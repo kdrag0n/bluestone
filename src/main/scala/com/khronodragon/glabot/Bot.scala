@@ -14,19 +14,21 @@ import net.dv8tion.jda.core.events.ReadyEvent
 
 
 class Bot extends ListenerAdapter {
-    var jda: JDA
-    var replSessions: Set[String] = Set[String]()
+    private var replSessions: Set[String] = Set[String]()
 
     override def onReady(event: ReadyEvent): Unit = {
-        println(s"Bot is ready! User ID: ${}")
+        val jda = event.getJDA
+        val uid = jda.getSelfUser().getId
+        println(s"Bot is ready! User ID: ${uid}")
     }
 
     override def onMessageReceived(event: MessageReceivedEvent): Unit = {
+        val jda = event.getJDA
         val author = event.getAuthor()
 
         if (author isBot)
             return
-        if (author.getId() == jda.getSelfUser().getId())
+        if (author.getId == jda.getSelfUser().getId)
             return
 
         val prefix = ")"
@@ -62,7 +64,7 @@ Remember that this is a huge work in progress!
                     channel.sendMessage("You need to specify a language, like `scala` or `js`!").queue
                     return
                 }
-                val language = args[0]
+                val language = args{0}
                 if (replSessions contains channel.getId) {
                     channel.sendMessage("Already running a REPL session in this channel. Exit it with `quit`.").queue
                     return
@@ -80,7 +82,7 @@ Remember that this is a huge work in progress!
                 engine.put("test", "Test right back at ya!")
                 engine.put("msg", message)
 
-                channel.sendMessage(s"Enter code to execute or evaluate. `exit()` or `quit` to exit. Prefix is: ```${prefix}```")
+                channel.sendMessage(s"Enter code to execute or evaluate. `exit()` or `quit` to exit. Prefix is: ```${prefix}```").queue
                 while (true) {
 
                 }
@@ -93,10 +95,6 @@ Remember that this is a huge work in progress!
                 }
             }
         }
-    }
-
-    def setJda(jda: JDA): Unit = {
-        this.jda = jda
     }
 }
 
@@ -112,10 +110,9 @@ object Bot {
               |Ok now actually starting...
             """.stripMargin)
         val bot = new Bot
-        val jda = new JDABuilder(AccountType.BOT)
+        new JDABuilder(AccountType.BOT)
                 .setToken(token)
                 .addEventListener(bot)
                 .buildAsync()
-        bot setJda jda
     }
 }

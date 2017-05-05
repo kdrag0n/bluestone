@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: com.typesafe.play:play-json_2.11:2.6.0-M7">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.typesafe.play/play-json_2.11/2.6.0-M7/65a4e4880eaf607dcb2478d258c021049274e8db/play-json_2.11-2.6.0-M7.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.typesafe.play/play-json_2.11/2.6.0-M7/f1d369ab9ced4e452dc34770e4f1963f5b45e74e/play-json_2.11-2.6.0-M7-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
