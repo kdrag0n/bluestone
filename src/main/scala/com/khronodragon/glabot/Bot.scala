@@ -38,11 +38,12 @@ class Bot extends ListenerAdapter {
         val responseNum = event.getResponseNumber()
 
         if (content.startsWith(prefix)) {
-            val cmdName = content.stripPrefix(prefix)
-            val args = content.substring(prefix.length + cmdName.length + 1).trim().split("\\s")
+            var args = content.split("\\s")
+            val cmdName = args{0}.stripPrefix(prefix)
+            args = args.drop(1)
 
             if (cmdName == "ping") {
-                channel.sendMessage("Pong!").queue
+                channel.sendMessage(s"Pong! ${jda.getPing}ms").queue
             } else if (cmdName == "rnum") {
                 channel.sendMessage(s"The current response number is ${responseNum}.").queue
             } else if (cmdName == "help") {
@@ -103,16 +104,12 @@ object Bot {
     @throws[RateLimitedException]("if we get ratelimited")
     def start(token: String): JDA = {
         println("Starting bot...")
-        println("aka sleeping")
-        Thread sleep(5000)
-        println(
-            """Done
-              |Ok now actually starting...
-            """.stripMargin)
         val bot = new Bot
-        new JDABuilder(AccountType.BOT)
+        val jda = new JDABuilder(AccountType.BOT)
                 .setToken(token)
                 .addEventListener(bot)
-                .buildAsync()
+                .buildBlocking()
+        Thread.sleep(1000000000)
+        jda
     }
 }
