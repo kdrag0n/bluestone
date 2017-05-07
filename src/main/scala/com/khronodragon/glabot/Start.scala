@@ -13,7 +13,7 @@ object Start extends App {
     val shardCount = (auth \ "shardCount").asOpt[Int].getOrElse(1)
 
     val textAccountType = (auth \ "type").asOpt[String].getOrElse("bot")
-    var accountType;
+    var accountType = AccountType
     textAccountType match {
         case "user" => accountType = AccountType.CLIENT
         case "bot" => accountType = AccountType.BOT
