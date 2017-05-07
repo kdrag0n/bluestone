@@ -1,9 +1,13 @@
 pipeline {
     agent any
     stages {
+        stage('Stuff') {
+            steps {
+                checkout scm
+            }
+        }
         stage('Build') {
             steps {
-                sh './gradlew build'
                 sh './gradlew shadowJar'
             }
         }
