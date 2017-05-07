@@ -102,14 +102,14 @@ Remember that this is a huge work in progress!
 object Bot {
     @throws[LoginException]("if we fail to login")
     @throws[RateLimitedException]("if we get ratelimited")
-    def start(token: String): JDA = {
+    def start(token: String, shardCount: int = 1,
+              accountType: AccountType = AccountType.BOT): Unit = {
         println("Starting bot...")
         val bot = new Bot
-        val jda = new JDABuilder(AccountType.BOT)
+        for ()
+        val jda = new JDABuilder(accountType)
                 .setToken(token)
                 .addEventListener(bot)
                 .buildBlocking()
-        Thread.sleep(1000000000)
-        jda
     }
 }
