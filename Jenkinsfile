@@ -7,6 +7,11 @@ pipeline {
                 sh './gradlew shadowJar'
             }
         }
+        stage('Ensure Sanity') {
+            steps {
+                sh 'echo "I\'m fine."'
+            }
+        }
     }
     post {
         always {
