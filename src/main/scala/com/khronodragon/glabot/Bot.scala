@@ -1,12 +1,12 @@
 package com.khronodragon.glabot
 
 import javax.script.ScriptEngineManager
+import java.util.concurrent._
 
-import net.dv8tion.jda.core.{AccountType, JDA, JDABuilder, Permission}
-import net.dv8tion.jda.client.entities.Group
+import net.dv8tion.jda.core._
 import net.dv8tion.jda.core.entities._
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
-import net.dv8tion.jda.core.exceptions.{PermissionException, RateLimitedException}
+import net.dv8tion.jda.core.exceptions.RateLimitedException
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import javax.security.auth.login.LoginException
 
@@ -14,12 +14,22 @@ import net.dv8tion.jda.core.events.ReadyEvent
 
 
 class Bot extends ListenerAdapter {
-    private var replSessions: Set[String] = Set[String]()
+    private var replSessions = Set[String]()
+    private val executor = new ScheduledThreadPoolExecutor(2)
+    private var tasks = Set[ScheduledFuture[_]]()
 
     override def onReady(event: ReadyEvent): Unit = {
         val jda = event.getJDA
         val uid = jda.getSelfUser().getId
-        println(s"Bot is ready! User ID: ${uid}")
+        println(s"Shard ${jda.getShardInfo.getShardId + 1} ready | UID ${uid}")
+        val task = new Runnable {
+            def run() = {
+                jda.getPresence.setGame(Game.of(""))
+            }
+        }
+        // scheduleAtFixedRate(runnable, initial delay, interval / period, time unit)
+        val future = executor.scheduleAtFixedRate(task, 1, 5, TimeUnit.SECONDS)
+        tasks += future
     }
 
     override def onMessageReceived(event: MessageReceivedEvent): Unit = {
@@ -43,7 +53,14 @@ class Bot extends ListenerAdapter {
             args = args.drop(1)
 
             if (cmdName == "ping") {
-                channel.sendMessage(s"Pong! ${jda.getPing}ms").queue
+                val msg = s"Pong! WebSockets: ${jda.getPing}ms"
+                val beforeTime = System.currentTimeMillis
+                channel.sendMessage(msg).queue(message1 => {
+                    message1.editMessage(msg + s", message: calculating...").queue(message2 => {
+                        val msgPing = System.currentTimeMillis - beforeTime
+                        message2.editMessage(msg + s", message: ${msgPing}ms")
+                    })
+                })
             } else if (cmdName == "rnum") {
                 channel.sendMessage(s"The current response number is ${responseNum}.").queue
             } else if (cmdName == "help") {
@@ -72,7 +89,7 @@ Remember that this is a huge work in progress!
                 }
                 replSessions += channel.getId
 
-                val engine = new ScriptEngineManager().getEngineByName("scala")// (language)
+                val engine = new ScriptEngineManager().getEngineByName(language)
                 engine.put("jda", jda)
                 engine.put("message", message)
                 engine.put("content", content)
@@ -110,6 +127,12 @@ object Bot {
                 .setToken(token)
                 .useSharding(shardId, shardCount)
                 .addEventListener(new Bot)
+                .setAudioEnabled(true)
+                .setAutoReconnect(true)
+                .setWebSocketTimeout(120000) // 2 minutes
+                .setBulkDeleteSplittingEnabled(false)
+                .setStatus(OnlineStatus.ONLINE)
+                .setGame(Game.of(s"on shard ${shardId + 1} of ${shardCount}"))
                 .buildAsync
             Thread.sleep(100)
         }
