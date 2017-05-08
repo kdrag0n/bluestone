@@ -1,6 +1,6 @@
 package com.khronodragon.glabot
 
-import javax.script.ScriptEngineManager
+import javax.script._
 import java.util.concurrent._
 
 import net.dv8tion.jda.core._
@@ -9,9 +9,12 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.exceptions.RateLimitedException
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import javax.security.auth.login.LoginException
-
 import net.dv8tion.jda.core.events.ReadyEvent
 
+import scala.reflect.runtime.universe._
+
+import annotations.{Cog => CogAnnotation, Command => CommandAnnotation}
+import cogs.Cog
 
 class Bot extends ListenerAdapter {
     private var replSessions = Set[String]()
@@ -40,7 +43,7 @@ class Bot extends ListenerAdapter {
             }
         }
         // scheduleAtFixedRate(runnable, initial delay, interval / period, time unit)
-        val future = executor.scheduleAtFixedRate(task, 10, 90, TimeUnit.SECONDS)
+        val future = executor.scheduleAtFixedRate(task, 10, 90, TimeUnit SECONDS)
         tasks += future
     }
 
@@ -126,6 +129,8 @@ Remember that this is a huge work in progress!
             }
         }
     }
+
+    def registerCogClass(cog: Cog)
 }
 
 object Bot {
