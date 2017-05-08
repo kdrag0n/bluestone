@@ -24,11 +24,23 @@ class Bot extends ListenerAdapter {
         println(s"Shard ${jda.getShardInfo.getShardId + 1} ready | UID ${uid}")
         val task = new Runnable {
             def run() = {
-                jda.getPresence.setGame(Game.of(""))
+                val statusLine =
+                ThreadLocalRandom.current.nextInt(1, 9) match {
+                    case 1 => s"with ${jda.getUsers.size} members"
+                    case 2 => s"in ${jda.getTextChannels.size + jda.getVoiceChannels.size} channels"
+                    case 3 => s"in ${jda.getGuilds.size} servers"
+                    case 4 => s"in ${jda.getGuilds.size} guilds"
+                    case 5 => s"from shard ${jda.getShardInfo.getShardId + 1} of ${jda.getShardInfo.getShardTotal}"
+                    case 6 => "with my buddies"
+                    case 7 => "with bits and bytes"
+                    case 8 => "World Domination"
+                    case _ => "severe ERROR!"
+                }
+                jda.getPresence.setGame(Game.of(statusLine))
             }
         }
         // scheduleAtFixedRate(runnable, initial delay, interval / period, time unit)
-        val future = executor.scheduleAtFixedRate(task, 1, 5, TimeUnit.SECONDS)
+        val future = executor.scheduleAtFixedRate(task, 10, 90, TimeUnit.SECONDS)
         tasks += future
     }
 
@@ -57,8 +69,8 @@ class Bot extends ListenerAdapter {
                 val beforeTime = System.currentTimeMillis
                 channel.sendMessage(msg).queue(message1 => {
                     message1.editMessage(msg + s", message: calculating...").queue(message2 => {
-                        val msgPing = System.currentTimeMillis - beforeTime
-                        message2.editMessage(msg + s", message: ${msgPing}ms")
+                        val msgPing = (System.currentTimeMillis - beforeTime) / 2.0
+                        message2.editMessage(msg + s", message: ${msgPing}ms").queue
                     })
                 })
             } else if (cmdName == "rnum") {
@@ -134,7 +146,7 @@ object Bot {
                 .setStatus(OnlineStatus.ONLINE)
                 .setGame(Game.of(s"on shard ${shardId + 1} of ${shardCount}"))
                 .buildAsync
-            Thread.sleep(100)
+            Thread.sleep(500)
         }
     }
 }
