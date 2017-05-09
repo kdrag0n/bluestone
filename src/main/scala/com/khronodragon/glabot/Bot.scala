@@ -11,14 +11,17 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter
 import net.dv8tion.jda.core.events._
 import javax.security.auth.login.LoginException
 
+import scala.collection.mutable.HashMap
 import scala.reflect.runtime.universe._
 import annotations.{Cog => CogAnnotation, Command => CommandAnnotation}
-import cogs.Cog
+import cogs.{Cog, CoreCog}
 
 class Bot extends ListenerAdapter with AbstractBot {
-    private var replSessions = Set[String]()
     private val executor = new ScheduledThreadPoolExecutor(1)
     private var tasks = Set[ScheduledFuture[_]]()
+    var commands = HashMap[String, Command]()
+    var cogs = HashMap[String, Cog]()
+    var commandCalls = HashMap[String, Int]()
 
     def getShardNum(event: Event): Int = {
         event.getJDA.getShardInfo.getShardId + 1
@@ -42,7 +45,7 @@ class Bot extends ListenerAdapter with AbstractBot {
                     case 7 => "with bits and bytes"
                     case 8 => "World Domination"
                     case 9 => "with you"
-                    case 10 => "with my potatoes"
+                    case 10 => "with potatoes"
                     case 11 => "something"
                     case _ => "severe ERROR!"
                 }
@@ -50,7 +53,7 @@ class Bot extends ListenerAdapter with AbstractBot {
             }
         }
         // scheduleAtFixedRate(runnable, initial delay, interval / period, time unit)
-        val future = executor.scheduleAtFixedRate(task, 10, 90, TimeUnit SECONDS)
+        val future = executor.scheduleAtFixedRate(task, 10, 120, TimeUnit SECONDS)
         tasks += future
     }
 
@@ -86,73 +89,32 @@ class Bot extends ListenerAdapter with AbstractBot {
             val cmdName = args{0}.stripPrefix(prefix)
             args = args.drop(1)
 
-            if (cmdName == "ping") {
-                val msg = s"Pong! WebSockets: ${jda.getPing}ms"
-                val beforeTime = System.currentTimeMillis
-                channel.sendMessage(msg).queue(message1 => {
-                    message1.editMessage(msg + s", message: calculating...").queue(message2 => {
-                        val msgPing = (System.currentTimeMillis - beforeTime) / 2.0
-                        message2.editMessage(msg + s", message: ${msgPing}ms").queue
-                    })
-                })
-            } else if (cmdName == "rnum") {
-                channel.sendMessage(s"The current response number is ${responseNum}.").queue
-            } else if (cmdName == "help") {
-                channel.sendMessage {
-                    """
-**GLaBOT by Dragon5232**
-
-Commands:
-  \u2022 help - Show this help.
-  \u2022 ping - Ping, pong!
-  \u2022 rnum - Get the current response number.
-
-That's it for now.
-Remember that this is a huge work in progress!
-                    """.stripMargin
-                }.queue
-            } else if (cmdName == "repl") {
-                if (args.length < 1) {
-                    channel.sendMessage("You need to specify a language, like `scala` or `js`!").queue
-                    return
-                }
-                val language = args{0}
-                println(language)
-                if (replSessions contains channel.getId) {
-                    channel.sendMessage("Already running a REPL session in this channel. Exit it with `quit`.").queue
-                    return
-                }
-                replSessions += channel.getId
-
-                val engine = new ScriptEngineManager().getEngineByName(language)
-                engine.put("jda", jda)
-                engine.put("message", message)
-                engine.put("content", content)
-                engine.put("author", author)
-                engine.put("channel", channel)
-                engine.put("guild", message.getGuild)
-                engine.put("server", message.getGuild)
-                engine.put("test", "Test right back at ya!")
-                engine.put("msg", message)
-
-                channel.sendMessage(s"Enter code to execute or evaluate. `exit()` or `quit` to exit. Prefix is: ```${prefix}```").queue
-                while (true) {
-
-                }
-            }
-        } else if (replSessions contains channel.getId) {
-            val ownerId = "160567046642335746"
-            if (author.getId == ownerId) {
-                if (content.startsWith("`")) {
-                    var code = content.replaceFirst("```scala", "").replaceFirst("```js", "").replaceFirst("```javascript", "").stripPrefix("`").stripSuffix("`")
+            if (commands contains cmdName) {
+                val command = commands(cmdName)
+                command.invoke(this, event, args, prefix)
+                if (commandCalls contains command.name) {
+                    commandCalls + (command.name -> (commandCalls(command.name) + 1))
+                } else {
+                    commandCalls + (command.name -> 1)
                 }
             }
         }
     }
 
-    override def onFai
+    def registerCogClass(cog: Cog): Cog = {
+        val properties = listCommands[typeOf[cog]]
+        cog
+    }
 
-    def registerCogClass(cog: Cog)
+    def listCommands[Tag: TypeTag]: List[(TermSymbol, Annotation)] = {
+        val fields = typeOf[Tag].members.collect {
+            case s: TermSymbol => s
+        }.filter(s => s.isVal || s.isVar)
+
+        fields.flatMap {
+            f => f.annotations.find(_.tree.tpe =:= typeOf[CommandAnnotation]).map((f, _))
+        }.toList
+    }
 }
 
 object Bot {
@@ -161,10 +123,15 @@ object Bot {
     def start(token: String, shardCount: Int = 1,
               accountType: AccountType = AccountType.BOT): Unit = {
         println("Starting bot...")
+
+        if (shardCount < 1) {
+            println("There needs to be at least 1 shard, or how will the bot work?")
+            System.exit(0)
+        }
+
         for (shardId <- 0 until shardCount) {
-            new JDABuilder(accountType)
+            val jda = new JDABuilder(accountType)
                 .setToken(token)
-                .useSharding(shardId, shardCount)
                 .addEventListener(new Bot)
                 .setAudioEnabled(true)
                 .setAutoReconnect(true)
@@ -172,7 +139,12 @@ object Bot {
                 .setBulkDeleteSplittingEnabled(false)
                 .setStatus(OnlineStatus.ONLINE)
                 .setGame(Game.of("something"))
-                .buildAsync
+
+            if (shardCount > 1) {
+                jda.useSharding(shardId, shardCount)
+            }
+
+            jda.buildAsync
             Thread.sleep(500)
         }
     }
