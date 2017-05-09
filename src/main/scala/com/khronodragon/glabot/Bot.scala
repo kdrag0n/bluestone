@@ -32,7 +32,7 @@ class Bot extends ListenerAdapter with AbstractBot {
         val task = new Runnable {
             def run() = {
                 val statusLine =
-                ThreadLocalRandom.current.nextInt(1, 9) match {
+                ThreadLocalRandom.current.nextInt(1, 12) match {
                     case 1 => s"with ${jda.getUsers.size} members"
                     case 2 => s"in ${jda.getTextChannels.size + jda.getVoiceChannels.size} channels"
                     case 3 => s"in ${jda.getGuilds.size} servers"
@@ -41,6 +41,9 @@ class Bot extends ListenerAdapter with AbstractBot {
                     case 6 => "with my buddies"
                     case 7 => "with bits and bytes"
                     case 8 => "World Domination"
+                    case 9 => "with you"
+                    case 10 => "with my potatoes"
+                    case 11 => "something"
                     case _ => "severe ERROR!"
                 }
                 jda.getPresence.setGame(Game.of(statusLine))
@@ -168,7 +171,7 @@ object Bot {
                 .setWebSocketTimeout(120000) // 2 minutes
                 .setBulkDeleteSplittingEnabled(false)
                 .setStatus(OnlineStatus.ONLINE)
-                .setGame(Game.of(s"on shard ${shardId + 1} of ${shardCount}"))
+                .setGame(Game.of("something"))
                 .buildAsync
             Thread.sleep(500)
         }
