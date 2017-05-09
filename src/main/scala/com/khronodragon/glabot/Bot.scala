@@ -8,23 +8,27 @@ import net.dv8tion.jda.core.entities._
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.exceptions.RateLimitedException
 import net.dv8tion.jda.core.hooks.ListenerAdapter
+import net.dv8tion.jda.core.events._
 import javax.security.auth.login.LoginException
-import net.dv8tion.jda.core.events.ReadyEvent
 
 import scala.reflect.runtime.universe._
-
 import annotations.{Cog => CogAnnotation, Command => CommandAnnotation}
 import cogs.Cog
 
-class Bot extends ListenerAdapter {
+class Bot extends ListenerAdapter with AbstractBot {
     private var replSessions = Set[String]()
-    private val executor = new ScheduledThreadPoolExecutor(2)
+    private val executor = new ScheduledThreadPoolExecutor(1)
     private var tasks = Set[ScheduledFuture[_]]()
+
+    def getShardNum(event: Event): Int = {
+        event.getJDA.getShardInfo.getShardId + 1
+    }
 
     override def onReady(event: ReadyEvent): Unit = {
         val jda = event.getJDA
+        this.jda = jda
         val uid = jda.getSelfUser().getId
-        println(s"Shard ${jda.getShardInfo.getShardId + 1} ready | UID ${uid}")
+        println(s"[Shard ${getShardNum(event)}] Ready - UID: $uid")
         val task = new Runnable {
             def run() = {
                 val statusLine =
@@ -47,9 +51,21 @@ class Bot extends ListenerAdapter {
         tasks += future
     }
 
+    override def onResume(event: ResumedEvent): Unit = {
+        println(s"[Shard ${getShardNum(event)}] WebSocket resumed")
+    }
+
+    override def onReconnect(event: ReconnectedEvent): Unit = {
+        println(s"[Shard ${getShardNum(event)}] Reconnected")
+    }
+
+    override def onShutdown(event: ShutdownEvent): Unit = {
+        println(s"[Shard ${getShardNum(event)}] Finished shutting down")
+    }
+
     override def onMessageReceived(event: MessageReceivedEvent): Unit = {
         val jda = event.getJDA
-        val author = event.getAuthor()
+        val author = event.getAuthor
 
         if (author isBot)
             return
@@ -57,10 +73,10 @@ class Bot extends ListenerAdapter {
             return
 
         val prefix = ")"
-        val message = event.getMessage()
-        val content = message.getRawContent()
-        val channel = event.getChannel()
-        val responseNum = event.getResponseNumber()
+        val message = event.getMessage
+        val content = message.getRawContent
+        val channel = event.getChannel
+        val responseNum = event.getResponseNumber
 
         if (content.startsWith(prefix)) {
             var args = content.split("\\s")
@@ -98,6 +114,7 @@ Remember that this is a huge work in progress!
                     return
                 }
                 val language = args{0}
+                println(language)
                 if (replSessions contains channel.getId) {
                     channel.sendMessage("Already running a REPL session in this channel. Exit it with `quit`.").queue
                     return
@@ -129,6 +146,8 @@ Remember that this is a huge work in progress!
             }
         }
     }
+
+    override def onFai
 
     def registerCogClass(cog: Cog)
 }

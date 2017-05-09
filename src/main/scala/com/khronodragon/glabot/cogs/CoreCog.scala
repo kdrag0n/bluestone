@@ -1,23 +1,21 @@
 package com.khronodragon.glabot.cogs
 
 import com.khronodragon.glabot.Bot
-import com.khronodragon.glabot.annotations.{Command, Cog => CogInfo}
+import com.khronodragon.glabot.annotations.Command
 import net.dv8tion.jda.core.entities.Message
 
-@CogInfo(name = "Core", description = "Essentials")
-class CoreCog extends Cog {
-    override final val name = "Core"
-    override final val description = "The core, essential cog to keep the bot running."
+class CoreCog(botObj: Bot) extends Cog {
+    override final val bot = botObj
 
-    def load(bot: Bot): Unit = {
-        this.bot = bot
+    def getName(): String = {
+        "Core"
     }
 
-    def unload(bot: Bot): Unit = {
-        true
+    def getDescription(): String = {
+        "The core, essential cog to keep the bot running."
     }
 
-    @Command(name = "ping2", description = "cmd desc")
+    @Command(name = "ping2", description = "cmd desc", aliases = Array("alias_test1", "alias_test2"))
     def cmdPing2(msg: Message, args: Array[String]): Unit = {
         msg.getChannel.sendMessage("pong this is in progress").queue
     }

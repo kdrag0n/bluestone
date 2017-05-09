@@ -3,11 +3,15 @@ package com.khronodragon.glabot.cogs
 import com.khronodragon.glabot.Bot
 
 abstract class Cog {
-    val name: String
-    val description: String
-    var bot: Bot
+    def getName(): String
+    def getDescription(): String
+    val bot: Bot
 
-    def load(bot: Bot): Unit
+    def load(): Unit = {
+        println(s"[$getName] Cog loaded.")
+    }
 
-    def unload(bot: Bot): Unit
+    def unload(): Unit = {
+        println(s"[$getName] Cog unloaded.")
+    }
 }
