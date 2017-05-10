@@ -12,11 +12,11 @@ import net.dv8tion.jda.core.events._
 import javax.security.auth.login.LoginException
 
 import scala.collection.mutable.HashMap
-import scala.reflect.runtime.universe._
-import annotations.{Cog => CogAnnotation, Command => CommandAnnotation}
+import scala.reflect.runtime.{universe => ru}
+import annotations.{Command => CommandAnnotation}
 import cogs.{Cog, CoreCog}
 
-class Bot extends ListenerAdapter with AbstractBot {
+class Bot extends ListenerAdapter {
     private val executor = new ScheduledThreadPoolExecutor(1)
     private var tasks = Set[ScheduledFuture[_]]()
     var commands = HashMap[String, Command]()
@@ -24,13 +24,26 @@ class Bot extends ListenerAdapter with AbstractBot {
     var commandCalls = HashMap[String, Int]()
 
     def getShardNum(event: Event): Int = {
-        event.getJDA.getShardInfo.getShardId + 1
+        val sInfo = event.getJDA.getShardInfo
+        if (sInfo == null) {
+            return 1
+        } else {
+            return sInfo.getShardId + 1
+        }
+    }
+
+    def getShardTotal(event: Event): Int = {
+        val sInfo = event.getJDA.getShardInfo
+        if (sInfo == null) {
+            return 1
+        } else {
+            return sInfo.getShardTotal
+        }
     }
 
     override def onReady(event: ReadyEvent): Unit = {
         val jda = event.getJDA
-        this.jda = jda
-        val uid = jda.getSelfUser().getId
+        val uid = jda.getSelfUser.getId
         println(s"[Shard ${getShardNum(event)}] Ready - UID: $uid")
         val task = new Runnable {
             def run() = {
@@ -40,7 +53,7 @@ class Bot extends ListenerAdapter with AbstractBot {
                     case 2 => s"in ${jda.getTextChannels.size + jda.getVoiceChannels.size} channels"
                     case 3 => s"in ${jda.getGuilds.size} servers"
                     case 4 => s"in ${jda.getGuilds.size} guilds"
-                    case 5 => s"from shard ${jda.getShardInfo.getShardId + 1} of ${jda.getShardInfo.getShardTotal}"
+                    case 5 => s"from shard ${getShardNum(event)} of ${getShardTotal(event)}"
                     case 6 => "with my buddies"
                     case 7 => "with bits and bytes"
                     case 8 => "World Domination"
@@ -55,6 +68,8 @@ class Bot extends ListenerAdapter with AbstractBot {
         // scheduleAtFixedRate(runnable, initial delay, interval / period, time unit)
         val future = executor.scheduleAtFixedRate(task, 10, 120, TimeUnit SECONDS)
         tasks += future
+        println("Going to register...")
+        registerCogClass(new CoreCog(this))
     }
 
     override def onResume(event: ResumedEvent): Unit = {
@@ -91,7 +106,7 @@ class Bot extends ListenerAdapter with AbstractBot {
 
             if (commands contains cmdName) {
                 val command = commands(cmdName)
-                command.invoke(this, event, args, prefix)
+                command.invoke(this, event, args, prefix, cmdName)
                 if (commandCalls contains command.name) {
                     commandCalls + (command.name -> (commandCalls(command.name) + 1))
                 } else {
@@ -102,17 +117,40 @@ class Bot extends ListenerAdapter with AbstractBot {
     }
 
     def registerCogClass(cog: Cog): Cog = {
-        val properties = listCommands[typeOf[cog]]
+        val mirror = ru.runtimeMirror(getClass.getClassLoader)
+        val properties = listCommands(cog)
+        println("propList: " + properties)
+        for ((symbol, annotation) <- properties) {
+            println("ANNO ARGS: " + annotation.tree.children.tail)
+            val func = mirror.reflect(cog).reflectMethod(symbol.asMethod).asInstanceOf[Function[Context, _]]
+            /*
+            val command = new Command(cmdName = anno.name, cmdDesc = anno.description,
+                                      cmdUsage = anno.usage, cmdHidden = anno.hidden,
+            cmdNPerms = anno.perms, cmdNoPm = anno.noPm, cmdAliases = anno.aliases,
+            cmdCall = func)
+
+            commands + (command.name -> command)
+            for (al <- command.aliases) {
+                commands + (al -> command)
+            }*/
+        }
+        cogs + (cog.getName -> cog)
         cog
     }
 
-    def listCommands[Tag: TypeTag]: List[(TermSymbol, Annotation)] = {
-        val fields = typeOf[Tag].members.collect {
-            case s: TermSymbol => s
-        }.filter(s => s.isVal || s.isVar)
+    def listCommands[Tag: ru.TypeTag](obj: Tag): List[(ru.TermSymbol, ru.Annotation)] = {
+        val mirror = ru.runtimeMirror(getClass.getClassLoader)
+        val fields = ru.typeOf[ru.TypeTag[Tag]].members.collect {
+            case s: ru.TermSymbol => s
+        }.filter(s => s.isMethod)
+        println("fields: " + fields)
+
+        println(fields.flatMap {
+            f => mirror.methodSymbol().annotations
+        }.toList)
 
         fields.flatMap {
-            f => f.annotations.find(_.tree.tpe =:= typeOf[CommandAnnotation]).map((f, _))
+            f => f.annotations.find(_.tree.tpe =:= ru.typeOf[CommandAnnotation]).map((f, _))
         }.toList
     }
 }

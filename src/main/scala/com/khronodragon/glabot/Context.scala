@@ -1,11 +1,13 @@
 package com.khronodragon.glabot
 
+import java.util.Date
+
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.entities._
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.requests.RestAction
 
-class Context(botObj: Bot, mEvent: MessageReceivedEvent, inArgs: Array[String], inPrefix: String) {
+class Context(botObj: Bot, mEvent: MessageReceivedEvent, inArgs: Array[String], inPrefix: String, invokedName: String) {
     final val bot: Bot = botObj
     final val event: MessageReceivedEvent = mEvent
     final val message: Message = event.getMessage
@@ -26,6 +28,8 @@ class Context(botObj: Bot, mEvent: MessageReceivedEvent, inArgs: Array[String], 
     final val channelIdLong: Long = channel.getIdLong
     final val prefix: String = inPrefix
     final val args: Array[String] = inArgs
+    final val invokedWith: String = invokedName
+    final val invokeTime: Date = new Date
 
     def reply(msg: String): RestAction[Message] = {
         channel.sendMessage(msg)

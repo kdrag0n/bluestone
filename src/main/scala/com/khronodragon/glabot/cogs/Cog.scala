@@ -14,4 +14,8 @@ abstract class Cog {
     def unload(): Unit = {
         println(s"[$getName] Cog unloaded.")
     }
+
+    def getType(): Class[_] = {
+        this.getClass
+    }
 }

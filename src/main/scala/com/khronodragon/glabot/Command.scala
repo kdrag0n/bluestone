@@ -15,8 +15,8 @@ class Command(cmdName: String, cmdDesc: String,
     final val aliases: Array[String] = cmdAliases
     final val function: Function[Context, _] = cmdCall
 
-    def invoke(bot: Bot, event: MessageReceivedEvent, args: Array[String], prefix: String): Unit = {
-        val context = new Context(bot, event, args, prefix)
+    def invoke(bot: Bot, event: MessageReceivedEvent, args: Array[String], prefix: String, invokedName: String): Unit = {
+        val context = new Context(bot, event, args, prefix, invokedName)
         this.function(context)
     }
 }
