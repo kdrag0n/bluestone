@@ -118,7 +118,7 @@ class Bot extends ListenerAdapter {
 
     def registerCogClass(cog: Cog): Cog = {
         val mirror = ru.runtimeMirror(getClass.getClassLoader)
-        val properties = listCommands(cog)
+        val properties = listCommands[cog.type]
         println("propList: " + properties)
         for ((symbol, annotation) <- properties) {
             println("ANNO ARGS: " + annotation.tree.children.tail)
@@ -138,16 +138,12 @@ class Bot extends ListenerAdapter {
         cog
     }
 
-    def listCommands[Tag: ru.TypeTag](obj: Tag): List[(ru.TermSymbol, ru.Annotation)] = {
+    def listCommands[Tag: ru.TypeTag]: List[(ru.TermSymbol, ru.Annotation)] = {
         val mirror = ru.runtimeMirror(getClass.getClassLoader)
         val fields = ru.typeOf[ru.TypeTag[Tag]].members.collect {
             case s: ru.TermSymbol => s
         }.filter(s => s.isMethod)
         println("fields: " + fields)
-
-        println(fields.flatMap {
-            f => mirror.methodSymbol().annotations
-        }.toList)
 
         fields.flatMap {
             f => f.annotations.find(_.tree.tpe =:= ru.typeOf[CommandAnnotation]).map((f, _))
