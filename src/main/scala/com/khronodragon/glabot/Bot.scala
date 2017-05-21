@@ -159,7 +159,7 @@ object Bot {
         println("Starting bot...")
 
         if (shardCount < 1) {
-            println("There needs to be at least 1 shard, or how will the bot work?")
+            println("There needs to be at least 1 shard, or how will the bot even work?")
             System.exit(0)
         }
 
