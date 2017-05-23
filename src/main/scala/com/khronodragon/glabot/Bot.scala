@@ -84,6 +84,10 @@ class Bot extends ListenerAdapter {
         println(s"[Shard ${getShardNum(event)}] Finished shutting down")
     }
 
+    override def onException(event: ExceptionEvent): Unit = {
+        println(s"error ${event.getCause}")
+    }
+
     override def onMessageReceived(event: MessageReceivedEvent): Unit = {
         val jda = event.getJDA
         val author = event.getAuthor
