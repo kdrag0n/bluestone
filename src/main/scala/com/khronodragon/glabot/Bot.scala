@@ -142,7 +142,7 @@ class Bot extends ListenerAdapter {
         val mirror = ru.runtimeMirror(getClass.getClassLoader)
         val fields = ru.typeOf[ru.TypeTag[Tag]].members.collect {
             case s: ru.TermSymbol => s
-        }.filter(s => s.isMethod)
+        }.filter(s => s.isMethod).filter(s => s.annotations.nonEmpty)
         println("fields: " + fields)
 
         fields.flatMap {
