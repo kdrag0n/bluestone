@@ -44,6 +44,8 @@ Commands:
 
 That's it for now.
 Remember that this is a huge work in progress!
+**IM REDOING THIS SOON!**
+**like as soon as the command stuff starts working**
                     """.stripMargin
         }.queue
     }

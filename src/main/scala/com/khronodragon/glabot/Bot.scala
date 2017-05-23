@@ -120,37 +120,35 @@ class Bot extends ListenerAdapter {
         }
     }
 
-    def registerCogClass(cog: Cog): Cog = {
+    def registerCogClass[C <: Cog](cog: C): Unit = {
         val mirror = ru.runtimeMirror(getClass.getClassLoader)
         val properties = listCommands[cog.type]
         println("propList: " + properties)
-        for ((symbol, annotation) <- properties) {
-            println("ANNO ARGS: " + annotation.tree.children.tail)
-            val func = mirror.reflect(cog).reflectMethod(symbol.asMethod).asInstanceOf[Function[Context, _]]
-            /*
-            val command = new Command(cmdName = anno.name, cmdDesc = anno.description,
-                                      cmdUsage = anno.usage, cmdHidden = anno.hidden,
-            cmdNPerms = anno.perms, cmdNoPm = anno.noPm, cmdAliases = anno.aliases,
-            cmdCall = func)
+        for ((symbol, annotationOpt) <- properties) {
+            if (annotationOpt.getOrElse(1) != 1) {
+                val annotation = annotationOpt.get
+                println("ANNO ARGS: " + annotation.tree.children.tail)
+                val func = mirror.reflect(cog).reflectMethod(symbol.asMethod)
+                /*
+                val command = new Command(cmdName = anno.name, cmdDesc = anno.description,
+                                          cmdUsage = anno.usage, cmdHidden = anno.hidden,
+                cmdNPerms = anno.perms, cmdNoPm = anno.noPm, cmdAliases = anno.aliases,
+                cmdCall = func)
 
-            commands + (command.name -> command)
-            for (al <- command.aliases) {
-                commands + (al -> command)
-            }*/
+                commands + (command.name -> command)
+                for (al <- command.aliases) {
+                    commands + (al -> command)
+                }*/
+            }
         }
         cogs + (cog.getName -> cog)
-        cog
     }
 
-    def listCommands[Tag: ru.TypeTag]: List[(ru.TermSymbol, ru.Annotation)] = {
-        val mirror = ru.runtimeMirror(getClass.getClassLoader)
-        val fields = ru.typeOf[ru.TypeTag[Tag]].members.collect {
-            case s: ru.TermSymbol => s
-        }.filter(s => s.isMethod).filter(s => s.annotations.nonEmpty)
-        println("fields: " + fields)
-
-        fields.flatMap {
-            f => f.annotations.find(_.tree.tpe =:= ru.typeOf[CommandAnnotation]).map((f, _))
+    def listCommands[Tag: ru.TypeTag]: List[(ru.MethodSymbol, Option[ru.Annotation])] = {
+        ru.typeOf[Tag].decls.collect {
+            case m: ru.MethodSymbol => m
+        }.filter(m => m.annotations.nonEmpty).map {
+            m => (m, m.annotations.find(_.tree.tpe =:= ru.typeOf[CommandAnnotation]))
         }.toList
     }
 }

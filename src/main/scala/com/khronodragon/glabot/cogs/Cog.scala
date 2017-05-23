@@ -1,6 +1,7 @@
 package com.khronodragon.glabot.cogs
 
 import com.khronodragon.glabot.Bot
+import com.khronodragon.glabot.annotations.Command
 
 abstract class Cog {
     def getName(): String
@@ -18,4 +19,7 @@ abstract class Cog {
     def getType(): Class[_] = {
         this.getClass
     }
+
+    @Command("name", "desc")
+    def methodOnOrig(): Unit = {}
 }
