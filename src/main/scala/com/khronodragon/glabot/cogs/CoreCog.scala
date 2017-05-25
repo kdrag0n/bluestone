@@ -6,13 +6,9 @@ import com.khronodragon.glabot.annotations.Command
 class CoreCog(botObj: Bot) extends Cog {
     override final val bot = botObj
 
-    def getName(): String = {
-        "Core"
-    }
+    def getName(): String = "Core"
 
-    def getDescription(): String = {
-        "The core, essential cog to keep the bot running."
-    }
+    def getDescription(): String = "The core, essential cog to keep the bot running."
 
     @Command(name = "ping", description = "Ping, pong!", aliases = Array("alias_test1", "alias_test2"))
     def cmdPing(ctx: Context): Unit = {

@@ -10,11 +10,7 @@ class MusicCog(botObj: Bot) extends Cog {
     final val playerManager = new DefaultAudioPlayerManager()
     AudioSourceManagers.registerRemoteSources(playerManager)
 
-    def getName(): String = {
-        "Music"
-    }
+    def getName(): String = "Music"
 
-    def getDescription(): String = {
-        "Who doesn't want some music?"
-    }
+    def getDescription(): String = "Who doesn't want some music?"
 }

@@ -9,13 +9,9 @@ class ReplCog(botObj: Bot) extends Cog {
     override final val bot = botObj
     private var replSessions = Set[Long]()
 
-    def getName(): String = {
-        "REPL"
-    }
+    def getName(): String = "REPL"
 
-    def getDescription(): String = {
-        "A multilingual REPL, in Discord!"
-    }
+    def getDescription(): String = "A multilingual REPL, in Discord!"
 
     @Command(name = "repl", description = "A multilingual REPL, in Discord!")
     def cmdRepl(ctx: Context): Unit = {
