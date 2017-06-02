@@ -1,4 +1,4 @@
-package com.khronodragon.glabot.cogs
+package com.khronodragon.glabot.scala.cogs
 
 import com.khronodragon.glabot.{Bot, Context}
 import com.khronodragon.glabot.annotations.Command

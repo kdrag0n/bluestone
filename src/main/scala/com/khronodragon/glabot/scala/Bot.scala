@@ -1,4 +1,4 @@
-package com.khronodragon.glabot
+package com.khronodragon.glabot.scala
 
 import javax.script._
 import java.util.concurrent._
@@ -69,7 +69,7 @@ class Bot extends ListenerAdapter {
         val future = executor.scheduleAtFixedRate(task, 10, 120, TimeUnit SECONDS)
         tasks += future
         println("Going to register...")
-        registerCogClass(new CoreCog(this))
+        new CoreCog(this).register()
     }
 
     override def onResume(event: ResumedEvent): Unit = {
@@ -105,7 +105,9 @@ class Bot extends ListenerAdapter {
 
         if (content.startsWith(prefix)) {
             var args = content.split("\\s")
-            val cmdName = args{0}.stripPrefix(prefix)
+            val cmdName = args {
+                0
+            }.stripPrefix(prefix)
             args = args.drop(1)
 
             if (commands contains cmdName) {
@@ -118,38 +120,6 @@ class Bot extends ListenerAdapter {
                 }
             }
         }
-    }
-
-    def registerCogClass[C <: Cog](cog: C): Unit = {
-        val mirror = ru.runtimeMirror(getClass.getClassLoader)
-        val properties = listCommands[cog.type]
-        println("propList: " + properties)
-        for ((symbol, annotationOpt) <- properties) {
-            if (annotationOpt.getOrElse(1) != 1) {
-                val annotation = annotationOpt.get
-                println("ANNO ARGS: " + annotation.tree.children.tail)
-                val func = mirror.reflect(cog).reflectMethod(symbol.asMethod)
-                /*
-                val command = new Command(cmdName = anno.name, cmdDesc = anno.description,
-                                          cmdUsage = anno.usage, cmdHidden = anno.hidden,
-                cmdNPerms = anno.perms, cmdNoPm = anno.noPm, cmdAliases = anno.aliases,
-                cmdCall = func)
-
-                commands + (command.name -> command)
-                for (al <- command.aliases) {
-                    commands + (al -> command)
-                }*/
-            }
-        }
-        cogs + (cog.getName -> cog)
-    }
-
-    def listCommands[Tag: ru.TypeTag]: List[(ru.MethodSymbol, Option[ru.Annotation])] = {
-        ru.typeOf[Tag].decls.collect {
-            case m: ru.MethodSymbol => m
-        }.filter(m => m.annotations.nonEmpty).map {
-            m => (m, m.annotations.find(_.tree.tpe =:= ru.typeOf[CommandAnnotation]))
-        }.toList
     }
 }
 

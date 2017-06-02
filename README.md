@@ -1,6 +1,6 @@
 # GLaBOT
 
-GLaBOT, the original Portal themed Discord bot written in Scala.
+GLaBOT, the original Portal themed Discord bot written in Java.
 
 You will need to create `auth.json` for the bot to be able to start.
 This is the template:
