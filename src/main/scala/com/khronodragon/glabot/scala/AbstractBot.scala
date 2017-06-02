@@ -1,4 +1,4 @@
-package com.khronodragon.glabot
+package com.khronodragon.bluestone
 
 import net.dv8tion.jda.core.JDA
 

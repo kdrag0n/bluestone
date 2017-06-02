@@ -1,4 +1,4 @@
-package com.khronodragon.glabot.annotations;
+package com.khronodragon.bluestone.annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

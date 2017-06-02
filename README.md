@@ -1,6 +1,6 @@
-# GLaBOT
+# Project Bluestone
 
-GLaBOT, the original Portal themed Discord bot written in Java.
+This is Project Bluestone, the rewrite of Goldmine in Java (and some Scala).
 
 You will need to create `auth.json` for the bot to be able to start.
 This is the template:
@@ -17,7 +17,7 @@ This is the template:
 Put your token in for the `token` key.
 Then, choose the number of shards you want to use.
 This is typically unnecessary, and serves no benefit,
-unless you have 500 guilds or more the bot is serving in.
+unless you have 750 guilds or more the bot is serving in.
 
 Optionally, obtain a Google API key with the following features enabled:
  - Google Custom Search API

@@ -1,9 +1,9 @@
-package com.khronodragon.glabot.cogs
+package com.khronodragon.bluestone.cogs
 
 import javax.script.ScriptEngineManager
 
-import com.khronodragon.glabot.{Bot, Context}
-import com.khronodragon.glabot.annotations.Command
+import com.khronodragon.bluestone.{Bot, Context}
+import com.khronodragon.bluestone.annotations.Command
 
 class ReplCog(botObj: Bot) extends Cog {
     override final val bot = botObj

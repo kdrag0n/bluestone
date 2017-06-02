@@ -1,7 +1,7 @@
-package com.khronodragon.glabot.cogs
+package com.khronodragon.bluestone.cogs
 
-import com.khronodragon.glabot.{Bot, Context}
-import com.khronodragon.glabot.annotations.Command
+import com.khronodragon.bluestone.{Bot, Context}
+import com.khronodragon.bluestone.annotations.Command
 
 class CoreCog(botObj: Bot) extends Cog {
     override final val bot = botObj
@@ -31,7 +31,7 @@ class CoreCog(botObj: Bot) extends Cog {
     def cmdHelp(ctx: Context): Unit = {
         ctx.reply {
             """
-**GLaBOT by Dragon5232**
+**Bluestone by Dragon5232**
 
 Commands:
   \u2022 help - Show this help.

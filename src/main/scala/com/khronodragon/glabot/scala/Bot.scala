@@ -1,4 +1,4 @@
-package com.khronodragon.glabot.scala
+package com.khronodragon.bluestone.scala
 
 import javax.script._
 import java.util.concurrent._

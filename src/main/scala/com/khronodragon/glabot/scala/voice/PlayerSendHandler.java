@@ -1,4 +1,4 @@
-package com.khronodragon.glabot.voice;
+package com.khronodragon.bluestone.voice;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;

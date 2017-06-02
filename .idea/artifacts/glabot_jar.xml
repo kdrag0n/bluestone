@@ -1,8 +1,8 @@
 <component name="ArtifactManager">
-  <artifact type="jar" name="glabot:jar">
+  <artifact type="jar" name="bluestone:jar">
     <output-path>$PROJECT_DIR$/out/artifacts</output-path>
-    <root id="archive" name="glabot_main.jar">
-      <element id="module-output" name="glabot_main" />
+    <root id="archive" name="bluestone_main.jar">
+      <element id="module-output" name="bluestone_main" />
       <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.dv8tion/JDA/3.0.0_189/f4c42e6cedfa93455424671402a09a31e1c41816/JDA-3.0.0_189.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpmime/4.5.2/22b4c53dd9b6761024258de8f9240c3dce6ea368/httpmime-4.5.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.8.5/b3035f37e674c04dafe36a660c3815cc59f764e2/jackson-databind-2.8.5.jar" path-in-jar="/" />

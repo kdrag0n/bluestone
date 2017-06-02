@@ -1,4 +1,4 @@
-package com.khronodragon.glabot.scala.test;
+package com.khronodragon.bluestone.scala.test;
 
 public class JavaTest {
 }

@@ -1,10 +1,10 @@
-package com.khronodragon.glabot
+package com.khronodragon.bluestone
 
 import net.dv8tion.jda.core.AccountType
 import play.api.libs.json.Json
 
 object Start extends App {
-    println("Welcome to GLaBOT!")
+    println("Welcome to Bluestone!")
     assert(JavaTest.test() == "It works!", "Self-test: Java test FAILED! Something is very wrong with this build.")
     val handle = scala.io.Source.fromFile("auth.json")
     val rawJson = try handle.mkString finally handle.close()

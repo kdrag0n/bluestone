@@ -9,8 +9,8 @@ group 'com.khronodragon'
 version '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
-archivesBaseName = 'glabot'
-mainClassName = 'com.khronodragon.glabot.Start'
+archivesBaseName = 'bluestone'
+mainClassName = 'com.khronodragon.bluestone.Start'
 
 repositories {
     mavenCentral()
@@ -19,9 +19,9 @@ repositories {
 
 task fatJar(type: Jar) {
     manifest {
-        attributes 'Implementation-Title': 'GLaBOT',
+        attributes 'Implementation-Title': 'Bluestone',
                 'Implementation-Version': version,
-                'Main-Class': 'com.khronodragon.glabot.Start'
+                'Main-Class': 'com.khronodragon.bluestone.Start'
     }
     baseName = project.name + '-all'
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }

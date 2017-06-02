@@ -1,4 +1,4 @@
-package com.khronodragon.glabot
+package com.khronodragon.bluestone
 
 import java.util.Date
 

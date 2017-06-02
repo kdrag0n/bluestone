@@ -1,4 +1,4 @@
-package com.khronodragon.glabot;
+package com.khronodragon.bluestone;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -9,7 +9,7 @@ public class Start {
     }
 
     public static void main(String[] args) {
-        print("Welcome to GLaBOT!");
+        print("Welcome to Bluestone!");
 
         String jsonCode = new String(Files.readAllBytes(Paths.get("auth.json")));
 

@@ -1,7 +1,7 @@
-package com.khronodragon.glabot.scala.cogs
+package com.khronodragon.bluestone.scala.cogs
 
-import com.khronodragon.glabot.{Bot, Command => CommandClass}
-import com.khronodragon.glabot.annotations.Command
+import com.khronodragon.bluestone.{Bot, Command => CommandClass}
+import com.khronodragon.bluestone.annotations.Command
 
 import scala.reflect.runtime.{universe => ru}
 

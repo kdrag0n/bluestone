@@ -2,8 +2,8 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel>
-      <module name="glabot_main" target="1.8" />
-      <module name="glabot_test" target="1.8" />
+      <module name="bluestone_main" target="1.8" />
+      <module name="bluestone_test" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

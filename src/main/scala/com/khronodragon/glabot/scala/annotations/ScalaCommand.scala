@@ -1,4 +1,4 @@
-package com.khronodragon.glabot.scala.annotations
+package com.khronodragon.bluestone.scala.annotations
 
 import scala.annotation.StaticAnnotation
 
