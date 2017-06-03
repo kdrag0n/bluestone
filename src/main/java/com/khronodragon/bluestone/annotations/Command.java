@@ -1,4 +1,4 @@
-package com.khronodragon.bluestone.scala.annotations;
+package com.khronodragon.bluestone.annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -9,10 +9,10 @@ import java.lang.annotation.ElementType;
 @Target(ElementType.METHOD)
 public @interface Command {
     String name();
-    String description() default "I'm a description!";
+    String description() default "I'm a command with no info!";
     String usage() default "";
     boolean hidden() default false;
     String[] perms() default {};
-    boolean noPm() default false;
+    boolean guildOnly() default false;
     String[] aliases() default {};
 }
