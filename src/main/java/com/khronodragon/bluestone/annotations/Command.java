@@ -9,7 +9,7 @@ import java.lang.annotation.ElementType;
 @Target(ElementType.METHOD)
 public @interface Command {
     String name();
-    String description() default "I'm a command with no info!";
+    String desc() default "I'm a command with no info!";
     String usage() default "";
     boolean hidden() default false;
     String[] perms() default {};

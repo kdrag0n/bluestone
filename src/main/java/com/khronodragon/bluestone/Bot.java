@@ -1,6 +1,8 @@
 package com.khronodragon.bluestone;
 
-import javafx.concurrent.Task;
+import com.khronodragon.bluestone.cogs.*;
+import net.dv8tion.jda.bot.JDABot;
+import net.dv8tion.jda.bot.entities.ApplicationInfo;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDA.ShardInfo;
@@ -28,6 +30,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public HashMap<String, Command> commands = new HashMap<>();
     public HashMap<String, Cog> cogs = new HashMap<>();
     public HashMap<String, AtomicInteger> commandCalls = new HashMap<>();
+    public ApplicationInfo appInfo;
+    public User owner;
 
     private static void sprint(String text) {
         System.out.println(text);
@@ -55,6 +59,13 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public void onReady(ReadyEvent event) {
         JDA jda = event.getJDA();
         long uid = jda.getSelfUser().getIdLong();
+
+        if (jda.getSelfUser().isBot()) {
+            this.appInfo = ((JDABot) jda).getApplicationInfo().complete();
+            this.owner = appInfo.getOwner();
+        } else {
+            this.owner = jda.getSelfUser();
+        }
         printf("[Shard %d] Ready - ID: %d", getShardNum(event), uid);
 
         Runnable task = new Runnable() {
@@ -104,10 +115,15 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             }
         };
 
-        ScheduledFuture future = executor.scheduleAtFixedRate(task, 10, 120, TimeUnit.SECONDS);
+        ScheduledFuture future = executor.scheduleAtFixedRate(task, 10, 6, TimeUnit.SECONDS);
         tasks.add(future);
         print("Going to register...");
         new CoreCog(this).register();
+        new CosmeticCog(this).register();
+        new FunCog(this).register();
+        new MusicCog(this).register();
+        new ReplCog(this).register();
+        new UtilityCog(this).register();
     }
 
     @Override
@@ -148,7 +164,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
         if (content.startsWith(prefix)) {
             ArrayList<String> args = new ArrayList<>(Arrays.asList(content.split("\\s")));
-            String cmdName = args[0].substring(prefix.length());
+            String cmdName = args.get(0).substring(prefix.length());
             args.remove(args.size() - 1);
 
             if (commands.containsKey(cmdName)) {
@@ -203,5 +219,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 Thread.sleep(500);
             } catch (InterruptedException e) {}
         }
+
+        return 0;
     }
 }

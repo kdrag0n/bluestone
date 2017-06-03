@@ -50,5 +50,6 @@ public class Command {
                 return false;
             }
         }
+        return true;
     }
 }
