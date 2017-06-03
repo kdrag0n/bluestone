@@ -235,7 +235,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
             jda.buildAsync();
             try {
-                Thread.sleep(500);
+                Thread.sleep(2000);
             } catch (InterruptedException e) {}
         }
 
