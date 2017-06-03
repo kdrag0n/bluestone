@@ -1,7 +1,5 @@
 package com.khronodragon.bluestone;
 
-import com.khronodragon.bluestone.cogs.*;
-import net.dv8tion.jda.bot.JDABot;
 import net.dv8tion.jda.bot.entities.ApplicationInfo;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
@@ -36,8 +34,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         super();
         ThreadFactory threadFactory = Executors.defaultThreadFactory();
         RejectedExecHandlerImpl rejectionHandler = new RejectedExecHandlerImpl();
-        threadExecutor = new ThreadPoolExecutor(3, 15, 25, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<Runnable>(2), threadFactory, rejectionHandler);
+        threadExecutor = new ThreadPoolExecutor(3, 100, 25, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<Runnable>(1), threadFactory, rejectionHandler);
     }
 
     private static void sprint(String text) {

@@ -26,9 +26,9 @@ public class Start {
         String type = auth.get("type").getAsString(); // "bot"
 
         AccountType accountType;
-        if (type == "bot") {
+        if (type.equals("bot")) {
             accountType = AccountType.BOT;
-        } else if (type == "user") {
+        } else if (type.equals("user")) {
             accountType = AccountType.CLIENT;
         } else {
             print("Warning: unrecognized account type! Use either 'client' (user) or 'bot' (bot). Assuming bot.");
