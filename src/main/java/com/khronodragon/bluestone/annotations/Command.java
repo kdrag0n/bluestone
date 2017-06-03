@@ -15,4 +15,5 @@ public @interface Command {
     String[] perms() default {};
     boolean guildOnly() default false;
     String[] aliases() default {};
+    boolean thread() default false;
 }

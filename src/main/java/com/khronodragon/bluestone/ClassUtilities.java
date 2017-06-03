@@ -6,6 +6,6 @@ public interface ClassUtilities {
     }
 
     default void printf(String fmt, Object... args) {
-        System.out.printf(fmt, args);
+        System.out.printf(fmt + "\n", args);
     }
 }

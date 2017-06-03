@@ -30,7 +30,8 @@ public abstract class Cog implements ClassUtilities {
 
                 com.khronodragon.bluestone.Command command = new com.khronodragon.bluestone.Command(
                         anno.name(), anno.desc(), anno.usage(), anno.hidden(),
-                        anno.perms(), anno.guildOnly(), anno.aliases(), method, this
+                        anno.perms(), anno.guildOnly(), anno.aliases(), method, this,
+                        anno.thread()
                 );
 
                 bot.commands.put(command.name, command);

@@ -13,25 +13,32 @@ import net.dv8tion.jda.core.events.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import org.reflections.Reflections;
 
 import javax.security.auth.login.LoginException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 public class Bot extends ListenerAdapter implements ClassUtilities {
-    private ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(2);
+    private ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(2);
+    public ThreadPoolExecutor threadExecutor;
     private HashSet<ScheduledFuture> tasks = new HashSet<>();
     public HashMap<String, Command> commands = new HashMap<>();
     public HashMap<String, Cog> cogs = new HashMap<>();
     public HashMap<String, AtomicInteger> commandCalls = new HashMap<>();
     public ApplicationInfo appInfo;
     public User owner;
+
+    public Bot() {
+        super();
+        ThreadFactory threadFactory = Executors.defaultThreadFactory();
+        RejectedExecHandlerImpl rejectionHandler = new RejectedExecHandlerImpl();
+        threadExecutor = new ThreadPoolExecutor(3, 15, 25, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<Runnable>(2), threadFactory, rejectionHandler);
+    }
 
     private static void sprint(String text) {
         System.out.println(text);
@@ -61,7 +68,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         long uid = jda.getSelfUser().getIdLong();
 
         if (jda.getSelfUser().isBot()) {
-            this.appInfo = ((JDABot) jda).getApplicationInfo().complete();
+            this.appInfo = jda.asBot().getApplicationInfo().complete();
             this.owner = appInfo.getOwner();
         } else {
             this.owner = jda.getSelfUser();
@@ -115,15 +122,29 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             }
         };
 
-        ScheduledFuture future = executor.scheduleAtFixedRate(task, 10, 6, TimeUnit.SECONDS);
+        ScheduledFuture future = scheduledExecutor.scheduleAtFixedRate(task, 10, 75, TimeUnit.SECONDS);
         tasks.add(future);
-        print("Going to register...");
-        new CoreCog(this).register();
-        new CosmeticCog(this).register();
-        new FunCog(this).register();
-        new MusicCog(this).register();
-        new ReplCog(this).register();
-        new UtilityCog(this).register();
+
+        Reflections reflector = new Reflections("com.khronodragon.bluestone.cogs");
+        Set<Class<? extends Cog>> cogClasses = reflector.getSubTypesOf(Cog.class);
+        for (Class cogClass: cogClasses) {
+            try {
+                Object obj = cogClass.getConstructor(this.getClass()).newInstance(this);
+                ((Cog) obj).register();
+            } catch (NoSuchMethodException e) {
+                print("Failed to register cog" + cogClass.getName());
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                print("Failed to register cog" + cogClass.getName());
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                print("Failed to register cog" + cogClass.getName());
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                print("Failed to register cog" + cogClass.getName());
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override

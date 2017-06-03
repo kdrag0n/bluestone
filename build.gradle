@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id 'idea'
-    id 'scala'
+//    id 'scala'
     id 'application'
     id 'com.github.johnrengelman.shadow' version '1.2.4'
 }
@@ -36,14 +36,15 @@ dependencies {
     compile 'com.sedmelluq:lavaplayer:1.2.36'
     compile 'com.mashape.unirest:unirest-java:1.4.9'
     compile 'com.google.guava:guava:22.0'
+    compile 'org.reflections:reflections:0.9.11'
 }
-
+/*
 tasks.withType(ScalaCompile) {
     configure(scalaCompileOptions.forkOptions) {
         memoryMaximumSize = '1G'
         jvmArgs = ['-XX:MaxPermSize=512M']
     }
 }
-
+*/
 compileJava.options.encoding = 'UTF-8'
-compileScala.options.encoding = 'UTF-8'
+// compileScala.options.encoding = 'UTF-8'
