@@ -2,12 +2,13 @@ package com.khronodragon.bluestone;
 
 import com.khronodragon.bluestone.annotations.Command;
 
+import java.awt.*;
 import java.lang.reflect.Method;
 
 public abstract class Cog implements ClassUtilities {
     public abstract String getName();
     public abstract String getDescription();
-    private final Bot bot;
+    protected final Bot bot;
 
     public Cog(Bot bot) {
         this.bot = bot;
@@ -42,5 +43,9 @@ public abstract class Cog implements ClassUtilities {
         }
 
         bot.cogs.put(this.getName(), this);
+    }
+
+    protected Color randomColor() {
+        return new Color(randint(0, (int) Math.pow(255, 3) - 1));
     }
 }

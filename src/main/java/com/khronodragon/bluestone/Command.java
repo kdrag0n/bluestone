@@ -54,7 +54,12 @@ public class Command {
                     event.getChannel().sendMessage(":x: A severe internal error occurred.").queue();
                 } catch (InvocationTargetException e) {
                     e.printStackTrace();
-                    event.getChannel().sendMessage(":x: A severe internal error occurred.").queue();
+                    Throwable cause = e.getCause();
+                    if (cause == null) {
+                        event.getChannel().sendMessage(":x: An unknown internal error occurred.").queue();
+                    } else {
+                        event.getChannel().sendMessage(String.format(":warning: Error in `%s%s`:```java\n%s```", prefix, invoker, bot.vagueTrace(cause))).queue();
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                     event.getChannel().sendMessage(String.format(":warning: Error in `%s%s`:```java\n%s```", prefix, invoker, e.toString())).queue();

@@ -11,6 +11,7 @@ import net.dv8tion.jda.core.events.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import org.apache.commons.lang3.StringUtils;
 import org.reflections.Reflections;
 
 import javax.security.auth.login.LoginException;
@@ -18,6 +19,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 public class Bot extends ListenerAdapter implements ClassUtilities {
@@ -29,6 +31,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public HashMap<String, AtomicInteger> commandCalls = new HashMap<>();
     public ApplicationInfo appInfo;
     public User owner;
+    private JDA jda;
 
     public Bot() {
         super();
@@ -36,6 +39,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         RejectedExecHandlerImpl rejectionHandler = new RejectedExecHandlerImpl();
         threadExecutor = new ThreadPoolExecutor(3, 100, 25, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<Runnable>(1), threadFactory, rejectionHandler);
+    }
+
+    public void setJda(JDA jda) {
+        this.jda = jda;
     }
 
     private static void sprint(String text) {
@@ -58,6 +65,17 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         } else {
             return sInfo.getShardTotal();
         }
+    }
+
+    public String vagueTrace(Throwable e) {
+        StackTraceElement[] elements = e.getStackTrace();
+        StackTraceElement[] limitedElems = {elements[0], elements[1]};
+        List<String> stack = new ArrayList<>();
+        stack.add(e.toString());
+        for (StackTraceElement elem: limitedElems) {
+            stack.add("> " + elem.toString());
+        }
+        return StringUtils.join(stack, "\n  ");
     }
 
     @Override
@@ -179,12 +197,11 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         Message message = event.getMessage();
         String content = message.getRawContent();
         MessageChannel channel = event.getChannel();
-        long responseNum = event.getResponseNumber();
 
         if (content.startsWith(prefix)) {
             ArrayList<String> args = new ArrayList<>(Arrays.asList(content.split("\\s")));
             String cmdName = args.get(0).substring(prefix.length());
-            args.remove(args.size() - 1);
+            args.remove(0);
 
             if (commands.containsKey(cmdName)) {
                 Command command = commands.get(cmdName);
@@ -195,10 +212,15 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     channel.sendMessage(":x: A severe internal error occurred.").queue();
                 } catch (InvocationTargetException e) {
                     e.printStackTrace();
-                    channel.sendMessage(":x: A severe internal error occurred.").queue();
+                    Throwable cause = e.getCause();
+                    if (cause == null) {
+                        channel.sendMessage(":x: An unknown internal error occurred.").queue();
+                    } else {
+                        channel.sendMessage(String.format(":warning: Error in `%s%s`:```java\n%s```", prefix, cmdName, vagueTrace(cause))).queue();
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    channel.sendMessage(String.format(":warning: Error in `%s%s`:```java\n%s```", prefix, cmdName, e.toString())).queue();
+                    channel.sendMessage(":x: A severe internal error occurred.").queue();
                 }
 
                 if (commandCalls.containsKey(command.name)) {
@@ -207,6 +229,34 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     commandCalls.put(command.name, new AtomicInteger(1));
                 }
             }
+        }
+    }
+
+    public Message waitForMessage(float timeout, Predicate<Message> check) {
+        ContainerCell<Message> lock = new ContainerCell<>();
+        MessageWaitEventListener listener = new MessageWaitEventListener(lock, check);
+        jda.addEventListener(listener);
+
+        synchronized (lock) {
+            if (timeout < 0) {
+                try {
+                    lock.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    jda.removeEventListener(listener);
+                    return null;
+                }
+            } else {
+                long ltime = (long) timeout;
+                try {
+                    lock.wait(ltime, (int) (timeout - ltime) * (int) 1e9);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    jda.removeEventListener(listener);
+                    return null;
+                }
+            }
+            return lock.getValue();
         }
     }
 
@@ -219,9 +269,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
 
         for (int shardId: IntStream.range(0, shardCount).toArray()) {
-            JDABuilder jda = new JDABuilder(accountType)
+            Bot bot = new Bot();
+            JDABuilder builder = new JDABuilder(accountType)
                     .setToken(token)
-                    .addEventListener(new Bot())
+                    .addEventListener(bot)
                     .setAudioEnabled(true)
                     .setAutoReconnect(true)
                     .setWebSocketTimeout(120000)
@@ -230,10 +281,11 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     .setGame(Game.of("something"));
 
             if (shardCount > 1) {
-                jda.useSharding(shardId, shardCount);
+                builder.useSharding(shardId, shardCount);
             }
 
-            jda.buildAsync();
+            JDA jda = builder.buildAsync();
+            bot.setJda(jda);
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {}

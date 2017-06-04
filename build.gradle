@@ -4,6 +4,7 @@ plugins {
 //    id 'scala'
     id 'application'
     id 'com.github.johnrengelman.shadow' version '1.2.4'
+    id 'com.github.hierynomus.jython' version '0.6.0'
 }
 
 group 'com.khronodragon'
@@ -31,12 +32,18 @@ task fatJar(type: Jar) {
 
 dependencies {
     compile 'org.scala-lang:scala-library:2.12.2'
+    compile 'org.scala-lang:scala-compiler:2.12.2'
     compile 'net.dv8tion:JDA:3.1.1_210'
     compile 'com.google.code.gson:gson:2.8.0'
-    compile 'com.sedmelluq:lavaplayer:1.2.36'
+    compile 'com.sedmelluq:lavaplayer:1.2.39'
     compile 'com.mashape.unirest:unirest-java:1.4.9'
     compile 'com.google.guava:guava:22.0'
     compile 'org.reflections:reflections:0.9.11'
+    compile 'org.python:jython-standalone:2.7.1b3'
+    compile 'org.slf4j:slf4j-simple:1.7.25'
+    compile 'org.codehaus.groovy:groovy-jsr223:2.4.11'
+//    compile 'org.luaj:luaj-jse:3.0.1'
+//    compile 'org.jruby:jruby-complete:9.1.10.0'
 }
 /*
 tasks.withType(ScalaCompile) {

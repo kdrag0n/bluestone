@@ -1,0 +1,3 @@
+org.codehaus.groovy.jsr223.GroovyScriptEngineFactory
+org.python.jsr223.PyScriptEngineFactory
+scala.tools.nsc.interpreter.Scripted$Factory
