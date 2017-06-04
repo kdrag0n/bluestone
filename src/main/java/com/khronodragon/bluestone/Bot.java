@@ -71,7 +71,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         StackTraceElement[] elements = e.getStackTrace();
         StackTraceElement[] limitedElems = {elements[0], elements[1]};
         List<String> stack = new ArrayList<>();
-        stack.add(StringUtils.replaceOnce(e.toString(), "java.lang.", ""));
+        stack.add(e.getClass().getSimpleName() + ": " + e.getMessage());
         for (StackTraceElement elem: limitedElems) {
             String base = "> " + elem.getClassName() + "." + elem.getMethodName();
             base += elem.isNativeMethod() ? "(native)" : "()";
@@ -201,8 +201,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         MessageChannel channel = event.getChannel();
 
         if (content.startsWith(prefix)) {
-            ArrayList<String> args = new ArrayList<>(Arrays.asList(content.split("\\s")));
-            String cmdName = args.get(0).substring(prefix.length());
+            ArrayList<String> args = new ArrayList<>(Arrays.asList(content.split("\\s+")));
+            String cmdName = args.get(0).substring(prefix.length()).toLowerCase();
             args.remove(0);
 
             if (commands.containsKey(cmdName)) {
@@ -213,11 +213,12 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     e.printStackTrace();
                     channel.sendMessage(":x: A severe internal error occurred.").queue();
                 } catch (InvocationTargetException e) {
-                    e.printStackTrace();
                     Throwable cause = e.getCause();
                     if (cause == null) {
+                        e.printStackTrace();
                         channel.sendMessage(":x: An unknown internal error occurred.").queue();
                     } else {
+                        cause.printStackTrace();
                         channel.sendMessage(String.format(":warning: Error in `%s%s`:```java\n%s```", prefix, cmdName, vagueTrace(cause))).queue();
                     }
                 } catch (Exception e) {

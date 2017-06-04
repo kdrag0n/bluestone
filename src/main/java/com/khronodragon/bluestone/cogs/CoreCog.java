@@ -6,10 +6,8 @@ import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.annotations.Command;
 import net.dv8tion.jda.core.EmbedBuilder;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class CoreCog extends Cog {
     public CoreCog(Bot bot) {
@@ -51,13 +49,29 @@ public class CoreCog extends Cog {
         }
 
         List<EmbedBuilder> pages = new ArrayList<>();
-        Map<String, List<Command>> cogAssign = new HashMap<>();
         Map<String, List<String>> fields = new HashMap<>();
         int chars = 0;
 
-        EmbedBuilder emb = new EmbedBuilder()
+        EmbedBuilder emb = newEmbedWithAuthor(ctx)
                 .setColor(randomColor())
                 .setTitle("Bot Help");
+
+        if (ctx.args.size() == 0) {
+            for (com.khronodragon.bluestone.Command cmd: new HashSet<>(bot.commands.values())) {
+                if (!cmd.hidden) {
+                    String cName = cmd.instance.getName();
+                    String entry = "\u2022 **" + cmd.name + "**: *" + cmd.description + "*";
+                    if (fields.containsKey(cName)) {
+                        fields.get(cName).add(entry);
+                    } else {
+                        fields.put(cName, new ArrayList<>(Arrays.asList(entry)));
+                    }
+                }
+            }
+        } else {
+            for (String item: ctx.args.subList(0, 24)) {
+            }
+        }
     }
 
     @Command(name="extest", desc="For testing exception handling.")

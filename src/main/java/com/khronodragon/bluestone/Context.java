@@ -32,7 +32,6 @@ public class Context {
     public final String prefix;
     public final List<String> args;
     public final String invoker;
-    public final User me;
     public final Date invokeTime = new Date();
 
     public Context(Bot bot, MessageReceivedEvent event, List<String> args,
@@ -58,7 +57,6 @@ public class Context {
         this.prefix = prefix;
         this.args = args;
         this.invoker = invoker;
-        this.me = author;
     }
 
     public RestAction<Message> send(String msg) {

@@ -1,6 +1,9 @@
 package com.khronodragon.bluestone;
 
 import com.khronodragon.bluestone.annotations.Command;
+import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.User;
 
 import java.awt.*;
 import java.lang.reflect.Method;
@@ -47,5 +50,42 @@ public abstract class Cog implements ClassUtilities {
 
     protected Color randomColor() {
         return new Color(randint(0, (int) Math.pow(255, 3) - 1));
+    }
+
+    protected EmbedBuilder newEmbedWithAuthor(Context ctx) {
+        String name;
+        String url = "";
+        String iconUrl;
+
+        if (ctx.guild != null) {
+            Member me = ctx.guild.getSelfMember();
+            name = me.getEffectiveName();
+            iconUrl = me.getUser().getEffectiveAvatarUrl();
+        } else {
+            User me = ctx.jda.getSelfUser();
+            name = me.getName();
+            iconUrl = me.getEffectiveAvatarUrl();
+        }
+
+        return new EmbedBuilder()
+                .setAuthor(name, url, iconUrl);
+    }
+
+    protected EmbedBuilder newEmbedWithAuthor(Context ctx, String url) {
+        String name;
+        String iconUrl;
+
+        if (ctx.guild != null) {
+            Member me = ctx.guild.getSelfMember();
+            name = me.getEffectiveName();
+            iconUrl = me.getUser().getEffectiveAvatarUrl();
+        } else {
+            User me = ctx.jda.getSelfUser();
+            name = me.getName();
+            iconUrl = me.getEffectiveAvatarUrl();
+        }
+
+        return new EmbedBuilder()
+                .setAuthor(name, url, iconUrl);
     }
 }

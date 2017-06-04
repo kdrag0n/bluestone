@@ -19,7 +19,7 @@ public class Command {
     public final boolean needThread;
     private List<Method> checks = new ArrayList<>();
     private final Method func;
-    private final Cog instance;
+    public final Cog instance;
 
     public Command(String name, String desc, String usage, boolean hidden,
                    String[] permsRequired, boolean guildOnly,
@@ -53,11 +53,12 @@ public class Command {
                     e.printStackTrace();
                     event.getChannel().sendMessage(":x: A severe internal error occurred.").queue();
                 } catch (InvocationTargetException e) {
-                    e.printStackTrace();
                     Throwable cause = e.getCause();
                     if (cause == null) {
+                        e.printStackTrace();
                         event.getChannel().sendMessage(":x: An unknown internal error occurred.").queue();
                     } else {
+                        cause.printStackTrace();
                         event.getChannel().sendMessage(String.format(":warning: Error in `%s%s`:```java\n%s```", prefix, invoker, bot.vagueTrace(cause))).queue();
                     }
                 } catch (Exception e) {
