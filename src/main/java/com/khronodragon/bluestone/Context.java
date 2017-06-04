@@ -5,6 +5,7 @@ import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.requests.RestAction;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -31,6 +32,7 @@ public class Context {
     public final String prefix;
     public final List<String> args;
     public final String invoker;
+    public final User me;
     public final Date invokeTime = new Date();
 
     public Context(Bot bot, MessageReceivedEvent event, List<String> args,
@@ -56,9 +58,25 @@ public class Context {
         this.prefix = prefix;
         this.args = args;
         this.invoker = invoker;
+        this.me = author;
     }
 
     public RestAction<Message> send(String msg) {
+        if (msg.length() > 2000) {
+            String truncateString = "**...too long**";
+            if (StringUtils.countMatches(msg, "```") % 2 == 1) {
+                truncateString = "```" + truncateString;
+            }
+            msg = msg.substring(0, msg.length() - truncateString.length() - 1);
+        }
+
+        msg = msg.replace("@everyone", "@\u200beveryone")
+                .replace("@here", "@\u200bhere");
+
+        return channel.sendMessage(msg);
+    }
+
+    public RestAction<Message> rawSend(String msg) {
         return channel.sendMessage(msg);
     }
 

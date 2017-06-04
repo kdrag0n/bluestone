@@ -4,6 +4,12 @@ import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.annotations.Command;
+import net.dv8tion.jda.core.EmbedBuilder;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class CoreCog extends Cog {
     public CoreCog(Bot bot) {
@@ -17,7 +23,7 @@ public class CoreCog extends Cog {
         return "The core, essential cog to keep the bot running.";
     }
 
-    @Command(name="ping", desc="Ping, pong!", aliases={"alias_test1", "alias_test2"})
+    @Command(name="ping", desc="Ping, pong!")
     public void cmdPing(Context ctx) {
         String msg = "Pong! WebSockets: " + ctx.jda.getPing() + "ms";
         long beforeTime = System.currentTimeMillis();
@@ -37,16 +43,25 @@ public class CoreCog extends Cog {
 
     @Command(name="help", desc="Because we all need help.")
     public void cmdHelp(Context ctx) {
-        ctx.send("**Bluestone by Dragon5232**\n" +
-                "\n" +
-                "Commands:\n" +
-                "  \\u2022 help - Show this help.\n" +
-                "  \\u2022 ping - Ping, pong!\n" +
-                "  \\u2022 rnum - Get the current response number.\n" +
-                "\n" +
-                "That's it for now.\n" +
-                "Remember that this is a huge work in progress!\n" +
-                "**IM REDOING THIS SOON!**\n" +
-                "**like as soon as the command stuff starts working**").queue();
+        boolean sendPublic = false;
+        if (ctx.invoker.startsWith("p")) {
+            if (ctx.author.getIdLong() == bot.owner.getIdLong()) {
+                sendPublic = true;
+            }
+        }
+
+        List<EmbedBuilder> pages = new ArrayList<>();
+        Map<String, List<Command>> cogAssign = new HashMap<>();
+        Map<String, List<String>> fields = new HashMap<>();
+        int chars = 0;
+
+        EmbedBuilder emb = new EmbedBuilder()
+                .setColor(randomColor())
+                .setTitle("Bot Help");
+    }
+
+    @Command(name="extest", desc="For testing exception handling.")
+    public void cmdEtest(Context ctx) throws Exception {
+        throw new Exception("Testing exception handling in commands");
     }
 }
