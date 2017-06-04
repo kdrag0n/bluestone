@@ -71,9 +71,11 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         StackTraceElement[] elements = e.getStackTrace();
         StackTraceElement[] limitedElems = {elements[0], elements[1]};
         List<String> stack = new ArrayList<>();
-        stack.add(e.toString());
+        stack.add(StringUtils.replaceOnce(e.toString(), "java.lang.", ""));
         for (StackTraceElement elem: limitedElems) {
-            stack.add("> " + elem.toString());
+            String base = "> " + elem.getClassName() + "." + elem.getMethodName();
+            base += elem.isNativeMethod() ? "(native)" : "()";
+            stack.add(base);
         }
         return StringUtils.join(stack, "\n  ");
     }
