@@ -1,10 +1,12 @@
 package com.khronodragon.bluestone.cogs;
 
-import com.khronodragon.bluestone.Bot;
-import com.khronodragon.bluestone.Cog;
-import com.khronodragon.bluestone.Context;
+import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.core.entities.MessageEmbed;
+import net.dv8tion.jda.core.entities.User;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -21,7 +23,22 @@ public class CoreCog extends Cog {
         return "The core, essential cog to keep the bot running.";
     }
 
-    @Command(name="ping", desc="Ping, pong!")
+    @Command(name = "say", desc = "Say something! Say it!", aliases = {"echo"}, usage = "[message]")
+    public void cmdSay(Context ctx) {
+        if (ctx.rawArgs.length() == 0) {
+            ctx.send(":x: I need text to say!").queue();
+            return;
+        }
+
+        ctx.send(ctx.rawArgs).queue();
+    }
+
+    @Command(name = "test", desc = "Make sure I work.")
+    public void cmdTest(Context ctx) {
+        ctx.send(ctx.mention + " Everything is looking good! :smile:").queue();
+    }
+
+    @Command(name = "ping", desc = "Ping, pong!")
     public void cmdPing(Context ctx) {
         String msg = "Pong! WebSockets: " + ctx.jda.getPing() + "ms";
         long beforeTime = System.currentTimeMillis();
@@ -34,13 +51,9 @@ public class CoreCog extends Cog {
         });
     }
 
-    @Command(name="rnum", desc="Get the current response number.")
-    public void cmdRnum(Context ctx) {
-        ctx.send("The current response number is " + ctx.responseNum + ".").queue();
-    }
-
-    @Command(name="help", desc="Because we all need help.")
+    @Command(name = "help", desc = "Because we all need help.", usage = "{commands and/or cogs}", thread = true)
     public void cmdHelp(Context ctx) {
+        int charLimit = ctx.jda.getSelfUser().isBot() ? MessageEmbed.EMBED_MAX_LENGTH_BOT : MessageEmbed.EMBED_MAX_LENGTH_CLIENT;
         boolean sendPublic = false;
         if (ctx.invoker.startsWith("p")) {
             if (ctx.author.getIdLong() == bot.owner.getIdLong()) {
@@ -48,9 +61,8 @@ public class CoreCog extends Cog {
             }
         }
 
-        List<EmbedBuilder> pages = new ArrayList<>();
+        List<MessageEmbed> pages = new ArrayList<>();
         Map<String, List<String>> fields = new HashMap<>();
-        int chars = 0;
 
         EmbedBuilder emb = newEmbedWithAuthor(ctx)
                 .setColor(randomColor())
@@ -61,6 +73,7 @@ public class CoreCog extends Cog {
                 if (!cmd.hidden) {
                     String cName = cmd.instance.getName();
                     String entry = "\u2022 **" + cmd.name + "**: *" + cmd.description + "*";
+
                     if (fields.containsKey(cName)) {
                         fields.get(cName).add(entry);
                     } else {
@@ -69,13 +82,104 @@ public class CoreCog extends Cog {
                 }
             }
         } else {
-            for (String item: ctx.args.subList(0, 24)) {
+            for (String item: ctx.args.subList(0, Math.min(24, ctx.args.size()))) {
+                String litem = item.toLowerCase();
+                boolean done = false;
+
+                if (bot.cogs.containsKey(item)) {
+                    Cog cog = bot.cogs.get(item);
+                    for (com.khronodragon.bluestone.Command cmd: new HashSet<>(bot.commands.values())) {
+                        if (cmd.instance == cog && !cmd.hidden) {
+                            String cName = cmd.instance.getName();
+                            String entry = "\u2022 **" + cmd.name + "**: *" + cmd.description + "*";
+
+                            if (fields.containsKey(cName)) {
+                                fields.get(cName).add(entry);
+                            } else {
+                                fields.put(cName, new ArrayList<>(Arrays.asList(entry)));
+                            }
+                        }
+                    }
+                    done = true;
+                }
+                if (bot.commands.containsKey(litem)) {
+                    com.khronodragon.bluestone.Command cmd = bot.commands.get(litem);
+                    String field = "`";
+                    if (cmd.aliases.length == 0) {
+                        field += cmd.name + "`";
+                    } else {
+                        field += String.join("/", cmd.aliases);
+                    }
+                    field += "\n\n" + cmd.description;
+                    fields.put(litem, new ArrayList<>(Arrays.asList(field)));
+                    done = true;
+                }
+                if (!done) {
+                    fields.put(item, new ArrayList<>(Arrays.asList("Not found.")));
+                }
             }
+        }
+
+        int chars = embedAuthorChars(ctx);
+        for (String cog: fields.keySet()) {
+            List<String> field = fields.get(cog);
+            String content = String.join("\n", field);
+            if (content.length() == 0) {
+                content = "No visible commands.";
+            }
+
+            int preLen = content.length() + cog.length();
+            if (chars + preLen > charLimit) {
+                pages.add(emb.build());
+                emb = newEmbedWithAuthor(ctx)
+                        .setColor(randomColor());
+                chars = embedAuthorChars(ctx);
+            }
+
+            if (content.length() <= MessageEmbed.VALUE_MAX_LENGTH) {
+                emb.addField(cog, content, false);
+            } else {
+                Paginator pager = new Paginator(1024);
+                field.stream().forEach(s -> pager.addLine(s));
+
+                for (String page: pager.getPages()) {
+                    emb.addField(cog, page, true);
+                }
+            }
+            chars += preLen;
+        }
+        pages.add(emb.build());
+
+        MessageDestination destination = MessageDestination.AUTHOR;
+        if (sendPublic || bot.isSelfbot()) {
+            destination = MessageDestination.CHANNEL;
+        } else {
+            if (pages.size() < 2 && pages.get(0).getLength() < 1012) {
+                destination = MessageDestination.CHANNEL;
+            }
+        }
+        MessageChannel channel = destination.getChannel(ctx);
+
+        for (MessageEmbed page: pages) {
+            channel.sendMessage(page).queue();
+        }
+
+        if (destination == MessageDestination.AUTHOR && ctx.guild != null) {
+            ctx.send("**__I sent you my help, check your DMs!__**").queue();
         }
     }
 
-    @Command(name="extest", desc="For testing exception handling.")
+    private int embedAuthorChars(Context ctx) {
+        if (ctx.guild != null) {
+            return ctx.guild.getSelfMember().getEffectiveName().length();
+        } else {
+            return ctx.jda.getSelfUser().getName().length();
+        }
+    }
+
+    @Command(name = "extest", desc = "For testing exception handling.")
     public void cmdEtest(Context ctx) throws Exception {
+        ctx.send("Raw arg test: `" + ctx.rawArgs + "`").queue();
         throw new Exception("Testing exception handling in commands");
     }
 }

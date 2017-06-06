@@ -16,7 +16,6 @@ public class Context {
     public final Message message;
     public final Message msg;
     public final User author;
-    public final long responseNum;
     public final Guild guild;
     public final MessageChannel channel;
     public final Member member;
@@ -32,6 +31,8 @@ public class Context {
     public final String prefix;
     public final List<String> args;
     public final String invoker;
+    public final String rawArgs;
+    public final String mention;
     public final Date invokeTime = new Date();
 
     public Context(Bot bot, MessageReceivedEvent event, List<String> args,
@@ -41,7 +42,6 @@ public class Context {
         this.message = event.getMessage();
         this.msg = message;
         this.author = event.getAuthor();
-        this.responseNum = event.getResponseNumber();
         this.guild = event.getGuild();
         this.channel = event.getChannel();
         this.member = event.getMember();
@@ -57,6 +57,8 @@ public class Context {
         this.prefix = prefix;
         this.args = args;
         this.invoker = invoker;
+        this.mention = author.getAsMention();
+        this.rawArgs = StringUtils.strip(content.substring(Math.min(prefix.length() + invoker.length() + 1, prefix.length() + invoker.length())));
     }
 
     public RestAction<Message> send(String msg) {

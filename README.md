@@ -27,3 +27,6 @@ and put it in the JSON.
 
 ### Enjoy!
 Don't forget that this project is still experimental.
+
+#Credits
+ - The `Strftime` class from Apache Tomcat is included under the Apache 2.0 License.

@@ -1,11 +1,12 @@
 package com.khronodragon.bluestone;
 
+import com.khronodragon.bluestone.errors.CheckFailure;
+import com.khronodragon.bluestone.errors.GuildOnlyError;
+import com.khronodragon.bluestone.errors.PermissionError;
+import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.bot.entities.ApplicationInfo;
-import net.dv8tion.jda.core.AccountType;
-import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.*;
 import net.dv8tion.jda.core.JDA.ShardInfo;
-import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -16,10 +17,13 @@ import org.reflections.Reflections;
 
 import javax.security.auth.login.LoginException;
 import java.lang.reflect.InvocationTargetException;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class Bot extends ListenerAdapter implements ClassUtilities {
@@ -31,18 +35,34 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public HashMap<String, AtomicInteger> commandCalls = new HashMap<>();
     public ApplicationInfo appInfo;
     public User owner;
+    public final DataStore store;
     private JDA jda;
+    private ShardUtil shardUtil;
 
     public Bot() {
         super();
         ThreadFactory threadFactory = Executors.defaultThreadFactory();
         RejectedExecHandlerImpl rejectionHandler = new RejectedExecHandlerImpl();
         threadExecutor = new ThreadPoolExecutor(3, 100, 25, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<Runnable>(1), threadFactory, rejectionHandler);
+                new ArrayBlockingQueue<>(1), threadFactory, rejectionHandler);
+
+        store = new DataStore();
     }
 
     public void setJda(JDA jda) {
         this.jda = jda;
+    }
+
+    public JDA getJda() {
+        return jda;
+    }
+
+    public void setShardUtil(ShardUtil util) {
+        shardUtil = util;
+    }
+
+    public ShardUtil getShardUtil() {
+        return shardUtil;
     }
 
     private static void sprint(String text) {
@@ -177,7 +197,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     @Override
     public void onShutdown(ShutdownEvent event) {
-        printf("[Shard %d] Finished shutting down", getShardNum(event));
+        printf("[Shard %d] Shutting down", getShardNum(event));
+        synchronized (this) {
+            notifyAll();
+        }
     }
 
     @Override
@@ -221,6 +244,14 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                         cause.printStackTrace();
                         channel.sendMessage(String.format(":warning: Error in `%s%s`:```java\n%s```", prefix, cmdName, vagueTrace(cause))).queue();
                     }
+                } catch (PermissionError e) {
+                    channel.sendMessage(String.format("%s Not enough permissions for `%s%s`! **%s** will work.", author.getAsMention(), prefix, cmdName,
+                            Strings.smartJoin(command.getFriendlyPerms()))).queue();
+                } catch (GuildOnlyError e) {
+                    channel.sendMessage("Sorry, that command only works in a guild.").queue();
+                } catch (CheckFailure e) {
+                    print(e.toString());
+                    channel.sendMessage(String.format("%s A check for `%s%s` failed. Do you not have permissions?", author.getAsMention(), prefix, cmdName)).queue();
                 } catch (Exception e) {
                     e.printStackTrace();
                     channel.sendMessage(":x: A severe internal error occurred.").queue();
@@ -236,7 +267,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     }
 
     public Message waitForMessage(float timeout, Predicate<Message> check) {
-        ContainerCell<Message> lock = new ContainerCell<>();
+        AtomicReference<Message> lock = new AtomicReference<>();
         MessageWaitEventListener listener = new MessageWaitEventListener(lock, check);
         jda.addEventListener(listener);
 
@@ -259,8 +290,32 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     return null;
                 }
             }
-            return lock.getValue();
+            return lock.get();
         }
+    }
+
+    public boolean isSelfbot() {
+        return !jda.getSelfUser().isBot();
+    }
+
+    public static String formatUptime() {
+        return "WIP";
+    }
+
+    public static String formatMemory() {
+        Runtime runtime = Runtime.getRuntime();
+        NumberFormat format = NumberFormat.getInstance();
+        return format.format(runtime.totalMemory() / 1048576.0f) + " MB";
+    }
+
+    public static String formatDuration(long duration) {
+        long h = duration / 3600;
+        long m = (duration % 3600) / 60;
+        long s = duration % 60;
+        String sh = (h > 0 ? String.valueOf(h) + " " + "h" : "");
+        String sm = (m < 10 && m > 0 && h > 0 ? "0" : "") + (m > 0 ? (h > 0 && s == 0 ? String.valueOf(m) : String.valueOf(m) + " " + "min") : "");
+        String ss = (s == 0 && (h > 0 || m > 0) ? "" : (s < 10 && (h > 0 || m > 0) ? "0" : "") + String.valueOf(s) + " " + "sec");
+        return sh + (h > 0 ? " " : "") + sm + (m > 0 ? " " : "") + ss;
     }
 
     public static int start(String token, int shardCount, AccountType accountType) throws LoginException, RateLimitedException {
@@ -271,24 +326,77 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             return 1;
         }
 
+        ShardUtil shardUtil = new ShardUtil(shardCount);
+
         for (int shardId: IntStream.range(0, shardCount).toArray()) {
-            Bot bot = new Bot();
-            JDABuilder builder = new JDABuilder(accountType)
-                    .setToken(token)
-                    .addEventListener(bot)
-                    .setAudioEnabled(true)
-                    .setAutoReconnect(true)
-                    .setWebSocketTimeout(120000)
-                    .setBulkDeleteSplittingEnabled(false)
-                    .setStatus(OnlineStatus.ONLINE)
-                    .setGame(Game.of("something"));
+            Runnable monitor = () -> {
+                while (true) {
+                    Bot bot = new Bot();
+                    JDABuilder builder = new JDABuilder(accountType)
+                            .setToken(token)
+                            .addEventListener(bot)
+                            .setAudioEnabled(true)
+                            .setAutoReconnect(true)
+                            .setWebSocketTimeout(120000)
+                            .setBulkDeleteSplittingEnabled(false)
+                            .setStatus(OnlineStatus.ONLINE)
+                            .setGame(Game.of("something"));
 
-            if (shardCount > 1) {
-                builder.useSharding(shardId, shardCount);
-            }
+                    if (shardCount != 1) {
+                        builder.useSharding(shardId, shardCount);
+                    }
 
-            JDA jda = builder.buildAsync();
-            bot.setJda(jda);
+                    JDA jda;
+                    try {
+                        jda = builder.buildAsync();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        System.out.printf("[Monitor: Shard %d] Failed to log in.");
+                        if (shardCount == 1) {
+                            System.exit(1);
+                        }
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException ex) {}
+                        continue;
+                    }
+                    bot.setJda(jda);
+                    shardUtil.setShard(shardId, bot);
+                    bot.setShardUtil(shardUtil);
+
+                    synchronized (bot) {
+                        try {
+                            bot.wait();
+                        } catch (InterruptedException e) {
+                            while (jda.getStatus() == JDA.Status.CONNECTED) {
+                                try {
+                                    Thread.sleep(25);
+                                } catch (InterruptedException ex) {
+                                    try {
+                                        Thread.sleep(15000);
+                                    } catch (InterruptedException exx) {}
+                                }
+                            }
+                        }
+                    }
+
+                    if (jda.getStatus() != JDA.Status.DISCONNECTED) {
+                        if (jda.getStatus() == JDA.Status.CONNECTED) {
+                            jda.getPresence().setStatus(OnlineStatus.INVISIBLE);
+                        }
+                        jda.shutdown();
+                    }
+                    if (shardCount == 1) {
+                        System.exit(0);
+                    }
+
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {}
+                }
+            };
+
+            new Thread(monitor).start();
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {}

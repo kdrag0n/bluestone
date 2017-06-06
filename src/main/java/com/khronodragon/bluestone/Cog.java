@@ -54,7 +54,6 @@ public abstract class Cog implements ClassUtilities {
 
     protected EmbedBuilder newEmbedWithAuthor(Context ctx) {
         String name;
-        String url = "";
         String iconUrl;
 
         if (ctx.guild != null) {
@@ -68,7 +67,7 @@ public abstract class Cog implements ClassUtilities {
         }
 
         return new EmbedBuilder()
-                .setAuthor(name, url, iconUrl);
+                .setAuthor(name, null, iconUrl);
     }
 
     protected EmbedBuilder newEmbedWithAuthor(Context ctx, String url) {

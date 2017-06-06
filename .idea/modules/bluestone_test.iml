@@ -13,8 +13,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="bluestone_main" />
-    <orderEntry type="library" name="Gradle: org.scala-lang:scala-library:2.12.2" level="project" />
-    <orderEntry type="library" name="Gradle: org.scala-lang:scala-compiler:2.12.2" level="project" />
     <orderEntry type="library" name="Gradle: net.dv8tion:JDA:3.1.1_210" level="project" />
     <orderEntry type="library" name="Gradle: com.google.code.gson:gson:2.8.0" level="project" />
     <orderEntry type="library" name="Gradle: com.sedmelluq:lavaplayer:1.2.39" level="project" />
@@ -24,8 +22,6 @@
     <orderEntry type="library" name="Gradle: org.python:jython-standalone:2.7.1b3" level="project" />
     <orderEntry type="library" name="Gradle: org.slf4j:slf4j-simple:1.7.25" level="project" />
     <orderEntry type="library" name="Gradle: org.codehaus.groovy:groovy-jsr223:2.4.11" level="project" />
-    <orderEntry type="library" name="Gradle: org.scala-lang:scala-reflect:2.12.2" level="project" />
-    <orderEntry type="library" name="Gradle: org.scala-lang.modules:scala-xml_2.12:1.0.6" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-lang3:3.5" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-collections4:4.1" level="project" />
     <orderEntry type="library" name="Gradle: org.json:json:20160810" level="project" />

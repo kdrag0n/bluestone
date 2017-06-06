@@ -38,7 +38,7 @@ public class ReplCog extends Cog {
                 "```javascript", ""), "`"), "`");
     }
 
-    @Command(name="repl", desc="A multilingual REPL, in Discord!", perms={"owner"}, thread=true)
+    @Command(name = "repl", desc = "A multilingual REPL, in Discord!", perms = {"owner"}, usage = "[language] {flags}", thread=true)
     public void cmdRepl(Context ctx) {
         if (ctx.args.size() < 1) {
             ctx.send("You need to specify a language, like `scala` or `js`!").queue();
@@ -116,7 +116,3 @@ public class ReplCog extends Cog {
         }
     }
 }
-
-/*
-String code = content.replaceFirst("```scala", "").replaceFirst("```js", "").replaceFirst("```javascript", "").stripPrefix("`").stripSuffix("`");
- */
