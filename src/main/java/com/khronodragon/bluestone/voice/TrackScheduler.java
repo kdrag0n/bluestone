@@ -17,10 +17,12 @@ public class TrackScheduler extends AudioEventAdapter {
     public final Queue<AudioTrack> queue = new LinkedList<>();
     public final Map<AudioTrack, MessageChannel> channelMap = new HashMap<>();
     AudioTrack lastTrack;
-    AudioTrack current;
+    public AudioTrack current;
+    public AudioState state;
 
-    TrackScheduler(AudioPlayer player) {
+    TrackScheduler(AudioPlayer player, AudioState state) {
         this.player = player;
+        this.state = state;
     }
 
     public void queue(AudioTrack track) {
@@ -29,12 +31,19 @@ public class TrackScheduler extends AudioEventAdapter {
     }
 
     public void queue(AudioTrack track, MessageChannel textChannel) {
-        queue(track);
         channelMap.put(track, textChannel);
+        queue(track);
     }
 
     public void nextTrack() {
-        player.startTrack(queue.poll(), false);
+        if (queue.size() > 0) {
+            player.startTrack(queue.poll(), false);
+        } else {
+            player.destroy();
+            state.guild.getAudioManager().closeAudioConnection();
+            state.guild.getAudioManager().setSendingHandler(new DummySendHandler());
+            state.parent.audioStates.remove(state.guild.getIdLong());
+        }
     }
 
     @Override
@@ -42,32 +51,30 @@ public class TrackScheduler extends AudioEventAdapter {
         current = track;
         if (channelMap.containsKey(track)) {
             AudioTrackInfo info = track.getInfo();
-            channelMap.get(track).sendMessage("Now playing **" + mentionClean(info.title) + "**, duration **" + Bot.formatDuration(track.getDuration()) + "**").queue();
+            channelMap.get(track).sendMessage(":arrow_forward: **" + mentionClean(info.title) + "**, length **" + Bot.formatDuration(info.length / 1000) + "**").queue();
         }
     }
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         lastTrack = track;
-        if (endReason.mayStartNext) {
-            if (repeating) {
-                player.startTrack(track.makeClone(), false);
-                if (channelMap.containsKey(track)) {
-                    AudioTrackInfo info = track.getInfo();
-                    channelMap.get(track).sendMessage("Now playing **" + mentionClean(info.title) + "**, duration **" + Bot.formatDuration(track.getDuration()) + "**").queue();
+        current = null;
+        try {
+            if (endReason.mayStartNext) {
+                if (repeating) {
+                    AudioTrack clone = track.makeClone();
+                    if (channelMap.containsKey(track)) {
+                        channelMap.put(clone, channelMap.get(track));
+                    }
+                    player.startTrack(clone, false);
+                } else {
+                    nextTrack();
                 }
-            } else {
-                nextTrack();
             }
-        } else if (endReason == endReason.CLEANUP) {
+        } finally {
             if (channelMap.containsKey(track)) {
-                queue(track.makeClone(), channelMap.get(track));
-            } else {
-                queue(track.makeClone());
+                channelMap.remove(track);
             }
-        }
-        if (channelMap.containsKey(track)) {
-            channelMap.remove(track);
         }
     }
 
@@ -81,7 +88,7 @@ public class TrackScheduler extends AudioEventAdapter {
     @Override
     public void onTrackStuck(AudioPlayer player, AudioTrack track, long thresholdMs) {
         if (channelMap.containsKey(track)) {
-            channelMap.get(track).sendMessage("Song appears to be frozen, skipping.").queue();
+            channelMap.get(track).sendMessage(":warning: Song appears to be frozen, skipping.").queue();
         }
         track.stop();
         nextTrack();
