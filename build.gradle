@@ -1,7 +1,6 @@
 plugins {
     id 'java'
     id 'idea'
-//    id 'scala'
     id 'application'
     id 'com.github.johnrengelman.shadow' version '1.2.4'
     id 'com.github.hierynomus.jython' version '0.6.0'
@@ -17,6 +16,9 @@ mainClassName = 'com.khronodragon.bluestone.Start'
 repositories {
     mavenCentral()
     jcenter()
+    maven {
+        url 'http://repo.boundlessgeo.com/main/'
+    }
 }
 
 task fatJar(type: Jar) {
@@ -31,8 +33,6 @@ task fatJar(type: Jar) {
 }
 
 dependencies {
-//    compile 'org.scala-lang:scala-library:2.12.2'
-//    compile 'org.scala-lang:scala-compiler:2.12.2'
     compile 'net.dv8tion:JDA:3.1.1_210'
     compile 'com.google.code.gson:gson:2.8.0'
     compile 'com.sedmelluq:lavaplayer:1.2.39'
@@ -40,10 +40,12 @@ dependencies {
     compile 'com.google.guava:guava:22.0'
     compile 'org.reflections:reflections:0.9.11'
     compile 'org.python:jython-standalone:2.7.1b3'
-    compile 'org.slf4j:slf4j-simple:1.7.25'
     compile 'org.codehaus.groovy:groovy-jsr223:2.4.11'
-//    compile 'org.luaj:luaj-jse:3.0.1'
-//    compile 'org.jruby:jruby-complete:9.1.10.0'
+    compile 'org.apache.logging.log4j:log4j-api:2.8.2'
+    compile 'org.apache.logging.log4j:log4j-core:2.8.2'
+    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.8.2'
+    compile 'org.beanshell:bsh:2.1b5'
+    compile 'com.lmax:disruptor:3.3.6'
 }
 /*
 tasks.withType(ScalaCompile) {

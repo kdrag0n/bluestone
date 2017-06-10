@@ -1,13 +1,13 @@
 package com.khronodragon.bluestone.cogs;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
+import com.khronodragon.bluestone.EventedCog;
 import com.khronodragon.bluestone.annotations.Command;
-import com.khronodragon.bluestone.voice.AudioState;
-import com.khronodragon.bluestone.voice.DummySendHandler;
-import com.khronodragon.bluestone.voice.PlayerSendHandler;
-import com.khronodragon.bluestone.voice.TrackLoadHandler;
+import com.khronodragon.bluestone.errors.PassException;
+import com.khronodragon.bluestone.voice.*;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.bandcamp.BandcampAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager;
@@ -20,15 +20,22 @@ import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.VoiceChannel;
+import net.dv8tion.jda.core.events.guild.voice.GenericGuildVoiceEvent;
+import net.dv8tion.jda.core.events.guild.voice.GuildVoiceJoinEvent;
+import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.managers.AudioManager;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class MusicCog extends Cog {
+public class MusicCog extends Cog implements EventedCog {
+    private ScheduledThreadPoolExecutor bgExecutor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder()
+            .setDaemon(true)
+            .setNameFormat("Music Cog Cleanup Thread %d")
+            .build());
     private final DefaultAudioPlayerManager playerManager = new DefaultAudioPlayerManager();
     public Map<Long, AudioState> audioStates = new HashMap<>();
 
@@ -39,6 +46,7 @@ public class MusicCog extends Cog {
         playerManager.registerSourceManager(new BandcampAudioSourceManager());
         playerManager.registerSourceManager(new VimeoAudioSourceManager());
         playerManager.registerSourceManager(new TwitchStreamAudioSourceManager());
+        bgExecutor.scheduleWithFixedDelay(() -> doCleanup(), 5, 5, TimeUnit.MINUTES);
     }
 
     public String getName() {
@@ -46,6 +54,12 @@ public class MusicCog extends Cog {
     }
     public String getDescription() {
         return "Listen to some sick beats with your friends!";
+    }
+
+    public void unload() {
+        playerManager.shutdown();
+        bgExecutor.shutdown();
+        super.unload();
     }
 
     private AudioState getAudioState(Guild guild) {
@@ -59,14 +73,87 @@ public class MusicCog extends Cog {
         }
     }
 
+    public void onGuildVoiceLeave(GuildVoiceLeaveEvent event) {
+        if (getVoiceEventSelfId(event) == event.getChannelLeft().getIdLong()) {
+            AudioState state = getAudioState(event.getGuild());
+            if (state == null) return;
+
+            if (event.getChannelLeft().getMembers().stream().filter(m -> !m.getVoiceState().isDeafened()).count() < 2) {
+                state.scheduler.player.setPaused(true);
+                state.scheduler.setEmptyPauseTime(new Date());
+                state.scheduler.setEmptyPaused(true);
+
+                ExtraTrackInfo info = state.scheduler.infoMap.get(state.scheduler.current);
+                if (info != null) {
+                    info.textChannel.sendMessage("Voice channel empty - player paused.").queue();
+                }
+            }
+        }
+    }
+
+    public void onGuildVoiceJoin(GuildVoiceJoinEvent event) {
+        if (getVoiceEventSelfId(event) == event.getChannelJoined().getIdLong()) {
+            AudioState state = getAudioState(event.getGuild());
+            if (state == null) return;
+
+            if (event.getChannelJoined().getMembers().stream().filter(m -> !m.getVoiceState().isDeafened()).count() == 2) {
+                state.scheduler.player.setPaused(false);
+                state.scheduler.setEmptyPaused(false);
+            }
+        }
+    }
+
+    private long getVoiceEventSelfId(GenericGuildVoiceEvent event) {
+        VoiceChannel ch = event.getGuild().getSelfMember().getVoiceState().getChannel();
+        if (ch == null) {
+            return 0L;
+        } else {
+            return ch.getIdLong();
+        }
+    }
+
+    private void doCleanup() {
+        for (Map.Entry entry: audioStates.entrySet()) {
+            long guildId = (long) entry.getKey();
+            AudioState state = (AudioState) entry.getValue();
+
+            if (new Date().getTime() - state.creationTime.getTime() < TimeUnit.MINUTES.toMillis(3)) {
+                continue;
+            }
+
+            if (state.scheduler.isEmptyPaused()) {
+                if (new Date().getTime() - state.scheduler.getEmptyPauseTime().getTime() < TimeUnit.MINUTES.toMillis(10)) {
+                    continue;
+                }
+
+                state.guild.getAudioManager().closeAudioConnection();
+                state.guild.getAudioManager().setSendingHandler(new DummySendHandler());
+                audioStates.remove(guildId);
+            }
+        }
+    }
+
+    private void channelChecks(Context ctx) {
+        VoiceChannel ch = ctx.member.getVoiceState().getChannel();
+        if (ctx.guild.getSelfMember().getVoiceState().getChannel() == null) {
+            ctx.send(":x: I'm not in a voice channel...").queue();
+            throw new PassException();
+        } else if (ch == null) {
+            ctx.send(":warning: You're not in a voice channel!").queue();
+            throw new PassException();
+        } else if (ctx.guild.getSelfMember().getVoiceState().getChannel().getIdLong() != ch.getIdLong()) {
+            ctx.send(":octagonal_sign: You need to be in the same voice channel as me to do that!").queue();
+            throw new PassException();
+        }
+    }
+
     //@Command(name = "summon", desc = "Summon me to your voice channel.", guildOnly = true)
     public void summon(Context ctx) {
         VoiceChannel channel = ctx.member.getVoiceState().getChannel();
         if (channel == null) {
             ctx.send(":x: You aren't in a voice channel!").queue();
-            return;
+            throw new PassException();
         }
-
 
         AudioManager manager = ctx.guild.getAudioManager();
         AudioState state = getAudioState(ctx.guild);
@@ -75,11 +162,11 @@ public class MusicCog extends Cog {
             manager.openAudioConnection(channel);
         } catch (PermissionException e) {
             ctx.send(":warning: I don't have permission to join that channel!").queue();
-            return;
+            throw new PassException();
         }
     }
 
-    @Command(name = "play", desc = "Play something!", usage = "[song]", guildOnly = true)
+    @Command(name = "play", desc = "Play something!", usage = "[search terms / link]", guildOnly = true)
     public void cmdPlay(Context ctx) {
         if (ctx.guild.getSelfMember().getVoiceState().getChannel() == null) {
             summon(ctx);
@@ -100,13 +187,7 @@ public class MusicCog extends Cog {
 
     @Command(name = "pause", desc = "Pause the player.", guildOnly = true)
     public void cmdPause(Context ctx) {
-        if (ctx.guild.getSelfMember().getVoiceState().getChannel() == null) {
-            ctx.send(":x: I'm not in a voice channel...").queue();
-            return;
-        } else if (ctx.guild.getSelfMember().getVoiceState().getChannel().getIdLong() != ctx.member.getVoiceState().getChannel().getIdLong()) {
-            ctx.send(":octagonal_sign: You need to be in the same voice channel as me to do that!").queue();
-            return;
-        }
+        channelChecks(ctx);
         AudioState state = getAudioState(ctx.guild);
 
         if (state.player.isPaused()) {
@@ -119,13 +200,7 @@ public class MusicCog extends Cog {
 
     @Command(name = "resume", desc = "Resume the player.", guildOnly = true)
     public void cmdResume(Context ctx) {
-        if (ctx.guild.getSelfMember().getVoiceState().getChannel() == null) {
-            ctx.send(":x: I'm not in a voice channel...").queue();
-            return;
-        } else if (ctx.guild.getSelfMember().getVoiceState().getChannel().getIdLong() != ctx.member.getVoiceState().getChannel().getIdLong()) {
-            ctx.send(":octagonal_sign: You need to be in the same voice channel as me to do that!").queue();
-            return;
-        }
+        channelChecks(ctx);
         AudioState state = getAudioState(ctx.guild);
 
         if (state.player.isPaused()) {
@@ -138,13 +213,7 @@ public class MusicCog extends Cog {
 
     @Command(name = "shuffle", desc = "Shuffle the queue.", guildOnly = true)
     public void cmdShuffle(Context ctx) {
-        if (ctx.guild.getSelfMember().getVoiceState().getChannel() == null) {
-            ctx.send(":x: I'm not in a voice channel...").queue();
-            return;
-        } else if (ctx.guild.getSelfMember().getVoiceState().getChannel().getIdLong() != ctx.member.getVoiceState().getChannel().getIdLong()) {
-            ctx.send(":octagonal_sign: You need to be in the same voice channel as me to do that!").queue();
-            return;
-        }
+        channelChecks(ctx);
         AudioState state = getAudioState(ctx.guild);
 
         state.scheduler.shuffleQueue();
@@ -152,15 +221,9 @@ public class MusicCog extends Cog {
         ctx.send(":twisted_rightwards_arrows: Queue shuffled.\n    \u2022 " + String.join("\n    \u2022 ", items)).queue();
     }
 
-    @Command(name = "repeat", desc = "Toggle repeating of the current song.", guildOnly = true)
+    @Command(name = "repeat", desc = "Toggle repeating of the current track.", guildOnly = true)
     public void cmdRepeat(Context ctx) {
-        if (ctx.guild.getSelfMember().getVoiceState().getChannel() == null) {
-            ctx.send(":x: I'm not in a voice channel...").queue();
-            return;
-        } else if (ctx.guild.getSelfMember().getVoiceState().getChannel().getIdLong() != ctx.member.getVoiceState().getChannel().getIdLong()) {
-            ctx.send(":octagonal_sign: You need to be in the same voice channel as me to do that!").queue();
-            return;
-        }
+        channelChecks(ctx);
         AudioState state = getAudioState(ctx.guild);
 
         if (state.scheduler.isRepeating()) {
@@ -168,7 +231,7 @@ public class MusicCog extends Cog {
             ctx.send(":arrow_right: No longer repeating.").queue();
         } else {
             state.scheduler.setRepeating(true);
-            ctx.send(":repeat: Now repeating song.").queue();
+            ctx.send(":repeat: Now repeating.").queue();
         }
     }
 
@@ -196,7 +259,7 @@ public class MusicCog extends Cog {
         if (state.scheduler.current == null)
             builder.setDescription("Nothing is playing.");
         else {
-            builder.setDescription("A song is playing.");
+            builder.setDescription("A track is playing.");
             AudioTrackInfo info = state.scheduler.current.getInfo();
             builder.addField("▶ " + info.title + " ◀", renderInfo(info), false);
         }
@@ -206,10 +269,10 @@ public class MusicCog extends Cog {
                 builder.appendDescription(" The queue is empty.");
                 break;
             case 1:
-                builder.appendDescription(" One song is queued.");
+                builder.appendDescription(" One track is queued.");
                 break;
             default:
-                builder.appendDescription(" There are " + state.scheduler.queue.size() + " songs queued.");
+                builder.appendDescription(" There are " + state.scheduler.queue.size() + " tracks queued.");
         }
 
         for (AudioTrack track: state.scheduler.queue) {
@@ -223,29 +286,53 @@ public class MusicCog extends Cog {
         .build()).queue();
     }
 
-    @Command(name = "skip", desc = "Skip the current song.", guildOnly = true)
+    @Command(name = "skip", desc = "Skip the current track.", guildOnly = true)
     public void cmdSkip(Context ctx) {
-        if (ctx.guild.getSelfMember().getVoiceState().getChannel() == null) {
-            ctx.send(":x: I'm not in a voice channel...").queue();
-            return;
-        } else if (ctx.guild.getSelfMember().getVoiceState().getChannel().getIdLong() != ctx.member.getVoiceState().getChannel().getIdLong()) {
-            ctx.send(":octagonal_sign: You need to be in the same voice channel as me to do that!").queue();
+        channelChecks(ctx);
+        AudioState state = getAudioState(ctx.guild);
+        ExtraTrackInfo info = state.scheduler.infoMap.get(state.scheduler.current);
+        if (info == null) {
+            ctx.send("").queue();
             return;
         }
-        AudioState state = getAudioState(ctx.guild);
 
-        ctx.send("not done yet").queue();
+        if (ctx.member.getUser().getIdLong() == info.requester.getUser().getIdLong()) {
+            if (state.scheduler.queue.isEmpty())
+                ctx.send("Skipped.").queue();
+
+            state.scheduler.skip();
+        } else {
+            int targetVotes = (int) Math.ceil(ctx.guild.getSelfMember().getVoiceState().getChannel().getMembers().size() / 2.0f);
+            if (info.hasVotedToSkip(ctx.member)) {
+                ctx.send("You've already voted to skip this track. Votes: **[" + info.getSkipVotes() + "/" + targetVotes + "]**").queue();
+            } else {
+                if (info.getSkipVotes() == targetVotes - 1) {
+                    state.scheduler.skip();
+                    ctx.send("Skip vote passed.").queue();
+                } else {
+                    info.addSkipVote(ctx.member);
+                    ctx.send("Skip vote added. Votes: **[" + info.getSkipVotes() + "/" + targetVotes + "]**").queue();
+                }
+            }
+        }
     }
 
-    @Command(name = "stop", desc = "Stop the player and disconnect.", aliases={"disconnect"}, guildOnly = true)
-    public void cmdStop(Context ctx) {
-        if (ctx.guild.getSelfMember().getVoiceState().getChannel() == null) {
-            ctx.send(":x: I'm not in a voice channel...").queue();
-            return;
-        } else if (ctx.guild.getSelfMember().getVoiceState().getChannel().getIdLong() != ctx.member.getVoiceState().getChannel().getIdLong()) {
-            ctx.send(":octagonal_sign: You need to be in the same voice channel as me to do that!").queue();
-            return;
+    @Command(name = "playing", desc = "Get the current track.", aliases = {"current"}, guildOnly = true)
+    public void cmdCurrent(Context ctx) {
+        channelChecks(ctx);
+        AudioState state = getAudioState(ctx.guild);
+
+        if (state.scheduler.current == null)
+            ctx.send("There's no track loaded... what?!").queue();
+        else {
+            AudioTrackInfo info = state.scheduler.current.getInfo();
+            ctx.send(":arrow_forward: **" + info.title + "**, length **" + Bot.formatDuration(info.length / 1000) + "**").queue();
         }
+    }
+
+    @Command(name = "stop", desc = "Stop the player and disconnect.", aliases = {"disconnect"}, guildOnly = true)
+    public void cmdStop(Context ctx) {
+        channelChecks(ctx);
 
         if (!audioStates.containsKey(ctx.guild.getIdLong())) {
             ctx.send(":bangbang: Failed to get the state for this guild. Something's terribly broken.").queue();
@@ -256,7 +343,7 @@ public class MusicCog extends Cog {
         ctx.guild.getAudioManager().setSendingHandler(new DummySendHandler());
         audioStates.remove(ctx.guild.getIdLong());
 
-        if (ctx.invoker == "stop")
+        if (ctx.invoker.equals("stop"))
             ctx.send("Stopped.").queue();
         else
             ctx.send("Disconnected.").queue();

@@ -7,10 +7,9 @@ import com.khronodragon.bluestone.annotations.Command;
 import net.dv8tion.jda.core.entities.Message;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineFactory;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
+import javax.script.*;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -68,11 +67,11 @@ public class ReplCog extends Cog {
             return;
         }
 
-        if (replSessions.contains(ctx.channelIdLong)) {
+        if (replSessions.contains(ctx.channel.getIdLong())) {
             ctx.send("Already running a REPL session in this channel. Exit it with `quit`.").queue();
             return;
         }
-        replSessions.add(ctx.channelIdLong);
+        replSessions.add(ctx.channel.getIdLong());
 
         engine.put("ctx", ctx);
         engine.put("context", ctx);
@@ -90,16 +89,16 @@ public class ReplCog extends Cog {
         ctx.send("REPL started. Prefix is " + prefix).queue();
         while (true) {
             Message response = bot.waitForMessage(-1, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
-                    msg.getChannel().getIdLong() == ctx.channelIdLong &&
+                    msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
                     msg.getRawContent().startsWith(prefix));
             engine.put("message", response);
             engine.put("msg", response);
 
             String cleaned = cleanupCode(response.getRawContent());
 
-            if (stringExists(cleaned, "quit", "exit", "System.exit()", "System.exit", "System.exit(0)")) {
+            if (stringExists(cleaned, "quit", "exit", "System.exit()", "System.exit", "System.exit(0)", "exit()")) {
                 ctx.send("**Exiting...**").queue();
-                replSessions.remove(ctx.channelIdLong);
+                replSessions.remove(ctx.channel.getIdLong());
                 break;
             }
 
@@ -107,11 +106,23 @@ public class ReplCog extends Cog {
             try {
                 result = engine.eval(cleaned);
             } catch (ScriptException e) {
-                result = e;
+                result = e.getCause();
+                if (result instanceof ScriptException) {
+                    result = ((ScriptException) result).getCause();
+                }
             }
 
             if (result != null) {
-                ctx.send("```py\n" + result.toString() + "```").queue();
+                try {
+                    ctx.send("```java\n" + result.toString() + "```").queue();
+                } catch (Exception e) {
+                    bot.logger.error("Error sending message in REPL", e);
+                    try {
+                        ctx.send("```java\n" + bot.renderStackTrace(e) + "```").queue();
+                    } catch (Exception ex) {
+                        bot.logger.error("Error reporting send error in REPL", ex);
+                    }
+                }
             }
         }
     }

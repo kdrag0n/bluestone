@@ -4,8 +4,9 @@ import com.khronodragon.bluestone.annotations.Command;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.User;
+import org.apache.logging.log4j.LogManager;
 
-import java.awt.*;
+import java.awt.Color;
 import java.lang.reflect.Method;
 
 public abstract class Cog implements ClassUtilities {
@@ -18,11 +19,11 @@ public abstract class Cog implements ClassUtilities {
     }
 
     public void load() {
-        printf("[%s] Cog loaded.", getName());
+        LogManager.getLogger(this.getClass()).info("Cog loaded.", getName());
     }
 
     public void unload() {
-        printf("[%s] Cog unloaded.", getName());
+        LogManager.getLogger(this.getClass()).info("[%s] Cog unloaded.", getName());
     }
 
     public void register() {
@@ -46,6 +47,10 @@ public abstract class Cog implements ClassUtilities {
         }
 
         bot.cogs.put(this.getName(), this);
+
+        if (this instanceof EventedCog) {
+            bot.eventedCogs.add((EventedCog) this);
+        }
     }
 
     protected Color randomColor() {

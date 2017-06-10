@@ -2,6 +2,7 @@ package com.khronodragon.bluestone;
 
 import com.khronodragon.bluestone.errors.CheckFailure;
 import com.khronodragon.bluestone.errors.GuildOnlyError;
+import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.errors.PermissionError;
 import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.core.Permission;
@@ -56,15 +57,16 @@ public class Command {
                 try {
                     func.invoke(instance, ctx);
                 } catch (IllegalAccessException e) {
-                    e.printStackTrace();
+                    bot.logger.error("Severe command ({}) invocation error:", invoker, e);
                     event.getChannel().sendMessage(":x: A severe internal error occurred.").queue();
                 } catch (InvocationTargetException e) {
                     Throwable cause = e.getCause();
                     if (cause == null) {
-                        e.printStackTrace();
+                        bot.logger.error("Unknown command ({}) invocation error:", invoker, e);
                         event.getChannel().sendMessage(":x: An unknown internal error occurred.").queue();
+                    } else if (cause instanceof PassException) {
                     } else {
-                        cause.printStackTrace();
+                        bot.logger.error("Command ({}) invocation error:", invoker, cause);
                         event.getChannel().sendMessage(String.format(":warning: Error in `%s%s`:```java\n%s```", prefix, invoker, bot.vagueTrace(cause))).queue();
                     }
                 } catch (PermissionError e) {
@@ -73,10 +75,10 @@ public class Command {
                 } catch (GuildOnlyError e) {
                     event.getChannel().sendMessage("Sorry, that command only works in a guild.").queue();
                 } catch (CheckFailure e) {
-                    System.out.println(e.toString());
+                    bot.logger.error("Checks failed for command {}:", invoker);
                     event.getChannel().sendMessage(String.format("%s A check for `%s%s` failed. Do you not have permissions?", event.getAuthor().getAsMention(), prefix, invoker)).queue();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    bot.logger.error("Unknown command ({}) error:", invoker, e);
                     event.getChannel().sendMessage(String.format(":warning: Error in `%s%s`:```java\n%s```", prefix, invoker, e.toString())).queue();
                 }
             };

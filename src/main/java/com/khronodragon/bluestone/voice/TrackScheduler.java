@@ -7,7 +7,6 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
-import net.dv8tion.jda.core.entities.MessageChannel;
 
 import java.util.*;
 
@@ -15,10 +14,30 @@ public class TrackScheduler extends AudioEventAdapter {
     private boolean repeating = false;
     public final AudioPlayer player;
     public final Queue<AudioTrack> queue = new LinkedList<>();
-    public final Map<AudioTrack, MessageChannel> channelMap = new HashMap<>();
+    public final Map<AudioTrack, ExtraTrackInfo> infoMap = new HashMap<>();
     AudioTrack lastTrack;
     public AudioTrack current;
     public AudioState state;
+
+    public boolean isEmptyPaused() {
+        return emptyPaused;
+    }
+
+    public void setEmptyPaused(boolean emptyPaused) {
+        this.emptyPaused = emptyPaused;
+    }
+
+    private boolean emptyPaused = false;
+
+    public Date getEmptyPauseTime() {
+        return emptyPauseTime;
+    }
+
+    public void setEmptyPauseTime(Date emptyPauseTime) {
+        this.emptyPauseTime = emptyPauseTime;
+    }
+
+    private Date emptyPauseTime = new Date();
 
     TrackScheduler(AudioPlayer player, AudioState state) {
         this.player = player;
@@ -30,8 +49,8 @@ public class TrackScheduler extends AudioEventAdapter {
             queue.offer(track);
     }
 
-    public void queue(AudioTrack track, MessageChannel textChannel) {
-        channelMap.put(track, textChannel);
+    public void queue(AudioTrack track, ExtraTrackInfo info) {
+        infoMap.put(track, info);
         queue(track);
     }
 
@@ -46,12 +65,16 @@ public class TrackScheduler extends AudioEventAdapter {
         }
     }
 
+    public void skip() {
+        onTrackEnd(player, current, AudioTrackEndReason.FINISHED);
+    }
+
     @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
         current = track;
-        if (channelMap.containsKey(track)) {
+        if (infoMap.containsKey(track)) {
             AudioTrackInfo info = track.getInfo();
-            channelMap.get(track).sendMessage(":arrow_forward: **" + mentionClean(info.title) + "**, length **" + Bot.formatDuration(info.length / 1000) + "**").queue();
+            infoMap.get(track).textChannel.sendMessage(":arrow_forward: **" + mentionClean(info.title) + "**, length **" + Bot.formatDuration(info.length / 1000L) + "**").queue();
         }
     }
 
@@ -60,11 +83,15 @@ public class TrackScheduler extends AudioEventAdapter {
         lastTrack = track;
         current = null;
         try {
+            try {
+                track.stop();
+            } catch (Throwable e) {}
+
             if (endReason.mayStartNext) {
                 if (repeating) {
                     AudioTrack clone = track.makeClone();
-                    if (channelMap.containsKey(track)) {
-                        channelMap.put(clone, channelMap.get(track));
+                    if (infoMap.containsKey(track)) {
+                        infoMap.put(clone, infoMap.get(track));
                     }
                     player.startTrack(clone, false);
                 } else {
@@ -72,23 +99,23 @@ public class TrackScheduler extends AudioEventAdapter {
                 }
             }
         } finally {
-            if (channelMap.containsKey(track)) {
-                channelMap.remove(track);
+            if (infoMap.containsKey(track)) {
+                infoMap.remove(track);
             }
         }
     }
 
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
-        if (channelMap.containsKey(track)) {
-            channelMap.get(track).sendMessage(":bangbang: Error in audio player! " + exception.getMessage());
+        if (infoMap.containsKey(track)) {
+            infoMap.get(track).textChannel.sendMessage(":bangbang: Error in audio player! " + exception.getMessage());
         }
     }
 
     @Override
     public void onTrackStuck(AudioPlayer player, AudioTrack track, long thresholdMs) {
-        if (channelMap.containsKey(track)) {
-            channelMap.get(track).sendMessage(":warning: Song appears to be frozen, skipping.").queue();
+        if (infoMap.containsKey(track)) {
+            infoMap.get(track).textChannel.sendMessage(":warning: Song appears to be frozen, skipping.").queue();
         }
         track.stop();
         nextTrack();

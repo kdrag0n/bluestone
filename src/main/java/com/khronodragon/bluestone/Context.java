@@ -26,14 +26,11 @@ public class Context {
     public final PrivateChannel privateChannel;
     public final JDA jda;
     public final String content;
-    public final String channelId;
-    public final long channelIdLong;
     public final String prefix;
     public final List<String> args;
     public final String invoker;
     public final String rawArgs;
     public final String mention;
-    public final Date invokeTime = new Date();
 
     public Context(Bot bot, MessageReceivedEvent event, List<String> args,
                    String prefix, String invoker) {
@@ -52,8 +49,6 @@ public class Context {
         this.privateChannel = event.getPrivateChannel();
         this.jda = event.getJDA();
         this.content = message.getRawContent();
-        this.channelId = channel.getId();
-        this.channelIdLong = channel.getIdLong();
         this.prefix = prefix;
         this.args = args;
         this.invoker = invoker;
@@ -72,6 +67,7 @@ public class Context {
 
         msg = msg.replace("@everyone", "@\u200beveryone")
                 .replace("@here", "@\u200bhere");
+        bot.logger.info("Msg {}", msg);
 
         return channel.sendMessage(msg);
     }

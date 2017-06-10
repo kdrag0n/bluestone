@@ -19,8 +19,12 @@
     <orderEntry type="library" name="Gradle: com.google.guava:guava:22.0" level="project" />
     <orderEntry type="library" name="Gradle: org.reflections:reflections:0.9.11" level="project" />
     <orderEntry type="library" name="Gradle: org.python:jython-standalone:2.7.1b3" level="project" />
-    <orderEntry type="library" name="Gradle: org.slf4j:slf4j-simple:1.7.25" level="project" />
     <orderEntry type="library" name="Gradle: org.codehaus.groovy:groovy-jsr223:2.4.11" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.logging.log4j:log4j-api:2.8.2" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.logging.log4j:log4j-core:2.8.2" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.logging.log4j:log4j-slf4j-impl:2.8.2" level="project" />
+    <orderEntry type="library" name="Gradle: org.beanshell:bsh:2.1b5" level="project" />
+    <orderEntry type="library" name="Gradle: com.lmax:disruptor:3.3.6" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-lang3:3.5" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-collections4:4.1" level="project" />
     <orderEntry type="library" name="Gradle: org.json:json:20160810" level="project" />
@@ -47,6 +51,6 @@
     <orderEntry type="library" name="Gradle: commons-codec:commons-codec:1.9" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.8.0" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.httpcomponents:httpcore-nio:4.4.4" level="project" />
-    <orderEntry type="library" name="Gradle: org.slf4j:slf4j-api:1.7.25" level="project" />
+    <orderEntry type="library" name="Gradle: org.slf4j:slf4j-api:1.7.24" level="project" />
   </component>
 </module>

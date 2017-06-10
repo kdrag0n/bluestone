@@ -1,7 +1,9 @@
 package com.khronodragon.bluestone;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.khronodragon.bluestone.errors.CheckFailure;
 import com.khronodragon.bluestone.errors.GuildOnlyError;
+import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.errors.PermissionError;
 import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.bot.entities.ApplicationInfo;
@@ -13,6 +15,8 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.reflections.Reflections;
 
 import javax.security.auth.login.LoginException;
@@ -23,15 +27,28 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class Bot extends ListenerAdapter implements ClassUtilities {
-    private ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(2);
-    public ThreadPoolExecutor threadExecutor;
+    public Logger logger = LogManager.getLogger(Bot.class);
+    private ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder()
+                                                            .setDaemon(true)
+                                                            .setNameFormat("Bot BG-Task Thread %d")
+                                                            .build());
+    private ThreadPoolExecutor cogEventExecutor = new ThreadPoolExecutor(5, 50, 45, TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(30), new ThreadFactoryBuilder()
+                                                .setDaemon(true)
+                                                .setNameFormat("Bot Cog-Event Pool Thread %d")
+                                                .build(), new RejectedExecHandlerImpl("Cog-Event"));
+    public ThreadPoolExecutor threadExecutor = new ThreadPoolExecutor(3, 85, 30, TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(60), new ThreadFactoryBuilder()
+            .setDaemon(true)
+            .setNameFormat("Bot Command-Exec Pool Thread %d")
+            .build(), new RejectedExecHandlerImpl("Command-Exec"));
     private HashSet<ScheduledFuture> tasks = new HashSet<>();
     public HashMap<String, Command> commands = new HashMap<>();
     public HashMap<String, Cog> cogs = new HashMap<>();
+    public HashSet<EventedCog> eventedCogs = new HashSet<>();
     public HashMap<String, AtomicInteger> commandCalls = new HashMap<>();
     public ApplicationInfo appInfo;
     public User owner;
@@ -41,16 +58,15 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     public Bot() {
         super();
-        ThreadFactory threadFactory = Executors.defaultThreadFactory();
-        RejectedExecHandlerImpl rejectionHandler = new RejectedExecHandlerImpl();
-        threadExecutor = new ThreadPoolExecutor(3, 100, 25, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(1), threadFactory, rejectionHandler);
-
         store = new DataStore();
     }
 
     public void setJda(JDA jda) {
         this.jda = jda;
+        final ShardInfo sInfo = jda.getShardInfo();
+        if (sInfo != null) {
+            logger = LogManager.getLogger("Bot [" + sInfo.getShardString() + "]");
+        }
     }
 
     public JDA getJda() {
@@ -87,7 +103,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
     }
 
-    public String vagueTrace(Throwable e) {
+    public static String vagueTrace(Throwable e) {
         StackTraceElement[] elements = e.getStackTrace();
         StackTraceElement[] limitedElems = {elements[0], elements[1]};
         List<String> stack = new ArrayList<>();
@@ -98,6 +114,30 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             stack.add(base);
         }
         return StringUtils.join(stack, "\n  ");
+    }
+
+    public static String renderStackTrace(Throwable e) {
+        StackTraceElement[] elements = e.getStackTrace();
+        List<String> stack = new ArrayList<>();
+        stack.add(e.getClass().getName() + ": " + e.getMessage());
+        for (StackTraceElement elem: elements) {
+            String base = "at " + elem.toString();
+            stack.add(base);
+        }
+        return StringUtils.join(stack, "\n    ");
+    }
+
+    @Override
+    public void onGenericEvent(Event event) {
+        for (EventedCog cog: eventedCogs) {
+            Runnable task = () -> cog.onEvent(event);
+
+            if (cog.needsThreadedEvents()) {
+                cogEventExecutor.execute(task);
+            } else {
+                task.run();
+            }
+        }
     }
 
     @Override
@@ -111,53 +151,50 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         } else {
             this.owner = jda.getSelfUser();
         }
-        printf("[Shard %d] Ready - ID: %d", getShardNum(event), uid);
+        logger.info("Ready - ID {}", uid);
 
-        Runnable task = new Runnable() {
-            public void run() {
-                String statusLine;
-                switch (ThreadLocalRandom.current().nextInt(1, 12)) {
-                    case 1:
-                        statusLine = String.format("with %s members", jda.getUsers().size());
-                        break;
-                    case 2:
-                        statusLine = String.format("in %d channels", jda.getTextChannels().size() +
-                                                   jda.getVoiceChannels().size());
-                        break;
-                    case 3:
-                        statusLine = String.format("in %d servers", jda.getGuilds().size());
-                        break;
-                    case 4:
-                        statusLine = String.format("in %d guilds", jda.getGuilds().size());
-                        break;
-                    case 5:
-                        statusLine = String.format("from shard %d of %d", getShardNum(event), getShardTotal(event));
-                        break;
-                    case 6:
-                        statusLine = "with my buddies";
-                        break;
-                    case 7:
-                        statusLine = "with bits and bytes";
-                        break;
-                    case 8:
-                        statusLine = "World Domination";
-                        break;
-                    case 9:
-                        statusLine = "with you";
-                        break;
-                    case 10:
-                        statusLine = "with potatoes";
-                        break;
-                    case 11:
-                        statusLine = "something";
-                        break;
-                    default:
-                        statusLine = "severe ERROR!";
-                        break;
-                }
-
-                jda.getPresence().setGame(Game.of(statusLine));
+        Runnable task = () -> {
+            String statusLine;
+            switch (ThreadLocalRandom.current().nextInt(1, 12)) {
+                case 1:
+                    statusLine = String.format("with %s users", shardUtil.getUserCount());
+                    break;
+                case 2:
+                    statusLine = String.format("in %d channels", shardUtil.getChannelCount());
+                    break;
+                case 3:
+                    statusLine = String.format("in %d servers", shardUtil.getGuildCount());
+                    break;
+                case 4:
+                    statusLine = String.format("in %d guilds", shardUtil.getGuildCount());
+                    break;
+                case 5:
+                    statusLine = String.format("from shard %d of %d", getShardNum(event), getShardTotal(event));
+                    break;
+                case 6:
+                    statusLine = "with my buddies";
+                    break;
+                case 7:
+                    statusLine = "with bits and bytes";
+                    break;
+                case 8:
+                    statusLine = "World Domination";
+                    break;
+                case 9:
+                    statusLine = "with you";
+                    break;
+                case 10:
+                    statusLine = "with potatoes";
+                    break;
+                case 11:
+                    statusLine = "something";
+                    break;
+                default:
+                    statusLine = "severe ERROR!";
+                    break;
             }
+
+            jda.getPresence().setGame(Game.of(statusLine));
         };
 
         ScheduledFuture future = scheduledExecutor.scheduleAtFixedRate(task, 10, 75, TimeUnit.SECONDS);
@@ -170,34 +207,30 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 Object obj = cogClass.getConstructor(this.getClass()).newInstance(this);
                 ((Cog) obj).register();
             } catch (NoSuchMethodException e) {
-                print("Failed to register cog" + cogClass.getName());
-                e.printStackTrace();
+                logger.error("Failed to register cog {}", cogClass.getName(), e);
             } catch (InstantiationException e) {
-                print("Failed to register cog" + cogClass.getName());
-                e.printStackTrace();
+                logger.error("Failed to register cog {}", cogClass.getName(), e);
             } catch (IllegalAccessException e) {
-                print("Failed to register cog" + cogClass.getName());
-                e.printStackTrace();
+                logger.error("Failed to register cog {}", cogClass.getName(), e);
             } catch (InvocationTargetException e) {
-                print("Failed to register cog" + cogClass.getName());
-                e.printStackTrace();
+                logger.error("Failed to register cog {}", cogClass.getName(), e);
             }
         }
     }
 
     @Override
     public void onResume(ResumedEvent event) {
-        printf("[Shard %d] WebSocket resumed", getShardNum(event));
+        logger.info("WebSocket resumed.");
     }
 
     @Override
     public void onReconnect(ReconnectedEvent event) {
-        printf("[Shard %d] Reconnected", getShardNum(event));
+        logger.info("Reconnected.");
     }
 
     @Override
     public void onShutdown(ShutdownEvent event) {
-        printf("[Shard %d] Shutting down", getShardNum(event));
+        logger.info("Shutting down...");
         synchronized (this) {
             notifyAll();
         }
@@ -205,7 +238,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     @Override
     public void onException(ExceptionEvent event) {
-        printf("[Shard %d] Error: %s", getShardNum(event), event.getCause());
+        logger.error("Error", event.getCause());
     }
 
     @Override
@@ -233,15 +266,16 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 try {
                     command.invoke(this, event, args, prefix, cmdName);
                 } catch (IllegalAccessException e) {
-                    e.printStackTrace();
+                    logger.error("Severe command ({}) invocation error:", cmdName, e);
                     channel.sendMessage(":x: A severe internal error occurred.").queue();
                 } catch (InvocationTargetException e) {
                     Throwable cause = e.getCause();
                     if (cause == null) {
-                        e.printStackTrace();
+                        logger.error("Unknown command ({}) invocation error:", cmdName, e);
                         channel.sendMessage(":x: An unknown internal error occurred.").queue();
+                    } else if (cause instanceof PassException) {
                     } else {
-                        cause.printStackTrace();
+                        logger.error("Command ({}) invocation error:", cmdName, cause);
                         channel.sendMessage(String.format(":warning: Error in `%s%s`:```java\n%s```", prefix, cmdName, vagueTrace(cause))).queue();
                     }
                 } catch (PermissionError e) {
@@ -250,10 +284,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 } catch (GuildOnlyError e) {
                     channel.sendMessage("Sorry, that command only works in a guild.").queue();
                 } catch (CheckFailure e) {
-                    print(e.toString());
+                    logger.error("Checks failed for command {}:", cmdName);
                     channel.sendMessage(String.format("%s A check for `%s%s` failed. Do you not have permissions?", author.getAsMention(), prefix, cmdName)).queue();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.error("Unknown command ({}) error:", cmdName, e);
                     channel.sendMessage(":x: A severe internal error occurred.").queue();
                 }
 
@@ -276,7 +310,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 try {
                     lock.wait();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    logger.error("wait() interrupted while waiting for message", e);
                     jda.removeEventListener(listener);
                     return null;
                 }
@@ -285,7 +319,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 try {
                     lock.wait(ltime, (int) (timeout - ltime) * (int) 1e9);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    logger.error("wait() interrupted while waiting for message", e);
                     jda.removeEventListener(listener);
                     return null;
                 }
@@ -305,10 +339,14 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public static String formatMemory() {
         Runtime runtime = Runtime.getRuntime();
         NumberFormat format = NumberFormat.getInstance();
-        return format.format(runtime.totalMemory() / 1048576.0f) + " MB";
+        return format.format((runtime.totalMemory() - runtime.freeMemory()) / 1048576.0f) + " MB";
     }
 
     public static String formatDuration(long duration) {
+        if (duration == 9223372036854775L) { // Long.MAX_VALUE / 1000L
+            return "[unknown]";
+        }
+
         long h = duration / 3600;
         long m = (duration % 3600) / 60;
         long s = duration % 60;
@@ -319,10 +357,13 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     }
 
     public static int start(String token, int shardCount, AccountType accountType) throws LoginException, RateLimitedException {
-        sprint("Starting bot...");
+        System.out.println("Starting...");
 
         if (shardCount < 1) {
-            sprint("There needs to be at least 1 shard, or how will the bot work?");
+            System.out.println("There needs to be at least 1 shard, or how will the bot work?");
+            return 1;
+        } else if (shardCount == 2) {
+            System.out.println("2 shards is very buggy and doesn't work well. Use either 1 or 3+ shards.");
             return 1;
         }
 
@@ -330,6 +371,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
         for (int shardId: IntStream.range(0, shardCount).toArray()) {
             Runnable monitor = () -> {
+                final Logger logger = LogManager.getLogger("ShardMonitor " + shardId);
                 while (true) {
                     Bot bot = new Bot();
                     JDABuilder builder = new JDABuilder(accountType)
@@ -350,8 +392,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     try {
                         jda = builder.buildAsync();
                     } catch (Exception e) {
-                        e.printStackTrace();
-                        System.out.printf("[Monitor: Shard %d] Failed to log in.");
+                        logger.error("Failed to log in.", e);
                         if (shardCount == 1) {
                             System.exit(1);
                         }
@@ -391,14 +432,15 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     }
 
                     try {
-                        Thread.sleep(2000);
+                        Thread.sleep(3000);
                     } catch (InterruptedException e) {}
                 }
             };
 
-            new Thread(monitor).start();
+            Thread monThread = new Thread(monitor, "Bot Shard-" + shardId + " Monitor Thread");
+            monThread.start();
             try {
-                Thread.sleep(2000);
+                Thread.sleep(5100);
             } catch (InterruptedException e) {}
         }
 

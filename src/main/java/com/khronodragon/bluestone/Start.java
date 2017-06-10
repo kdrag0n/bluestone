@@ -11,13 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class Start {
-    private static void print(String text) {
-        System.out.println(text);
-    }
-
     public static void main(String[] args) throws IOException {
-        print("Welcome to Bluestone!");
-
         String jsonCode = new String(Files.readAllBytes(Paths.get("auth.json")));
         JsonObject auth = new JsonParser().parse(jsonCode).getAsJsonObject();
 
@@ -31,7 +25,7 @@ public class Start {
         } else if (type.equals("user")) {
             accountType = AccountType.CLIENT;
         } else {
-            print("Warning: unrecognized account type! Use either 'client' (user) or 'bot' (bot). Assuming bot.");
+            System.out.println("Warning: unrecognized account type! Use either 'client' (user) or 'bot' (bot). Assuming bot.");
             accountType = AccountType.BOT;
         }
 
