@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import static java.text.MessageFormat.format;
 
 public class Command {
     public final String name;
@@ -67,22 +68,25 @@ public class Command {
                     } else if (cause instanceof PassException) {
                     } else {
                         bot.logger.error("Command ({}) invocation error:", invoker, cause);
-                        event.getChannel().sendMessage(String.format(":warning: Error in `%s%s`:```java\n%s```", prefix, invoker, bot.vagueTrace(cause))).queue();
+                        event.getChannel().sendMessage(format(":warning: Error in `{0}{1}`:```java\n{2}```", prefix, invoker, bot.vagueTrace(cause))).queue();
                     }
                 } catch (PermissionError e) {
-                    event.getChannel().sendMessage(String.format("%s Not enough permissions for `%s%s`! **%s** will work.", event.getAuthor().getAsMention(), prefix, invoker,
+                    event.getChannel().sendMessage(format("{0} Not enough permissions for `{1}{2}`! **{3}** will work.", event.getAuthor().getAsMention(), prefix, invoker,
                             Strings.smartJoin(permsRequired))).queue();
                 } catch (GuildOnlyError e) {
                     event.getChannel().sendMessage("Sorry, that command only works in a guild.").queue();
                 } catch (CheckFailure e) {
                     bot.logger.error("Checks failed for command {}:", invoker);
-                    event.getChannel().sendMessage(String.format("%s A check for `%s%s` failed. Do you not have permissions?", event.getAuthor().getAsMention(), prefix, invoker)).queue();
+                    event.getChannel().sendMessage(format("{0} A check for `{1}{2}` failed. Do you not have permissions?", event.getAuthor().getAsMention(), prefix, invoker)).queue();
                 } catch (Exception e) {
                     bot.logger.error("Unknown command ({}) error:", invoker, e);
-                    event.getChannel().sendMessage(String.format(":warning: Error in `%s%s`:```java\n%s```", prefix, invoker, e.toString())).queue();
+                    event.getChannel().sendMessage(format(":warning: Error in `{0}{1}`:```java\n{2}```", prefix, invoker, e.toString())).queue();
                 }
             };
 
+            if (bot.threadExecutor.getActiveCount() >= bot.threadExecutor.getMaximumPoolSize()) {
+                event.getChannel().sendMessage(":hourglass: Your command has been queued. *If this happens often, contact the owner!*").queue();
+            }
             bot.threadExecutor.execute(task);
         } else {
             func.invoke(instance, ctx);

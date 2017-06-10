@@ -150,7 +150,7 @@ public class CoreCog extends Cog {
         }
         pages.add(emb.build());
 
-        MessageDestination destination = MessageDestination.AUTHOR;
+        MessageDestination destination = MessageDestination.CHANNEL;//AUTHOR; // for testing // TODO: remove this
         if (sendPublic || bot.isSelfbot()) {
             destination = MessageDestination.CHANNEL;
         } else {

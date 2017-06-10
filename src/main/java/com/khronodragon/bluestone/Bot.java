@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
+import static java.text.MessageFormat.format;
 
 public class Bot extends ListenerAdapter implements ClassUtilities {
     public Logger logger = LogManager.getLogger(Bot.class);
@@ -157,19 +158,19 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             String statusLine;
             switch (ThreadLocalRandom.current().nextInt(1, 12)) {
                 case 1:
-                    statusLine = String.format("with %s users", shardUtil.getUserCount());
+                    statusLine = format("with {0} users", shardUtil.getUserCount());
                     break;
                 case 2:
-                    statusLine = String.format("in %d channels", shardUtil.getChannelCount());
+                    statusLine = format("in {0} channels", shardUtil.getChannelCount());
                     break;
                 case 3:
-                    statusLine = String.format("in %d servers", shardUtil.getGuildCount());
+                    statusLine = format("in {0} servers", shardUtil.getGuildCount());
                     break;
                 case 4:
-                    statusLine = String.format("in %d guilds", shardUtil.getGuildCount());
+                    statusLine = format("in {0} guilds", shardUtil.getGuildCount());
                     break;
                 case 5:
-                    statusLine = String.format("from shard %d of %d", getShardNum(event), getShardTotal(event));
+                    statusLine = format("from shard {0} of {0}", getShardNum(event), getShardTotal(event));
                     break;
                 case 6:
                     statusLine = "with my buddies";
@@ -276,16 +277,16 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     } else if (cause instanceof PassException) {
                     } else {
                         logger.error("Command ({}) invocation error:", cmdName, cause);
-                        channel.sendMessage(String.format(":warning: Error in `%s%s`:```java\n%s```", prefix, cmdName, vagueTrace(cause))).queue();
+                        channel.sendMessage(format(":warning: Error in `{0}{1}`:```java\n{2}```", prefix, cmdName, vagueTrace(cause))).queue();
                     }
                 } catch (PermissionError e) {
-                    channel.sendMessage(String.format("%s Not enough permissions for `%s%s`! **%s** will work.", author.getAsMention(), prefix, cmdName,
+                    channel.sendMessage(format("{0} Not enough permissions for `{1}{2}`! **{3}** will work.", author.getAsMention(), prefix, cmdName,
                             Strings.smartJoin(command.getFriendlyPerms()))).queue();
                 } catch (GuildOnlyError e) {
                     channel.sendMessage("Sorry, that command only works in a guild.").queue();
                 } catch (CheckFailure e) {
                     logger.error("Checks failed for command {}:", cmdName);
-                    channel.sendMessage(String.format("%s A check for `%s%s` failed. Do you not have permissions?", author.getAsMention(), prefix, cmdName)).queue();
+                    channel.sendMessage(format("{0} A check for `{1}{2}` failed. Do you not have permissions?", author.getAsMention(), prefix, cmdName)).queue();
                 } catch (Exception e) {
                     logger.error("Unknown command ({}) error:", cmdName, e);
                     channel.sendMessage(":x: A severe internal error occurred.").queue();

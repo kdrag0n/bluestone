@@ -14,18 +14,11 @@ public class Context {
     public final Bot bot;
     public final MessageReceivedEvent event;
     public final Message message;
-    public final Message msg;
     public final User author;
     public final Guild guild;
     public final MessageChannel channel;
     public final Member member;
-    public final Group group;
-    public final String messageId;
-    public final long messageIdLong;
-    public final TextChannel textChannel;
-    public final PrivateChannel privateChannel;
     public final JDA jda;
-    public final String content;
     public final String prefix;
     public final List<String> args;
     public final String invoker;
@@ -37,37 +30,30 @@ public class Context {
         this.bot = bot;
         this.event = event;
         this.message = event.getMessage();
-        this.msg = message;
         this.author = event.getAuthor();
         this.guild = event.getGuild();
         this.channel = event.getChannel();
         this.member = event.getMember();
-        this.group = event.getGroup();
-        this.messageId = event.getMessageId();
-        this.messageIdLong = event.getMessageIdLong();
-        this.textChannel = event.getTextChannel();
-        this.privateChannel = event.getPrivateChannel();
         this.jda = event.getJDA();
-        this.content = message.getRawContent();
         this.prefix = prefix;
         this.args = args;
         this.invoker = invoker;
         this.mention = author.getAsMention();
-        this.rawArgs = StringUtils.strip(content.substring(Math.min(prefix.length() + invoker.length() + 1, prefix.length() + invoker.length())));
+        this.rawArgs = StringUtils.strip(message.getRawContent().substring(Math.min(prefix.length() + invoker.length() + 1, prefix.length() + invoker.length())));
     }
 
     public RestAction<Message> send(String msg) {
         if (msg.length() > 2000) {
+            msg = msg.substring(0, 2000);
             String truncateString = "**...too long**";
             if (StringUtils.countMatches(msg, "```") % 2 == 1) {
                 truncateString = "```" + truncateString;
             }
-            msg = msg.substring(0, msg.length() - truncateString.length() - 1);
+            msg = msg.substring(0, msg.length() - truncateString.length()) + truncateString;
         }
 
         msg = msg.replace("@everyone", "@\u200beveryone")
                 .replace("@here", "@\u200bhere");
-        bot.logger.info("Msg {}", msg);
 
         return channel.sendMessage(msg);
     }

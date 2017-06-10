@@ -46,7 +46,13 @@ public class OwnerCog extends Cog {
                 msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
                 msg.getRawContent().toLowerCase().startsWith("yes"));
         if (resp != null) {
-            ctx.jda.shutdown();
+            logger.info("Shard shutting down...");
+            ctx.jda.shutdown(false);
         }
+    }
+
+    @Command(name = "shardtree", desc = "Display a shard-guild tree.", perms = {"owner"})
+    public void cmdShardTree(Context ctx) {
+        ctx.send("```java\n").queue();
     }
 }

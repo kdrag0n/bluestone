@@ -8,12 +8,12 @@ import net.dv8tion.jda.core.entities.Message;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.script.*;
-import java.io.Reader;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import static java.text.MessageFormat.format;
 
 public class ReplCog extends Cog {
     private Set<Long> replSessions = new HashSet<Long>();
@@ -53,7 +53,7 @@ public class ReplCog extends Cog {
             List<String> langs = new ArrayList<>();
 
             for (ScriptEngineFactory factory: factories) {
-                langs.add(String.format("%s %s (%s %s)", factory.getEngineName(), factory.getEngineVersion(),
+                langs.add(format("{0} {1} ({2} {3})", factory.getEngineName(), factory.getEngineVersion(),
                         factory.getLanguageName(), factory.getLanguageVersion()));
             }
 
@@ -79,7 +79,6 @@ public class ReplCog extends Cog {
         engine.put("last", null);
         engine.put("jda", ctx.jda);
         engine.put("message", ctx.message);
-        engine.put("content", ctx.content);
         engine.put("author", ctx.author);
         engine.put("channel", ctx.channel);
         engine.put("guild", ctx.guild);

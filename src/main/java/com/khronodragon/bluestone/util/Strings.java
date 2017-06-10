@@ -37,4 +37,12 @@ public class Strings {
         array[array.length - 1] = "or " + array[array.length - 1];
         return String.join(", ", array);
     }
+
+    public static String str(long value) {
+        return Long.toString(value);
+    }
+
+    public static String str(int value) {
+        return Integer.toString(value);
+    }
 }
