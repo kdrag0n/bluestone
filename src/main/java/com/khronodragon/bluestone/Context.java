@@ -43,6 +43,9 @@ public class Context {
     }
 
     public RestAction<Message> send(String msg) {
+        msg = msg.replace("@everyone", "@\u200beveryone")
+            .replace("@here", "@\u200bhere");
+
         if (msg.length() > 2000) {
             msg = msg.substring(0, 2000);
             String truncateString = "**...too long**";
@@ -51,9 +54,6 @@ public class Context {
             }
             msg = msg.substring(0, msg.length() - truncateString.length()) + truncateString;
         }
-
-        msg = msg.replace("@everyone", "@\u200beveryone")
-                .replace("@here", "@\u200bhere");
 
         return channel.sendMessage(msg);
     }
