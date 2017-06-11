@@ -126,7 +126,7 @@ public class UtilityCog extends Cog {
     private Runnable pollTask(Set<String> validEmotes, long messageId, Map<String, Set<User>> pollTable) {
         return () -> {
             while (true) {
-                MessageReactionAddEvent event = bot.waitForReaction(-1.0f, ev -> ev.getMessageIdLong() == messageId &&
+                MessageReactionAddEvent event = bot.waitForReaction(-1, ev -> ev.getMessageIdLong() == messageId &&
                         ev.getUser().getIdLong() != bot.getJda().getSelfUser().getIdLong() &&
                         validEmotes.contains(ev.getReactionEmote().toString()));
                 pollTable.get(event.getReactionEmote().toString()).add(event.getUser());

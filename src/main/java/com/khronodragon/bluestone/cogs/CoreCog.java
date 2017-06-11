@@ -49,7 +49,7 @@ public class CoreCog extends Cog {
         });
     }
 
-    @Command(name = "help", desc = "Because we all need help.", usage = "{commands and/or cogs}", thread = true)
+    @Command(name = "help", desc = "Because we all need help.", usage = "{commands and/or cogs}", aliases = {"phelp", "halp"}, thread = true)
     public void cmdHelp(Context ctx) {
         int charLimit = ctx.jda.getSelfUser().isBot() ? MessageEmbed.EMBED_MAX_LENGTH_BOT : MessageEmbed.EMBED_MAX_LENGTH_CLIENT;
         boolean sendPublic = false;
@@ -62,9 +62,9 @@ public class CoreCog extends Cog {
         List<MessageEmbed> pages = new ArrayList<>();
         Map<String, List<String>> fields = new HashMap<>();
 
-        EmbedBuilder emb = newEmbedWithAuthor(ctx)
-                .setColor(randomColor())
-                .setTitle("Bot Help");
+        EmbedBuilder emb = new EmbedBuilder()
+                .setAuthor("Bot Help", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
+                .setColor(randomColor());
 
         if (ctx.args.size() == 0) {
             for (com.khronodragon.bluestone.Command cmd: new HashSet<>(bot.commands.values())) {

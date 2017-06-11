@@ -30,10 +30,10 @@ public class OwnerCog extends Cog {
 
     @Command(name = "shutdown", desc = "Shutdown the bot.", perms = {"owner"}, thread = true)
     public void cmdShutdown(Context ctx) {
-        ctx.send(":warning: Are you **sure** you want to stop the whole bot? Type `yes` to continue.").complete();
-        Message resp = bot.waitForMessage(7.0f, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
+        ctx.send(":warning: Are you **sure** you want to stop the entire bot? Type `yes` to continue.").complete();
+        Message resp = bot.waitForMessage(7000, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
                 msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
-                msg.getRawContent().toLowerCase().startsWith("yes"));
+                msg.getRawContent().equalsIgnoreCase("yes"));
         if (resp != null) {
             ctx.jda.getPresence().setStatus(OnlineStatus.INVISIBLE);
             logger.info("Global shutdown requested.");
@@ -47,13 +47,14 @@ public class OwnerCog extends Cog {
 
     @Command(name = "stopshard", desc = "Stop the current shard.", perms = {"owner"}, aliases = {"restart"}, thread = true)
     public void cmdStopShard(Context ctx) {
-        ctx.send(":warning: Are you **sure** you want to stop (restart) the shard? Type `yes` to continue.").complete();
-        Message resp = bot.waitForMessage(7.0f, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
+        final Integer n = ctx.rawArgs.length() > 0 ? Integer.valueOf(ctx.rawArgs) : ctx.bot.getShardNum() - 1;
+        ctx.send(":warning: Are you **sure** you want to stop (restart) shard " + n + "? Type `yes` to continue.").complete();
+        Message resp = bot.waitForMessage(7000, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
                 msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
-                msg.getRawContent().toLowerCase().startsWith("yes"));
+                msg.getRawContent().equalsIgnoreCase("yes"));
         if (resp != null) {
-            logger.info("Shard shutting down...");
-            ctx.jda.shutdown(false);
+            logger.info("Shard {} shutting down...", n);
+            ctx.bot.getShardUtil().getShard(n).getJda().shutdown(false);
         }
     }
 

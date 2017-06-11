@@ -39,7 +39,7 @@ public class Context {
         this.args = args;
         this.invoker = invoker;
         this.mention = author.getAsMention();
-        this.rawArgs = StringUtils.strip(message.getRawContent().substring(Math.min(prefix.length() + invoker.length() + 1, prefix.length() + invoker.length())));
+        this.rawArgs = message.getRawContent().substring(Math.min(prefix.length() + invoker.length() + 1, prefix.length() + invoker.length())).trim();
     }
 
     public RestAction<Message> send(String msg) {

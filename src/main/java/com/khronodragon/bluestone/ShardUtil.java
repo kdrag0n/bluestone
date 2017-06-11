@@ -6,7 +6,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ShardUtil {
-    private Map<Integer, Bot> shards = new HashMap<>();
+    private Map<Integer, Bot> shards = new LinkedHashMap<>();
     private int shardCount;
 
     ShardUtil(int shardCount) {
@@ -26,7 +26,7 @@ public class ShardUtil {
     }
 
     public Set<Bot> getShards() {
-        return new HashSet<>(shards.values());
+        return new LinkedHashSet<>(shards.values());
     }
 
     public int getGuildCount() {

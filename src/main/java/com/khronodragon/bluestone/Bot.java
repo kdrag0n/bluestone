@@ -96,8 +96,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         System.out.println(text);
     }
 
-    public int getShardNum(Event event) {
-        ShardInfo sInfo = event.getJDA().getShardInfo();
+    public int getShardNum() {
+        ShardInfo sInfo = jda.getShardInfo();
         if (sInfo == null) {
             return 1;
         } else {
@@ -105,8 +105,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
     }
 
-    public int getShardTotal(Event event) {
-        ShardInfo sInfo = event.getJDA().getShardInfo();
+    public int getShardTotal() {
+        ShardInfo sInfo = jda.getShardInfo();
         if (sInfo == null) {
             return 1;
         } else {
@@ -121,10 +121,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         stack.add(e.getClass().getSimpleName() + ": " + e.getMessage());
         for (StackTraceElement elem: limitedElems) {
             String base = "> " + elem.getClassName() + "." + elem.getMethodName();
-            base += elem.isNativeMethod() ? "(native)" : "()";
+            base += elem.isNativeMethod() ? "(native)" : format("({0})", elem.getLineNumber());
             stack.add(base);
         }
-        return StringUtils.join(stack, "\n  ");
+        return String.join("\n  ", stack);
     }
 
     public static String renderStackTrace(Throwable e) {
@@ -180,7 +180,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     statusLine = format("in {0} guilds", shardUtil.getGuildCount());
                     break;
                 case 5:
-                    statusLine = format("from shard {0} of {0}", getShardNum(event), getShardTotal(event));
+                    statusLine = format("from shard {0} of {0}", getShardNum(), getShardTotal());
                     break;
                 case 6:
                     statusLine = "with my buddies";
@@ -311,13 +311,13 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
     }
 
-    public Message waitForMessage(float timeout, Predicate<Message> check) {
+    public Message waitForMessage(long millis, Predicate<Message> check) {
         AtomicReference<Message> lock = new AtomicReference<>();
         MessageWaitEventListener listener = new MessageWaitEventListener(lock, check);
         jda.addEventListener(listener);
 
         synchronized (lock) {
-            if (timeout < 0) {
+            if (millis < 0L) {
                 try {
                     lock.wait();
                 } catch (InterruptedException e) {
@@ -326,9 +326,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     return null;
                 }
             } else {
-                long ltime = (long) timeout;
                 try {
-                    lock.wait(ltime, (int) (timeout - ltime) * (int) 1e9);
+                    lock.wait(millis);
                 } catch (InterruptedException e) {
                     logger.error("wait() interrupted while waiting for message", e);
                     jda.removeEventListener(listener);
@@ -339,13 +338,13 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
     }
 
-    public MessageReactionAddEvent waitForReaction(float timeout, Predicate<MessageReactionAddEvent> check) {
+    public MessageReactionAddEvent waitForReaction(long millis, Predicate<MessageReactionAddEvent> check) {
         AtomicReference<MessageReactionAddEvent> lock = new AtomicReference<>();
         ReactionWaitEventListener listener = new ReactionWaitEventListener(lock, check);
         jda.addEventListener(listener);
 
         synchronized (lock) {
-            if (timeout < 0) {
+            if (millis < 0L) {
                 try {
                     lock.wait();
                 } catch (InterruptedException e) {
@@ -354,9 +353,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     return null;
                 }
             } else {
-                long ltime = (long) timeout;
                 try {
-                    lock.wait(ltime, (int) (timeout - ltime) * (int) 1e9);
+                    lock.wait(millis);
                 } catch (InterruptedException e) {
                     logger.error("wait() interrupted while waiting for reaction", e);
                     jda.removeEventListener(listener);
@@ -471,7 +469,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                         if (jda.getStatus() == JDA.Status.CONNECTED) {
                             jda.getPresence().setStatus(OnlineStatus.INVISIBLE);
                         }
-                        jda.shutdown();
+                        jda.shutdown(false);
                     }
                     if (shardCount == 1) {
                         System.exit(0);
