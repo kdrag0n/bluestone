@@ -3,13 +3,11 @@ package com.khronodragon.bluestone.cogs;
 import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.MessageEmbed;
-import net.dv8tion.jda.core.entities.User;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import static java.text.MessageFormat.format;
 
 public class CoreCog extends Cog {
     public CoreCog(Bot bot) {
@@ -177,9 +175,8 @@ public class CoreCog extends Cog {
         }
     }
 
-    @Command(name = "extest", desc = "For testing exception handling.")
-    public void cmdEtest(Context ctx) throws Exception {
-        ctx.send("Raw arg test: `" + ctx.rawArgs + "`").queue();
-        throw new Exception("Testing exception handling in commands");
+    @Command(name = "uptime", desc = "Get my uptime and memory usage.", aliases = {"memory", "ram"})
+    public void cmdUptime(Context ctx) {
+        ctx.send(format("I've been up for **{0}**, and am using **{} MB** of memory.", bot.formatUptime(), bot.formatMemory())).queue();
     }
 }

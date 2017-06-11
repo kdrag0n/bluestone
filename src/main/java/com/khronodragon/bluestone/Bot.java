@@ -5,6 +5,8 @@ import com.khronodragon.bluestone.errors.CheckFailure;
 import com.khronodragon.bluestone.errors.GuildOnlyError;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.errors.PermissionError;
+import com.khronodragon.bluestone.listeners.MessageWaitEventListener;
+import com.khronodragon.bluestone.listeners.ReactionWaitEventListener;
 import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.bot.entities.ApplicationInfo;
 import net.dv8tion.jda.core.*;
@@ -12,6 +14,7 @@ import net.dv8tion.jda.core.JDA.ShardInfo;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import org.apache.commons.lang3.StringUtils;
@@ -46,6 +49,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             .setDaemon(true)
             .setNameFormat("Bot Command-Exec Pool Thread %d")
             .build(), new RejectedExecHandlerImpl("Command-Exec"));
+    public Date startTime = new Date();
     private HashSet<ScheduledFuture> tasks = new HashSet<>();
     public HashMap<String, Command> commands = new HashMap<>();
     public HashMap<String, Cog> cogs = new HashMap<>();
@@ -59,6 +63,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     public Bot() {
         super();
+        scheduledExecutor.setMaximumPoolSize(6);
+        scheduledExecutor.setKeepAliveTime(16L, TimeUnit.SECONDS);
         store = new DataStore();
     }
 
@@ -72,6 +78,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     public JDA getJda() {
         return jda;
+    }
+
+    public ScheduledThreadPoolExecutor getScheduledExecutor() {
+        return scheduledExecutor;
     }
 
     public void setShardUtil(ShardUtil util) {
@@ -329,12 +339,44 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
     }
 
+    public MessageReactionAddEvent waitForReaction(float timeout, Predicate<MessageReactionAddEvent> check) {
+        AtomicReference<MessageReactionAddEvent> lock = new AtomicReference<>();
+        ReactionWaitEventListener listener = new ReactionWaitEventListener(lock, check);
+        jda.addEventListener(listener);
+
+        synchronized (lock) {
+            if (timeout < 0) {
+                try {
+                    lock.wait();
+                } catch (InterruptedException e) {
+                    logger.error("wait() interrupted while waiting for reaction", e);
+                    jda.removeEventListener(listener);
+                    return null;
+                }
+            } else {
+                long ltime = (long) timeout;
+                try {
+                    lock.wait(ltime, (int) (timeout - ltime) * (int) 1e9);
+                } catch (InterruptedException e) {
+                    logger.error("wait() interrupted while waiting for reaction", e);
+                    jda.removeEventListener(listener);
+                    return null;
+                }
+            }
+            return lock.get();
+        }
+    }
+
     public boolean isSelfbot() {
         return !jda.getSelfUser().isBot();
     }
 
-    public static String formatUptime() {
-        return "WIP";
+    long getUptimeMillis() {
+        return new Date().getTime() - startTime.getTime();
+    }
+
+    public String formatUptime() {
+        return formatDuration(getUptimeMillis() / 1000L);
     }
 
     public static String formatMemory() {
@@ -351,10 +393,13 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         long h = duration / 3600;
         long m = (duration % 3600) / 60;
         long s = duration % 60;
-        String sh = (h > 0 ? String.valueOf(h) + " " + "h" : "");
+        long d = h / 24;
+        h = h % 24;
+        String sd = (d > 0 ? String.valueOf(d) + " " + "day" + (d == 1 ? "" : "s") : "");
+        String sh = (h > 0 ? String.valueOf(h) + " " + "hr" : "");
         String sm = (m < 10 && m > 0 && h > 0 ? "0" : "") + (m > 0 ? (h > 0 && s == 0 ? String.valueOf(m) : String.valueOf(m) + " " + "min") : "");
         String ss = (s == 0 && (h > 0 || m > 0) ? "" : (s < 10 && (h > 0 || m > 0) ? "0" : "") + String.valueOf(s) + " " + "sec");
-        return sh + (h > 0 ? " " : "") + sm + (m > 0 ? " " : "") + ss;
+        return sd + (d > 0 ? " " : "") + sh + (h > 0 ? " " : "") + sm + (m > 0 ? " " : "") + ss;
     }
 
     public static int start(String token, int shardCount, AccountType accountType) throws LoginException, RateLimitedException {

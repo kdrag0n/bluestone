@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class TrackLoadHandler implements AudioLoadResultHandler {
-    private static final String[] prefixes = {"", "ytsearch:", "scsearch:"};
+    private static final String[] PREFIXES = {"", "ytsearch:", "scsearch:"};
     private final Context ctx;
     private final AudioState state;
     private int iteration;
@@ -69,9 +69,9 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
 
     @Override
     public void noMatches() {
-        if (iteration < prefixes.length - 1) {
+        if (iteration < PREFIXES.length - 1) {
             iteration += 1;
-            manager.loadItem(prefixes[iteration] + term, this);
+            manager.loadItem(PREFIXES[iteration] + term, this);
         } else
             ctx.send(":warning: No matches found!").queue();
     }
