@@ -21,16 +21,13 @@ import static java.text.MessageFormat.format;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class UtilityCog extends Cog {
-    private static final Pattern UNICODE_EMOTE_PATTERN = Pattern.compile("([\\x{10000}-\\x{10ffff}\\u2615])");
+    private static final Pattern UNICODE_EMOTE_PATTERN = Pattern.compile("([\\u20a0-\\u32ff\\x{1f000}-\\x{1ffff}\\x{fe4e5}-\\x{fe4ee}])");
     private static final Pattern CUSTOM_EMOTE_PATTERN = Pattern.compile("<:[a-z_]+:([0-9]{17,19})>", Pattern.CASE_INSENSITIVE);
-    private static final String RED_TICK = "<:redTick:312314733816709120>";
-    private static final String GREEN_TICK = "<:greenTick:312314752711786497>";
     public UtilityCog(Bot bot) {
         super(bot);
     }
@@ -126,18 +123,21 @@ public class UtilityCog extends Cog {
     private Runnable pollTask(Set<String> validEmotes, long messageId, Map<String, Set<User>> pollTable) {
         return () -> {
             while (true) {
-                MessageReactionAddEvent event = bot.waitForReaction(-1, ev -> ev.getMessageIdLong() == messageId &&
+                MessageReactionAddEvent event = bot.waitForReaction(0, ev -> ev.getMessageIdLong() == messageId &&
                         ev.getUser().getIdLong() != bot.getJda().getSelfUser().getIdLong() &&
                         validEmotes.contains(ev.getReactionEmote().toString()));
-                pollTable.get(event.getReactionEmote().toString()).add(event.getUser());
+                if (event == null) break; // Interrupted, probably by poll time ending
+
+                bot.logger.info("react {} {}", event, event.getReactionEmote());
+                final String key = event.getReactionEmote().toString();
+
+                if (pollTable.containsKey(key)) {
+                    pollTable.get(key).add(event.getUser());
+                } else {
+                    pollTable.put(key, new HashSet<>(Arrays.asList(event.getUser())));
+                }
             }
         };
-    }
-
-    private Set<Emote> customEmoteParser(Guild guild, Stream<String> rawEmoteIdStream) {
-        return rawEmoteIdStream
-                .map(guild::getEmoteById)
-                .collect(Collectors.toSet());
     }
 
     @Command(name = "poll", desc = "Start a poll, with reactions.", usage = "[emotes] [question] [time in minutes]", guildOnly = true)
@@ -157,32 +157,37 @@ public class UtilityCog extends Cog {
         ctx.args.remove(ctx.args.size() - 1);
 
         String preQuestion = String.join(" ", ctx.args);
-        Set<Character> unicodeEmotes = RegexUtil.matchStream(UNICODE_EMOTE_PATTERN, preQuestion)
-                                        .map(match -> match.group().charAt(0)).collect(Collectors.toSet());
-        Set<Emote> customEmotes = customEmoteParser(ctx.guild, RegexUtil.matchStream(CUSTOM_EMOTE_PATTERN, preQuestion)
-                                                                .map(MatchResult::group));
+        Set<String> unicodeEmotes = RegexUtil.matchStream(UNICODE_EMOTE_PATTERN, preQuestion)
+                                        .map(match -> match.group()).collect(Collectors.toSet());
+        bot.logger.info(unicodeEmotes);
+        ctx.send("UC EM: `" + unicodeEmotes + "`").queue();
+        Set<Emote> customEmotes = RegexUtil.matchStream(CUSTOM_EMOTE_PATTERN, preQuestion)
+                                           .map(m -> ctx.guild.getEmoteById(m.group(1)))
+                                           .collect(Collectors.toSet());
+        bot.logger.info("2 {}", customEmotes);
+        ctx.send("C EM: `" + customEmotes + "`").queue();
         if (customEmotes.contains(null)) {
-            ctx.send(":warning: You provided an invalid custom emote!").queue();
-            return;
+            customEmotes.remove(null);
         } else if (unicodeEmotes.size() + customEmotes.size() < 2) {
             ctx.send(":warning: You need at least 2 emotes to poll!").queue();
             return;
         }
 
         final String question = preQuestion.replaceAll(UNICODE_EMOTE_PATTERN.pattern(), "")
-                           .replaceAll("\\s+", " ").trim();
+                                           .replaceAll("<:[a-z_]+:[0-9]{17,19}>", "")
+                                           .replaceAll("\\s+", " ").trim();
 
         Map<String, Set<User>> pollTable = new HashMap<>();
         EmbedBuilder embed = new EmbedBuilder()
-                                .setAuthor(ctx.member.getEffectiveName() + "is polling...", null, ctx.author.getEffectiveAvatarUrl())
+                                .setAuthor(ctx.member.getEffectiveName() + " is polling...", null, ctx.author.getEffectiveAvatarUrl())
                                 .setColor(ctx.member.getColor())
                                 .setDescription(question)
                                 .appendDescription("\n\n")
-                                .appendDescription("**Reactions are being added...**");
+                                .appendDescription("**⌛ Reactions are being added...**");
 
         ctx.send(embed.build()).queue(msg -> {
-            for (char emote: unicodeEmotes) {
-                msg.addReaction(String.valueOf(emote)).queue();
+            for (String emote: unicodeEmotes) {
+                msg.addReaction(emote).queue();
             }
             for (Emote emote: customEmotes) {
                 msg.addReaction(emote).queue();
@@ -196,7 +201,7 @@ public class UtilityCog extends Cog {
 
             embed.setDescription(question)
                     .appendDescription("\n\n")
-                    .appendDescription("**" + GREEN_TICK + " Go ahead and vote!**");
+                    .appendDescription("**✅ Go ahead and vote!**");
 
             bot.getScheduledExecutor().schedule(() -> {
                 msg.editMessage(embed.build()).queue(newMsg -> {
@@ -212,20 +217,22 @@ public class UtilityCog extends Cog {
                         String winner = resultTable.entrySet().stream()
                                 .max((entry1, entry2) -> entry1.getValue() > entry2.getValue() ? 1 : -1)
                                 .get().getKey();
-                        List<String> orderedResultList = new LinkedList<>();
+                        List<String> orderedResultList = resultTable.entrySet().stream()
+                                .map(e -> e.getKey() + ": " + e.getValue() + "votes")
+                                .collect(Collectors.toList());
 
                         embed.setDescription(question)
                                 .appendDescription("\n\n")
-                                .appendDescription("**" + RED_TICK + " Poll ended.**")
+                                .appendDescription("**❌ Poll ended.**")
                                 .addField("Winner", winner, false);
                         newMsg.editMessage(embed.build()).queue();
 
                         ctx.send("**Poll** `" + question + "` **ended!\n" +
                                     "Winner: " + winner + "**\n\n" +
-                                    "Full Results:\n" + String.join("\n", orderedResultList)).queue();;
+                                    "Full Results:\n" + String.join("\n", orderedResultList)).queue();
                     }, pollTime, TimeUnit.SECONDS);//MINUTES); // TODO: use MINUTES for non testing
                 });
-            }, 180L, TimeUnit.MILLISECONDS);
+            }, (unicodeEmotes.size() + customEmotes.size()) * (int) (ctx.jda.getPing() * 1.8), TimeUnit.MILLISECONDS);
         });
     }
 }

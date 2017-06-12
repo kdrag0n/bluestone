@@ -181,6 +181,7 @@ public class MusicCog extends Cog implements EventedCog {
             return;
         }
         final String term = String.join(" ", ctx.args);
+        ctx.message.addReaction("⌛").queue();
 
         playerManager.loadItem(term, new TrackLoadHandler(ctx, state, playerManager, term));
     }

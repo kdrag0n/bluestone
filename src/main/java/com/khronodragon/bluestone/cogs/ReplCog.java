@@ -87,7 +87,7 @@ public class ReplCog extends Cog {
 
         ctx.send("REPL started. Prefix is " + prefix).queue();
         while (true) {
-            Message response = bot.waitForMessage(-1, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
+            Message response = bot.waitForMessage(0, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
                     msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
                     msg.getRawContent().startsWith(prefix));
             engine.put("message", response);
@@ -104,7 +104,9 @@ public class ReplCog extends Cog {
             Object result;
             try {
                 result = engine.eval(cleaned);
+                response.addReaction("☑").queue();
             } catch (ScriptException e) {
+                response.addReaction("❌").queue();
                 result = e.getCause();
                 if (result instanceof ScriptException) {
                     result = ((ScriptException) result).getCause();

@@ -3,6 +3,7 @@ package com.khronodragon.bluestone;
 import com.khronodragon.bluestone.annotations.Command;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
 import org.apache.logging.log4j.LogManager;
 
@@ -91,5 +92,11 @@ public abstract class Cog implements ClassUtilities {
 
         return new EmbedBuilder()
                 .setAuthor(name, url, iconUrl);
+    }
+
+    public static void removeReactionIfExists(Message message, String unicode) {
+        message.getReactions().stream().filter(r -> r.getEmote().getName().equals(unicode)).forEach(r -> {
+            r.removeReaction().queue();
+        });
     }
 }

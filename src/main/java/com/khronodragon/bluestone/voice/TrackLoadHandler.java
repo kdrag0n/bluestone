@@ -1,6 +1,7 @@
 package com.khronodragon.bluestone.voice;
 
 import com.khronodragon.bluestone.Bot;
+import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -32,6 +33,8 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
     public void trackLoaded(AudioTrack track) {
         if (!track.getInfo().isStream && track.getDuration() > TimeUnit.MINUTES.toMillis(2 * 60 + 32)) {
             ctx.send(":no_entry: Track longer than **2 h 30 min**!").queue();
+            Cog.removeReactionIfExists(ctx.message, "⌛");
+            ctx.message.addReaction("❌").queue();
             return;
         }
 
@@ -40,6 +43,8 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
             AudioTrackInfo info = track.getInfo();
 
             ctx.send(":white_check_mark: Queued **" + info.title + "** by **" + info.author + "**, length **" + Bot.formatDuration(info.length / 1000L) + "**").queue();
+            Cog.removeReactionIfExists(ctx.message, "⌛");
+            ctx.message.addReaction("☑").queue();
         }
     }
 
@@ -65,6 +70,8 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
             duration += track.getDuration();
         }
         ctx.send(":white_check_mark: Queued playlist **" + playlist.getName() + "**, length **" + Bot.formatDuration(duration / 1000L) + "**").queue();
+        Cog.removeReactionIfExists(ctx.message, "⌛");
+        ctx.message.addReaction("☑").queue();
     }
 
     @Override
@@ -72,12 +79,17 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
         if (iteration < PREFIXES.length - 1) {
             iteration += 1;
             manager.loadItem(PREFIXES[iteration] + term, this);
-        } else
+        } else {
             ctx.send(":warning: No matches found!").queue();
+            Cog.removeReactionIfExists(ctx.message, "⌛");
+            ctx.message.addReaction("❌").queue();
+        }
     }
 
     @Override
     public void loadFailed(FriendlyException exception) {
         ctx.send(":bangbang: Error loading track: " + exception.getMessage()).queue();
+        Cog.removeReactionIfExists(ctx.message, "⌛");
+        ctx.message.addReaction("❌").queue();
     }
 }

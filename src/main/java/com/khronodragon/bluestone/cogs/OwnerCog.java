@@ -63,7 +63,7 @@ public class OwnerCog extends Cog {
         List<String> items = new ArrayList<>();
 
         for (Bot shard: ctx.bot.getShardUtil().getShards()) {
-            items.add("Shard " + shard.getJda().getShardInfo().getShardId() + ":");
+            items.add("Shard " + (shard.getShardNum() - 1) + ":");
             for (Guild guild: shard.getJda().getGuilds()) {
                 items.add("    - " + guild.getName());
             }

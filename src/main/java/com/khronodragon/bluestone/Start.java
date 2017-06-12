@@ -30,7 +30,7 @@ public class Start {
         }
 
         try {
-            Bot.start(token, shardCount, accountType);
+            Bot.start(token, shardCount, accountType, auth);
         } catch (LoginException e) {
             e.printStackTrace();
         } catch (RateLimitedException e) {

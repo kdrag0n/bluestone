@@ -35,7 +35,6 @@ public class RegexUtil {
                 return next;
             }
 
-            /** Required to satisfy the interface, but unsupported. */
             public void remove() { throw new UnsupportedOperationException(); }
         };
     }

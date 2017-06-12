@@ -1,6 +1,7 @@
 package com.khronodragon.bluestone;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.gson.JsonObject;
 import com.khronodragon.bluestone.errors.CheckFailure;
 import com.khronodragon.bluestone.errors.GuildOnlyError;
 import com.khronodragon.bluestone.errors.PassException;
@@ -34,6 +35,7 @@ import java.util.stream.IntStream;
 import static java.text.MessageFormat.format;
 
 public class Bot extends ListenerAdapter implements ClassUtilities {
+    public static final String USER_AGENT = "Goldmine (Project Bluestone) Discord Bot by Dragon5232 (tiny.cc/goldbot)";
     public Logger logger = LogManager.getLogger(Bot.class);
     private ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder()
                                                             .setDaemon(true)
@@ -60,6 +62,16 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public final DataStore store;
     private JDA jda;
     private ShardUtil shardUtil;
+
+    public JsonObject getAuth() {
+        return auth;
+    }
+
+    public void setAuth(JsonObject auth) {
+        this.auth = auth;
+    }
+
+    private JsonObject auth;
 
     public Bot() {
         super();
@@ -317,22 +329,11 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         jda.addEventListener(listener);
 
         synchronized (lock) {
-            if (millis < 0L) {
-                try {
-                    lock.wait();
-                } catch (InterruptedException e) {
-                    logger.error("wait() interrupted while waiting for message", e);
-                    jda.removeEventListener(listener);
-                    return null;
-                }
-            } else {
-                try {
-                    lock.wait(millis);
-                } catch (InterruptedException e) {
-                    logger.error("wait() interrupted while waiting for message", e);
-                    jda.removeEventListener(listener);
-                    return null;
-                }
+            try {
+                lock.wait(millis);
+            } catch (InterruptedException e) {
+                jda.removeEventListener(listener);
+                return null;
             }
             return lock.get();
         }
@@ -344,22 +345,11 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         jda.addEventListener(listener);
 
         synchronized (lock) {
-            if (millis < 0L) {
-                try {
-                    lock.wait();
-                } catch (InterruptedException e) {
-                    logger.error("wait() interrupted while waiting for reaction", e);
-                    jda.removeEventListener(listener);
-                    return null;
-                }
-            } else {
-                try {
-                    lock.wait(millis);
-                } catch (InterruptedException e) {
-                    logger.error("wait() interrupted while waiting for reaction", e);
-                    jda.removeEventListener(listener);
-                    return null;
-                }
+            try {
+                lock.wait(millis);
+            } catch (InterruptedException e) {
+                jda.removeEventListener(listener);
+                return null;
             }
             return lock.get();
         }
@@ -400,7 +390,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         return sd + (d > 0 ? " " : "") + sh + (h > 0 ? " " : "") + sm + (m > 0 ? " " : "") + ss;
     }
 
-    public static int start(String token, int shardCount, AccountType accountType) throws LoginException, RateLimitedException {
+    public static int start(String token, int shardCount, AccountType accountType, JsonObject config) throws LoginException, RateLimitedException {
         System.out.println("Starting...");
 
         if (shardCount < 1) {
@@ -418,6 +408,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 final Logger logger = LogManager.getLogger("ShardMonitor " + shardId);
                 while (true) {
                     Bot bot = new Bot();
+                    bot.setAuth(config);
                     JDABuilder builder = new JDABuilder(accountType)
                             .setToken(token)
                             .addEventListener(bot)
