@@ -8,12 +8,11 @@ import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.util.RegexUtil;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Emote;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.MessageReaction;
-import net.dv8tion.jda.core.entities.MessageReaction.ReactionEmote;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import org.apache.commons.lang3.text.WordUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 import static com.khronodragon.bluestone.util.Strings.str;
@@ -26,8 +25,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class UtilityCog extends Cog {
+    private static final Logger logger = LogManager.getLogger(UtilityCog.class);
     private static final Pattern UNICODE_EMOTE_PATTERN = Pattern.compile("([\\u20a0-\\u32ff\\x{1f000}-\\x{1ffff}\\x{fe4e5}-\\x{fe4ee}])");
     private static final Pattern CUSTOM_EMOTE_PATTERN = Pattern.compile("<:[a-z_]+:([0-9]{17,19})>", Pattern.CASE_INSENSITIVE);
+
     public UtilityCog(Bot bot) {
         super(bot);
     }
@@ -208,7 +209,9 @@ public class UtilityCog extends Cog {
                     pollThread.start();
 
                     bot.getScheduledExecutor().schedule(() -> {
-                        pollThread.interrupt();
+                        logger.info("Poll stage 2 executed, stopping task...");
+                        pollThread.stop();
+                        logger.info("Stopped.");
                         Map<String, Integer> resultTable = pollTable.entrySet().stream()
                                 .collect(Collectors.toMap(
                                 entry -> entry.getKey(),

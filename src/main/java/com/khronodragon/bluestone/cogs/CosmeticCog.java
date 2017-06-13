@@ -3,6 +3,7 @@ package com.khronodragon.bluestone.cogs;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
+import com.khronodragon.bluestone.emotes.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
@@ -10,14 +11,17 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.async.Callback;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.MessageBuilder;
+import net.dv8tion.jda.core.entities.Message;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Arrays;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CosmeticCog extends Cog {
+    private static final EmoteProviderManager EMOTE_PROVIDER_MANAGER = new EmoteProviderManager();
     private static final Map<Character, String> alphabetToEmote = new HashMap<Character, String>() {{
         put(' ', "    ");
         put('#', ":hash:");
@@ -68,6 +72,10 @@ public class CosmeticCog extends Cog {
 
     public CosmeticCog(Bot bot) {
         super(bot);
+        EMOTE_PROVIDER_MANAGER.addProvider(new TwitchEmoteProvider());
+        EMOTE_PROVIDER_MANAGER.addProvider(new BetterTTVEmoteProvider());
+        EMOTE_PROVIDER_MANAGER.addProvider(new FrankerFaceZEmoteProvider());
+        EMOTE_PROVIDER_MANAGER.addProvider(new DiscordEmoteProvider());
     }
 
     public String getName() {
@@ -154,6 +162,50 @@ public class CosmeticCog extends Cog {
 
                     public void cancelled() {
                         ctx.send(":x: The request was cancelled!").queue();
+                    }
+                });
+    }
+
+    @Command(name = "emote", desc = "Get an emoticon, from many sources.", usage = "[emote name]")
+    public void cmdEmote(Context ctx) {
+        if (ctx.rawArgs.length() < 1) {
+            ctx.send(":warning: You need to specify an emote!").queue();
+            return;
+        }
+        if (!EMOTE_PROVIDER_MANAGER.isFullyLoaded()) {
+            ctx.send(":x: The emote data hasn't been loaded yet! Try again soon.").queue();
+            return;
+        }
+
+        final String url = EMOTE_PROVIDER_MANAGER.getFirstUrl(ctx.rawArgs);
+        if (url == null) {
+            ctx.send(":warning: No such emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV should work.").queue();
+            return;
+        }
+        EmoteInfo info = EMOTE_PROVIDER_MANAGER.getFirstInfo(ctx.rawArgs);
+
+        Unirest.get(url)
+                .header("User-Agent", Bot.USER_AGENT)
+                .asBinaryAsync(new Callback<InputStream>() {
+                    @Override
+                    public void completed(HttpResponse<InputStream> response) {
+                        Message msg = null;
+                        if (info != null) {
+                            msg = new MessageBuilder()
+                                    .append(info.description)
+                                    .build();
+                        }
+                        ctx.channel.sendFile(response.getBody(), "emote.png", msg).queue();
+                    }
+
+                    @Override
+                    public void failed(UnirestException e) {
+                        ctx.send(":warning: Failed to fetch emote.").queue();
+                    }
+
+                    @Override
+                    public void cancelled() {
+                        ctx.send(":x: The request was cancelled.").queue();
                     }
                 });
     }
