@@ -1,5 +1,7 @@
 package com.khronodragon.bluestone.emotes;
 
+import org.apache.logging.log4j.LogManager;
+
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -51,8 +53,10 @@ public class EmoteProviderManager {
 
     public boolean isFullyLoaded() {
         for (EmoteProvider provider: providers) {
-            if (!provider.isLoaded())
+            if (!provider.isLoaded()) {
+                LogManager.getLogger(EmoteProviderManager.class).info("Provider not loaded: " + provider.getClass().getSimpleName());
                 return false;
+            }
         }
         return true;
     }

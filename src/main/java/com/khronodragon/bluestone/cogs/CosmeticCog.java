@@ -22,6 +22,26 @@ import java.util.stream.Collectors;
 
 public class CosmeticCog extends Cog {
     private static final EmoteProviderManager EMOTE_PROVIDER_MANAGER = new EmoteProviderManager();
+    public static final Map<String, String> charsets = new HashMap<String, String>() {{
+        put("normal", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~ `!@#$%^&*()-_=+[]{}|;:'\",<.>/?");
+        put("fullwidth", "ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ０１２３４５６７８９～ ｀ ！＠＃＄％＾＆＊（）－＿＝＋［］｛｝|；：＇＂,＜．＞/？");
+        put("circled", "ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓜⓝⓞⓟⓠⓡⓢⓣⓤⓥⓦⓧⓨⓩⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ0①②③④⑤⑥⑦⑧⑨~ `!@#$%^&⊛()⊖_⊜⊕[]{}⦶;:'\",⧀⨀⧁⊘?⦸");
+        put("circled_negative", "🅐🅑🅒🅓🅔🅕🅖🅗🅘🅙🅚🅛🅜🅝🅞🅟🅠🅡🅢🅣🅤🅥🅦🅧🅨🅩🅐🅑🅒🅓🅔🅕🅖🅗🅘🅙🅚🅛🅜🅝🅞🅟🅠🅡🅢🅣🅤🅥🅦🅧🅨🅩⓿123456789~ `!@#$%^&⊛()⊖_⊜⊕[]{}⦶;:'\",⧀⨀⧁⊘?⦸");
+        put("math_bold", "𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙𝟎𝟏𝟐𝟑𝟒𝟓𝟔𝟕𝟖𝟗~ `!@#$%^&*()-_=+[]{}|;:'\",<.>/?");
+        put("math_bold_old", "𝖆𝖇𝖈𝖉𝖊𝖋𝖌𝖍𝖎𝖏𝖐𝖑𝖒𝖓𝖔𝖕𝖖𝖗𝖘𝖙𝖚𝖛𝖜𝖝𝖞𝖟𝕬𝕭𝕮𝕯𝕰𝕱𝕲𝕳𝕴𝕵𝕶𝕷𝕸𝕹𝕺𝕻𝕼𝕽𝕾𝕿𝖀𝖁𝖂𝖃𝖄𝖅0123456789~ `!@#$%^&*()-_=+[]{}|;:'\",<.>/?");
+        put("math_bold_italic", "𝒂𝒃𝒄𝒅𝒆𝒇𝒈𝒉𝒊𝒋𝒌𝒍𝒎𝒏𝒐𝒑𝒒𝒓𝒔𝒕𝒖𝒗𝒘𝒙𝒚𝒛𝑨𝑩𝑪𝑫𝑬𝑭𝑮𝑯𝑰𝑱𝑲𝑳𝑴𝑵𝑶𝑷𝑸𝑹𝑺𝑻𝑼𝑽𝑾𝑿𝒀𝒁0123456789~ `!@#$%^&*()-_=+[]{}|;:'\",<.>/?");
+        put("math_bold_script", "𝓪𝓫𝓬𝓭𝓮𝓯𝓰𝓱𝓲𝓳𝓴𝓵𝓶𝓷𝓸𝓹𝓺𝓻𝓼𝓽𝓾𝓿𝔀𝔁𝔂𝔃𝓐𝓑𝓒𝓓𝓔𝓕𝓖𝓗𝓘𝓙𝓚𝓛𝓜𝓝𝓞𝓟𝓠𝓡𝓢𝓣𝓤𝓥𝓦𝓧𝓨𝓩0123456789~ `!@#$%^&*()-_=+[]{}|;:'\",<.>/?");
+        put("math_double", "𝕒𝕓𝕔𝕕𝕖𝕗𝕘𝕙𝕚𝕛𝕜𝕝𝕞𝕟𝕠𝕡𝕢𝕣𝕤𝕥𝕦𝕧𝕨𝕩𝕪𝕫𝔸𝔹ℂ𝔻𝔼𝔽𝔾ℍ𝕀𝕁𝕂𝕃𝕄ℕ𝕆ℙℚℝ𝕊𝕋𝕌𝕍𝕎𝕏𝕐ℤ𝟘𝟙𝟚𝟛𝟜𝟝𝟞𝟟𝟠𝟡~ `!@#$%^&*()-_=+[]{}|;:'\",<.>/?");
+        put("math_mono", "𝚊𝚋𝚌𝚍𝚎𝚏𝚐𝚑𝚒𝚓𝚔𝚕𝚖𝚗𝚘𝚙𝚚𝚛𝚜𝚝𝚞𝚟𝚠𝚡𝚢𝚣𝙰𝙱𝙲𝙳𝙴𝙵𝙶𝙷𝙸𝙹𝙺𝙻𝙼𝙽𝙾𝙿𝚀𝚁𝚂𝚃𝚄𝚅𝚆𝚇𝚈𝚉𝟶𝟷𝟸𝟹𝟺𝟻𝟼𝟽𝟾𝟿~ `!@#$%^&*()-_=+[]{}|;:'\",<.>/?");
+        put("math_sans", "𝖺𝖻𝖼𝖽𝖾𝖿𝗀𝗁𝗂𝗃𝗄𝗅𝗆𝗇𝗈𝗉𝗊𝗋𝗌𝗍𝗎𝗏𝗐𝗑𝗒𝗓𝖠𝖡𝖢𝖣𝖤𝖥𝖦𝖧𝖨𝖩𝖪𝖫𝖬𝖭𝖮𝖯𝖰𝖱𝖲𝖳𝖴𝖵𝖶𝖷𝖸𝖹𝟢𝟣𝟤𝟥𝟦𝟧𝟨𝟩𝟪𝟫~ `!@#$%^&*()-_=+[]{}|;:'\",<.>/?");
+        put("math_sans_bold", "𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵~ `!@#$%^&*()-_=+[]{}|;:'\",<.>/?");
+        put("math_sans_bold_italic", "𝙖𝙗𝙘𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙧𝙨𝙩𝙪𝙫𝙬𝙭𝙮𝙯𝘼𝘽𝘾𝘿𝙀𝙁𝙂𝙃𝙄𝙅𝙆𝙇𝙈𝙉𝙊𝙋𝙌𝙍𝙎𝙏𝙐𝙑𝙒𝙓𝙔𝙕0123456789~ `!@#$%^&*()-_=+[]{}|;:'\",<.>/?");
+        put("math_sans_italic", "𝘢𝘣𝘤𝘥𝘦𝘧𝘨𝘩𝘪𝘫𝘬𝘭𝘮𝘯𝘰𝘱𝘲𝘳𝘴𝘵𝘶𝘷𝘸𝘹𝘺𝘻𝘈𝘉𝘊𝘋𝘌𝘍𝘎𝘏𝘐𝘑𝘒𝘓𝘔𝘕𝘖𝘗𝘘𝘙𝘚𝘛𝘜𝘝𝘞𝘟𝘠𝘡0123456789~ `!@#$%^&*()-_=+[]{}|;:'\",<.>/?");
+        put("parenthesized", "⒜⒝⒞⒟⒠⒡⒢⒣⒤⒥⒦⒧⒨⒩⒪⒫⒬⒭⒮⒯⒰⒱⒲⒳⒴⒵⒜⒝⒞⒟⒠⒡⒢⒣⒤⒥⒦⒧⒨⒩⒪⒫⒬⒭⒮⒯⒰⒱⒲⒳⒴⒵0⑴⑵⑶⑷⑸⑹⑺⑻⑼~ `!@#$%^&*()-_=+[]{}|;:'\",<.>/?");
+        put("squared", "🄰🄱🄲🄳🄴🄵🄶🄷🄸🄹🄺🄻🄼🄽🄾🄿🅀🅁🅂🅃🅄🅅🅆🅇🅈🅉🄰🄱🄲🄳🄴🄵🄶🄷🄸🄹🄺🄻🄼🄽🄾🄿🅀🅁🅂🅃🅄🅅🅆🅇🅈🅉0123456789~ `!@#$%^&⧆()⊟_=⊞[]{}|;:'\",<⊡>⧄?⧅");
+        put("squared_negative", "🅰🅱🅲🅳🅴🅵🅶🅷🅸🅹🅺🅻🅼🅽🅾🅿🆀🆁🆂🆃🆄🆅🆆🆇🆈🆉🅰🅱🅲🅳🅴🅵🅶🅷🅸🅹🅺🅻🅼🅽🅾🅿🆀🆁🆂🆃🆄🆅🆆🆇🆈🆉0123456789~ `!@#$%^&*()-_=+[]{}|;:'\",<.>/?");
+        put("upside_down", "ɐqɔpǝɟƃɥᴉɾʞlɯuodbɹsʇnʌʍxʎz∀qƆpƎℲפHIſʞ˥WNOԀQɹS┴∩ΛMX⅄Z0ƖᄅƐㄣϛ9ㄥ86~ ,¡@#$%^⅋*)(-‾=+][}{|;:,,,'>˙</¿");
+    }};
     private static final Map<Character, String> alphabetToEmote = new HashMap<Character, String>() {{
         put(' ', "    ");
         put('#', ":hash:");
@@ -92,7 +112,7 @@ public class CosmeticCog extends Cog {
     }
 
     @Command(name = "emotisay", desc = "Show some text as cool block letters.", aliases = {"emotesay", "esay"}, usage = "[text]")
-    public void cmdStyle(Context ctx) {
+    public void cmdEmotisay(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(":warning: You need some text!").queue();
             return;
@@ -142,7 +162,6 @@ public class CosmeticCog extends Cog {
     @Command(name = "cat", desc = "Get a random cat!")
     public void cmdCat(Context ctx) {
         Unirest.get("http://random.cat/meow")
-                .header("User-Agent", Bot.USER_AGENT)
                 .asJsonAsync(new Callback<JsonNode>() {
                     public void completed(HttpResponse<JsonNode> response) {
                         String imageUrl = response.getBody().getObject().getString("file");
@@ -185,12 +204,11 @@ public class CosmeticCog extends Cog {
         EmoteInfo info = EMOTE_PROVIDER_MANAGER.getFirstInfo(ctx.rawArgs);
 
         Unirest.get(url)
-                .header("User-Agent", Bot.USER_AGENT)
                 .asBinaryAsync(new Callback<InputStream>() {
                     @Override
                     public void completed(HttpResponse<InputStream> response) {
                         Message msg = null;
-                        if (info != null) {
+                        if (info.description != null) {
                             msg = new MessageBuilder()
                                     .append(info.description)
                                     .build();
@@ -208,5 +226,55 @@ public class CosmeticCog extends Cog {
                         ctx.send(":x: The request was cancelled.").queue();
                     }
                 });
+    }
+
+    private String applyStyle(String orig, String mapTo) {
+        String mapFrom = charsets.get("normal");
+        StringBuilder newString = new StringBuilder();
+        int i = 0;
+
+        while (i < orig.length()) {
+            char origChar1 = orig.charAt(i);
+            char origChar2;
+            char newChar1 = mapTo.charAt(i);
+            char newChar2 = mapTo.charAt(i + 1);
+        }
+    }
+
+    @Command(name = "styles", desc = "List the available text styles.", aliases = {"fonts"})
+    public void cmdStyles(Context ctx) {
+        EmbedBuilder emb = new EmbedBuilder()
+                .setAuthor("Text Styles", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
+                .setColor(randomColor())
+                .setDescription("\u200b");
+
+        for (Map.Entry<String, String> entry: charsets.entrySet()) {
+            emb.appendDescription("    \u2022 " + applyStyle(entry.getKey(), entry.getValue()) + "\n");
+        }
+        emb.appendDescription("\n\nUse a style with the `style` command: `style [name] [text]`.");
+
+        ctx.send(emb.build()).queue();
+    }
+
+    @Command(name = "style", desc = "Apply a style to some text.", aliases = {"font"})
+    public void cmdStyle(Context ctx) {
+        if (ctx.rawArgs.length() < 1) {
+            ctx.send(":warning: Usage is `style [style name] [text]`.\n" +
+                    "\nTip: *use the `styles` command to see what there is.*").queue();
+            return;
+        }
+        if (ctx.args.size() < 2) {
+            ctx.send(":warning: Usage is `style [style name] [text]`.").queue();
+            return;
+        }
+
+        String styleName = ctx.args.get(0);
+        if (!charsets.containsKey(styleName)) {
+            ctx.send(":warning: No such style! List them with the `styles` command.").queue();
+            return;
+        }
+
+        String text = ctx.rawArgs.substring(styleName.length()).trim();
+        ctx.send(applyStyle(text, charsets.get(styleName))).queue();
     }
 }

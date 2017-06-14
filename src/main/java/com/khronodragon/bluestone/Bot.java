@@ -35,7 +35,7 @@ import java.util.stream.IntStream;
 import static java.text.MessageFormat.format;
 
 public class Bot extends ListenerAdapter implements ClassUtilities {
-    public static final String USER_AGENT = "Goldmine (Project Bluestone) Discord Bot by Dragon5232 (tiny.cc/goldbot)";
+    public static final String USER_AGENT = "Goldmine/2 Discord Bot (tiny.cc/goldbot)";
     public Logger logger = LogManager.getLogger(Bot.class);
     private ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder()
                                                             .setDaemon(true)

@@ -32,8 +32,10 @@ public class BetterTTVEmoteProvider implements EmoteProvider {
 
                             tempEmotes.put(name, realEmote);
                         }
+                        emotes = tempEmotes;
+                        template = "https:" + StringUtils.replaceOnce(data.getString("urlTemplate"), "{{image}}", "2x");
 
-                        template = StringUtils.replaceOnce(data.getString("urlTemplate"), "{{image}}", "2x");
+                        LogManager.getLogger(BetterTTVEmoteProvider.class).info("Data loaded.");
                     }
 
                     @Override
@@ -43,7 +45,7 @@ public class BetterTTVEmoteProvider implements EmoteProvider {
 
                     @Override
                     public void cancelled() {
-                        LogManager.getLogger(BetterTTVEmoteProvider.class).error("Data request cancelled");
+                        LogManager.getLogger(BetterTTVEmoteProvider.class).error("Data request cancelled!");
                     }
                 });
     }

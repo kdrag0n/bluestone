@@ -8,17 +8,20 @@ public class DiscordEmoteProvider implements EmoteProvider {
 
     @Override
     public boolean hasEmote(String emote) {
-        return emote.matches(CUSTOM_EMOTE_PATTERN.pattern());
+        return emote.matches("<:[a-zA-Z_]+:[0-9]{17,19}>");
     }
 
     @Override
     public String getUrl(String emote) {
-        return "https://cdn.discordapp.com/emojis/" + CUSTOM_EMOTE_PATTERN.matcher(emote).group(2) + ".png";
+        Matcher matcher = CUSTOM_EMOTE_PATTERN.matcher(emote);
+        matcher.find();
+        return "https://cdn.discordapp.com/emojis/" + matcher.group(2) + ".png";
     }
 
     @Override
     public EmoteInfo getEmoteInfo(String emote) {
         Matcher matcher = CUSTOM_EMOTE_PATTERN.matcher(emote);
+        matcher.find();
         return new EmoteInfo(matcher.group(1), matcher.group(2), null);
     }
 

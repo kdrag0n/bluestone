@@ -46,6 +46,8 @@ dependencies {
     compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.8.2'
     compile 'org.beanshell:bsh:2.1b5'
     compile 'com.lmax:disruptor:3.3.6'
+    compile 'com.sparkjava:spark-core:2.6.0'
+    compile 'com.j2html:j2html:1.0.0'
 }
 /*
 tasks.withType(ScalaCompile) {

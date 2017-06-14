@@ -9,9 +9,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.json.JSONObject;
 
+import static com.khronodragon.bluestone.util.Strings.str;
+
 public class TwitchEmoteProvider implements EmoteProvider {
-    private JSONObject emotes = null;
-    private JSONObject templates = null;
+    public JSONObject emotes = null;
+    public JSONObject templates = null;
 
     public TwitchEmoteProvider() {
         Unirest.get("https://twitchemotes.com/api_cache/v2/global.json")
@@ -20,7 +22,8 @@ public class TwitchEmoteProvider implements EmoteProvider {
                     public void completed(HttpResponse<JsonNode> response) {
                         JSONObject data = response.getBody().getObject();
                         emotes = data.getJSONObject("emotes");
-                        templates = data.getJSONObject("templates");
+                        templates = data.getJSONObject("template");
+                        LogManager.getLogger(TwitchEmoteProvider.class).info("Data loaded.");
                     }
 
                     @Override
@@ -30,7 +33,7 @@ public class TwitchEmoteProvider implements EmoteProvider {
 
                     @Override
                     public void cancelled() {
-                        LogManager.getLogger(TwitchEmoteProvider.class).error("Data request cancelled");
+                        LogManager.getLogger(TwitchEmoteProvider.class).error("Data request cancelled!");
                     }
                 });
     }
@@ -48,7 +51,7 @@ public class TwitchEmoteProvider implements EmoteProvider {
     @Override
     public String getUrl(String emote) {
         if (emotes.has(emote)) {
-            return StringUtils.replaceOnce(templates.getString("medium"), "{image_id}", emotes.getJSONObject(emote).getString("image_id"));
+            return StringUtils.replaceOnce(templates.getString("medium"), "{image_id}", str(emotes.getJSONObject(emote).getInt("image_id")));
         } else {
             return null;
         }
@@ -58,7 +61,7 @@ public class TwitchEmoteProvider implements EmoteProvider {
     public EmoteInfo getEmoteInfo(String emote) {
         if (emotes.has(emote)) {
             JSONObject emoteObj = emotes.getJSONObject(emote);
-            return new EmoteInfo(emote, emoteObj.getString("image_id"), emoteObj.optString("description"));
+            return new EmoteInfo(emote, str(emoteObj.getInt("image_id")), emoteObj.optString("description"));
         } else {
             return null;
         }

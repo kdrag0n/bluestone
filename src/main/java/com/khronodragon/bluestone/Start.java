@@ -2,6 +2,7 @@ package com.khronodragon.bluestone;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mashape.unirest.http.Unirest;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 
@@ -28,6 +29,8 @@ public class Start {
             System.out.println("Warning: unrecognized account type! Use either 'client' (user) or 'bot' (bot). Assuming bot.");
             accountType = AccountType.BOT;
         }
+
+        Unirest.setDefaultHeader("User-Agent", Bot.USER_AGENT);
 
         try {
             Bot.start(token, shardCount, accountType, auth);

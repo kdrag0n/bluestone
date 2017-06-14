@@ -64,7 +64,6 @@ public class GoogleCog extends Cog {
                 .setAuthor("Google", "https://google.com/", "https://raw.githubusercontent.com/Armored-Dragon/goldmine/master/assets/icon-google.png");
 
         Unirest.get(format(API_URL_BASE, key, encodedQuery))
-                .header("User-Agent", Bot.USER_AGENT)
                 .asJsonAsync(new Callback<JsonNode>() {
                     @Override
                     public void completed(HttpResponse<JsonNode> response) {
