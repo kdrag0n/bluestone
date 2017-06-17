@@ -1,4 +1,4 @@
-package com.khronodragon.bluestone;
+package com.khronodragon.bluestone.util;
 
 import java.util.concurrent.ThreadLocalRandom;
 

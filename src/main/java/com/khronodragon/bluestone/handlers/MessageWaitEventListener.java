@@ -1,4 +1,4 @@
-package com.khronodragon.bluestone.listeners;
+package com.khronodragon.bluestone.handlers;
 
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;

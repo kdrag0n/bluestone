@@ -52,7 +52,7 @@ public class Base65536 {
             codePoints.add(codePoint);
         }
 
-        return String.join("", codePoints.stream().map(codePoint -> {
+        return Strings.simpleJoin(codePoints.stream().map(codePoint -> {
             if (codePoint < bmpThreshold) {
                 return Character.toString((char) (int) codePoint);
             }

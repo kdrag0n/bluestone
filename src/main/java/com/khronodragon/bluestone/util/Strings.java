@@ -34,8 +34,17 @@ public class Strings {
     }
 
     public static String smartJoin(String[] array) {
-        array[array.length - 1] = "or " + array[array.length - 1];
+        if (array.length > 1)
+            array[array.length - 1] = "or " + array[array.length - 1];
+
         return String.join(", ", array);
+    }
+
+    public static String smartJoin(List<String> list) {
+        if (list.size() > 1)
+            list.set(list.size() - 1, "or " + list.get(list.size() - 1));
+
+        return String.join(", ", list);
     }
 
     public static String str(long value) {
@@ -44,5 +53,15 @@ public class Strings {
 
     public static String str(int value) {
         return Integer.toString(value);
+    }
+
+    public static String simpleJoin(List<String> strings) {
+        StringBuilder builder = new StringBuilder();
+
+        for (String str: strings) {
+            builder.append(str);
+        }
+
+        return builder.toString();
     }
 }

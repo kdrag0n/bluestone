@@ -48,14 +48,7 @@ dependencies {
     compile 'com.lmax:disruptor:3.3.6'
     compile 'com.sparkjava:spark-core:2.6.0'
     compile 'com.j2html:j2html:1.0.0'
+    compile 'io.codearte.jfairy:jfairy:0.5.7'
 }
-/*
-tasks.withType(ScalaCompile) {
-    configure(scalaCompileOptions.forkOptions) {
-        memoryMaximumSize = '1G'
-        jvmArgs = ['-XX:MaxPermSize=512M']
-    }
-}
-*/
+
 compileJava.options.encoding = 'UTF-8'
-// compileScala.options.encoding = 'UTF-8'

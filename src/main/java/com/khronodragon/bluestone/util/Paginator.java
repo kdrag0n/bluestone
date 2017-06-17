@@ -1,4 +1,4 @@
-package com.khronodragon.bluestone;
+package com.khronodragon.bluestone.util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,10 +34,10 @@ public class Paginator {
         count = 0;
     }
 
-    public List<String> getPages() {
+    public String[] getPages() {
         if (currentPage.size() > 0) {
             closePage();
         }
-        return pages;
+        return pages.toArray(new String[0]);
     }
 }

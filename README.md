@@ -2,7 +2,7 @@
 
 This is Project Bluestone, the rewrite of Goldmine in Java (and some Scala).
 
-You will need to create `auth.json` for the bot to be able to start.
+You will need to create `config.json` for the bot to be able to start.
 This is the template:
 ```json
 {

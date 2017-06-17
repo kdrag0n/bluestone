@@ -1,6 +1,7 @@
 package com.khronodragon.bluestone;
 
 import com.khronodragon.bluestone.annotations.Command;
+import com.khronodragon.bluestone.util.ClassUtilities;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
@@ -92,6 +93,18 @@ public abstract class Cog implements ClassUtilities {
 
         return new EmbedBuilder()
                 .setAuthor(name, url, iconUrl);
+    }
+
+    protected String getEffectiveName(Context ctx) {
+        if (ctx.guild == null) {
+            return ctx.jda.getSelfUser().getName();
+        } else {
+            return ctx.guild.getSelfMember().getEffectiveName();
+        }
+    }
+
+    protected String getTag(User user) {
+        return user.getName() + '#' + user.getDiscriminator();
     }
 
     public static void removeReactionIfExists(Message message, String unicode) {

@@ -13,12 +13,12 @@ import java.nio.file.Paths;
 
 public class Start {
     public static void main(String[] args) throws IOException {
-        String jsonCode = new String(Files.readAllBytes(Paths.get("auth.json")));
-        JsonObject auth = new JsonParser().parse(jsonCode).getAsJsonObject();
+        String jsonCode = new String(Files.readAllBytes(Paths.get("config.json")));
+        JsonObject config = new JsonParser().parse(jsonCode).getAsJsonObject();
 
-        String token = auth.get("token").getAsString();
-        int shardCount = auth.get("shardCount").getAsInt(); // 1
-        String type = auth.get("type").getAsString(); // "bot"
+        String token = config.get("token").getAsString();
+        int shardCount = config.get("shardCount").getAsInt(); // 1
+        String type = config.get("type").getAsString(); // "bot"
 
         AccountType accountType;
         if (type.equals("bot")) {
@@ -33,10 +33,8 @@ public class Start {
         Unirest.setDefaultHeader("User-Agent", Bot.USER_AGENT);
 
         try {
-            Bot.start(token, shardCount, accountType, auth);
-        } catch (LoginException e) {
-            e.printStackTrace();
-        } catch (RateLimitedException e) {
+            Bot.start(token, shardCount, accountType, config);
+        } catch (LoginException|RateLimitedException e) {
             e.printStackTrace();
         }
     }

@@ -2,6 +2,8 @@ package com.khronodragon.bluestone.cogs;
 
 import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
+import com.khronodragon.bluestone.enums.MessageDestination;
+import com.khronodragon.bluestone.util.Paginator;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.MessageEmbed;
@@ -70,7 +72,7 @@ public class CoreCog extends Cog {
             for (com.khronodragon.bluestone.Command cmd: new HashSet<>(bot.commands.values())) {
                 if (!cmd.hidden) {
                     String cName = cmd.instance.getName();
-                    String entry = "\u2022 **" + cmd.name + "**: *" + cmd.description + "*";
+                    String entry = "\u2022 **" + cmd.name + "**: *" + cmd.description + '*';
 
                     if (fields.containsKey(cName)) {
                         fields.get(cName).add(entry);
@@ -89,7 +91,7 @@ public class CoreCog extends Cog {
                     for (com.khronodragon.bluestone.Command cmd: new HashSet<>(bot.commands.values())) {
                         if (cmd.instance == cog && !cmd.hidden) {
                             String cName = cmd.instance.getName();
-                            String entry = "\u2022 **" + cmd.name + "**: *" + cmd.description + "*";
+                            String entry = "\u2022 **" + cmd.name + "**: *" + cmd.description + '*';
 
                             if (fields.containsKey(cName)) {
                                 fields.get(cName).add(entry);
@@ -104,7 +106,7 @@ public class CoreCog extends Cog {
                     com.khronodragon.bluestone.Command cmd = bot.commands.get(litem);
                     String field = "`";
                     if (cmd.aliases.length == 0) {
-                        field += cmd.name + "`";
+                        field += cmd.name + '`';
                     } else {
                         field += String.join("/", cmd.aliases);
                     }
@@ -148,7 +150,7 @@ public class CoreCog extends Cog {
         }
         pages.add(emb.build());
 
-        MessageDestination destination = MessageDestination.CHANNEL;//AUTHOR; // for testing // TODO: remove this
+        MessageDestination destination = MessageDestination.AUTHOR;
         if (sendPublic || bot.isSelfbot()) {
             destination = MessageDestination.CHANNEL;
         } else {

@@ -242,7 +242,7 @@ public class MusicCog extends Cog implements EventedCog {
             builder.append("Uploader: *" + info.author + "*\n");
         }
 
-        builder.append("Length: *" + Bot.formatDuration(info.length / 1000) + "*");
+        builder.append("Length: *" + Bot.formatDuration(info.length / 1000) + '*');
         return builder.toString();
     }
 
@@ -278,7 +278,7 @@ public class MusicCog extends Cog implements EventedCog {
 
         for (AudioTrack track: state.scheduler.queue) {
             AudioTrackInfo info = track.getInfo();
-            builder.addField(info.title, renderInfo(info), true);
+            builder.addField(info.title, renderInfo(info), false);
         }
 
         ctx.send(new MessageBuilder()
@@ -305,14 +305,14 @@ public class MusicCog extends Cog implements EventedCog {
         } else {
             int targetVotes = (int) Math.ceil(ctx.guild.getSelfMember().getVoiceState().getChannel().getMembers().size() / 2.0f);
             if (info.hasVotedToSkip(ctx.member)) {
-                ctx.send("You've already voted to skip this track. Votes: **[" + info.getSkipVotes() + "/" + targetVotes + "]**").queue();
+                ctx.send("You've already voted to skip this track. Votes: **[" + info.getSkipVotes() + '/' + targetVotes + "]**").queue();
             } else {
                 if (info.getSkipVotes() == targetVotes - 1) {
                     state.scheduler.skip();
                     ctx.send("Skip vote passed.").queue();
                 } else {
                     info.addSkipVote(ctx.member);
-                    ctx.send("Skip vote added. Votes: **[" + info.getSkipVotes() + "/" + targetVotes + "]**").queue();
+                    ctx.send("Skip vote added. Votes: **[" + info.getSkipVotes() + '/' + targetVotes + "]**").queue();
                 }
             }
         }

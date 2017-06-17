@@ -1,4 +1,4 @@
-package com.khronodragon.bluestone;
+package com.khronodragon.bluestone.handlers;
 
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;

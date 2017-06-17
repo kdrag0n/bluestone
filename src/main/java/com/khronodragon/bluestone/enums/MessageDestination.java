@@ -1,5 +1,6 @@
-package com.khronodragon.bluestone;
+package com.khronodragon.bluestone.enums;
 
+import com.khronodragon.bluestone.Context;
 import net.dv8tion.jda.core.entities.MessageChannel;
 
 public enum MessageDestination {

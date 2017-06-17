@@ -6,8 +6,10 @@ import com.khronodragon.bluestone.errors.CheckFailure;
 import com.khronodragon.bluestone.errors.GuildOnlyError;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.errors.PermissionError;
-import com.khronodragon.bluestone.listeners.MessageWaitEventListener;
-import com.khronodragon.bluestone.listeners.ReactionWaitEventListener;
+import com.khronodragon.bluestone.handlers.MessageWaitEventListener;
+import com.khronodragon.bluestone.handlers.ReactionWaitEventListener;
+import com.khronodragon.bluestone.handlers.RejectedExecHandlerImpl;
+import com.khronodragon.bluestone.util.ClassUtilities;
 import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.bot.entities.ApplicationInfo;
 import net.dv8tion.jda.core.*;
@@ -63,15 +65,19 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     private JDA jda;
     private ShardUtil shardUtil;
 
-    public JsonObject getAuth() {
-        return auth;
+    public JsonObject getConfig() {
+        return config;
     }
 
-    public void setAuth(JsonObject auth) {
-        this.auth = auth;
+    public void setConfig(JsonObject config) {
+        this.config = config;
     }
 
-    private JsonObject auth;
+    private JsonObject config;
+
+    public JsonObject getKeys() {
+        return config.getAsJsonObject("keys");
+    }
 
     public Bot() {
         super();
@@ -84,7 +90,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         this.jda = jda;
         final ShardInfo sInfo = jda.getShardInfo();
         if (sInfo != null) {
-            logger = LogManager.getLogger("Bot [" + sInfo.getShardString() + "]");
+            logger = LogManager.getLogger("Bot [" + sInfo.getShardString() + ']');
         }
     }
 
@@ -132,7 +138,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         List<String> stack = new ArrayList<>();
         stack.add(e.getClass().getSimpleName() + ": " + e.getMessage());
         for (StackTraceElement elem: limitedElems) {
-            String base = "> " + elem.getClassName() + "." + elem.getMethodName();
+            String base = "> " + elem.getClassName() + '.' + elem.getMethodName();
             base += elem.isNativeMethod() ? "(native)" : format("({0})", elem.getLineNumber());
             stack.add(base);
         }
@@ -229,13 +235,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             try {
                 Object obj = cogClass.getConstructor(this.getClass()).newInstance(this);
                 ((Cog) obj).register();
-            } catch (NoSuchMethodException e) {
-                logger.error("Failed to register cog {}", cogClass.getName(), e);
-            } catch (InstantiationException e) {
-                logger.error("Failed to register cog {}", cogClass.getName(), e);
-            } catch (IllegalAccessException e) {
-                logger.error("Failed to register cog {}", cogClass.getName(), e);
-            } catch (InvocationTargetException e) {
+            } catch (NoSuchMethodException|InstantiationException|IllegalAccessException|InvocationTargetException e) {
                 logger.error("Failed to register cog {}", cogClass.getName(), e);
             }
         }
@@ -383,10 +383,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         long s = duration % 60;
         long d = h / 24;
         h = h % 24;
-        String sd = (d > 0 ? String.valueOf(d) + " " + "day" + (d == 1 ? "" : "s") : "");
-        String sh = (h > 0 ? String.valueOf(h) + " " + "hr" : "");
-        String sm = (m < 10 && m > 0 && h > 0 ? "0" : "") + (m > 0 ? (h > 0 && s == 0 ? String.valueOf(m) : String.valueOf(m) + " " + "min") : "");
-        String ss = (s == 0 && (h > 0 || m > 0) ? "" : (s < 10 && (h > 0 || m > 0) ? "0" : "") + String.valueOf(s) + " " + "sec");
+        String sd = (d > 0 ? String.valueOf(d) + ' ' + "day" + (d == 1 ? "" : "s") : "");
+        String sh = (h > 0 ? String.valueOf(h) + ' ' + "hr" : "");
+        String sm = (m < 10 && m > 0 && h > 0 ? "0" : "") + (m > 0 ? (h > 0 && s == 0 ? String.valueOf(m) : String.valueOf(m) + ' ' + "min") : "");
+        String ss = (s == 0 && (h > 0 || m > 0) ? "" : (s < 10 && (h > 0 || m > 0) ? "0" : "") + String.valueOf(s) + ' ' + "sec");
         return sd + (d > 0 ? " " : "") + sh + (h > 0 ? " " : "") + sm + (m > 0 ? " " : "") + ss;
     }
 
@@ -403,12 +403,12 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
         ShardUtil shardUtil = new ShardUtil(shardCount);
 
-        for (int shardId: IntStream.range(0, shardCount).toArray()) {
+        IntStream.range(0, shardCount).forEach(shardId -> {
             Runnable monitor = () -> {
                 final Logger logger = LogManager.getLogger("ShardMonitor " + shardId);
                 while (true) {
                     Bot bot = new Bot();
-                    bot.setAuth(config);
+                    bot.setConfig(config);
                     JDABuilder builder = new JDABuilder(accountType)
                             .setToken(token)
                             .addEventListener(bot)
@@ -477,7 +477,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             try {
                 Thread.sleep(5100);
             } catch (InterruptedException e) {}
-        }
+        });
 
         return 0;
     }

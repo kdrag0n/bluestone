@@ -13,6 +13,7 @@ import net.dv8tion.jda.core.EmbedBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
@@ -23,6 +24,7 @@ import static java.text.MessageFormat.format;
 public class GoogleCog extends Cog {
     private static final Logger logger = LogManager.getLogger(GoogleCog.class);
     protected static final String API_URL_BASE = "https://www.googleapis.com/customsearch/v1?key={0}&cx=011887893391472424519:xf_tuvgfrgk&safe=off&q={1}";
+
     public GoogleCog(Bot bot) {
         super(bot);
     }
@@ -43,7 +45,7 @@ public class GoogleCog extends Cog {
         }
 
         final String query = String.join(" ", ctx.args);
-        String key = bot.getAuth().getAsJsonObject("keys").get("google").getAsString();
+        String key = bot.getKeys().get("google").getAsString();
         if (key == null) {
             ctx.send(":x: The bot doesn't have a Google API key set up!").queue();
             return;
@@ -79,7 +81,23 @@ public class GoogleCog extends Cog {
                                         .setDescription(result.getString("snippet"))
                                         .addField("Link", result.getString("link"), false);
 
-                                // emb.setImage(['pagemap']['metatags'][0]['og:image'] or 'twitter:image');
+                                try {
+                                    JSONObject meta = result.getJSONObject("pagemap").getJSONArray("metatags").getJSONObject(0);
+
+                                    if (meta.has("twitter:image")) {
+                                        if (meta.has("twitter:card")) {
+                                            if (meta.getString("twitter:card").equals("summary_large_image")) {
+                                                emb.setImage(meta.getString("twitter:image"));
+                                            } else {
+                                                emb.setThumbnail(meta.getString("twitter:image"));
+                                            }
+                                        } else {
+                                            emb.setThumbnail(meta.getString("twitter:image"));
+                                        }
+                                    } else if (meta.has("og:image")) {
+                                        emb.setThumbnail(meta.getString("og:image"));
+                                    }
+                                } catch (JSONException ignored) {}
                             } else {
                                 emb.setDescription("No results.");
                             }
