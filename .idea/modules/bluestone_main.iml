@@ -28,6 +28,8 @@
     <orderEntry type="library" name="Gradle: com.sparkjava:spark-core:2.6.0" level="project" />
     <orderEntry type="library" name="Gradle: com.j2html:j2html:1.0.0" level="project" />
     <orderEntry type="library" name="Gradle: io.codearte.jfairy:jfairy:0.5.7" level="project" />
+    <orderEntry type="library" name="Gradle: com.google.zxing:core:3.2.0" level="project" />
+    <orderEntry type="library" name="Gradle: com.google.zxing:javase:3.2.0" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-lang3:3.5" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-collections4:4.1" level="project" />
     <orderEntry type="library" name="Gradle: org.json:json:20160810" level="project" />

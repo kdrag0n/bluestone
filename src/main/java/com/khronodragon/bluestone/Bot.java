@@ -132,15 +132,33 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
     }
 
+    protected static String vagueTraceElement(StackTraceElement elem) {
+        String base = "> " + elem.getClassName() + '.' + elem.getMethodName();
+        base += elem.isNativeMethod() ? "(native)" : format("({0})", elem.getLineNumber());
+
+        return base;
+    }
+
     public static String vagueTrace(Throwable e) {
         StackTraceElement[] elements = e.getStackTrace();
         StackTraceElement[] limitedElems = {elements[0], elements[1]};
         List<String> stack = new ArrayList<>();
         stack.add(e.getClass().getSimpleName() + ": " + e.getMessage());
+
         for (StackTraceElement elem: limitedElems) {
-            String base = "> " + elem.getClassName() + '.' + elem.getMethodName();
-            base += elem.isNativeMethod() ? "(native)" : format("({0})", elem.getLineNumber());
-            stack.add(base);
+            stack.add(vagueTraceElement(elem));
+        }
+
+        if (!stack.stream()
+            .anyMatch(s -> s.contains("com.khronodragon.bluestone.cogs"))) {
+            Optional<StackTraceElement> optElem = Arrays.stream(elements)
+                    .filter(el -> el.getClassName().startsWith("com.khronodragon.bluestone.cogs."))
+                    .findFirst();
+
+            if (optElem.isPresent()) {
+                stack.add("");
+                stack.add(vagueTraceElement(optElem.get()));
+            }
         }
         return String.join("\n  ", stack);
     }
@@ -149,10 +167,12 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         StackTraceElement[] elements = e.getStackTrace();
         List<String> stack = new ArrayList<>();
         stack.add(e.getClass().getName() + ": " + e.getMessage());
+
         for (StackTraceElement elem: elements) {
             String base = "at " + elem.toString();
             stack.add(base);
         }
+
         return StringUtils.join(stack, "\n    ");
     }
 

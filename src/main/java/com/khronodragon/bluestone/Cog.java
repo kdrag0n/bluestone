@@ -112,4 +112,8 @@ public abstract class Cog implements ClassUtilities {
             r.removeReaction().queue();
         });
     }
+
+    protected<T> T randomChoice(T[] array) {
+        return array[randint(0, array.length)];
+    }
 }

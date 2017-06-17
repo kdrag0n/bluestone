@@ -4,6 +4,13 @@ import ch.jamiete.mcping.MinecraftPing;
 import ch.jamiete.mcping.MinecraftPingOptions;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.WriterException;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.Cooldown;
@@ -14,6 +21,8 @@ import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.async.Callback;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import io.codearte.jfairy.Fairy;
+import io.codearte.jfairy.producer.person.Person;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Emote;
@@ -21,6 +30,7 @@ import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.MessageReaction.ReactionEmote;
 import net.dv8tion.jda.core.entities.PrivateChannel;
 import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.entities.impl.UserImpl;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.lang3.ArrayUtils;
@@ -36,8 +46,7 @@ import static com.khronodragon.bluestone.util.Strings.str;
 import static java.text.MessageFormat.format;
 
 import java.awt.*;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -51,6 +60,12 @@ public class UtilityCog extends Cog {
     private static final Pattern CUSTOM_EMOTE_PATTERN = Pattern.compile("<:[a-z_]+:([0-9]{17,19})>", Pattern.CASE_INSENSITIVE);
     private static final int[] CHAR_NO_PREVIEW = {32, 65279};
     private static final String MC_COLOR_PATTERN = "\\u00a7[4c6e2ab319d5f78lnokmr]";
+    private static final Fairy fairy = Fairy.create();
+    private static final QRCodeWriter qrWriter = new QRCodeWriter();
+    private static final Map qrHintMap = new HashMap() {{
+        put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
+        put(EncodeHintType.CHARACTER_SET, "UTF-8");
+    }};
 
     public UtilityCog(Bot bot) {
         super(bot);
@@ -304,6 +319,7 @@ public class UtilityCog extends Cog {
         }
         json.put("text0", topText);
         json.put("text1", bottomText);
+        logger.info("req {}", json);
 
         Unirest.post("https://api.imgflip.com/caption_image")
                 .body(json)
@@ -311,13 +327,14 @@ public class UtilityCog extends Cog {
                     @Override
                     public void completed(HttpResponse<JsonNode> response) {
                         JSONObject resp = response.getBody().getObject();
+                        logger.info(resp);
                         if (resp.getBoolean("success")) {
                             ctx.send(new EmbedBuilder()
                             .setColor(randomColor())
                             .setImage(resp.getJSONObject("data").getString("url"))
                             .build()).queue();
                         } else {
-                            ctx.send(":warning: Error! `" + resp.getString("error_message") + '`').queue();
+                            ctx.send(":warning: Error: `" + resp.getString("error_message") + '`').queue();
                         }
                     }
 
@@ -353,7 +370,7 @@ public class UtilityCog extends Cog {
                         .append(", ")
                         .append(b)
                         .append(" | Integer: ")
-                        .append(color.getRGB())
+                        .append(Math.abs(color.getRGB()))
                         .toString());
 
         ctx.send(embed.build()).queue();
@@ -371,7 +388,7 @@ public class UtilityCog extends Cog {
 
         while (iterator.hasNext()) {
             int codepoint = iterator.nextInt();
-            final String fmt = ArrayUtils.contains(CHAR_NO_PREVIEW, codepoint) ? "U+%04x %1$s %1%c" : "U+%04x %1$s %1%c (`%1$c`)";
+            final String fmt = ArrayUtils.contains(CHAR_NO_PREVIEW, codepoint) ? "U+%04X %2$s %1$c" : "U+%04X %2$s %1$c (`%1$c`)";
 
             pager.addLine(String.format(fmt, codepoint, Character.getName(codepoint)));
         }
@@ -402,7 +419,7 @@ public class UtilityCog extends Cog {
             return;
         }
 
-        ctx.send("```" + Base65536.encode(bytes) + "```");
+        ctx.send("```" + Base65536.encode(bytes) + "```").queue();
     }
 
     @Command(name = "decode", desc = "Decode Base65536 into regular text.", usage = "[text]")
@@ -563,11 +580,12 @@ public class UtilityCog extends Cog {
         }
 
         EmbedBuilder emb = new EmbedBuilder()
+                .setColor(randomColor())
                 .setAuthor(getTag(ctx.author), ctx.author.getEffectiveAvatarUrl(), ctx.author.getEffectiveAvatarUrl())
                 .setDescription(ctx.rawArgs)
                 .addField("Message ID", ctx.message.getId(), true)
                 .addField("Author ID", ctx.author.getId(), true)
-                .addField("Channel", format("**{0}**\nID: `{1,number}`", ctx.channel.getName(), ctx.channel.getId()), true)
+                .addField("Channel", format("**{0}**\nID: `{1}`", ctx.channel.getName(), ctx.channel.getId()), true)
                 .addField("Sent via PM?", ctx.channel instanceof PrivateChannel ? "Yes" : "No", true)
                 .addField("Time", ctx.message.getCreationTime().toString(), true)
                 .addField("Timestamp", str(ctx.message.getCreationTime().toEpochSecond()), true)
@@ -592,10 +610,57 @@ public class UtilityCog extends Cog {
         ctx.send(":thumbsup: Message sent.").queue();
     }
 
+    @Command(name = "rprofile", desc = "Generate a random person.", aliases = {"rperson"})
+    public void cmdRprofile(Context ctx) {
+        Person person = fairy.person();
+
+        EmbedBuilder emb = new EmbedBuilder()
+                .setColor(randomColor())
+                .setAuthor(person.getFirstName(), null, "https://discordapp.com/assets/" + randomChoice(UserImpl.DefaultAvatar.values()).toString() + ".png")
+                .addField("Full Name", person.getFullName(), false)
+                .addField("Age", str(person.getAge()), true)
+                .addField("Email", person.getEmail(), true)
+                .addField("Date of Birth", person.getDateOfBirth().toString("MM/dd/yyyy"), true)
+                .addField("Phone Number", person.getTelephoneNumber(), true)
+                .addField("Address", person.getAddress().toString(), true)
+                .addField("Company", person.getCompany().getName(), true)
+                .addField("Username", person.getUsername(), true)
+                .addField("Gender", WordUtils.capitalizeFully(person.getSex().name()), true)
+                .addField("Passport Number", person.getPassportNumber(), true)
+                .setFooter("Fake profiles FTW!", null);
+
+        ctx.send(emb.build()).queue();
+    }
+
+    private byte[] encodeBarcode(String text, BarcodeFormat format, int size)
+            throws WriterException, IOException {
+        BitMatrix matrix = qrWriter.encode(text, format, size, size, qrHintMap);
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        MatrixToImageWriter.writeToStream(matrix, "PNG", stream);
+
+        return stream.toByteArray();
+    }
+
+    @Command(name = "qrcode", desc = "Generate a QR code.", aliases = {"qr"}, thread = true)
+    public void cmdQrcode(Context ctx) {
+        if (ctx.rawArgs.length() < 1) {
+            ctx.send(":warning: I need some text!").queue();
+        }
+
+        byte[] data;
+        try {
+            data = encodeBarcode(ctx.rawArgs, BarcodeFormat.QR_CODE, 256);
+        } catch (WriterException|IOException e) {
+            logger.error("QR code error", e);
+            ctx.send(":x: An error occurred. Text too long?").queue();
+            return;
+        }
+
+        ctx.channel.sendFile(data, "qrcode.png", null).queue();
+    }
+
     /*
-    rprofile
-    qrcode
-    avatar
     ocr
     discrim
     permissions (perms)
