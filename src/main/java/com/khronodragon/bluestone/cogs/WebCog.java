@@ -15,11 +15,11 @@ public class WebCog extends Cog {
     }
 
     public String getName() {
-        return "WebCog";
+        return "Web";
     }
 
     public String getDescription() {
-        return "A description.";
+        return "The great web dashboard cog.";
     }
 
     @Command(name = "webstatus", desc = "Check the status of the web server.")

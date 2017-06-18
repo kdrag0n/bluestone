@@ -1,8 +1,6 @@
 package com.khronodragon.bluestone.util;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import org.apache.logging.log4j.message.StringFormattedMessage;
+import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -18,20 +16,15 @@ public class MinecraftUtil {
         put("strikethrough", "~~");
     }};
 
-    public static String decodeJsonText(JsonObject data) {
+    public static String decodeJsonText(JSONObject data) {
         List<String> segments = new LinkedList<>();
 
-        for (JsonElement elem: data.getAsJsonArray("extra")) {
-            JsonObject element = elem.getAsJsonObject();
+        for (Object elem: data.getJSONArray("extra")) {
+            JSONObject element = (JSONObject) elem;
 
-            String item = element.get("text").getAsString();
+            String item = element.optString("text", "");
             for (String fkey: FORMAT_KEYS.keySet()) {
-                boolean hasKey = false;
-                try {
-                    hasKey = element.getAsJsonPrimitive(fkey).getAsBoolean();
-                } catch (Exception ignored) {}
-
-                if (hasKey) {
+                if (element.optBoolean(fkey, false)) {
                     String intKey = "{F" + fkey + '}';
                     item = intKey + item + intKey;
                 }

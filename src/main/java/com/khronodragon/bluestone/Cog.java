@@ -6,6 +6,8 @@ import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
 
 import java.awt.Color;
@@ -115,5 +117,9 @@ public abstract class Cog implements ClassUtilities {
 
     protected<T> T randomChoice(T[] array) {
         return array[randint(0, array.length)];
+    }
+
+    protected String[] embedFieldPages(String text) {
+        return StringUtils.split(WordUtils.wrap(text, 1024, "||", true, "\\s+"), "||");
     }
 }

@@ -45,7 +45,7 @@ public class GoogleCog extends Cog {
         }
 
         final String query = String.join(" ", ctx.args);
-        String key = bot.getKeys().get("google").getAsString();
+        String key = bot.getKeys().optString("google");
         if (key == null) {
             ctx.send(":x: The bot doesn't have a Google API key set up!").queue();
             return;

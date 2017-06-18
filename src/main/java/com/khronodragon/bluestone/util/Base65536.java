@@ -91,6 +91,6 @@ public class Base65536 {
                 }
             }
         }
-        return ArrayUtils.toPrimitive(bytes.toArray(new Byte[0]));
+        return ArrayUtils.toPrimitive(bytes.stream().map(i -> Byte.valueOf((byte) (int) i)).toArray(Byte[]::new));
     }
 }

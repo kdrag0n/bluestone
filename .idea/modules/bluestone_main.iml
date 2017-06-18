@@ -13,7 +13,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Gradle: net.dv8tion:JDA:3.1.1_212" level="project" />
-    <orderEntry type="library" name="Gradle: com.google.code.gson:gson:2.8.0" level="project" />
     <orderEntry type="library" name="Gradle: com.sedmelluq:lavaplayer:1.2.39" level="project" />
     <orderEntry type="library" name="Gradle: com.mashape.unirest:unirest-java:1.4.9" level="project" />
     <orderEntry type="library" name="Gradle: com.google.guava:guava:22.0" level="project" />
@@ -23,7 +22,6 @@
     <orderEntry type="library" name="Gradle: org.apache.logging.log4j:log4j-api:2.8.2" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.logging.log4j:log4j-core:2.8.2" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.logging.log4j:log4j-slf4j-impl:2.8.2" level="project" />
-    <orderEntry type="library" name="Gradle: org.beanshell:bsh:2.1b5" level="project" />
     <orderEntry type="library" name="Gradle: com.lmax:disruptor:3.3.6" level="project" />
     <orderEntry type="library" name="Gradle: com.sparkjava:spark-core:2.6.0" level="project" />
     <orderEntry type="library" name="Gradle: com.j2html:j2html:1.0.0" level="project" />

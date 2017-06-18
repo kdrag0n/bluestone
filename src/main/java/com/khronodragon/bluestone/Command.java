@@ -72,7 +72,7 @@ public class Command {
                     }
                 } catch (PermissionError e) {
                     event.getChannel().sendMessage(format("{0} Not enough permissions for `{1}{2}`! **{3}** will work.", event.getAuthor().getAsMention(), prefix, invoker,
-                            Strings.smartJoin(permsRequired))).queue();
+                            Strings.smartJoin(permsRequired, "or"))).queue();
                 } catch (GuildOnlyError e) {
                     event.getChannel().sendMessage("Sorry, that command only works in a guild.").queue();
                 } catch (CheckFailure e) {

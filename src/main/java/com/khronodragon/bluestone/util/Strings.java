@@ -34,15 +34,23 @@ public class Strings {
     }
 
     public static String smartJoin(String[] array) {
+        return smartJoin(array, "and");
+    }
+
+    public static String smartJoin(List<String> list) {
+        return smartJoin(list, "and");
+    }
+
+    public static String smartJoin(String[] array, String sep) {
         if (array.length > 1)
-            array[array.length - 1] = "or " + array[array.length - 1];
+            array[array.length - 1] = sep + ' ' + array[array.length - 1];
 
         return String.join(", ", array);
     }
 
-    public static String smartJoin(List<String> list) {
+    public static String smartJoin(List<String> list, String sep) {
         if (list.size() > 1)
-            list.set(list.size() - 1, "or " + list.get(list.size() - 1));
+            list.set(list.size() - 1, sep + ' ' + list.get(list.size() - 1));
 
         return String.join(", ", list);
     }

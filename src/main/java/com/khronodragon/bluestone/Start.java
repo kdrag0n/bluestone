@@ -1,10 +1,9 @@
 package com.khronodragon.bluestone;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.mashape.unirest.http.Unirest;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
+import org.json.JSONObject;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
@@ -14,11 +13,11 @@ import java.nio.file.Paths;
 public class Start {
     public static void main(String[] args) throws IOException {
         String jsonCode = new String(Files.readAllBytes(Paths.get("config.json")));
-        JsonObject config = new JsonParser().parse(jsonCode).getAsJsonObject();
+        JSONObject config = new JSONObject(jsonCode);
 
-        String token = config.get("token").getAsString();
-        int shardCount = config.get("shardCount").getAsInt(); // 1
-        String type = config.get("type").getAsString(); // "bot"
+        String token = config.getString("token");
+        int shardCount = config.optInt("shardCount", 1); // 1
+        String type = config.optString("type"); // "bot"
 
         AccountType accountType;
         if (type.equals("bot")) {

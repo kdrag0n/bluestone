@@ -28,37 +28,37 @@
  */
 package ch.jamiete.mcping;
 
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 public class MinecraftPing {
 
     /**
-     * Fetches a {@link JsonObject} for the supplied hostname.
+     * Fetches a {@link JSONObject} for the supplied hostname.
      * <b>Assumed timeout of 2s and port of 25565.</b>
      * 
      * @param hostname - a valid String hostname
-     * @return {@link JsonObject}
+     * @return {@link JSONObject}
      * @throws IOException 
      */
-    public JsonObject getPing(final String hostname) throws IOException {
+    public JSONObject getPing(final String hostname) throws IOException {
         return this.getPing(new MinecraftPingOptions().setHostname(hostname));
     }
 
     /**
-     * Fetches a {@link JsonObject} for the supplied options.
+     * Fetches a {@link JSONObject} for the supplied options.
      * 
      * @param options - a filled instance of {@link MinecraftPingOptions}
-     * @return {@link JsonObject}
+     * @return {@link JSONObject}
      * @throws IOException 
      */
-    public JsonObject getPing(final MinecraftPingOptions options) throws IOException {
+    public JSONObject getPing(final MinecraftPingOptions options) throws IOException {
         MinecraftPingUtil.validate(options.getHostname(), "Hostname cannot be null.");
         MinecraftPingUtil.validate(options.getPort(), "Port cannot be null.");
 
@@ -129,8 +129,8 @@ public class MinecraftPing {
         in.close();
         socket.close();
 
-        JsonObject jsonObject = new JsonParser().parse(json).getAsJsonObject();
-        jsonObject.addProperty("ping_millis", pingMs);
+        JSONObject jsonObject = new JSONObject(json);
+        jsonObject.put("ping_millis", pingMs);
 
         return jsonObject;
     }

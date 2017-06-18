@@ -7,10 +7,12 @@ This is the template:
 ```json
 {
   "token": "token",
-  "shardCount": 2,
+  "shard_count": 2,
   "type": "bot",
   "keys": {
-    "google": ""
+    "google": "",
+    "discord_bots": "",
+    "carbonitex": ""
   }
 }
 ```
@@ -24,6 +26,10 @@ Optionally, obtain a Google API key with the following features enabled:
  - YouTube Data API v3
 
 and put it in the JSON.
+
+You may also provide Discord Bots and Carbonitex keys if you have valid ones.
+However, invalid or empty keys will cause errors
+whenever guild count is updated.
 
 ### Enjoy!
 Don't forget that this project is still experimental.

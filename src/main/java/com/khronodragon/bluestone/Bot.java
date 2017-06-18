@@ -1,7 +1,6 @@
 package com.khronodragon.bluestone;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.gson.JsonObject;
 import com.khronodragon.bluestone.errors.CheckFailure;
 import com.khronodragon.bluestone.errors.GuildOnlyError;
 import com.khronodragon.bluestone.errors.PassException;
@@ -23,6 +22,7 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONObject;
 import org.reflections.Reflections;
 
 import javax.security.auth.login.LoginException;
@@ -65,18 +65,18 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     private JDA jda;
     private ShardUtil shardUtil;
 
-    public JsonObject getConfig() {
+    public JSONObject getConfig() {
         return config;
     }
 
-    public void setConfig(JsonObject config) {
+    public void setConfig(JSONObject config) {
         this.config = config;
     }
 
-    private JsonObject config;
+    private JSONObject config;
 
-    public JsonObject getKeys() {
-        return config.getAsJsonObject("keys");
+    public JSONObject getKeys() {
+        return config.getJSONObject("keys");
     }
 
     public Bot() {
@@ -253,8 +253,9 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         Set<Class<? extends Cog>> cogClasses = reflector.getSubTypesOf(Cog.class);
         for (Class cogClass: cogClasses) {
             try {
-                Object obj = cogClass.getConstructor(this.getClass()).newInstance(this);
-                ((Cog) obj).register();
+                Cog cog = (Cog) cogClass.getConstructor(this.getClass()).newInstance(this);
+                cog.register();
+                cog.load();
             } catch (NoSuchMethodException|InstantiationException|IllegalAccessException|InvocationTargetException e) {
                 logger.error("Failed to register cog {}", cogClass.getName(), e);
             }
@@ -323,7 +324,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     }
                 } catch (PermissionError e) {
                     channel.sendMessage(format("{0} Not enough permissions for `{1}{2}`! **{3}** will work.", author.getAsMention(), prefix, cmdName,
-                            Strings.smartJoin(command.getFriendlyPerms()))).queue();
+                            Strings.smartJoin(command.getFriendlyPerms(), ""))).queue();
                 } catch (GuildOnlyError e) {
                     channel.sendMessage("Sorry, that command only works in a guild.").queue();
                 } catch (CheckFailure e) {
@@ -410,7 +411,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         return sd + (d > 0 ? " " : "") + sh + (h > 0 ? " " : "") + sm + (m > 0 ? " " : "") + ss;
     }
 
-    public static int start(String token, int shardCount, AccountType accountType, JsonObject config) throws LoginException, RateLimitedException {
+    public static int start(String token, int shardCount, AccountType accountType, JSONObject config) throws LoginException, RateLimitedException {
         System.out.println("Starting...");
 
         if (shardCount < 1) {

@@ -167,6 +167,15 @@ public class CosmeticCog extends Cog {
         ctx.send("(╯°□°）╯︵ ┻━─┬\uFEFF ノ( ゜-゜ノ)").queue();
     }
 
+    @Command(name = "bleach", desc = "Get me some bleach. NOW.")
+    public void cmdBleach(Context ctx) {
+        ctx.send(new EmbedBuilder()
+                .setColor(randomColor())
+                .setTitle("Bleach")
+                .setImage("https://upload.wikimedia.org/wikipedia/commons/d/d3/Clorox_Bleach_products.jpg")
+                .build()).queue();
+    }
+
     @Command(name = "cat", desc = "Get a random cat!")
     public void cmdCat(Context ctx) {
         Unirest.get("http://random.cat/meow")

@@ -2,8 +2,6 @@ package com.khronodragon.bluestone.cogs;
 
 import ch.jamiete.mcping.MinecraftPing;
 import ch.jamiete.mcping.MinecraftPingOptions;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
@@ -25,11 +23,9 @@ import io.codearte.jfairy.Fairy;
 import io.codearte.jfairy.producer.person.Person;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
-import net.dv8tion.jda.core.entities.Emote;
-import net.dv8tion.jda.core.entities.MessageEmbed;
+import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.entities.MessageReaction.ReactionEmote;
-import net.dv8tion.jda.core.entities.PrivateChannel;
-import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.entities.impl.UserImpl;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import org.apache.commons.codec.DecoderException;
@@ -38,7 +34,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+import org.python.antlr.ast.Num;
 
 import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 import static com.khronodragon.bluestone.util.Strings.smartJoin;
@@ -47,6 +46,8 @@ import static java.text.MessageFormat.format;
 
 import java.awt.*;
 import java.io.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -56,16 +57,22 @@ import java.util.stream.Stream;
 
 public class UtilityCog extends Cog {
     private static final Logger logger = LogManager.getLogger(UtilityCog.class);
+
     private static final Pattern UNICODE_EMOTE_PATTERN = Pattern.compile("([\\u20a0-\\u32ff\\x{1f000}-\\x{1ffff}\\x{fe4e5}-\\x{fe4ee}])");
     private static final Pattern CUSTOM_EMOTE_PATTERN = Pattern.compile("<:[a-z_]+:([0-9]{17,19})>", Pattern.CASE_INSENSITIVE);
+
     private static final int[] CHAR_NO_PREVIEW = {32, 65279};
     private static final String MC_COLOR_PATTERN = "\\u00a7[4c6e2ab319d5f78lnokmr]";
+    private static final JSONArray EMPTY_JSON_ARRAY = new JSONArray();
+
     private static final Fairy fairy = Fairy.create();
     private static final QRCodeWriter qrWriter = new QRCodeWriter();
     private static final Map qrHintMap = new HashMap() {{
         put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
         put(EncodeHintType.CHARACTER_SET, "UTF-8");
     }};
+
+    private static final String SHRUG = "¯\\_(ツ)_/¯";
 
     public UtilityCog(Bot bot) {
         super(bot);
@@ -85,7 +92,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "user", desc = "Get some info about a user.", usage = "{user}", aliases = {"userinfo", "whois"})
     public void cmdUser(Context ctx) { // TODO: parseUser
-        ctx.send("java is terrible so this command is impossible to implement").queue();
+        ctx.send("mehh too lazy to implement this rn").queue();
     }
 
     @Command(name = "guildinfo", desc = "Get loads of info about this guild.", guildOnly = true, aliases = {"ginfo", "guild", "server", "serverinfo", "sinfo"})
@@ -311,9 +318,9 @@ public class UtilityCog extends Cog {
 
         json.put("template_id", template);
         try {
-            json.put("username", bot.getKeys().getAsJsonObject("imgflip").get("username").getAsString());
-            json.put("password", bot.getKeys().getAsJsonObject("imgflip").get("password").getAsString());
-        } catch (NullPointerException none) {
+            json.put("username", bot.getKeys().getJSONObject("imgflip").getString("username"));
+            json.put("password", bot.getKeys().getJSONObject("imgflip").getString("password"));
+        } catch (JSONException none) {
             json.put("username", "imgflip_hubot");
             json.put("password", "imgflip_hubot");
         }
@@ -347,6 +354,68 @@ public class UtilityCog extends Cog {
                     @Override
                     public void cancelled() {
                         ctx.send(":x: Request cancelled.").queue();
+                    }
+                });
+    }
+
+    @Command(name = "urban", desc = "Define something with Urban Dictionary.", aliases = {"define"})
+    public void cmdUrban(Context ctx) {
+        if (ctx.rawArgs.length() == 0) {
+            ctx.send(":warning: I need a term!").queue();
+            return;
+        }
+
+        Unirest.get("http://api.urbandictionary.com/v0/define")
+                .routeParam("term", ctx.rawArgs)
+                .asJsonAsync(new Callback<JsonNode>() {
+                    @Override
+                    public void completed(HttpResponse<JsonNode> response) {
+                        JSONArray results = response.getBody().getObject().getJSONArray("list");
+
+                        if (results.length() < 1) {
+                            ctx.send(":warning: No matches found.").queue();
+                            return;
+                        }
+                        JSONObject word = results.getJSONObject(0);
+
+                        EmbedBuilder emb = new EmbedBuilder()
+                                .setColor(randomColor())
+                                .setTitle(word.getString("word"))
+                                .setAuthor("Urban Dictionary", word.getString("permalink"), "https://images.discordapp.net/.eJwFwdsNwyAMAMBdGICHhUPIMpULiCAlGIHzUVXdvXdf9cxLHeoUGeswJreVeGa9hCfVoitzvQqNtnTi25AIpfMuXZaBDSM4G9wWAdA5vxuIAQNCQB9369F7a575pv7KLUnjTvOjR6_q9wdVRCZ_.BorCGmKDHUzN6L0CodSwX7Yv3kg");
+
+                        String definition = word.getString("definition");
+                        if (definition.length() > 0) {
+                            for (String page: embedFieldPages(definition)) {
+                                emb.addField("Definition", page, false);
+                            }
+                        } else {
+                            emb.addField("Definition", "None?!", false);
+                        }
+
+                        String example = word.getString("example");
+                        if (example.length() > 0) {
+                            for (String page: embedFieldPages(example)) {
+                                emb.addField("Example", page, false);
+                            }
+                        } else {
+                            emb.addField("Example", "None?!", false);
+                        }
+
+                        emb.addField("\uD83D\uDC4D", word.getString("thumbs_up"), true)
+                                .addField("\uD83D\uDC4E", word.getString("thumbs_down"), true);
+
+                        ctx.send(emb.build()).queue();
+                    }
+
+                    @Override
+                    public void failed(UnirestException e) {
+                        logger.error("Urban Dictionary API error", e);
+                        ctx.send(":x: Request failed.").queue();
+                    }
+
+                    @Override
+                    public void cancelled() {
+                        ctx.send(":x: Request cancelled for some reason...").queue();
                     }
                 });
     }
@@ -471,7 +540,7 @@ public class UtilityCog extends Cog {
             return;
         }
 
-        JsonObject data;
+        JSONObject data;
         logger.info("Connecting to Minecraft server {}:{}", server, port);
         try {
             data = new MinecraftPing().getPing(new MinecraftPingOptions().setHostname(server).setPort(port).setTimeout(5000));
@@ -483,25 +552,21 @@ public class UtilityCog extends Cog {
 
         String desc;
         String serverType = "Vanilla";
-        JsonElement dataDesc = data.get("description");
-        JsonObject dataPlayers = data.getAsJsonObject("players");
+        Object dataDesc = data.get("description");
+        JSONObject dataPlayers = data.getJSONObject("players");
 
-        if (dataDesc.isJsonObject()) {
-            JsonObject descObj = dataDesc.getAsJsonObject();
+        if (dataDesc instanceof JSONObject) {
+            JSONObject descObj = (JSONObject) dataDesc;
 
-            if (descObj.has("text")) {
-                if (descObj.get("text").getAsString().length() > 0) {
-                    desc = descObj.get("text").getAsString();
-                } else {
-                    desc = MinecraftUtil.decodeJsonText(descObj);
-                }
+            if (descObj.optString("text", "").length() > 0) {
+                desc = descObj.getString("text");
             } else {
                 desc = MinecraftUtil.decodeJsonText(descObj);
             }
-        } else if (dataDesc.getAsString() != null){
-            desc = dataDesc.getAsString();
+        } else if (dataDesc instanceof String) {
+            desc = (String) dataDesc;
         } else {
-            desc= dataDesc.toString();
+            desc = dataDesc.toString();
         }
         desc = desc.replaceAll(MC_COLOR_PATTERN, "");
 
@@ -510,45 +575,45 @@ public class UtilityCog extends Cog {
                 .setDescription(desc)
                 .setColor(randomColor())
                 .setFooter(getEffectiveName(ctx), ctx.jda.getSelfUser().getEffectiveAvatarUrl())
-                .addField("Players", dataPlayers.get("online").getAsInt() + "/" + dataPlayers.get("max").getAsInt(), true);
+                .addField("Players", dataPlayers.getInt("online") + "/" + dataPlayers.getInt("max"), true);
 
-        if (dataPlayers.get("sample") != null && dataPlayers.get("sample").isJsonArray() && dataPlayers.getAsJsonArray("sample").size() > 0) {
-            String content = smartJoin(StreamUtils.asStream(dataPlayers.getAsJsonArray("sample").iterator())
+        if (val(dataPlayers.optJSONArray("sample")).or(EMPTY_JSON_ARRAY).length() > 0) {
+            String content = smartJoin(StreamUtils.asStream(dataPlayers.getJSONArray("sample").iterator())
                                         .map(elem ->
-                                            elem.getAsJsonObject().get("name").getAsString()
+                                            ((JSONObject) elem).getString("name")
                                         )
                                         .collect(Collectors.toList())).replaceAll(MC_COLOR_PATTERN, "");
 
             if (content.length() <= MessageEmbed.VALUE_MAX_LENGTH) {
                 emb.addField("Players Online", content, true);
             } else {
-                for (String page: StringUtils.split(WordUtils.wrap(content, 1024, "||", true, "\\s+"), "||")) {
+                for (String page: embedFieldPages(content)) {
                     emb.addField("Players Online", page, true);
                 }
             }
         }
 
-        emb.addField("Version", data.getAsJsonObject("version").get("name").getAsString().replaceAll(MC_COLOR_PATTERN, ""), true);
-        emb.addField("Protocol Version", data.getAsJsonObject("version").get("protocol").getAsString(), true);
+        emb.addField("Version", data.getJSONObject("version").getString("name").replaceAll(MC_COLOR_PATTERN, ""), true);
+        emb.addField("Protocol Version", data.getJSONObject("version").getString("protocol"), true);
 
         if (data.has("modinfo")) {
-            JsonObject modinfo = data.getAsJsonObject("modinfo");
+            JSONObject modinfo = data.getJSONObject("modinfo");
             if (modinfo.has("modList")) {
-                if (modinfo.getAsJsonArray("modList").size() > 0) {
-                    String content = smartJoin(StreamUtils.asStream(modinfo.getAsJsonArray("modList").iterator())
+                if (modinfo.getJSONArray("modList").length() > 0) {
+                    String content = smartJoin(StreamUtils.asStream(modinfo.getJSONArray("modList").iterator())
                             .map(elem -> {
-                                JsonObject mod = elem.getAsJsonObject();
+                                JSONObject mod = (JSONObject) elem;
 
-                                return WordUtils.capitalize(mod.get("modid").getAsString()) +
+                                return WordUtils.capitalize(mod.getString("modid")) +
                                         ' ' +
-                                        mod.get("version").getAsString();
+                                        mod.getString("version");
                             })
                             .collect(Collectors.toList()));
 
                     if (content.length() <= 1024) {
                         emb.addField("Mods", content, true);
                     } else {
-                        for (String page: StringUtils.split(WordUtils.wrap(content, 1024, "||", true, "\\s+"), "||")) {
+                        for (String page: embedFieldPages(content)) {
                             emb.addField("Mods", page, true);
                         }
                     }
@@ -556,7 +621,7 @@ public class UtilityCog extends Cog {
             }
 
             if (modinfo.has("type")) {
-                String type = modinfo.get("type").getAsString();
+                String type = modinfo.getString("type");
 
                 if (type.equalsIgnoreCase("fml")) {
                     serverType = "Forge / FML";
@@ -567,7 +632,7 @@ public class UtilityCog extends Cog {
         }
 
         emb.addField("Server Type", serverType, true);
-        emb.addField("Ping", format("{0,number}ms", data.get("ping_millis").getAsInt()), true);
+        emb.addField("Ping", format("{0,number}ms", data.getInt("ping_millis")), true);
 
         ctx.send(emb.build()).queue();
     }
@@ -660,23 +725,225 @@ public class UtilityCog extends Cog {
         ctx.channel.sendFile(data, "qrcode.png", null).queue();
     }
 
-    /*
-    ocr
-    discrim
-    permissions (perms)
-    xkcd
-      - random
-      - latest
-      - number
-    zwsp
-    b64encode
-    b64decode
-    ipinfo (ip) freegeoip.net
-    dial
-    urban
-    bleach
-    nick
-    mcskin
-    mchead
-     */
+    @Command(name = "permissions", desc = "See your permissions here.", aliases = {"perms"})
+    public void cmdPerms(Context ctx) {
+        List<Permission> perms = ctx.guild == null ?
+                Permission.getPermissions(379968) :
+                ctx.member.getPermissions((Channel) ctx.channel);
+
+        List<String> permList = perms.stream()
+                .map(perm -> "**" + perm.getName() + "**")
+                .collect(Collectors.toList());
+
+        ctx.send("You have " + smartJoin(permList) + " here.").queue();
+    }
+
+    @Command(name = "xkcd", desc = "All that xkcd goodness!", thread = true)
+    public void cmdXkcd(Context ctx) {
+        if (ctx.rawArgs.length() < 1) {
+            ctx.send(":thinking: **You need to specify what to get!**\n" +
+                    "The following are valid:\n" +
+                    "    \u2022 `latest`\n" +
+                    "    \u2022 `random`\n" +
+                    "    \u2022 `number [comic number]`\n" +
+                    "    \u2022 `[comic number]`").queue();
+            return;
+        }
+
+        String first = ctx.args.get(0);
+        String second = "";
+        try {
+            second = ctx.args.get(1);
+        } catch (IndexOutOfBoundsException e) {}
+
+        String comicTitle, comicUrl, comicDesc;
+        int comicNum;
+
+        if (first.equalsIgnoreCase("latest")) {
+            try {
+                comicNum = Unirest.get("https://xkcd.com/info.0.json")
+                        .asJson()
+                        .getBody().getObject()
+                        .getInt("num");
+            } catch (UnirestException e) {
+                logger.error("xkcd > latest: http error", e);
+                ctx.send(":x: An error occurred.").queue();
+                return;
+            }
+        } else if (first.equalsIgnoreCase("random")) {
+            try {
+                comicNum = randint(1, Unirest.get("https://xkcd.com/info.0.json")
+                        .asJson()
+                        .getBody().getObject()
+                        .getInt("num") + 1);
+            } catch (UnirestException e) {
+                logger.error("xkcd > random: http error", e);
+                ctx.send(":x: An error occurred.").queue();
+                return;
+            }
+        } else if ((first.equalsIgnoreCase("number") && second.matches("^[0-9]{1,4}$")) || first.matches("^[0-9]{1,4}$")) {
+            try {
+                int max = Unirest.get("https://xkcd.com/info.0.json")
+                        .asJson()
+                        .getBody().getObject()
+                        .getInt("num");
+                int requested;
+                try {
+                    requested = Integer.parseInt(first);
+                } catch (NumberFormatException e) {
+                    requested = Integer.parseInt(second);
+                }
+
+                if (requested > 0 && requested <= max) {
+                    comicNum = requested;
+                } else {
+                    ctx.send(":warning: Invalid comic. The latest is " + max + '.').queue();
+                    return;
+                }
+            } catch (UnirestException e) {
+                logger.error("xkcd > random: http error", e);
+                ctx.send(":x: An error occurred.").queue();
+                return;
+            }
+        } else {
+            ctx.send(":thinking: **Invalid comic!**\n" +
+                    "The following are valid:\n" +
+                    "    \\u2022 `latest`\n" +
+                    "    \\u2022 `random`\n" +
+                    "    \\u2022 `number [comic number]`\n" +
+                    "    \\u2022 `[comic number]`").queue();
+            return;
+        }
+
+        try {
+            JSONObject resp = Unirest.get("http://www.xkcd.com/" + comicNum + "/info.0.json")
+                    .asJson()
+                    .getBody().getObject();
+
+            comicTitle = resp.getString("safe_title");
+            comicDesc = resp.getString("alt");
+            comicUrl = resp.getString("img");
+        } catch (UnirestException e) {
+            logger.error("xkcd: http error", e);
+            ctx.send(":x: An error occurred.").queue();
+            return;
+        }
+
+        EmbedBuilder emb = new EmbedBuilder()
+                .setColor(randomColor())
+                .setAuthor(comicTitle, "https://xkcd.com/" + comicNum, null)
+                .setImage(comicUrl)
+                .setFooter(comicDesc, null);
+
+        ctx.send(emb.build()).queue();
+    }
+
+    @Command(name = "zwsp", desc = "Get a zero width space.", aliases = {"u200b", "200b"})
+    public void cmdZwsp(Context ctx) {
+        ctx.send("\u200b").queue();
+    }
+
+    @Command(name = "b64encode", desc = "Encode text into Base64.")
+    public void cmdB64encode(Context ctx) {
+        if (ctx.rawArgs.length() == 0) {
+            ctx.send(":warning: I need some text!").queue();
+            return;
+        }
+
+        ctx.send("```" + Base64.getEncoder().encodeToString(ctx.rawArgs.getBytes()) + "```").queue();
+    }
+
+    @Command(name = "b64decode", desc = "Decode Base64 into text.")
+    public void cmdB64decode(Context ctx) {
+        if (ctx.rawArgs.length() == 0) {
+            ctx.send(":warning: I need some text!").queue();
+            return;
+        }
+
+        ctx.send("```" + new String(Base64.getDecoder().decode(ctx.rawArgs)) + "```").queue();
+    }
+
+    @Command(name = "ipinfo", desc = "Get information about an IP or domain.", aliases = {"ip"})
+    public void cmdIpInfo(Context ctx) {
+        if (ctx.rawArgs.length() == 0) {
+            ctx.send(":warning: I need an IP or domain!").queue();
+            return;
+        }
+
+        Unirest.get("https://freegeoip.net/json/" + ctx.rawArgs)
+                .asJsonAsync(new Callback<JsonNode>() {
+                    @Override
+                    public void completed(HttpResponse<JsonNode> response) {
+                        JSONObject data = response.getBody().getObject();
+
+                        String rdns;
+                        try {
+                            rdns = InetAddress.getByName(data.getString("ip")).getCanonicalHostName();
+                        } catch (UnknownHostException e) {
+                            rdns = "Couldn't find host";
+                        }
+
+                        EmbedBuilder emb = new EmbedBuilder()
+                                .setColor(randomColor())
+                                .setAuthor("IP Data", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
+                                .addField("IP", data.getString("ip"), true)
+                                .addField("Reverse DNS", rdns, true)
+                                .addField("Country", format("{0} ({1})",
+                                        data.getString("country_name"),
+                                        data.getString("country_code")), true)
+                                .addField("Region", "WIP", true)
+                                .addField("City", val(data.optString("city")).or(SHRUG), true)
+                                .addField("ZIP Code", val(data.optString("zip_code")).or(SHRUG), true)
+                                .addField("Timezone", val(data.optString("time_zone")).or(SHRUG), true)
+                                .addField("Longitude", val(data.optString("longitude")).or(SHRUG), true)
+                                .addField("Latitude", val(data.optString("latitude")).or(SHRUG), true)
+                                .addField("Metro Code", data.optInt("metro_code") != 0 ?
+                                        data.optString("metro_code") :
+                                        SHRUG, true);
+
+                        ctx.send(emb.build()).queue();
+                    }
+
+                    @Override
+                    public void failed(UnirestException e) {
+                        logger.error("ipinfo API error", e);
+                        ctx.send(":x: Request failed.").queue();
+                    }
+
+                    @Override
+                    public void cancelled() {
+                        ctx.send(":x: Request cancelled.").queue();
+                    }
+                });
+    }
+
+    @Command(name = "mcskin", desc = "Get someone's Minecraft skin.")
+    public void cmdMcskin(Context ctx) {
+        if (!ctx.rawArgs.matches("^[a-zA-Z0-9_]{1,32}$")) {
+            ctx.send(":warning: I need a valid username!").queue();
+            return;
+        }
+        final String name = ctx.rawArgs;
+
+        ctx.send(new EmbedBuilder()
+                .setColor(randomColor())
+                .setAuthor(name + "'s skin", null, "https://mcapi.ca/avatar/" + name + "/150/true")
+                .setImage("https://mcapi.ca/skin/" + name + "/150/true")
+                .build()).queue();
+    }
+
+    @Command(name = "mchead", desc = "Get someone's Minecraft head.")
+    public void cmdMchead(Context ctx) {
+        if (!ctx.rawArgs.matches("^[a-zA-Z0-9_]{1,32}$")) {
+            ctx.send(":warning: I need a valid username!").queue();
+            return;
+        }
+        final String name = ctx.rawArgs;
+
+        ctx.send(new EmbedBuilder()
+                .setColor(randomColor())
+                .setAuthor(name + "'s head", null, "https://mcapi.ca/avatar/" + name + "/150/true")
+                .setImage("https://mcapi.ca/avatar/" + name + "/150/true")
+                .build()).queue();
+    }
 }
