@@ -69,8 +69,8 @@ public class StatReporterCog extends Cog implements EventedCog {
     }
 
     public void report() {
-        String dbotsKey = bot.getKeys().optString("discord_bots");
-        String carbonitexKey = bot.getKeys().optString("carbonitex");
+        String dbotsKey = bot.getKeys().optString("discord_bots", null);
+        String carbonitexKey = bot.getKeys().optString("carbonitex", null);
 
         if (dbotsKey != null)
             reportDiscordBots(dbotsKey);
