@@ -410,6 +410,5 @@ public class FunCog extends Cog {
     @Command(name = "soon", desc = "Feel the loading of 10000 years, aka Soon™.", aliases = {"soontm"})
     public void cmdSoon(Context ctx) {
         ctx.channel.sendFile(FunCog.class.getResourceAsStream("/assets/soon.gif"), "soon.gif", null).queue();
-        FunCog.class.getProtectionDomain()
     }
 }
