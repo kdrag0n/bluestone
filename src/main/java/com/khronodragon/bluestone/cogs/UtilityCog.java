@@ -366,7 +366,7 @@ public class UtilityCog extends Cog {
         }
 
         Unirest.get("http://api.urbandictionary.com/v0/define")
-                .routeParam("term", ctx.rawArgs)
+                .queryString("term", ctx.rawArgs)
                 .asJsonAsync(new Callback<JsonNode>() {
                     @Override
                     public void completed(HttpResponse<JsonNode> response) {

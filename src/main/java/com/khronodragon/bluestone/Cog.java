@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 
 import java.awt.Color;
 import java.lang.reflect.Method;
+import java.util.List;
 
 public abstract class Cog implements ClassUtilities {
     public abstract String getName();
@@ -115,8 +116,12 @@ public abstract class Cog implements ClassUtilities {
         });
     }
 
-    protected<T> T randomChoice(T[] array) {
+    protected <T> T randomChoice(T[] array) {
         return array[randint(0, array.length)];
+    }
+
+    protected <T> T randomChoice(List<T> list) {
+        return list.get(randint(0, list.size()));
     }
 
     protected String[] embedFieldPages(String text) {
