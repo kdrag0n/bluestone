@@ -8,7 +8,6 @@ import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.errors.CheckFailure;
 import com.khronodragon.bluestone.errors.PermissionError;
 import com.khronodragon.bluestone.sql.BotAdmin;
-import com.sun.tools.internal.xjc.reader.xmlschema.bindinfo.BIConversion;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.utils.MiscUtil;
 
