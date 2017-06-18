@@ -15,6 +15,7 @@ import com.khronodragon.bluestone.handlers.RejectedExecHandlerImpl;
 import com.khronodragon.bluestone.sql.BotAdmin;
 import com.khronodragon.bluestone.util.ClassUtilities;
 import com.khronodragon.bluestone.util.Strings;
+import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import net.dv8tion.jda.bot.entities.ApplicationInfo;
 import net.dv8tion.jda.core.*;
 import net.dv8tion.jda.core.JDA.ShardInfo;
@@ -25,10 +26,12 @@ import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import org.reflections.Reflections;
+import sun.plugin2.util.SystemUtil;
 
 import javax.security.auth.login.LoginException;
 import java.lang.reflect.InvocationTargetException;
@@ -447,6 +450,11 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                             .setBulkDeleteSplittingEnabled(false)
                             .setStatus(OnlineStatus.ONLINE)
                             .setGame(Game.of("something"));
+
+                    if ((System.getProperty("os.arch").startsWith("x86") ||
+                            System.getProperty("os.arch").equals("amd64")) &&
+                            (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX))
+                        builder.setAudioSendFactory(new NativeAudioSendFactory());
 
                     if (shardCount != 1) {
                         builder.useSharding(shardId, shardCount);

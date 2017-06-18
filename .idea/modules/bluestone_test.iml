@@ -13,7 +13,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="bluestone_main" />
-    <orderEntry type="library" name="Gradle: net.dv8tion:JDA:3.1.1_212" level="project" />
+    <orderEntry type="library" name="Gradle: net.dv8tion:JDA:3.1.1_213" level="project" />
     <orderEntry type="library" name="Gradle: com.sedmelluq:lavaplayer:1.2.39" level="project" />
     <orderEntry type="library" name="Gradle: com.mashape.unirest:unirest-java:1.4.9" level="project" />
     <orderEntry type="library" name="Gradle: com.google.guava:guava:22.0" level="project" />
@@ -32,6 +32,7 @@
     <orderEntry type="library" name="Gradle: com.j256.ormlite:ormlite-core:5.0" level="project" />
     <orderEntry type="library" name="Gradle: com.j256.ormlite:ormlite-jdbc:5.0" level="project" />
     <orderEntry type="library" name="Gradle: com.h2database:h2:1.4.196" level="project" />
+    <orderEntry type="library" name="Gradle: com.sedmelluq:jda-nas:1.0.5" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-lang3:3.5" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-collections4:4.1" level="project" />
     <orderEntry type="library" name="Gradle: org.json:json:20160810" level="project" />
@@ -62,6 +63,7 @@
     <orderEntry type="library" name="Gradle: com.google.inject:guice:4.0" level="project" />
     <orderEntry type="library" name="Gradle: joda-time:joda-time:2.3" level="project" />
     <orderEntry type="library" name="Gradle: com.google.inject.extensions:guice-assistedinject:4.0" level="project" />
+    <orderEntry type="library" name="Gradle: com.sedmelluq:udp-queue:1.0.6" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.httpcomponents:httpcore:4.4.4" level="project" />
     <orderEntry type="library" name="Gradle: commons-logging:commons-logging:1.2" level="project" />
     <orderEntry type="library" name="Gradle: commons-codec:commons-codec:1.9" level="project" />

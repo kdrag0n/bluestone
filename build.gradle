@@ -33,7 +33,7 @@ task fatJar(type: Jar) {
 }
 
 dependencies {
-    compile 'net.dv8tion:JDA:3.1.1_212'
+    compile 'net.dv8tion:JDA:3.1.1_213'
     compile 'com.sedmelluq:lavaplayer:1.2.39'
     compile 'com.mashape.unirest:unirest-java:1.4.9'
     compile 'com.google.guava:guava:22.0'
@@ -52,6 +52,7 @@ dependencies {
     compile 'com.j256.ormlite:ormlite-core:5.0'
     compile 'com.j256.ormlite:ormlite-jdbc:5.0'
     compile 'com.h2database:h2:1.4.196'
+    compile 'com.sedmelluq:jda-nas:1.0.5'
 }
 
 compileJava.options.encoding = 'UTF-8'
