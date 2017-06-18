@@ -4,7 +4,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
-import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.errors.CheckFailure;
 import com.khronodragon.bluestone.errors.GuildOnlyError;
@@ -70,26 +69,18 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public User owner;
 
     public Dao<BotAdmin, Long> getAdminDao() {
-        return adminDao;
+        return shardUtil.getAdminDao();
     }
 
-    private Dao<BotAdmin, Long> adminDao;
-    private JdbcConnectionSource dbConn;
     private JDA jda;
     private ShardUtil shardUtil;
 
     public JSONObject getConfig() {
-        return config;
+        return shardUtil.getConfig();
     }
-
-    public void setConfig(JSONObject config) {
-        this.config = config;
-    }
-
-    private JSONObject config;
 
     public JSONObject getKeys() {
-        return config.getJSONObject("keys");
+        return getConfig().getJSONObject("keys");
     }
 
     public Bot() {
@@ -97,36 +88,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
         scheduledExecutor.setMaximumPoolSize(6);
         scheduledExecutor.setKeepAliveTime(16L, TimeUnit.SECONDS);
-
-        try {
-            dbConn = new JdbcConnectionSource("jdbc:" + config.optString("db_url", "h2:database:bluestone"));
-        } catch (SQLException e) {
-            logger.error("Failed to connect to database!", e);
-            logger.warn("Using an in-memory database.");
-
-            try {
-                dbConn = new JdbcConnectionSource("jdbc:h2:mem:bluestone-db");
-            } catch (SQLException ex) {
-                logger.error("Failed to create in-memory database!", ex);
-                System.exit(-1);
-            }
-        }
-
-        try {
-            TableUtils.createTableIfNotExists(dbConn, BotAdmin.class);
-        } catch (SQLException e) {
-            logger.warn("Failed to create bot admin table!", e);
-        }
-
-        try {
-            adminDao = DaoManager.createDao(dbConn, BotAdmin.class);
-        } catch (SQLException e) {
-            logger.warn("Failed to create bot admin DAO!", e);
-        }
     }
 
     public JdbcConnectionSource getDatabase() {
-        return dbConn;
+        return shardUtil.getDatabase();
     }
 
     public void setJda(JDA jda) {
@@ -466,14 +431,13 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             return 1;
         }
 
-        ShardUtil shardUtil = new ShardUtil(shardCount);
+        ShardUtil shardUtil = new ShardUtil(shardCount, config);
 
         IntStream.range(0, shardCount).forEach(shardId -> {
             Runnable monitor = () -> {
                 final Logger logger = LogManager.getLogger("ShardMonitor " + shardId);
                 while (true) {
                     Bot bot = new Bot();
-                    bot.setConfig(config);
                     JDABuilder builder = new JDABuilder(accountType)
                             .setToken(token)
                             .addEventListener(bot)

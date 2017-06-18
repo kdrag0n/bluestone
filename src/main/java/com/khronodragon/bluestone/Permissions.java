@@ -10,6 +10,9 @@ import java.util.stream.Collectors;
 
 public class Permissions {
     public static boolean check(String[] permsRequired, Context ctx) {
+        if (ctx.author.getIdLong() == ctx.bot.owner.getIdLong())
+            return true;
+
         for (String perm: permsRequired) {
             if (perm.equals("owner")) {
                 if (ctx.author.getIdLong() != ctx.bot.owner.getIdLong())

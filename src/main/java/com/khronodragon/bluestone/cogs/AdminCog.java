@@ -21,6 +21,7 @@ public class AdminCog extends Cog {
     private static final String[] ADMIN_PERM = {"admin"};
     private static final String ADMIN_NO_COMMAND = ":thinking: **I need an action!**\n" +
             "The following are valid:\n" +
+            "    \u2022 `test` - test if you're an admin\n" +
             "    \u2022 `list` - list current admins\n" +
             "    \u2022 `add [mention or id]` - add an admin\n" +
             "    \u2022 `remove [mention or id]` - remove an admin\n" +
@@ -48,11 +49,6 @@ public class AdminCog extends Cog {
         ctx.send("Not implemented yet!").queue();
     }
 
-    @Command(name = "admintest", desc = "Test if you're a bot admin.", perms = {"admin"})
-    public void cmdAdmintest(Context ctx) {
-        ctx.send(ctx.mention + " :wave: Hey there, admin!").queue();
-    }
-
     @Command(name = "admin", desc = "Manage bot admins.", aliases = {"admins"}, thread = true)
     public void groupAdmin(Context ctx) throws SQLException, PermissionError {
         if (ctx.rawArgs.length() < 1) {
@@ -67,9 +63,16 @@ public class AdminCog extends Cog {
             adminCmdAdd(ctx);
         else if (invoked.equals("remove"))
             adminCmdRemove(ctx);
+        else if (invoked.equals("test"))
+            adminCmdTest(ctx);
         else
             ctx.send(ADMIN_NO_COMMAND).queue();
 
+    }
+
+    private void adminCmdTest(Context ctx) throws SQLException {
+        String admin = bot.getAdminDao().queryForId(ctx.author.getIdLong()) == null ? " :cry: You aren't an admin!" : " :wave: Hey there, admin!";
+        ctx.send(ctx.mention + admin).queue();
     }
 
     private void adminCmdList(Context ctx) throws SQLException {
@@ -77,7 +80,10 @@ public class AdminCog extends Cog {
                 .map(a -> val(a.getLastUsername()).or("Unknown") + " (`" + a.getUserId() + "`)")
                 .collect(Collectors.toList());
 
-        ctx.send("**Current bot admins:**\n    \u2022 " + String.join("    \u2022", adminList)).queue();
+        if (adminList.size() > 0)
+            ctx.send("**Current bot admins:**\n    \u2022 " + String.join("\n    \u2022 ", adminList)).queue();
+        else
+            ctx.send("There are no admins! :open_mouth:").queue();
     }
 
     private void adminCmdAdd(Context ctx) throws SQLException, PermissionError {

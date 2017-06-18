@@ -1,16 +1,70 @@
 package com.khronodragon.bluestone;
 
+import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.dao.DaoManager;
+import com.j256.ormlite.jdbc.JdbcConnectionSource;
+import com.j256.ormlite.table.TableUtils;
+import com.khronodragon.bluestone.sql.BotAdmin;
 import net.dv8tion.jda.core.JDA;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.json.JSONObject;
+import sun.security.provider.SHA;
 
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ShardUtil {
+    private static final Logger logger = LogManager.getLogger(ShardUtil.class);
     private Map<Integer, Bot> shards = new LinkedHashMap<>();
     private int shardCount;
 
-    ShardUtil(int shardCount) {
+    private Dao<BotAdmin, Long> adminDao;
+    private JdbcConnectionSource dbConn;
+    private JSONObject config;
+
+    ShardUtil(int shardCount, JSONObject config) {
         this.shardCount = shardCount;
+        this.config = config;
+
+        try {
+            dbConn = new JdbcConnectionSource("jdbc:" + config.optString("db_url", "h2:./database"));
+        } catch (SQLException e) {
+            logger.error("Failed to connect to database!", e);
+            logger.warn("Using an in-memory database.");
+
+            try {
+                dbConn = new JdbcConnectionSource("jdbc:h2:mem:bluestone-db");
+            } catch (SQLException ex) {
+                logger.error("Failed to create in-memory database!", ex);
+                System.exit(-1);
+            }
+        }
+
+        try {
+            TableUtils.createTableIfNotExists(dbConn, BotAdmin.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create bot admin table!", e);
+        }
+
+        try {
+            adminDao = DaoManager.createDao(dbConn, BotAdmin.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create bot admin DAO!", e);
+        }
+    }
+
+    public Dao<BotAdmin, Long> getAdminDao() {
+        return adminDao;
+    }
+
+    public JdbcConnectionSource getDatabase() {
+        return dbConn;
+    }
+
+    public JSONObject getConfig() {
+        return config;
     }
 
     public int getShardCount() {
@@ -47,4 +101,6 @@ public class ShardUtil {
     public int getRequestCount() {
         return shards.values().stream().mapToInt(b -> b.commandCalls.values().stream().mapToInt(AtomicInteger::get).sum()).sum();
     }
+
+
 }

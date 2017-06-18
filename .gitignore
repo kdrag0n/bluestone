@@ -197,3 +197,5 @@ gradle-app.setting
 # End of https://www.gitignore.io/api/java,maven,scala,gradle,eclipse,intellij,playframework
 
 config.json
+*.db
+*.sqlite

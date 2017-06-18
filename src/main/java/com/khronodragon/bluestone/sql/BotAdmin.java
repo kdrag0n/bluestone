@@ -16,7 +16,7 @@ public class BotAdmin {
         return lastUsername;
     }
 
-    @DatabaseField(canBeNull = true, defaultValue = "")
+    @DatabaseField(canBeNull = true, defaultValue = "", width = 32)
     private String lastUsername;
 
     public BotAdmin() {}
