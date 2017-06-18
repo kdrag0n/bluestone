@@ -1,6 +1,11 @@
 package com.khronodragon.bluestone;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.dao.DaoManager;
+import com.j256.ormlite.jdbc.JdbcConnectionSource;
+import com.j256.ormlite.support.ConnectionSource;
+import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.errors.CheckFailure;
 import com.khronodragon.bluestone.errors.GuildOnlyError;
 import com.khronodragon.bluestone.errors.PassException;
@@ -8,6 +13,7 @@ import com.khronodragon.bluestone.errors.PermissionError;
 import com.khronodragon.bluestone.handlers.MessageWaitEventListener;
 import com.khronodragon.bluestone.handlers.ReactionWaitEventListener;
 import com.khronodragon.bluestone.handlers.RejectedExecHandlerImpl;
+import com.khronodragon.bluestone.sql.BotAdmin;
 import com.khronodragon.bluestone.util.ClassUtilities;
 import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.bot.entities.ApplicationInfo;
@@ -27,6 +33,7 @@ import org.reflections.Reflections;
 
 import javax.security.auth.login.LoginException;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.*;
@@ -61,7 +68,13 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public HashMap<String, AtomicInteger> commandCalls = new HashMap<>();
     public ApplicationInfo appInfo;
     public User owner;
-    public final DataStore store;
+
+    public Dao<BotAdmin, Long> getAdminDao() {
+        return adminDao;
+    }
+
+    private Dao<BotAdmin, Long> adminDao;
+    private JdbcConnectionSource dbConn;
     private JDA jda;
     private ShardUtil shardUtil;
 
@@ -81,14 +94,45 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     public Bot() {
         super();
+
         scheduledExecutor.setMaximumPoolSize(6);
         scheduledExecutor.setKeepAliveTime(16L, TimeUnit.SECONDS);
-        store = new DataStore();
+
+        try {
+            dbConn = new JdbcConnectionSource("jdbc:" + config.optString("db_url", "h2:database:bluestone"));
+        } catch (SQLException e) {
+            logger.error("Failed to connect to database!", e);
+            logger.warn("Using an in-memory database.");
+
+            try {
+                dbConn = new JdbcConnectionSource("jdbc:h2:mem:bluestone-db");
+            } catch (SQLException ex) {
+                logger.error("Failed to create in-memory database!", ex);
+                System.exit(-1);
+            }
+        }
+
+        try {
+            TableUtils.createTableIfNotExists(dbConn, BotAdmin.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create bot admin table!", e);
+        }
+
+        try {
+            adminDao = DaoManager.createDao(dbConn, BotAdmin.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create bot admin DAO!", e);
+        }
+    }
+
+    public JdbcConnectionSource getDatabase() {
+        return dbConn;
     }
 
     public void setJda(JDA jda) {
         this.jda = jda;
         final ShardInfo sInfo = jda.getShardInfo();
+
         if (sInfo != null) {
             logger = LogManager.getLogger("Bot [" + sInfo.getShardString() + ']');
         }

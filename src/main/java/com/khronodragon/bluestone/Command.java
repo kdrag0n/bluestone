@@ -119,9 +119,13 @@ public class Command {
     }
 
     private void checkPerms(Context ctx) throws PermissionError {
-        if (!Permissions.check(permsRequired, ctx)) {
+        if (!Permissions.check(permsRequired, ctx))
             throw new PermissionError("Requester missing permissions for command " + name);
-        }
+    }
+
+    public static void checkPerms(Context ctx, String[] permsRequired) {
+        if (!Permissions.check(permsRequired, ctx))
+            throw new PermissionError("Requester missing permissions for command");
     }
 
     public String[] getFriendlyPerms() {

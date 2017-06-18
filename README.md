@@ -9,6 +9,7 @@ This is the template:
   "token": "token",
   "shard_count": 2,
   "type": "bot",
+  "db_url": "h2:database:bluestone",
   "keys": {
     "google": "",
     "discord_bots": "",
@@ -20,6 +21,13 @@ Put your token in for the `token` key.
 Then, choose the number of shards you want to use.
 This is typically unnecessary, and serves no benefit,
 unless you have 750 guilds or more the bot is serving in.
+
+The `db_url` key is for the database connection.
+If you don't want to use a server, `h2` is probably the best choice.
+The format for h2 is `h2:[database file name without extension]:[any username, like bluestone]`.
+The file is saved as `name.mv.db`, in the current working directory.
+If you do want to use a server, such as MySQL, you'll have to write your own URL.
+It's just passed to JDBC, so any JDBC connection source without `jdbc:` will work.
 
 Optionally, obtain a Google API key with the following features enabled:
  - Google Custom Search API
