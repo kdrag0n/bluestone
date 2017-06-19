@@ -5,6 +5,7 @@ import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.sql.BotAdmin;
+import com.khronodragon.bluestone.sql.GuildPrefix;
 import net.dv8tion.jda.core.JDA;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,6 +24,12 @@ public class ShardUtil {
     private Dao<BotAdmin, Long> adminDao;
     private JdbcConnectionSource dbConn;
     private JSONObject config;
+
+    public PrefixStore getPrefixStore() {
+        return prefixStore;
+    }
+
+    private PrefixStore prefixStore;
 
     ShardUtil(int shardCount, JSONObject config) {
         this.shardCount = shardCount;
@@ -52,6 +59,19 @@ public class ShardUtil {
             adminDao = DaoManager.createDao(dbConn, BotAdmin.class);
         } catch (SQLException e) {
             logger.warn("Failed to create bot admin DAO!", e);
+        }
+
+        try {
+            TableUtils.createTableIfNotExists(dbConn, GuildPrefix.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create command prefix table!", e);
+        }
+
+        try {
+            Dao<GuildPrefix, Long> dao = DaoManager.createDao(dbConn, GuildPrefix.class);
+            prefixStore = new PrefixStore(dao, config.optString("default_prefix", "!"));
+        } catch (SQLException e) {
+            logger.warn("Failed to create prefix store and/or DAO!", e);
         }
     }
 

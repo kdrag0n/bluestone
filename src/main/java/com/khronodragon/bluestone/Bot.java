@@ -13,6 +13,7 @@ import com.khronodragon.bluestone.handlers.MessageWaitEventListener;
 import com.khronodragon.bluestone.handlers.ReactionWaitEventListener;
 import com.khronodragon.bluestone.handlers.RejectedExecHandlerImpl;
 import com.khronodragon.bluestone.sql.BotAdmin;
+import com.khronodragon.bluestone.sql.GuildPrefix;
 import com.khronodragon.bluestone.util.ClassUtilities;
 import com.khronodragon.bluestone.util.Strings;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
@@ -31,11 +32,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import org.reflections.Reflections;
-import sun.plugin2.util.SystemUtil;
 
 import javax.security.auth.login.LoginException;
 import java.lang.reflect.InvocationTargetException;
-import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.concurrent.*;
@@ -73,6 +72,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     public Dao<BotAdmin, Long> getAdminDao() {
         return shardUtil.getAdminDao();
+    }
+
+    public Dao<GuildPrefix, Long> getPrefixDao() {
+        return shardUtil.getPrefixStore().getDao();
     }
 
     private JDA jda;
@@ -299,18 +302,23 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        JDA jda = event.getJDA();
-        User author = event.getAuthor();
+        final JDA jda = event.getJDA();
+        final User author = event.getAuthor();
 
         if (author.isBot())
             return;
         if (author.getIdLong() == jda.getSelfUser().getIdLong())
             return;
 
-        String prefix = ")";
-        Message message = event.getMessage();
-        String content = message.getRawContent();
-        MessageChannel channel = event.getChannel();
+        final Message message = event.getMessage();
+        final String prefix;
+        if (message.getGuild() == null) {
+            prefix = shardUtil.getPrefixStore().getDefaultPrefix();
+        } else {
+            prefix = shardUtil.getPrefixStore().getPrefix(message.getGuild().getIdLong());
+        }
+        final String content = message.getRawContent();
+        final MessageChannel channel = event.getChannel();
 
         if (content.startsWith(prefix)) {
             ArrayList<String> args = new ArrayList<>(Arrays.asList(content.split("\\s+")));
@@ -390,6 +398,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     public boolean isSelfbot() {
         return !jda.getSelfUser().isBot();
+    }
+
+    public boolean isBot() {
+        return jda.getSelfUser().isBot();
     }
 
     long getUptimeMillis() {

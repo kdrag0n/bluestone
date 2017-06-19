@@ -168,6 +168,11 @@ public class MusicCog extends Cog implements EventedCog {
 
     @Command(name = "play", desc = "Play something!", usage = "[search terms / link]", guildOnly = true)
     public void cmdPlay(Context ctx) {
+        if (ctx.rawArgs.length() < 1) {
+            ctx.send(":warning: I need something to play!").queue();
+            return;
+        }
+
         if (ctx.guild.getSelfMember().getVoiceState().getChannel() == null) {
             summon(ctx);
         } else if (ctx.guild.getSelfMember().getVoiceState().getChannel().getIdLong() != ctx.member.getVoiceState().getChannel().getIdLong()) {

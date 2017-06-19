@@ -104,9 +104,7 @@ public class ReplCog extends Cog {
             Object result;
             try {
                 result = engine.eval(cleaned);
-                response.addReaction("☑").queue();
             } catch (ScriptException e) {
-                response.addReaction("❌").queue();
                 result = e.getCause();
                 if (result instanceof ScriptException) {
                     result = ((ScriptException) result).getCause();
@@ -124,6 +122,8 @@ public class ReplCog extends Cog {
                         bot.logger.error("Error reporting send error in REPL", ex);
                     }
                 }
+            } else {
+                response.addReaction("✅").queue();
             }
         }
     }

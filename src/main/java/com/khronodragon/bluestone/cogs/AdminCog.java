@@ -3,11 +3,10 @@ package com.khronodragon.bluestone.cogs;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
-import com.khronodragon.bluestone.Permissions;
 import com.khronodragon.bluestone.annotations.Command;
-import com.khronodragon.bluestone.errors.CheckFailure;
 import com.khronodragon.bluestone.errors.PermissionError;
 import com.khronodragon.bluestone.sql.BotAdmin;
+import com.khronodragon.bluestone.sql.GuildPrefix;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.utils.MiscUtil;
 
@@ -19,6 +18,7 @@ import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 
 public class AdminCog extends Cog {
     private static final String[] ADMIN_PERM = {"admin"};
+    private static final String[] PREFIX_MOD_PERMS = {"manageServer", "manageChannel", "messageManage"};
     private static final String ADMIN_NO_COMMAND = ":thinking: **I need an action!**\n" +
             "The following are valid:\n" +
             "    \u2022 `test` - test if you're an admin\n" +
@@ -144,5 +144,24 @@ public class AdminCog extends Cog {
         bot.getAdminDao().deleteById(userId);
 
         ctx.send(":white_check_mark: User removed.").queue();
+    }
+
+    @Command(name = "prefix", desc = "Get or set the command prefix.", aliases = {"setprefix"}, guildOnly = true)
+    public void cmdPrefix(Context ctx) throws SQLException, PermissionError {
+        if (ctx.rawArgs.length() > 0) {
+            com.khronodragon.bluestone.Command.checkPerms(ctx, PREFIX_MOD_PERMS);
+
+            if (ctx.rawArgs.length() > 32) {
+                ctx.send(":x: Prefix too long!").queue();
+            } else {
+                GuildPrefix prefix = new GuildPrefix(ctx.guild.getIdLong(), ctx.rawArgs);
+                bot.getPrefixDao().createOrUpdate(prefix);
+                bot.getShardUtil().getPrefixStore().updateCache(ctx.guild.getIdLong(), ctx.rawArgs);
+
+                ctx.send(":white_check_mark: Prefix set.").queue();
+            }
+        } else {
+            ctx.send("**Prefix:** `" + ctx.prefix + "`").queue();
+        }
     }
 }

@@ -5,7 +5,7 @@ import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable(tableName = "admins")
 public class BotAdmin {
-    @DatabaseField(id = true)
+    @DatabaseField(id = true, canBeNull = false)
     private long userId;
 
     public long getUserId() {
@@ -16,7 +16,7 @@ public class BotAdmin {
         return lastUsername;
     }
 
-    @DatabaseField(canBeNull = true, defaultValue = "", width = 32)
+    @DatabaseField(defaultValue = "", width = 32)
     private String lastUsername;
 
     public BotAdmin() {}
