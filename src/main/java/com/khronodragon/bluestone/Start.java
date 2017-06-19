@@ -12,8 +12,6 @@ import java.nio.file.Paths;
 
 public class Start {
     public static void main(String[] args) throws IOException, ClassNotFoundException {
-        Class.forName("org.h2.Driver");
-
         String jsonCode = new String(Files.readAllBytes(Paths.get("config.json")));
         JSONObject config = new JSONObject(jsonCode);
 
