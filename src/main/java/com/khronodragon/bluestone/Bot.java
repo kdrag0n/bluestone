@@ -343,8 +343,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                         channel.sendMessage(format(":warning: Error in `{0}{1}`:```java\n{2}```", prefix, cmdName, vagueTrace(cause))).queue();
                     }
                 } catch (PermissionError e) {
-                    channel.sendMessage(format("{0} Not enough permissions for `{1}{2}`! **{3}** will work.", author.getAsMention(), prefix, cmdName,
-                            Strings.smartJoin(command.getFriendlyPerms(), ""))).queue();
+                    channel.sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.", author.getAsMention(), prefix, cmdName,
+                            Strings.smartJoin(command.getFriendlyPerms(), "or"))).queue();
                 } catch (GuildOnlyError e) {
                     channel.sendMessage("Sorry, that command only works in a guild.").queue();
                 } catch (CheckFailure e) {

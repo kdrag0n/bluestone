@@ -71,7 +71,7 @@ public class Command {
                         event.getChannel().sendMessage(format(":warning: Error in `{0}{1}`:```java\n{2}```", prefix, invoker, bot.vagueTrace(cause))).queue();
                     }
                 } catch (PermissionError e) {
-                    event.getChannel().sendMessage(format("{0} Not enough permissions for `{1}{2}`! **{3}** will work.", event.getAuthor().getAsMention(), prefix, invoker,
+                    event.getChannel().sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.", event.getAuthor().getAsMention(), prefix, invoker,
                             Strings.smartJoin(permsRequired, "or"))).queue();
                 } catch (GuildOnlyError e) {
                     event.getChannel().sendMessage("Sorry, that command only works in a guild.").queue();
@@ -81,7 +81,7 @@ public class Command {
                 } catch (Exception e) {
                     bot.logger.error("Unknown command ({}) error:", invoker, e);
                     event.getChannel().sendMessage(format(":warning: Error in `{0}{1}`:```java\n{2}```", prefix, invoker, e.toString())).queue();
-                }
+                } // CheckFailure and friends may seem redundant, but used for perm checks in threads
             };
 
             if (bot.threadExecutor.getActiveCount() >= bot.threadExecutor.getMaximumPoolSize()) {

@@ -517,9 +517,9 @@ public class UtilityCog extends Cog {
         ctx.send("```" + decoded + "```").queue();
     }
 
+    @Cooldown(scope = BucketType.USER, delay = 5)
     @Command(name = "minecraft", desc = "Get information about a Minecraft server.",
             usage = "[server address]", aliases = {"mc", "mcserver"}, thread = true)
-    @Cooldown(scope = BucketType.USER, delay = 5)
     public void cmdMineServer(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(":warning: I need a server address.").queue();
@@ -637,8 +637,8 @@ public class UtilityCog extends Cog {
         ctx.send(emb.build()).queue();
     }
 
-    @Command(name = "contact", desc = "Contact the bot owner with a message.", usage = "[message]")
     @Cooldown(scope = BucketType.USER, delay = 20)
+    @Command(name = "contact", desc = "Contact the bot owner with a message.", usage = "[message]")
     public void cmdContact(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(":warning: I need a message!").queue();

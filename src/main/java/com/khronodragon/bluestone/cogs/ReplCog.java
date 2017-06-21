@@ -5,6 +5,7 @@ import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.annotations.Command;
 import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.requests.RestAction;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.script.*;
@@ -29,7 +30,7 @@ public class ReplCog extends Cog {
         return "A multilingual REPL, in Discord!";
     }
 
-    private String cleanupCode(String code) {
+    public static String cleanupCode(String code) {
         return StringUtils.stripEnd(StringUtils.stripStart(StringUtils.replaceOnce(
                 StringUtils.replaceOnce(
                         StringUtils.replaceOnce(code, "```scala", ""),
@@ -110,6 +111,9 @@ public class ReplCog extends Cog {
                     result = ((ScriptException) result).getCause();
                 }
             }
+            if (result instanceof RestAction)
+                result = ((RestAction) result).complete();
+            engine.put("last", result);
 
             if (result != null) {
                 try {
