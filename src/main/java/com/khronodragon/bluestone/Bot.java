@@ -22,6 +22,7 @@ import net.dv8tion.jda.core.*;
 import net.dv8tion.jda.core.JDA.ShardInfo;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.*;
+import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
@@ -34,14 +35,19 @@ import org.json.JSONObject;
 import org.reflections.Reflections;
 
 import javax.security.auth.login.LoginException;
+import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
+import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
+
+import static com.khronodragon.bluestone.util.Strings.str;
 import static java.text.MessageFormat.format;
 
 public class Bot extends ListenerAdapter implements ClassUtilities {
@@ -179,16 +185,20 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     }
 
     public static String renderStackTrace(Throwable e) {
+        return renderStackTrace(e, "    ", "at ");
+    }
+
+    public static String renderStackTrace(Throwable e, String joinSpaces, String elemPrefix) {
         StackTraceElement[] elements = e.getStackTrace();
-        List<String> stack = new ArrayList<>();
+        List<String> stack = new LinkedList<>();
         stack.add(e.getClass().getName() + ": " + e.getMessage());
 
         for (StackTraceElement elem: elements) {
-            String base = "at " + elem.toString();
+            String base = elemPrefix + elem.toString();
             stack.add(base);
         }
 
-        return StringUtils.join(stack, "\n    ");
+        return StringUtils.join(stack, '\n' + joinSpaces);
     }
 
     @Override
@@ -340,7 +350,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     } else if (cause instanceof PassException) {
                     } else {
                         logger.error("Command ({}) invocation error:", cmdName, cause);
-                        channel.sendMessage(format(":warning: Error in `{0}{1}`:```java\n{2}```", prefix, cmdName, vagueTrace(cause))).queue();
+                        channel.sendMessage(format(":warning: Error!```java\n{2}```This error has been reported.", prefix, cmdName, vagueTrace(cause))).queue();
+                        owner.openPrivateChannel().queue(ch -> {
+                            ch.sendMessage(errorEmbed(cause, message, command)).queue();
+                        });
                     }
                 } catch (PermissionError e) {
                     channel.sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.", author.getAsMention(), prefix, cmdName,
@@ -348,7 +361,6 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 } catch (GuildOnlyError e) {
                     channel.sendMessage("Sorry, that command only works in a guild.").queue();
                 } catch (CheckFailure e) {
-                    logger.error("Checks failed for command {}:", cmdName);
                     channel.sendMessage(format("{0} A check for `{1}{2}` failed. Do you not have permissions?", author.getAsMention(), prefix, cmdName)).queue();
                 } catch (Exception e) {
                     logger.error("Unknown command ({}) error:", cmdName, e);
@@ -362,6 +374,35 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 }
             }
         }
+    }
+
+    private static MessageEmbed errorEmbed(Throwable e, Message msg, Command cmd) {
+        Date date = new Date();
+        String stack = renderStackTrace(e, "\u3000", "➡ ");
+
+        EmbedBuilder emb = new EmbedBuilder()
+                .setAuthor(Cog.getTag(msg.getAuthor()), null, msg.getAuthor().getEffectiveAvatarUrl())
+                .setTitle("Error in command `" + cmd.name + '`')
+                .setColor(Color.ORANGE)
+                .appendDescription("```java\n")
+                .appendDescription(stack.substring(0, Math.min(stack.length(), 2037)))
+                .appendDescription("```")
+                .addField("Timestamp", date.getTime() + "ms", true)
+                .addField("Author ID", msg.getAuthor().getId(), true)
+                .addField("Message ID", msg.getId(), true)
+                .addField("Attachments", str(msg.getAttachments().size()), true)
+                .addField("Guild", msg.getGuild() == null ? "None" : msg.getGuild().getName(), true)
+                .addField("Guild ID", msg.getGuild() == null ? "None (no guild)" : msg.getGuild().getId(), true)
+                .addField("Channel", msg.getChannel().getName(), true)
+                .addField("Channel ID", msg.getChannel().getId(), true)
+                .addField("Content", '`' + msg.getContent() + '`', true)
+                .addField("Embeds", str(msg.getEmbeds().size()), true)
+                .setFooter(date.toString(), null);
+
+        if (msg.getGuild() != null)
+            emb.setFooter(date.toString(), msg.getGuild().getIconUrl());
+
+        return emb.build();
     }
 
     public Message waitForMessage(long millis, Predicate<Message> check) {
