@@ -61,7 +61,9 @@ public class UtilityCog extends Cog {
     private static final Pattern UNICODE_EMOTE_PATTERN = Pattern.compile("([\\u20a0-\\u32ff\\x{1f000}-\\x{1ffff}\\x{fe4e5}-\\x{fe4ee}])");
     private static final Pattern CUSTOM_EMOTE_PATTERN = Pattern.compile("<:[a-z_]+:([0-9]{17,19})>", Pattern.CASE_INSENSITIVE);
 
-    private static final int[] CHAR_NO_PREVIEW = {32, 65279};
+    private static final int[] CHAR_NO_PREVIEW = {65279};
+    private static final byte[] DIRECTIONALITY_NO_PREVIEW = {Character.DIRECTIONALITY_WHITESPACE, Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE,
+                Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE};
     private static final String MC_COLOR_PATTERN = "\\u00a7[4c6e2ab319d5f78lnokmr]";
     private static final JSONArray EMPTY_JSON_ARRAY = new JSONArray();
 
@@ -457,7 +459,9 @@ public class UtilityCog extends Cog {
 
         while (iterator.hasNext()) {
             int codepoint = iterator.nextInt();
-            final String fmt = ArrayUtils.contains(CHAR_NO_PREVIEW, codepoint) ? "U+%04X %2$s %1$c" : "U+%04X %2$s %1$c (`%1$c`)";
+            final String fmt = ArrayUtils.contains(CHAR_NO_PREVIEW, codepoint) ||
+                    ArrayUtils.contains(DIRECTIONALITY_NO_PREVIEW, Character.getDirectionality(codepoint)) ?
+                    "U+%04X %2$s %1$c" : "U+%04X %2$s %1$c (`%1$c`)";
 
             pager.addLine(String.format(fmt, codepoint, Character.getName(codepoint)));
         }
