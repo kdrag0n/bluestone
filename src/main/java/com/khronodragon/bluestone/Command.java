@@ -76,7 +76,6 @@ public class Command {
                 } catch (GuildOnlyError e) {
                     event.getChannel().sendMessage("Sorry, that command only works in a guild.").queue();
                 } catch (CheckFailure e) {
-                    bot.logger.error("Checks failed for command {}:", invoker);
                     event.getChannel().sendMessage(format("{0} A check for `{1}{2}` failed. Do you not have permissions?", event.getAuthor().getAsMention(), prefix, invoker)).queue();
                 } catch (Exception e) {
                     bot.logger.error("Unknown command ({}) error:", invoker, e);
