@@ -33,9 +33,9 @@ public abstract class Cog {
     }
 
     public void register() {
-        Class obj = this.getClass();
+        Class clazz = this.getClass();
 
-        for (Method method: obj.getDeclaredMethods()) {
+        for (Method method: clazz.getDeclaredMethods()) {
             if (method.isAnnotationPresent(Command.class)) {
                 Command anno = method.getAnnotation(Command.class);
 

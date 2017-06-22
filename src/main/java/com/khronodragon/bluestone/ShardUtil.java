@@ -3,6 +3,7 @@ package com.khronodragon.bluestone;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
+import com.j256.ormlite.jdbc.JdbcPooledConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.sql.BotAdmin;
 import com.khronodragon.bluestone.sql.GuildPrefix;
@@ -10,7 +11,6 @@ import net.dv8tion.jda.core.JDA;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
-import sun.security.provider.SHA;
 
 import java.sql.SQLException;
 import java.util.*;
@@ -36,7 +36,7 @@ public class ShardUtil {
         this.config = config;
 
         try {
-            dbConn = new JdbcConnectionSource("jdbc:" + config.optString("db_url", "h2:./database"));
+            dbConn = new JdbcPooledConnectionSource("jdbc:" + config.optString("db_url", "h2:./database"));
         } catch (SQLException e) {
             logger.error("Failed to connect to database!", e);
             logger.warn("Using an in-memory database.");

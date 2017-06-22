@@ -32,6 +32,7 @@
     <orderEntry type="library" name="Gradle: com.h2database:h2:1.4.196" level="project" />
     <orderEntry type="library" name="Gradle: com.sedmelluq:jda-nas:1.0.5" level="project" />
     <orderEntry type="library" name="Gradle: org.mariadb.jdbc:mariadb-java-client:2.0.2" level="project" />
+    <orderEntry type="library" name="Gradle: com.zaxxer:HikariCP:2.6.2" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-lang3:3.5" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-collections4:4.1" level="project" />
     <orderEntry type="library" name="Gradle: org.json:json:20160810" level="project" />
@@ -81,6 +82,6 @@
     <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-util:9.4.4.v20170414" level="project" />
     <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-security:9.4.4.v20170414" level="project" />
     <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-client:9.4.4.v20170414" level="project" />
-    <orderEntry type="library" name="Gradle: org.slf4j:slf4j-api:1.7.24" level="project" />
+    <orderEntry type="library" name="Gradle: org.slf4j:slf4j-api:1.7.25" level="project" />
   </component>
 </module>

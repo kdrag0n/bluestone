@@ -378,7 +378,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     private static MessageEmbed errorEmbed(Throwable e, Message msg, Command cmd) {
         Date date = new Date();
-        String stack = renderStackTrace(e, "\u3000", "➡ ");
+        String stack = renderStackTrace(e, "\u3000", "> ");
 
         EmbedBuilder emb = new EmbedBuilder()
                 .setAuthor(Cog.getTag(msg.getAuthor()), null, msg.getAuthor().getEffectiveAvatarUrl())
