@@ -13,8 +13,9 @@ import org.apache.logging.log4j.LogManager;
 import java.awt.Color;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
-public abstract class Cog implements ClassUtilities {
+public abstract class Cog {
     public abstract String getName();
     public abstract String getDescription();
     protected final Bot bot;
@@ -58,11 +59,24 @@ public abstract class Cog implements ClassUtilities {
         }
     }
 
-    protected Color randomColor() {
+    protected static int randint(int min, int max) {
+        return ThreadLocalRandom.current().nextInt(min, max);
+    }
+
+    protected static boolean stringExists(String string, String... options) {
+        for (String opt: options) {
+            if (string.equals(opt)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static Color randomColor() {
         return new Color(randint(0, (int) Math.pow(255, 3) - 1));
     }
 
-    protected EmbedBuilder newEmbedWithAuthor(Context ctx) {
+    protected static EmbedBuilder newEmbedWithAuthor(Context ctx) {
         String name;
         String iconUrl;
 
@@ -80,7 +94,7 @@ public abstract class Cog implements ClassUtilities {
                 .setAuthor(name, null, iconUrl);
     }
 
-    protected EmbedBuilder newEmbedWithAuthor(Context ctx, String url) {
+    protected static EmbedBuilder newEmbedWithAuthor(Context ctx, String url) {
         String name;
         String iconUrl;
 
@@ -98,7 +112,7 @@ public abstract class Cog implements ClassUtilities {
                 .setAuthor(name, url, iconUrl);
     }
 
-    protected String getEffectiveName(Context ctx) {
+    protected static String getEffectiveName(Context ctx) {
         if (ctx.guild == null) {
             return ctx.jda.getSelfUser().getName();
         } else {
@@ -106,7 +120,7 @@ public abstract class Cog implements ClassUtilities {
         }
     }
 
-    protected String getTag(User user) {
+    public static String getTag(User user) {
         return user.getName() + '#' + user.getDiscriminator();
     }
 
@@ -116,15 +130,15 @@ public abstract class Cog implements ClassUtilities {
         });
     }
 
-    protected <T> T randomChoice(T[] array) {
+    protected static <T> T randomChoice(T[] array) {
         return array[randint(0, array.length)];
     }
 
-    protected <T> T randomChoice(List<T> list) {
+    protected static <T> T randomChoice(List<T> list) {
         return list.get(randint(0, list.size()));
     }
 
-    protected String[] embedFieldPages(String text) {
+    protected static String[] embedFieldPages(String text) {
         return StringUtils.split(WordUtils.wrap(text, 1024, "||", true, "\\s+"), "||");
     }
 }
