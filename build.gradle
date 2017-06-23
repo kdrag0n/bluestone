@@ -16,9 +16,6 @@ mainClassName = 'com.khronodragon.bluestone.Start'
 repositories {
     mavenCentral()
     jcenter()
-    maven {
-        url 'http://repo.boundlessgeo.com/main/'
-    }
 }
 
 task fatJar(type: Jar) {
