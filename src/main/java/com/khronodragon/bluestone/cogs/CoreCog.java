@@ -104,14 +104,18 @@ public class CoreCog extends Cog {
                 }
                 if (bot.commands.containsKey(litem)) {
                     com.khronodragon.bluestone.Command cmd = bot.commands.get(litem);
-                    String field = "`";
+                    StringBuilder field = new StringBuilder("`");
+
                     if (cmd.aliases.length < 1) {
-                        field += cmd.name + '`';
+                        field.append(cmd.name);
                     } else {
-                        field += String.join("/", cmd.aliases);
+                        field.append(ctx.prefix)
+                                .append(String.join("/", cmd.aliases));
                     }
-                    field += "\n\n" + cmd.description;
-                    fields.put(litem, new ArrayList<>(Arrays.asList(field)));
+
+                    field.append("`\n\n");
+                    field.append(cmd.description);
+                    fields.put(litem, new ArrayList<>(Arrays.asList(field.toString())));
                     done = true;
                 }
                 if (!done) {
