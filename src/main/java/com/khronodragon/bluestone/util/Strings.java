@@ -4,6 +4,8 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Strings {
     private static final int bmpThreshold = 1 << 16;
@@ -71,5 +73,20 @@ public class Strings {
         }
 
         return builder.toString();
+    }
+
+    public static String replace(String input, Pattern regex, StringReplacerCallback callback) {
+        StringBuffer result = new StringBuffer();
+        Matcher matcher = regex.matcher(input);
+        while (matcher.find()) {
+            result.append(callback.replace(matcher.group()));
+        }
+        matcher.appendTail(result);
+
+        return result.toString();
+    }
+
+    public static StringMapper createMap() {
+        return StringMapper.match();
     }
 }

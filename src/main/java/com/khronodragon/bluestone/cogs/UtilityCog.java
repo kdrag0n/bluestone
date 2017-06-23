@@ -146,7 +146,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "invite", desc = "Generate an invite link for myself or another bot.", aliases = {"addbot"})
     public void cmdInvite(Context ctx) {
-        if (ctx.rawArgs.length() == 0) {
+        if (ctx.rawArgs.length() < 1) {
             ctx.send(format("<https://discordapp.com/api/oauth2/authorize?client_id={0}&scope=bot&permissions={1}>",
                     ctx.jda.getSelfUser().getId(), "1609825363")).queue();
         } else {
@@ -183,7 +183,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "poll", desc = "Start a poll, with reactions.", usage = "[emotes] [question] [time in minutes]", guildOnly = true)
     public void cmdPoll(Context ctx) {
-        if (ctx.args.size() == 0) {
+        if (ctx.args.size() < 1) {
             ctx.send(":warning: Missing question, emotes, and time (in minutes)!").queue();
             return;
         }
@@ -295,7 +295,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "meme", desc = "Generate a custom meme.", usage = "[top text] | [bottom text]")
     public void cmdMeme(Context ctx) {
-        if (ctx.rawArgs.length() == 0) {
+        if (ctx.rawArgs.length() < 1) {
             ctx.send(":warning: I need some text to use!").queue();
             return;
         }
@@ -362,7 +362,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "urban", desc = "Define something with Urban Dictionary.", aliases = {"define"})
     public void cmdUrban(Context ctx) {
-        if (ctx.rawArgs.length() == 0) {
+        if (ctx.rawArgs.length() < 1) {
             ctx.send(":warning: I need a term!").queue();
             return;
         }
@@ -449,7 +449,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "charinfo", desc = "Get the Unicode info for a character(s).", usage = "[text]")
     public void cmdCharInfo(Context ctx) {
-        if (ctx.rawArgs.length() == 0) {
+        if (ctx.rawArgs.length() < 1) {
             ctx.send(":warning: I need some text!").queue();
             return;
         }
@@ -479,7 +479,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "encode", desc = "Encode some text into Base65536.", usage = "[text]")
     public void cmdEncode(Context ctx) {
-        if (ctx.rawArgs.length() == 0) {
+        if (ctx.rawArgs.length() < 1) {
             ctx.send(":warning: I need some text!").queue();
             return;
         }
@@ -497,7 +497,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "decode", desc = "Decode Base65536 into regular text.", usage = "[text]")
     public void cmdDecode(Context ctx) {
-        if (ctx.rawArgs.length() == 0) {
+        if (ctx.rawArgs.length() < 1) {
             ctx.send(":warning: I need some text!").queue();
             return;
         }
@@ -849,7 +849,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "b64encode", desc = "Encode text into Base64.")
     public void cmdB64encode(Context ctx) {
-        if (ctx.rawArgs.length() == 0) {
+        if (ctx.rawArgs.length() < 1) {
             ctx.send(":warning: I need some text!").queue();
             return;
         }
@@ -859,7 +859,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "b64decode", desc = "Decode Base64 into text.")
     public void cmdB64decode(Context ctx) {
-        if (ctx.rawArgs.length() == 0) {
+        if (ctx.rawArgs.length() < 1) {
             ctx.send(":warning: I need some text!").queue();
             return;
         }
@@ -869,7 +869,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "ipinfo", desc = "Get information about an IP or domain.", aliases = {"ip"})
     public void cmdIpInfo(Context ctx) {
-        if (ctx.rawArgs.length() == 0) {
+        if (ctx.rawArgs.length() < 1) {
             ctx.send(":warning: I need an IP or domain!").queue();
             return;
         }

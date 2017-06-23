@@ -52,7 +52,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
     public void playlistLoaded(AudioPlaylist playlist) {
         List<AudioTrack> tracks = playlist.getTracks();
         if (playlist.isSearchResult()) {
-            if (tracks.size() == 0)
+            if (tracks.size() < 1)
                 noMatches();
             else
                 trackLoaded(tracks.get(0));

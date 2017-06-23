@@ -25,7 +25,7 @@ public class CoreCog extends Cog {
 
     @Command(name = "say", desc = "Say something! Say it!", aliases = {"echo"}, usage = "[message]")
     public void cmdSay(Context ctx) {
-        if (ctx.rawArgs.length() == 0) {
+        if (ctx.rawArgs.length() < 1) {
             ctx.send(":x: I need text to say!").queue();
             return;
         }
@@ -68,7 +68,7 @@ public class CoreCog extends Cog {
                 .setAuthor("Bot Help", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
                 .setColor(randomColor());
 
-        if (ctx.args.size() == 0) {
+        if (ctx.args.size() < 1) {
             for (com.khronodragon.bluestone.Command cmd: new HashSet<>(bot.commands.values())) {
                 if (!cmd.hidden) {
                     String cName = cmd.instance.getName();
@@ -105,7 +105,7 @@ public class CoreCog extends Cog {
                 if (bot.commands.containsKey(litem)) {
                     com.khronodragon.bluestone.Command cmd = bot.commands.get(litem);
                     String field = "`";
-                    if (cmd.aliases.length == 0) {
+                    if (cmd.aliases.length < 1) {
                         field += cmd.name + '`';
                     } else {
                         field += String.join("/", cmd.aliases);
@@ -124,7 +124,7 @@ public class CoreCog extends Cog {
         for (String cog: fields.keySet()) {
             List<String> field = fields.get(cog);
             String content = String.join("\n", field);
-            if (content.length() == 0) {
+            if (content.length() < 1) {
                 content = "No visible commands.";
             }
 

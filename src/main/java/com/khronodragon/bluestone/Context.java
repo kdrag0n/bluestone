@@ -42,18 +42,25 @@ public class Context {
         this.rawArgs = message.getRawContent().substring(Math.min(prefix.length() + invoker.length() + 1, prefix.length() + invoker.length())).trim();
     }
 
-    public RestAction<Message> send(String msg) {
-        msg = msg.replace("@everyone", "@\u200beveryone")
-            .replace("@here", "@\u200bhere");
+    public static String truncate(String msg) {
+        return truncate(msg, "**...too long**");
+    }
 
+    public static String truncate(String msg, String truncateString) {
         if (msg.length() > 2000) {
             msg = msg.substring(0, 2000);
-            String truncateString = "**...too long**";
             if (StringUtils.countMatches(msg, "```") % 2 == 1) {
                 truncateString = "```" + truncateString;
             }
-            msg = msg.substring(0, msg.length() - truncateString.length()) + truncateString;
+            return msg.substring(0, msg.length() - truncateString.length()) + truncateString;
+        } else {
+            return msg;
         }
+    }
+
+    public RestAction<Message> send(String msg) {
+        msg = truncate(msg.replace("@everyone", "@\u200beveryone")
+            .replace("@here", "@\u200bhere"));
 
         return channel.sendMessage(msg);
     }
