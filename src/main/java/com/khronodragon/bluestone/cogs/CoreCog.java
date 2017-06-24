@@ -77,7 +77,7 @@ public class CoreCog extends Cog {
                     if (fields.containsKey(cName)) {
                         fields.get(cName).add(entry);
                     } else {
-                        fields.put(cName, new ArrayList<>(Arrays.asList(entry)));
+                        fields.put(cName, new LinkedList<>(Arrays.asList(entry)));
                     }
                 }
             }
@@ -96,12 +96,16 @@ public class CoreCog extends Cog {
                             if (fields.containsKey(cName)) {
                                 fields.get(cName).add(entry);
                             } else {
-                                fields.put(cName, new ArrayList<>(Arrays.asList(entry)));
+                                final LinkedList<String> newList = new LinkedList<>();
+                                newList.add(entry);
+                                
+                                fields.put(cName, newList);
                             }
                         }
                     }
                     done = true;
                 }
+
                 if (bot.commands.containsKey(litem)) {
                     com.khronodragon.bluestone.Command cmd = bot.commands.get(litem);
                     StringBuilder field = new StringBuilder("`");
@@ -115,11 +119,12 @@ public class CoreCog extends Cog {
 
                     field.append("`\n\n");
                     field.append(cmd.description);
-                    fields.put(litem, new ArrayList<>(Arrays.asList(field.toString())));
+                    fields.put(litem, Collections.singletonList(field.toString()));
                     done = true;
                 }
+
                 if (!done) {
-                    fields.put(item, new ArrayList<>(Arrays.asList("Not found.")));
+                    fields.put(item, Collections.singletonList("Not found."));
                 }
             }
         }
