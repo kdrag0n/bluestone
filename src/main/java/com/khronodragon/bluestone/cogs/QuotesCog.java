@@ -92,7 +92,7 @@ public class QuotesCog extends Cog {
             quoteCmdList(ctx);
         else if (invoked.equals("random") || invoked.equals("rand"))
             quoteCmdRandom(ctx);
-        else if (invoked.matches("^[a-zA-Z0-9]{4}$"))
+        else if (invoked.matches("^[0-9a-fA-F]{4}$"))
             quoteShowId(ctx, invoked.toLowerCase());
         else
             ctx.send(NO_COMMAND).queue();
