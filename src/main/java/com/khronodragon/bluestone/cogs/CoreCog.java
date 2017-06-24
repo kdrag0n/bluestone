@@ -77,7 +77,10 @@ public class CoreCog extends Cog {
                     if (fields.containsKey(cName)) {
                         fields.get(cName).add(entry);
                     } else {
-                        fields.put(cName, new LinkedList<>(Arrays.asList(entry)));
+                        final LinkedList<String> newList = new LinkedList<>();
+                        newList.add(entry);
+
+                        fields.put(cName, newList);
                     }
                 }
             }
@@ -98,7 +101,7 @@ public class CoreCog extends Cog {
                             } else {
                                 final LinkedList<String> newList = new LinkedList<>();
                                 newList.add(entry);
-                                
+
                                 fields.put(cName, newList);
                             }
                         }
