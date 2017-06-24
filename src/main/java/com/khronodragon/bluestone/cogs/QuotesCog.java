@@ -16,6 +16,8 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 
+import static com.khronodragon.bluestone.util.NullValueWrapper.val;
+
 public class QuotesCog extends Cog {
     private static final Logger logger = LogManager.getLogger(QuotesCog.class);
     private static final Character[] hexChars = {'0', '1', '2', '3', '4', '5', '6', '7',
@@ -153,7 +155,7 @@ public class QuotesCog extends Cog {
         if (ctx.guild == null)
             emb.setColor(randomColor());
         else
-            emb.setColor(ctx.member.getColor());
+            emb.setColor(val(ctx.member.getColor()).or(randomColor()));
 
         for (Quote quote: quotes) {
             emb.addField(quote.getId(), quote.getQuote(), true);
