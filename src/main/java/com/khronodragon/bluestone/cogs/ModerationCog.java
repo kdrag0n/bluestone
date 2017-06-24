@@ -80,6 +80,10 @@ public class ModerationCog extends Cog {
             ctx.send(PURGE_NO_PARAMS).queue();
             return;
         }
+        if (!ctx.guild.getSelfMember().hasPermission((Channel) ctx.channel, Permission.MESSAGE_MANAGE)) {
+            ctx.send(":warning: I need to be able to **manage messages**!").queue();
+            return;
+        }
         ctx.channel.sendTyping().queue();
 
         Matcher matcher;
