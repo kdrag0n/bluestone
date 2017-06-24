@@ -14,7 +14,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.List;
 
 import static com.khronodragon.bluestone.util.NullValueWrapper.val;
@@ -29,7 +28,10 @@ public class QuotesCog extends Cog {
             "    \u2022 `add [quote]` - add a quote\n" +
             "    \u2022 `delete [id]` - delete a quote, if you own it\n" +
             "    \u2022 `list` - list your quotes\n" +
-            "    \u2022 `random` - view a random quote";
+            "    \u2022 `random` - view a random quote\n" +
+            "    \u2022 `count` - see how many quotes there are\n" +
+            "\n" +
+            "Aliases: [create, new, remove], [del, rm], [rand], [num]";
     private Dao<Quote, String> dao;
 
     public QuotesCog(Bot bot) {
@@ -95,6 +97,8 @@ public class QuotesCog extends Cog {
             quoteCmdList(ctx);
         else if (invoked.equals("random") || invoked.equals("rand"))
             quoteCmdRandom(ctx);
+        else if (invoked.equals("count") || invoked.equals("num"))
+            quoteCmdCount(ctx);
         else if (invoked.matches("^[0-9a-fA-F]{4}$"))
             quoteShowId(ctx, invoked.toLowerCase());
         else
@@ -113,7 +117,11 @@ public class QuotesCog extends Cog {
             return;
         }
 
-        int quotes = dao.queryForFieldValues(Collections.singletonMap("authorId", ctx.author.getIdLong())).size();
+        short quotes = (short) dao.queryBuilder()
+                .where()
+                .eq("authorId", ctx.author.getIdLong())
+                .countOf();
+
         if (quotes >= 25) {
             ctx.send(":x: You already have 25 quotes!").queue();
             return;
@@ -143,7 +151,11 @@ public class QuotesCog extends Cog {
     }
 
     private void quoteCmdList(Context ctx) throws SQLException {
-        List<Quote> quotes = dao.queryForFieldValues(Collections.singletonMap("authorId", ctx.author.getIdLong()));
+        List<Quote> quotes = dao.queryBuilder()
+                .where()
+                .eq("authorId", ctx.author.getIdLong())
+                .query();
+
         if (quotes.size() < 1) {
             ctx.send("You have no quotes. Add some!").queue();
             return;
@@ -173,6 +185,10 @@ public class QuotesCog extends Cog {
                 .queryForFirst();
 
         ctx.send(quote.render()).queue();
+    }
+
+    private void quoteCmdCount(Context ctx) throws SQLException {
+        ctx.send("There are **" + dao.countOf() + "** quotes.").queue();
     }
 
     private void quoteShowId(Context ctx, String id) throws SQLException {
