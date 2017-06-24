@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -73,6 +74,14 @@ public class ShardUtil {
         } catch (SQLException e) {
             logger.warn("Failed to create prefix store and/or DAO!", e);
         }
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                dbConn.close();
+            } catch (IOException e) {
+                logger.warn("Couldn't close database connection", e);
+            }
+        }));
     }
 
     public Dao<BotAdmin, Long> getAdminDao() {
