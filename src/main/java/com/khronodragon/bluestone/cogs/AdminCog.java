@@ -46,7 +46,7 @@ public class AdminCog extends Cog {
             ctx.send(":warning: I need someone to ban!").queue();
             return;
         }
-        ctx.send("Not implemented yet!").queue();
+        ctx.send("Not implemented yet!").queue(); // TODO: implement
     }
 
     @Command(name = "admin", desc = "Manage bot admins.", aliases = {"admins"}, thread = true)

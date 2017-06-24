@@ -20,6 +20,6 @@ public class CogmanCog extends Cog {
 
     @Command(name = "cog", desc = "Manage all the cogs.", perms = {"owner"})
     public void cmdCog(Context ctx) {
-        ctx.send("Not implemented yet!").queue();
+        ctx.send("Not implemented yet!").queue(); // TODO: implement
     }
 }
