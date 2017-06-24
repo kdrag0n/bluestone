@@ -37,16 +37,7 @@ public class AdminCog extends Cog {
     }
 
     public String getDescription() {
-        return "Everything admin and moderator!";
-    }
-
-    @Command(name = "ban", desc = "Ban someone!", perms = {"banMembers"})
-    public void cmdBan(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need someone to ban!").queue();
-            return;
-        }
-        ctx.send("Not implemented yet!").queue(); // TODO: implement
+        return "Everything admin!";
     }
 
     @Command(name = "admin", desc = "Manage bot admins.", aliases = {"admins"}, thread = true)
