@@ -16,7 +16,6 @@ import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,10 +34,8 @@ public class WelcomeCog extends Cog implements EventedCog {
             "The following are valid:\n" +
             "    \u2022 `status` - view the status of this message\n" +
             "    \u2022 `show` - show the current message\n" +
-            "    \u2022 `set` - set the current message\n" +
-            "    \u2022 `toggle` - toggle the status of this message\n" +
-            "\n" +
-            "**NOTE: This has nothing to do with *server* admins!**";
+            "    \u2022 `set [message]` - set the current message\n" +
+            "    \u2022 `toggle` - toggle the status of this message";
     private Dao<GuildWelcomeMessages, Long> messageDao;
 
     public WelcomeCog(Bot bot) {
@@ -99,7 +96,7 @@ public class WelcomeCog extends Cog implements EventedCog {
                         "[default]", "[default]", true, true));
             } catch (SQLException ex) {
                 logger.error("Failed to recover from NPE (control cmd)", ex);
-                ctx.send(":robot: I wasn't able to fix it for you. If it's a problem, contact the bot owner.").queue();
+                ctx.send(":sob: I wasn't able to fix it for you. If it's a problem, contact the bot owner.").queue();
                 return;
             }
 
@@ -295,7 +292,7 @@ public class WelcomeCog extends Cog implements EventedCog {
         if (!event.getGuild().isAvailable()) return;
 
         try {
-            if (messageDao.queryForId(event.getGuild().getIdLong()) != null) {
+            if (messageDao.idExists(event.getGuild().getIdLong())) {
                 messageDao.deleteById(event.getGuild().getIdLong());
             }
         } catch (SQLException e) {
