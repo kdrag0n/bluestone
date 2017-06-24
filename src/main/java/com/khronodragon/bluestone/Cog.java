@@ -45,9 +45,16 @@ public abstract class Cog {
                         anno.thread()
                 );
 
-                bot.commands.put(command.name, command);
+                if (bot.commands.containsKey(command.name))
+                    throw new IllegalStateException("Command '" + al + "' already registered!");
+                else
+                    bot.commands.put(command.name, command);
+                
                 for (String al: command.aliases) {
-                    bot.commands.put(al, command);
+                    if (bot.commands.containsKey(al))
+                        throw new IllegalStateException("Command '" + al + "' already registered!");
+                    else
+                        bot.commands.put(al, command);
                 }
             }
         }
