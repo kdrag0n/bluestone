@@ -30,7 +30,7 @@ task fatJar(type: Jar) {
 }
 
 dependencies {
-    compile 'net.dv8tion:JDA:3.1.1_216'
+    compile 'net.dv8tion:JDA:3.1.1_217'
     compile 'com.sedmelluq:lavaplayer:1.2.42'
     compile 'com.mashape.unirest:unirest-java:1.4.9'
     compile 'com.google.guava:guava:22.0'

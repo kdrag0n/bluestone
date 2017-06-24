@@ -13,7 +13,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="bluestone_main" />
-    <orderEntry type="library" name="Gradle: net.dv8tion:JDA:3.1.1_216" level="project" />
+    <orderEntry type="library" name="Gradle: net.dv8tion:JDA:3.1.1_217" level="project" />
     <orderEntry type="library" name="Gradle: com.sedmelluq:lavaplayer:1.2.42" level="project" />
     <orderEntry type="library" name="Gradle: com.mashape.unirest:unirest-java:1.4.9" level="project" />
     <orderEntry type="library" name="Gradle: com.google.guava:guava:22.0" level="project" />
