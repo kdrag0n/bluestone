@@ -150,6 +150,10 @@ public class QuotesCog extends Cog {
                 .setAuthor(ctx.author.getName(), null, ctx.author.getEffectiveAvatarUrl())
                 .setTitle("Quotes")
                 .setDescription("Here are all the quotes you've written.");
+        if (ctx.guild == null)
+            emb.setColor(randomColor());
+        else
+            emb.setColor(ctx.member.getColor());
 
         for (Quote quote: quotes) {
             emb.addField(quote.getId(), quote.getQuote(), true);
