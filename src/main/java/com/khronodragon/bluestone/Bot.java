@@ -57,12 +57,12 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                                                             .setDaemon(true)
                                                             .setNameFormat("Bot BG-Task Thread %d")
                                                             .build());
-    private ThreadPoolExecutor cogEventExecutor = new ThreadPoolExecutor(5, 50, 45, TimeUnit.SECONDS,
+    private ThreadPoolExecutor cogEventExecutor = new ThreadPoolExecutor(5, 50, 10, TimeUnit.SECONDS,
             new ArrayBlockingQueue<>(30), new ThreadFactoryBuilder()
                                                 .setDaemon(true)
                                                 .setNameFormat("Bot Cog-Event Pool Thread %d")
                                                 .build(), new RejectedExecHandlerImpl("Cog-Event"));
-    public ThreadPoolExecutor threadExecutor = new ThreadPoolExecutor(3, 85, 30, TimeUnit.SECONDS,
+    public ThreadPoolExecutor threadExecutor = new ThreadPoolExecutor(3, 85, 10, TimeUnit.SECONDS,
             new ArrayBlockingQueue<>(60), new ThreadFactoryBuilder()
             .setDaemon(true)
             .setNameFormat("Bot Command-Exec Pool Thread %d")
