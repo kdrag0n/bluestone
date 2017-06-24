@@ -403,8 +403,8 @@ public class UtilityCog extends Cog {
                             emb.addField("Example", "None?!", false);
                         }
 
-                        emb.addField("\uD83D\uDC4D", word.getString("thumbs_up"), true)
-                                .addField("\uD83D\uDC4E", word.getString("thumbs_down"), true);
+                        emb.addField("\uD83D\uDC4D", str(word.getInt("thumbs_up")), true)
+                                .addField("\uD83D\uDC4E", str(word.getInt("thumbs_down")), true);
 
                         ctx.send(emb.build()).queue();
                     }
