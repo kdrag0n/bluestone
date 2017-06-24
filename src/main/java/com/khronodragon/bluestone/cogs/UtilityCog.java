@@ -2,6 +2,9 @@ package com.khronodragon.bluestone.cogs;
 
 import ch.jamiete.mcping.MinecraftPing;
 import ch.jamiete.mcping.MinecraftPingOptions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
@@ -37,7 +40,6 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.python.antlr.ast.Num;
 
 import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 import static com.khronodragon.bluestone.util.Strings.smartJoin;
@@ -50,6 +52,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -69,12 +72,46 @@ public class UtilityCog extends Cog {
 
     private static final Fairy fairy = Fairy.create();
     private static final QRCodeWriter qrWriter = new QRCodeWriter();
-    private static final Map qrHintMap = new HashMap() {{
+    private static final Map<EncodeHintType, Object> qrHintMap = new HashMap<EncodeHintType, Object>() {{
         put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
         put(EncodeHintType.CHARACTER_SET, "UTF-8");
     }};
 
     private static final String SHRUG = "¯\\_(ツ)_/¯";
+    private final LoadingCache<String, EmbedBuilder> ipInfoCache = CacheBuilder.newBuilder()
+            .maximumSize(36)
+            .expireAfterAccess(6, TimeUnit.HOURS)
+            .build(new CacheLoader<String, EmbedBuilder>() {
+                @Override
+                public EmbedBuilder load(String key) throws UnirestException {
+                    String uri = "https://freegeoip.net/json/" + key;
+                    JSONObject data = Unirest.get(uri).asJson().getBody().getObject();
+
+                    String rdns;
+                    try {
+                        rdns = InetAddress.getByName(data.getString("ip")).getCanonicalHostName();
+                    } catch (UnknownHostException e) {
+                        rdns = "Couldn't find host";
+                    }
+
+                    return new EmbedBuilder()
+                            .setColor(randomColor())
+                            .addField("IP", data.getString("ip"), true)
+                            .addField("Reverse DNS", rdns, true)
+                            .addField("Country", format("{0} ({1})",
+                                    data.getString("country_name"),
+                                    data.getString("country_code")), true)
+                            .addField("Region", "WIP", true)
+                            .addField("City", val(data.optString("city")).or(SHRUG), true)
+                            .addField("ZIP Code", val(data.optString("zip_code")).or(SHRUG), true)
+                            .addField("Timezone", val(data.optString("time_zone")).or(SHRUG), true)
+                            .addField("Longitude", val(data.optString("longitude")).or(SHRUG), true)
+                            .addField("Latitude", val(data.optString("latitude")).or(SHRUG), true)
+                            .addField("Metro Code", data.optInt("metro_code") != 0 ?
+                                    data.optString("metro_code") :
+                                    SHRUG, true);
+                }
+            });
 
     public UtilityCog(Bot bot) {
         super(bot);
@@ -867,58 +904,28 @@ public class UtilityCog extends Cog {
         ctx.send("```" + new String(Base64.getDecoder().decode(ctx.rawArgs)) + "```").queue();
     }
 
-    @Command(name = "ipinfo", desc = "Get information about an IP or domain.", aliases = {"ip"})
-    public void cmdIpInfo(Context ctx) {
+    @Command(name = "ipinfo", desc = "Get information about an IP or domain.", aliases = {"ip"}, thread = true)
+    public void cmdIpInfo(Context ctx) throws Throwable {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(":warning: I need an IP or domain!").queue();
             return;
+        } else if (!ctx.rawArgs.matches("^(?:localhost|[a-zA-Z\\-.]+\\.[a-z]{2,15}|(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|[0-9a-f:]+)$")) {
+            ctx.send(":warning: Invalid domain, IPV4, or IPV6 address!").queue();
+            return;
         }
 
-        Unirest.get("https://freegeoip.net/json/" + ctx.rawArgs)
-                .asJsonAsync(new Callback<JsonNode>() {
-                    @Override
-                    public void completed(HttpResponse<JsonNode> response) {
-                        JSONObject data = response.getBody().getObject();
-
-                        String rdns;
-                        try {
-                            rdns = InetAddress.getByName(data.getString("ip")).getCanonicalHostName();
-                        } catch (UnknownHostException e) {
-                            rdns = "Couldn't find host";
-                        }
-
-                        EmbedBuilder emb = new EmbedBuilder()
-                                .setColor(randomColor())
-                                .setAuthor("IP Data", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
-                                .addField("IP", data.getString("ip"), true)
-                                .addField("Reverse DNS", rdns, true)
-                                .addField("Country", format("{0} ({1})",
-                                        data.getString("country_name"),
-                                        data.getString("country_code")), true)
-                                .addField("Region", "WIP", true)
-                                .addField("City", val(data.optString("city")).or(SHRUG), true)
-                                .addField("ZIP Code", val(data.optString("zip_code")).or(SHRUG), true)
-                                .addField("Timezone", val(data.optString("time_zone")).or(SHRUG), true)
-                                .addField("Longitude", val(data.optString("longitude")).or(SHRUG), true)
-                                .addField("Latitude", val(data.optString("latitude")).or(SHRUG), true)
-                                .addField("Metro Code", data.optInt("metro_code") != 0 ?
-                                        data.optString("metro_code") :
-                                        SHRUG, true);
-
-                        ctx.send(emb.build()).queue();
-                    }
-
-                    @Override
-                    public void failed(UnirestException e) {
-                        logger.error("ipinfo API error", e);
-                        ctx.send(":x: Request failed.").queue();
-                    }
-
-                    @Override
-                    public void cancelled() {
-                        ctx.send(":x: Request cancelled.").queue();
-                    }
-                });
+        try {
+            ctx.send(ipInfoCache.get(ctx.rawArgs)
+                .setAuthor("IP Data", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
+                .build()).queue();
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof UnirestException) {
+                logger.error("ipinfo API error", e.getCause());
+                ctx.send(":x: Request failed.").queue();
+            } else {
+                throw e.getCause();
+            }
+        }
     }
 
     @Command(name = "mcskin", desc = "Get someone's Minecraft skin.")
