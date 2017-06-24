@@ -46,10 +46,10 @@ public abstract class Cog {
                 );
 
                 if (bot.commands.containsKey(command.name))
-                    throw new IllegalStateException("Command '" + al + "' already registered!");
+                    throw new IllegalStateException("Command '" + command.name + "' already registered!");
                 else
                     bot.commands.put(command.name, command);
-                
+
                 for (String al: command.aliases) {
                     if (bot.commands.containsKey(al))
                         throw new IllegalStateException("Command '" + al + "' already registered!");
