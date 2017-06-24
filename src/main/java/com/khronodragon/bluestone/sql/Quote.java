@@ -6,10 +6,11 @@ import com.j256.ormlite.table.DatabaseTable;
 import java.text.MessageFormat;
 import java.util.Date;
 
+import static java.text.MessageFormat.format;
+
 @DatabaseTable(tableName = "quotes")
 public class Quote {
-    public static final MessageFormat QUOTE_FORMAT =
-            new MessageFormat("[{0}] {4}\"{1}\"{4} — `{2}` ({3,date})");
+    public static final String QUOTE_FORMAT = "[{0}] {4}\"{1}\"{4} — `{2}` ({3,date})";
 
     @DatabaseField(id = true, canBeNull = false, width = 4)
     private String id;
@@ -59,6 +60,6 @@ public class Quote {
     public String render() {
         char italicKey = quote.indexOf('*') == -1 ? '*' : '\00';
 
-        return QUOTE_FORMAT.format(id, quote, authorName, date, italicKey);
+        return format(QUOTE_FORMAT, id, quote, authorName, date, italicKey);
     }
 }

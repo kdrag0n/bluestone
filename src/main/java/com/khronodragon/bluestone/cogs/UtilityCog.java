@@ -447,7 +447,7 @@ public class UtilityCog extends Cog {
         ctx.send(embed.build()).queue();
     }
 
-    @Command(name = "charinfo", desc = "Get the Unicode info for a character(s).", usage = "[text]")
+    @Command(name = "charinfo", desc = "Get the Unicode character info for some text.", usage = "[text]")
     public void cmdCharInfo(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(":warning: I need some text!").queue();
