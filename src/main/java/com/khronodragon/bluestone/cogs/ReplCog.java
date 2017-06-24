@@ -17,6 +17,18 @@ import java.util.Set;
 import static java.text.MessageFormat.format;
 
 public class ReplCog extends Cog {
+    private static final String GROOVY_PRE_INJECT = "import net.dv8tion.jda.core.entities.*\n" +
+            "import net.dv8tion.jda.core.*\n" +
+            "import com.khronodragon.bluestone.*\n" +
+            "import org.apache.logging.log4j.*\n" +
+            "import javax.script.*\n" +
+            "import com.khronodragon.bluestone.cogs.*\n" +
+            "import com.khronodragon.bluestone.errors.*\n" +
+            "import org.json.*\n" +
+            "import com.khronodragon.bluestone.sql.*\n" +
+            "import com.khronodragon.bluestone.handlers.*\n" +
+            "import com.khronodragon.bluestone.enums.*\n";
+
     private Set<Long> replSessions = new HashSet<Long>();
 
     public ReplCog(Bot bot) {
@@ -104,7 +116,10 @@ public class ReplCog extends Cog {
 
             Object result;
             try {
-                result = engine.eval(cleaned);
+                if (language.equals("groovy"))
+                    result = GROOVY_PRE_INJECT + engine.eval(cleaned);
+                else
+                    result = engine.eval(cleaned);
             } catch (ScriptException e) {
                 result = e.getCause();
                 if (result instanceof ScriptException) {
