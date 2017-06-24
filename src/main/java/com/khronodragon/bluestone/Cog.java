@@ -21,6 +21,10 @@ public abstract class Cog {
         this.bot = bot;
     }
 
+    public String getCosmeticName() {
+        return getName();
+    }
+
     public void load() {
         LogManager.getLogger(this.getClass()).info("Cog loaded.", getName());
     }

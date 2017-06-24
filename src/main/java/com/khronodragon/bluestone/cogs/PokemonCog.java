@@ -11,6 +11,11 @@ public class PokemonCog extends Cog {
     }
 
     public String getName() {
+        return "Pokemon";
+    }
+
+    @Override
+    public String getCosmeticName() {
         return "Pokémon";
     }
 
