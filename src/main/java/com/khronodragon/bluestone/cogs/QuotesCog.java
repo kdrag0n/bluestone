@@ -2,6 +2,7 @@ package com.khronodragon.bluestone.cogs;
 
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
+import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
@@ -165,9 +166,13 @@ public class QuotesCog extends Cog {
     }
 
     private void quoteCmdRandom(Context ctx) throws SQLException {
-        List<Quote> quotes = dao.queryForAll();
+        Quote quote = dao.queryBuilder()
+                .orderByRaw(((JdbcConnectionSource) dao.getConnectionSource()).getUrl().startsWith("jdbc:h2") ?
+                            "RAND()": "RANDOM()")
+                .limit(1L)
+                .queryForFirst();
 
-        ctx.send(randomChoice(quotes).render()).queue();
+        ctx.send(quote.render()).queue();
     }
 
     private void quoteShowId(Context ctx, String id) throws SQLException {
