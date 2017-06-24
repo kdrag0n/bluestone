@@ -43,11 +43,8 @@ public class ReplCog extends Cog {
     }
 
     public static String cleanupCode(String code) {
-        return StringUtils.stripEnd(StringUtils.stripStart(StringUtils.replaceOnce(
-                StringUtils.replaceOnce(
-                        StringUtils.replaceOnce(code, "```scala", ""),
-                        "```js", ""),
-                "```javascript", ""), "`"), "`");
+        String stage1 = code.replaceFirst("```(?:js|javascript|py|python|java|groovy|scala|kotlin|kt|lua|ruby|rb)\n?", "");
+        return StringUtils.stripEnd(StringUtils.stripStart(stage1, "`"), "`");
     }
 
     @Command(name = "repl", desc = "A multilingual REPL, in Discord!", perms = {"owner"}, usage = "[language] {flags}", thread=true)
