@@ -71,7 +71,7 @@ public class AdminCog extends Cog {
     }
 
     private void adminCmdTest(Context ctx) throws SQLException {
-        String admin = bot.getAdminDao().queryForId(ctx.author.getIdLong()) == null ? " :cry: You aren't an admin!" : " :wave: Hey there, admin!";
+        String admin = bot.getAdminDao().idExists(ctx.author.getIdLong()) ? " :wave: Hey there, admin!" : " :cry: You aren't an admin!";
         ctx.send(ctx.mention + admin).queue();
     }
 

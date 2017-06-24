@@ -19,7 +19,7 @@ public class Permissions {
                     return false;
             } else if (perm.equals("admin")) {
                 try {
-                    if (ctx.bot.getAdminDao().queryForId(ctx.author.getIdLong()) == null)
+                    if (!ctx.bot.getAdminDao().idExists(ctx.author.getIdLong()))
                         return false;
                 } catch (SQLException e) {
                     ctx.bot.logger.warn("Bot admin perm check error", e);
