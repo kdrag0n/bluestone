@@ -16,7 +16,7 @@ public class GuildPrefix {
         return prefix;
     }
 
-    @DatabaseField(defaultValue = "!", width = 32)
+    @DatabaseField(width = 32, canBeNull = false)
     private String prefix;
 
     public GuildPrefix() {}
