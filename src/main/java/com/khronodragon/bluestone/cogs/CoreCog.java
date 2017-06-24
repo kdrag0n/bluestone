@@ -71,7 +71,7 @@ public class CoreCog extends Cog {
         if (ctx.args.size() < 1) {
             for (com.khronodragon.bluestone.Command cmd: new HashSet<>(bot.commands.values())) {
                 if (!cmd.hidden) {
-                    String cName = cmd.instance.getName();
+                    String cName = cmd.cog.getName();
                     String entry = "\u2022 **" + cmd.name + "**: *" + cmd.description + '*';
 
                     if (fields.containsKey(cName)) {
@@ -91,9 +91,10 @@ public class CoreCog extends Cog {
 
                 if (bot.cogs.containsKey(item)) {
                     Cog cog = bot.cogs.get(item);
+
                     for (com.khronodragon.bluestone.Command cmd: new HashSet<>(bot.commands.values())) {
-                        if (cmd.instance == cog && !cmd.hidden) {
-                            String cName = cmd.instance.getName();
+                        if (cmd.cog == cog && !cmd.hidden) {
+                            String cName = cmd.cog.getName();
                             String entry = "\u2022 **" + cmd.name + "**: *" + cmd.description + '*';
 
                             if (fields.containsKey(cName)) {

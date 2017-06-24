@@ -29,7 +29,7 @@ public class Command {
     public final boolean needThread;
     private List<Method> checks = new ArrayList<>();
     private final Method func;
-    public final Cog instance;
+    public final Cog cog;
 
     public Command(String name, String desc, String usage, boolean hidden,
                    String[] permsRequired, boolean guildOnly,
@@ -42,7 +42,7 @@ public class Command {
         this.guildOnly = guildOnly;
         this.aliases = aliases;
         this.func = func;
-        this.instance = cogInstance;
+        this.cog = cogInstance;
         this.cogName = cogInstance.getName();
         this.needThread = needThread;
     }
@@ -56,7 +56,7 @@ public class Command {
         if (needThread) {
             Runnable task = () -> {
                 try {
-                    func.invoke(instance, ctx);
+                    func.invoke(cog, ctx);
                 } catch (IllegalAccessException e) {
                     bot.logger.error("Severe command ({}) invocation error:", invoker, e);
                     event.getChannel().sendMessage(":x: A severe internal error occurred.").queue();
@@ -88,7 +88,7 @@ public class Command {
             }
             bot.threadExecutor.execute(task);
         } else {
-            func.invoke(instance, ctx);
+            func.invoke(cog, ctx);
         }
     }
 

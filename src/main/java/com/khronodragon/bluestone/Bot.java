@@ -2,9 +2,7 @@ package com.khronodragon.bluestone;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
-import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.errors.CheckFailure;
 import com.khronodragon.bluestone.errors.GuildOnlyError;
 import com.khronodragon.bluestone.errors.PassException;
@@ -37,7 +35,7 @@ import org.reflections.Reflections;
 import javax.security.auth.login.LoginException;
 import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
-import java.text.DateFormat;
+import java.lang.reflect.Method;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.List;
@@ -279,11 +277,45 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         for (Class cogClass: cogClasses) {
             try {
                 Cog cog = (Cog) cogClass.getConstructor(this.getClass()).newInstance(this);
-                cog.register();
+                registerCog(cog);
                 cog.load();
             } catch (NoSuchMethodException|InstantiationException|IllegalAccessException|InvocationTargetException e) {
                 logger.error("Failed to register cog {}", cogClass.getName(), e);
             }
+        }
+    }
+
+    public void registerCog(Cog cog) {
+        Class clazz = cog.getClass();
+
+        for (Method method: clazz.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(com.khronodragon.bluestone.annotations.Command.class)) {
+                com.khronodragon.bluestone.annotations.Command anno = method.getAnnotation(com.khronodragon.bluestone.annotations.Command.class);
+
+                com.khronodragon.bluestone.Command command = new com.khronodragon.bluestone.Command(
+                        anno.name(), anno.desc(), anno.usage(), anno.hidden(),
+                        anno.perms(), anno.guildOnly(), anno.aliases(), method, cog,
+                        anno.thread()
+                );
+
+                if (commands.containsKey(command.name))
+                    throw new IllegalStateException("Command '" + command.name + "' already registered!");
+                else
+                    commands.put(command.name, command);
+
+                for (String al: command.aliases) {
+                    if (commands.containsKey(al))
+                        throw new IllegalStateException("Command '" + al + "' already registered!");
+                    else
+                        commands.put(al, command);
+                }
+            }
+        }
+
+        cogs.put(cog.getName(), cog);
+
+        if (cog instanceof EventedCog) {
+            eventedCogs.add((EventedCog) cog);
         }
     }
 

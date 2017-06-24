@@ -1,7 +1,5 @@
 package com.khronodragon.bluestone;
 
-import com.khronodragon.bluestone.annotations.Command;
-import com.khronodragon.bluestone.util.ClassUtilities;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
@@ -11,7 +9,6 @@ import org.apache.commons.lang3.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
 
 import java.awt.Color;
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -30,40 +27,6 @@ public abstract class Cog {
 
     public void unload() {
         LogManager.getLogger(this.getClass()).info("[%s] Cog unloaded.", getName());
-    }
-
-    public void register() {
-        Class clazz = this.getClass();
-
-        for (Method method: clazz.getDeclaredMethods()) {
-            if (method.isAnnotationPresent(Command.class)) {
-                Command anno = method.getAnnotation(Command.class);
-
-                com.khronodragon.bluestone.Command command = new com.khronodragon.bluestone.Command(
-                        anno.name(), anno.desc(), anno.usage(), anno.hidden(),
-                        anno.perms(), anno.guildOnly(), anno.aliases(), method, this,
-                        anno.thread()
-                );
-
-                if (bot.commands.containsKey(command.name))
-                    throw new IllegalStateException("Command '" + command.name + "' already registered!");
-                else
-                    bot.commands.put(command.name, command);
-
-                for (String al: command.aliases) {
-                    if (bot.commands.containsKey(al))
-                        throw new IllegalStateException("Command '" + al + "' already registered!");
-                    else
-                        bot.commands.put(al, command);
-                }
-            }
-        }
-
-        bot.cogs.put(this.getName(), this);
-
-        if (this instanceof EventedCog) {
-            bot.eventedCogs.add((EventedCog) this);
-        }
     }
 
     protected static int randint(int min, int max) {
