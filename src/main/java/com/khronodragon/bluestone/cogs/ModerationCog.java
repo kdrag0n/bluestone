@@ -130,8 +130,11 @@ public class ModerationCog extends Cog {
         List<Message> toDelete = new LinkedList<>();
 
         for (Message msg: channel.getIterableHistory()) {
-            if (toDelete.size() >= limit + 1)
+            if (toDelete.size() >= limit)
                 break;
+
+            if (msg.getIdLong() == ctx.message.getIdLong())
+                continue;
 
             if (msg.getCreationTime().isBefore(maxAge)) {
                 twoWeekWarn = "\n:vertical_traffic_light: *Some messages weren't deleted, because they were more than 2 weeks old.*";
@@ -159,7 +162,6 @@ public class ModerationCog extends Cog {
                 return;
             }
         }
-        toDelete.remove(ctx.message);
 
         if (toDelete.isEmpty()) {
             ctx.send(":warning: No messages match your criteria!").queue();
@@ -173,7 +175,7 @@ public class ModerationCog extends Cog {
             channel.deleteMessages(toDelete).complete();
         } else {
             for (int i = 0; i <= toDelete.size(); i += 100) {
-                channel.deleteMessages(toDelete.subList(i, i + 100)).complete();
+                channel.deleteMessages(toDelete.subList(i, Math.min(i + 100, toDelete.size()))).complete();
             }
         }
 
