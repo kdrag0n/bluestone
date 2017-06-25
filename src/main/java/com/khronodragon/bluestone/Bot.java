@@ -376,8 +376,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
         if (content.startsWith(prefix)) {
             String[] split = content.substring(prefix.length()).split("\\s+");
-            ArrayList<String> args = new ArrayList<>(split.length - 1);
-            
+            List<String> args = new ArrayList<>(split.length - 1);
+
             for (int i = 1; i < split.length; i++)
                 args.add(split[i]);
 
@@ -393,6 +393,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     channel.sendMessage(":x: A severe internal error occurred.").queue();
                 } catch (InvocationTargetException e) {
                     Throwable cause = e.getCause();
+
                     if (cause == null) {
                         logger.error("Unknown command ({}) invocation error:", cmdName, e);
                         channel.sendMessage(":x: An unknown internal error occurred.").queue();
