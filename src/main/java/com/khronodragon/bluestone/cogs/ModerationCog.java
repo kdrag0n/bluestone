@@ -96,21 +96,21 @@ public class ModerationCog extends Cog {
 
         // match all the params
         args = match(PURGE_QUOTE_PATTERN, args, m -> {
-            substrings.add(m.group().toLowerCase().trim());
+            substrings.add(m.group(1).toLowerCase().trim());
         });
 
         matcher = PURGE_REGEX_PATTERN.matcher(args);
         if (matcher.find())
-            regex = matcher.group();
+            regex = matcher.group(1);
 
         args = match(PURGE_MENTION_PATTERN, args, m -> {
-            userIds.add(MiscUtil.parseSnowflake(m.group()));
+            userIds.add(MiscUtil.parseSnowflake(m.group(1)));
         });
 
         matcher = PURGE_NUM_PATTERN.matcher(args);
         if (matcher.find()) {
             try {
-                limit = Integer.parseInt(matcher.group().trim());
+                limit = Integer.parseInt(matcher.group(1).trim());
             } catch (NumberFormatException e) {
                 ctx.send(":x: Invalid number given for limit!").queue();
                 return;
