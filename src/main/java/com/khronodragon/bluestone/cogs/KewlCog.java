@@ -23,10 +23,7 @@ public class KewlCog extends Cog {
     private static final Logger logger = LogManager.getLogger(KewlCog.class);
     private static final Pattern DATE_WEEKDAY_PATTERN = Pattern.compile("^The date [0-9 a-zA-Z]+ is not a ([MTWFS][a-z]+), but a ([MTWFS][a-z]+)\\.$");
     private static final Language language = new AmericanEnglish();
-    private final ThreadLocal<JLanguageTool> langTool = ThreadLocal.withInitial(() -> {
-        logger.info("Creating new LanguageTool instance...");
-        return new JLanguageTool(language);
-    });
+    private final JLanguageTool langTool = new JLanguageTool(language);
 
     public KewlCog(Bot bot) {
         super(bot);
@@ -52,7 +49,10 @@ public class KewlCog extends Cog {
         final String text = ctx.rawArgs;
         StringBuilder result = new StringBuilder(text);
 
-        List<RuleMatch> matches = langTool.get().check(text);
+        List<RuleMatch> matches;
+        synchronized (langTool) {
+            matches = langTool.check(text);
+        }
         Collections.reverse(matches);
 
         for (RuleMatch match: matches) {
