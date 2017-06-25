@@ -25,12 +25,11 @@ public class ShardUtil {
     private Dao<BotAdmin, Long> adminDao;
     private JdbcConnectionSource dbConn;
     private JSONObject config;
+    private PrefixStore prefixStore;
 
     public PrefixStore getPrefixStore() {
         return prefixStore;
     }
-
-    private PrefixStore prefixStore;
 
     ShardUtil(int shardCount, JSONObject config) {
         this.shardCount = shardCount;

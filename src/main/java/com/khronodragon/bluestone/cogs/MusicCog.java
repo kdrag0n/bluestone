@@ -279,6 +279,7 @@ public class MusicCog extends Cog implements EventedCog {
                 break;
             default:
                 builder.appendDescription(" There are " + state.scheduler.queue.size() + " tracks queued.");
+                break;
         }
 
         for (AudioTrack track: state.scheduler.queue) {

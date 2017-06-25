@@ -7,7 +7,6 @@ import com.khronodragon.bluestone.annotations.Command;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.exceptions.PermissionException;
-import net.dv8tion.jda.core.requests.restaction.pagination.MessagePaginationAction;
 import net.dv8tion.jda.core.utils.MiscUtil;
 
 import java.time.OffsetDateTime;

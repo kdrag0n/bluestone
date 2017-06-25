@@ -94,10 +94,8 @@ public class Command {
     }
 
     private boolean runChecks(Context ctx) throws CheckFailure {
-        if (guildOnly) {
-            if (ctx.guild == null) {
-                throw new GuildOnlyError("Command only works in a guild");
-            }
+        if (guildOnly && ctx.guild == null) {
+            throw new GuildOnlyError("Command only works in a guild");
         }
 
         if (permsRequired.length > 0) {

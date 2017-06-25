@@ -8,6 +8,9 @@ public class BotAdmin {
     @DatabaseField(id = true, canBeNull = false)
     private long userId;
 
+    @DatabaseField(defaultValue = "", width = 32)
+    private String lastUsername;
+
     public long getUserId() {
         return userId;
     }
@@ -15,9 +18,6 @@ public class BotAdmin {
     public String getLastUsername() {
         return lastUsername;
     }
-
-    @DatabaseField(defaultValue = "", width = 32)
-    private String lastUsername;
 
     public BotAdmin() {}
 

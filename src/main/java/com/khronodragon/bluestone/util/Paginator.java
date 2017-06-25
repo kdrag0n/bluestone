@@ -17,7 +17,7 @@ public class Paginator {
 
     public void addLine(String line) {
         if (line.length() > maxSize - 1) {
-            throw new RuntimeException("Line exceeds maximum page size " + (maxSize - 1));
+            throw new IllegalArgumentException("Line exceeds maximum page size " + (maxSize - 1));
         }
 
         if (count + line.length() + 1 > maxSize) {

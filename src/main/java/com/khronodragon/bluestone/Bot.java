@@ -66,6 +66,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             .setNameFormat("Bot Command-Exec Pool Thread %d")
             .build(), new RejectedExecHandlerImpl("Command-Exec"));
     public Date startTime = new Date();
+    private JDA jda;
+    private ShardUtil shardUtil;
     private HashSet<ScheduledFuture> tasks = new HashSet<>();
     public HashMap<String, Command> commands = new HashMap<>();
     public HashMap<String, Cog> cogs = new HashMap<>();
@@ -81,9 +83,6 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public Dao<GuildPrefix, Long> getPrefixDao() {
         return shardUtil.getPrefixStore().getDao();
     }
-
-    private JDA jda;
-    private ShardUtil shardUtil;
 
     public JSONObject getConfig() {
         return shardUtil.getConfig();
@@ -127,10 +126,6 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     public ShardUtil getShardUtil() {
         return shardUtil;
-    }
-
-    private static void sprint(String text) {
-        System.out.println(text);
     }
 
     public int getShardNum() {

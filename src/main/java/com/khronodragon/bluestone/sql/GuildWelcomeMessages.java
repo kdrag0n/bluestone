@@ -8,6 +8,18 @@ public class GuildWelcomeMessages {
     @DatabaseField(id = true, canBeNull = false)
     private long guildId;
 
+    @DatabaseField(defaultValue = "[default]", width = 2000, canBeNull = false)
+    private String welcome;
+
+    @DatabaseField(defaultValue = "[default]", width = 2000, canBeNull = false)
+    private String leave;
+
+    @DatabaseField(canBeNull = false)
+    private boolean welcomeEnabled;
+
+    @DatabaseField(canBeNull = false)
+    private boolean leaveEnabled;
+
     public long getGuildId() {
         return guildId;
     }
@@ -36,12 +48,6 @@ public class GuildWelcomeMessages {
         this.leaveEnabled = leaveEnabled;
     }
 
-    @DatabaseField(defaultValue = "[default]", width = 2000, canBeNull = false)
-    private String welcome;
-
-    @DatabaseField(defaultValue = "[default]", width = 2000, canBeNull = false)
-    private String leave;
-
     public boolean isWelcomeEnabled() {
         return welcomeEnabled;
     }
@@ -49,12 +55,6 @@ public class GuildWelcomeMessages {
     public boolean isLeaveEnabled() {
         return leaveEnabled;
     }
-
-    @DatabaseField(canBeNull = false)
-    private boolean welcomeEnabled;
-
-    @DatabaseField(canBeNull = false)
-    private boolean leaveEnabled;
 
     public GuildWelcomeMessages() {}
 

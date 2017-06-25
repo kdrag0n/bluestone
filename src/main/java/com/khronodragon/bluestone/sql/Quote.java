@@ -3,7 +3,6 @@ package com.khronodragon.bluestone.sql;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-import java.text.MessageFormat;
 import java.util.Date;
 
 import static java.text.MessageFormat.format;

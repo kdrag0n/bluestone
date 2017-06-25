@@ -12,6 +12,8 @@ import java.util.*;
 
 public class TrackScheduler extends AudioEventAdapter {
     private boolean repeating = false;
+    private boolean emptyPaused = false;
+    private Date emptyPauseTime = new Date();
     public final AudioPlayer player;
     public final Queue<AudioTrack> queue = new LinkedList<>();
     public final Map<AudioTrack, ExtraTrackInfo> infoMap = new HashMap<>();
@@ -27,8 +29,6 @@ public class TrackScheduler extends AudioEventAdapter {
         this.emptyPaused = emptyPaused;
     }
 
-    private boolean emptyPaused = false;
-
     public Date getEmptyPauseTime() {
         return emptyPauseTime;
     }
@@ -36,8 +36,6 @@ public class TrackScheduler extends AudioEventAdapter {
     public void setEmptyPauseTime(Date emptyPauseTime) {
         this.emptyPauseTime = emptyPauseTime;
     }
-
-    private Date emptyPauseTime = new Date();
 
     TrackScheduler(AudioPlayer player, AudioState state) {
         this.player = player;

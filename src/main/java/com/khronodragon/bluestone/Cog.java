@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class Cog {
+    protected final Bot bot;
     public abstract String getName();
     public abstract String getDescription();
-    protected final Bot bot;
 
     public Cog(Bot bot) {
         this.bot = bot;

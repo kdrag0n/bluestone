@@ -20,9 +20,9 @@ public class Start {
         String type = config.optString("type"); // "bot"
 
         AccountType accountType;
-        if (type.equals("bot")) {
+        if ("bot".equals(type)) {
             accountType = AccountType.BOT;
-        } else if (type.equals("user")) {
+        } else if ("user".equals(type)) {
             accountType = AccountType.CLIENT;
         } else {
             System.out.println("Warning: unrecognized account type! Use either 'client' (user) or 'bot' (bot). Assuming bot.");

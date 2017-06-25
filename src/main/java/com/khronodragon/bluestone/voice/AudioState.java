@@ -11,7 +11,7 @@ public class AudioState {
     public AudioPlayer player;
     public TrackScheduler scheduler;
     public Guild guild;
-    MusicCog parent;
+    public MusicCog parent;
     public Date creationTime = new Date();
 
     public AudioState(AudioPlayerManager manager, Guild guild, MusicCog parent) {

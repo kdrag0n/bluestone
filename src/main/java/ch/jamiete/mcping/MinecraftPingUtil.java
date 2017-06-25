@@ -41,7 +41,7 @@ public class MinecraftPingUtil {
 
     public static void validate(final Object o, final String m) {
         if (o == null) {
-            throw new RuntimeException(m);
+            throw new IllegalStateException(m);
         }
     }
 
@@ -64,7 +64,7 @@ public class MinecraftPingUtil {
             i |= (k & 0x7F) << j++ * 7;
 
             if (j > 5)
-                throw new RuntimeException("VarInt too big");
+                throw new IllegalStateException("VarInt too big");
 
             if ((k & 0x80) != 128)
                 break;

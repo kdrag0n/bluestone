@@ -161,7 +161,6 @@ public class UtilityCog extends Cog {
 
     @Command(name = "info", desc = "Get some info about me.", aliases = {"about", "stats", "statistics"})
     public void cmdInfo(Context ctx) {
-        Runtime runtime = Runtime.getRuntime();
         ShardUtil shardUtil = bot.getShardUtil();
         EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://khronodragon.com/")
                 .setColor(randomColor())
@@ -639,24 +638,22 @@ public class UtilityCog extends Cog {
 
         if (data.has("modinfo")) {
             JSONObject modinfo = data.getJSONObject("modinfo");
-            if (modinfo.has("modList")) {
-                if (modinfo.getJSONArray("modList").length() > 0) {
-                    String content = smartJoin(StreamUtils.asStream(modinfo.getJSONArray("modList").iterator())
-                            .map(elem -> {
-                                JSONObject mod = (JSONObject) elem;
+            if (modinfo.has("modList") && modinfo.getJSONArray("modList").length() > 0) {
+                String content = smartJoin(StreamUtils.asStream(modinfo.getJSONArray("modList").iterator())
+                        .map(elem -> {
+                            JSONObject mod = (JSONObject) elem;
 
-                                return WordUtils.capitalize(mod.getString("modid")) +
-                                        ' ' +
-                                        mod.getString("version");
-                            })
-                            .collect(Collectors.toList()));
+                            return WordUtils.capitalize(mod.getString("modid")) +
+                                    ' ' +
+                                    mod.getString("version");
+                        })
+                        .collect(Collectors.toList()));
 
-                    if (content.length() <= 1024) {
-                        emb.addField("Mods", content, true);
-                    } else {
-                        for (String page: embedFieldPages(content)) {
-                            emb.addField("Mods", page, true);
-                        }
+                if (content.length() <= 1024) {
+                    emb.addField("Mods", content, true);
+                } else {
+                    for (String page: embedFieldPages(content)) {
+                        emb.addField("Mods", page, true);
                     }
                 }
             }

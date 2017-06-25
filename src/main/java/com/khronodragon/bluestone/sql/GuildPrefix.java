@@ -8,6 +8,9 @@ public class GuildPrefix {
     @DatabaseField(id = true, canBeNull = false)
     private long guildId;
 
+    @DatabaseField(width = 32, canBeNull = false)
+    private String prefix;
+
     public long getGuildId() {
         return guildId;
     }
@@ -15,9 +18,6 @@ public class GuildPrefix {
     public String getPrefix() {
         return prefix;
     }
-
-    @DatabaseField(width = 32, canBeNull = false)
-    private String prefix;
 
     public GuildPrefix() {}
 
