@@ -48,6 +48,7 @@ public class KewlCog extends Cog {
             return;
         }
         ctx.channel.sendTyping().queue();
+        
         final String text = ctx.rawArgs;
         StringBuilder result = new StringBuilder(text);
 
@@ -55,8 +56,6 @@ public class KewlCog extends Cog {
         Collections.reverse(matches);
 
         for (RuleMatch match: matches) {
-            logger.info("rmatch {} - from {} to {} rep {}", match, match.getFromPos(), match.getToPos(), match.getSuggestedReplacements());
-
             if (match.getSuggestedReplacements().size() > 0) {
                 result.replace(match.getFromPos(), match.getToPos(), match.getSuggestedReplacements().get(0));
             } else if (match.getRule().getId().equals("DATE_WEEKDAY")) {
@@ -67,7 +66,8 @@ public class KewlCog extends Cog {
                 String correctWeekday = m.group(2);
 
                 result.replace(match.getFromPos(), match.getToPos(),
-                        result.substring(match.getFromPos(), match.getToPos()).replace(wrongWeekday, correctWeekday));
+                        result.substring(match.getFromPos(), match.getToPos())
+                                .replace(wrongWeekday, correctWeekday));
             }
         }
         String finalResult = result.toString().replace(".M..", "M.");
