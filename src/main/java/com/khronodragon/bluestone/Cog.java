@@ -46,8 +46,8 @@ public abstract class Cog {
         return false;
     }
 
-    public static Color randomColor() {
-        return new Color(randint(0, (int) Math.pow(255, 3) - 1));
+    public static Color randomColor() { // 255**3 = 16581375
+        return new Color(randint(0, 16581375));
     }
 
     protected static EmbedBuilder newEmbedWithAuthor(Context ctx) {

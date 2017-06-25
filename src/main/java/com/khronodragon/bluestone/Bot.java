@@ -152,7 +152,9 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     }
 
     protected static String vagueTraceElement(StackTraceElement elem) {
-        String base = "> " + elem.getClassName() + '.' + elem.getMethodName();
+        String base = "> " + StringUtils.replaceOnce(StringUtils.replaceOnce(elem.getClassName(),
+                "java.util", "stdlib"),
+                "com.khronodragon.bluestone", "bot") + '.' + elem.getMethodName();
         base += elem.isNativeMethod() ? "(native)" : format("({0})", elem.getLineNumber());
 
         return base;
@@ -179,7 +181,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 stack.add(vagueTraceElement(optElem.get()));
             }
         }
-        return String.join("\n  ", stack);
+        return String.join("\n\u2007\u2007", stack);
     }
 
     public static String renderStackTrace(Throwable e) {
@@ -279,7 +281,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 Cog cog = (Cog) cogClass.getConstructor(this.getClass()).newInstance(this);
                 registerCog(cog);
                 cog.load();
-            } catch (NoSuchMethodException|InstantiationException|IllegalAccessException|InvocationTargetException e) {
+            } catch (Throwable e) {
                 logger.error("Failed to register cog {}", cogClass.getName(), e);
             }
         }
@@ -382,10 +384,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     } else if (cause instanceof PassException) {
                     } else {
                         logger.error("Command ({}) invocation error:", cmdName, cause);
-                        channel.sendMessage(format(":warning: Error!```java\n{2}```This error has been reported.", prefix, cmdName, vagueTrace(cause))).queue();
-                        owner.openPrivateChannel().queue(ch -> {
-                            ch.sendMessage(errorEmbed(cause, message, command)).queue();
-                        });
+                        channel.sendMessage(format(":warning: Error!```java\n{2}```This error will be reported.", prefix, cmdName, vagueTrace(cause))).queue();
+                        reportErrorToOwner(cause, message, command);
                     }
                 } catch (PermissionError e) {
                     channel.sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.", author.getAsMention(), prefix, cmdName,
@@ -406,6 +406,12 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 }
             }
         }
+    }
+
+    public void reportErrorToOwner(Throwable e, Message msg, Command cmd) {
+        owner.openPrivateChannel().queue(ch -> {
+            ch.sendMessage(errorEmbed(e, msg, cmd)).queue();
+        });
     }
 
     private static MessageEmbed errorEmbed(Throwable e, Message msg, Command cmd) {
@@ -477,7 +483,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         return jda.getSelfUser().isBot();
     }
 
-    long getUptimeMillis() {
+    private long getUptimeMillis() {
         return new Date().getTime() - startTime.getTime();
     }
 

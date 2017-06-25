@@ -68,7 +68,8 @@ public class Command {
                     } else if (cause instanceof PassException) {
                     } else {
                         bot.logger.error("Command ({}) invocation error:", invoker, cause);
-                        event.getChannel().sendMessage(format(":warning: Error in `{0}{1}`:```java\n{2}```", prefix, invoker, bot.vagueTrace(cause))).queue();
+                        event.getChannel().sendMessage(format(":warning: Error!```java\n{2}```This error will be reported.", prefix, invoker, bot.vagueTrace(cause))).queue();
+                        bot.reportErrorToOwner(cause, event.getMessage(), this);
                     }
                 } catch (PermissionError e) {
                     event.getChannel().sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.", event.getAuthor().getAsMention(), prefix, invoker,
