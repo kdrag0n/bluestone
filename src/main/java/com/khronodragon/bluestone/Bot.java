@@ -278,7 +278,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         Set<Class<? extends Cog>> cogClasses = reflector.getSubTypesOf(Cog.class);
         for (Class cogClass: cogClasses) {
             try {
-                Cog cog = (Cog) cogClass.getConstructor(this.getClass()).newInstance(this);
+                Cog cog = (Cog) cogClass.getConstructor(Bot.class).newInstance(this);
                 registerCog(cog);
                 cog.load();
             } catch (Throwable e) {
@@ -294,7 +294,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             if (method.isAnnotationPresent(com.khronodragon.bluestone.annotations.Command.class)) {
                 com.khronodragon.bluestone.annotations.Command anno = method.getAnnotation(com.khronodragon.bluestone.annotations.Command.class);
 
-                com.khronodragon.bluestone.Command command = new com.khronodragon.bluestone.Command(
+                Command command = new Command(
                         anno.name(), anno.desc(), anno.usage(), anno.hidden(),
                         anno.perms(), anno.guildOnly(), anno.aliases(), method, cog,
                         anno.thread()
@@ -319,6 +319,21 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         if (cog instanceof EventedCog) {
             eventedCogs.add((EventedCog) cog);
         }
+    }
+
+    public void unregisterCog(Cog cog) {
+        for (Map.Entry<String, Command> entry: commands.entrySet()) {
+            Command cmd = entry.getValue();
+
+            if (cmd.cog == cog) {
+                commands.remove(entry.getKey());
+            }
+        }
+        cog.unload();
+
+        cogs.remove(cog.getName(), cog);
+        if (cog instanceof EventedCog)
+            eventedCogs.remove(cog);
     }
 
     @Override
