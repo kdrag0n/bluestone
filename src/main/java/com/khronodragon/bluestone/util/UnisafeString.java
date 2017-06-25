@@ -36,7 +36,7 @@ public class UnisafeString {
 
     public PrimitiveIterator.OfInt chars() {
         class CodePointIterator implements PrimitiveIterator.OfInt {
-            int cur = 0;
+            private int cur = 0;
 
             @Override
             public void forEachRemaining(IntConsumer block) {

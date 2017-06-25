@@ -341,7 +341,8 @@ public class UtilityCog extends Cog {
         int template = 61579;
         // TODO: try matching the regex-id pairs against input
 
-        String topText, bottomText;
+        String topText;
+        String bottomText;
         if (ctx.rawArgs.contains("|")) {
             final int sepIndex = ctx.rawArgs.indexOf('|');
 
@@ -794,7 +795,9 @@ public class UtilityCog extends Cog {
             second = ctx.args.get(1);
         } catch (IndexOutOfBoundsException e) {}
 
-        String comicTitle, comicUrl, comicDesc;
+        String comicTitle;
+        String comicUrl;
+        String comicDesc;
         int comicNum;
 
         if (first.equalsIgnoreCase("latest")) {

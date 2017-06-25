@@ -55,10 +55,8 @@ public class CoreCog extends Cog {
     public void cmdHelp(Context ctx) {
         int charLimit = ctx.jda.getSelfUser().isBot() ? MessageEmbed.EMBED_MAX_LENGTH_BOT : MessageEmbed.EMBED_MAX_LENGTH_CLIENT;
         boolean sendPublic = false;
-        if (ctx.invoker.startsWith("p")) {
-            if (ctx.author.getIdLong() == bot.owner.getIdLong()) {
-                sendPublic = true;
-            }
+        if (ctx.invoker.startsWith("p") && ctx.author.getIdLong() == bot.owner.getIdLong()) {
+            sendPublic = true;
         }
 
         List<MessageEmbed> pages = new ArrayList<>();

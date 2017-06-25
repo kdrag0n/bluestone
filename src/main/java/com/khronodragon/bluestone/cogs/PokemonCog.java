@@ -177,7 +177,7 @@ public class PokemonCog extends Cog {
                         .collect(Collectors.joining(", ")), true)
                 .addField("Experience", str(pokemon.getExp()), true)
                 .addField("Happiness", str(pokemon.getHappiness()), true)
-                .addField("Evolves Into", evoString.equals("") ? "Nothing" : evoString, true)
+                .addField("Evolves Into", "".equals(evoString) ? "Nothing" : evoString, true)
                 .addField("Species", pokemon.getSpecies().equals("") ?
                         "¯\\_(ツ)_/¯" : pokemon.getSpecies(), true)
                 .setImage(imageUrl);

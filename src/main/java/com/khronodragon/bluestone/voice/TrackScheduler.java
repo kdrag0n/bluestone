@@ -17,7 +17,7 @@ public class TrackScheduler extends AudioEventAdapter {
     public final AudioPlayer player;
     public final Queue<AudioTrack> queue = new LinkedList<>();
     public final Map<AudioTrack, ExtraTrackInfo> infoMap = new HashMap<>();
-    AudioTrack lastTrack;
+    private AudioTrack lastTrack;
     public AudioTrack current;
     public AudioState state;
 
