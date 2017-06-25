@@ -322,7 +322,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     }
 
     public void unregisterCog(Cog cog) {
-        for (Map.Entry<String, Command> entry: commands.entrySet()) {
+        for (Map.Entry<String, Command> entry: new HashSet<>(commands.entrySet())) {
             Command cmd = entry.getValue();
 
             if (cmd.cog == cog) {

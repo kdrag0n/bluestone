@@ -30,7 +30,7 @@ public abstract class Cog {
     }
 
     public void unload() {
-        LogManager.getLogger(this.getClass()).info("[%s] Cog unloaded.", getName());
+        LogManager.getLogger(this.getClass()).info("Cog unloaded.", getName());
     }
 
     protected static int randint(int min, int max) {

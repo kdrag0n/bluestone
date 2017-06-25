@@ -103,7 +103,7 @@ public class CogmanCog extends Cog {
         if (opt.isPresent()) {
             return opt.get();
         } else {
-            ctx.send(":warning: That cog isn't loaded!");
+            ctx.send(":warning: That cog isn't loaded!").queue();
             throw new PassException();
         }
     }

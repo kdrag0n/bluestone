@@ -10,6 +10,7 @@ import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Icon;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.requests.RestAction;
@@ -193,6 +194,7 @@ public class OwnerCog extends Cog {
     @Command(name = "command_calls", desc = "Get the top 25 command calls.", perms = {"owner"}, hidden = true, aliases = {"ccalls"})
     public void cmdCmdCalls(Context ctx) {
         EmbedBuilder emb = new EmbedBuilder()
+                .setColor(randomColor())
                 .setAuthor("Command Calls", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
                 .setDescription("Here are the top 25 command calls, sorted by amount.")
                 .addField("Total", str(bot.commandCalls.values().stream()
@@ -200,12 +202,23 @@ public class OwnerCog extends Cog {
                                         .sum()), true);
 
         bot.commandCalls.entrySet().stream()
-                .sorted(Map.Entry.comparingByValue(Comparator.comparingInt(AtomicInteger::get)))
+                .sorted(Map.Entry.comparingByValue(Collections.reverseOrder(Comparator.comparingInt(AtomicInteger::get))))
                 .limit(24)
                 .forEach(entry -> {
                     emb.addField(entry.getKey(), str(entry.getValue().get()), true);
                 });
 
         ctx.send(emb.build()).queue();
+    }
+
+    @Command(name = "setavatar", desc = "Change my avatar.", perms = {"owner"}, aliases = {"set_avatar"})
+    public void cmdSetAvatar(Context ctx) throws IOException {
+        if (ctx.rawArgs.length() < 1) {
+            ctx.send(":thinking: I need a file path!").queue();
+            return;
+        }
+
+        ctx.jda.getSelfUser().getManager().setAvatar(Icon.from(new File(ctx.rawArgs))).queue();
+        ctx.send(":thumbsup: Avatar changed.").queue();
     }
 }
