@@ -35,6 +35,7 @@
     <orderEntry type="library" name="Gradle: org.mariadb.jdbc:mariadb-java-client:2.0.2" level="project" />
     <orderEntry type="library" name="Gradle: com.zaxxer:HikariCP:2.6.2" level="project" />
     <orderEntry type="library" name="Gradle: com.google.code.gson:gson:2.8.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.languagetool:language-en:3.7" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-lang3:3.5" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-collections4:4.1" level="project" />
     <orderEntry type="library" name="Gradle: org.json:json:20160810" level="project" />
@@ -66,6 +67,11 @@
     <orderEntry type="library" name="Gradle: joda-time:joda-time:2.3" level="project" />
     <orderEntry type="library" name="Gradle: com.google.inject.extensions:guice-assistedinject:4.0" level="project" />
     <orderEntry type="library" name="Gradle: com.sedmelluq:udp-queue:1.0.6" level="project" />
+    <orderEntry type="library" name="Gradle: org.languagetool:languagetool-core:3.7" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.opennlp:opennlp-tools:1.7.2" level="project" />
+    <orderEntry type="library" name="Gradle: edu.washington.cs.knowitall:opennlp-tokenize-models:1.5" level="project" />
+    <orderEntry type="library" name="Gradle: edu.washington.cs.knowitall:opennlp-postag-models:1.5" level="project" />
+    <orderEntry type="library" name="Gradle: edu.washington.cs.knowitall:opennlp-chunk-models:1.5" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.httpcomponents:httpcore:4.4.4" level="project" />
     <orderEntry type="library" name="Gradle: commons-logging:commons-logging:1.2" level="project" />
     <orderEntry type="library" name="Gradle: commons-codec:commons-codec:1.9" level="project" />
@@ -81,9 +87,21 @@
     <orderEntry type="library" name="Gradle: org.eclipse.jetty.websocket:websocket-api:9.4.4.v20170414" level="project" />
     <orderEntry type="library" name="Gradle: javax.inject:javax.inject:1" level="project" />
     <orderEntry type="library" name="Gradle: aopalliance:aopalliance:1.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.carrot2:morfologik-fsa:2.1.2" level="project" />
+    <orderEntry type="library" name="Gradle: org.carrot2:morfologik-fsa-builders:2.1.2" level="project" />
+    <orderEntry type="library" name="Gradle: org.carrot2:morfologik-speller:2.1.2" level="project" />
+    <orderEntry type="library" name="Gradle: org.carrot2:morfologik-stemming:2.1.2" level="project" />
+    <orderEntry type="library" name="Gradle: com.carrotsearch:hppc:0.7.1" level="project" />
+    <orderEntry type="library" name="Gradle: net.loomchild:segment:2.0.0" level="project" />
+    <orderEntry type="library" name="Gradle: com.optimaize.languagedetector:language-detector:0.6" level="project" />
+    <orderEntry type="library" name="Gradle: com.intellij:annotations:12.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.lucene:lucene-core:5.5.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.lucene:lucene-backward-codecs:5.5.3" level="project" />
+    <orderEntry type="library" name="Gradle: edu.berkeley.nlp:berkeleylm:1.1.2" level="project" />
     <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-util:9.4.4.v20170414" level="project" />
     <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-security:9.4.4.v20170414" level="project" />
     <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-client:9.4.4.v20170414" level="project" />
+    <orderEntry type="library" name="Gradle: net.arnx:jsonic:1.2.11" level="project" />
     <orderEntry type="library" name="Gradle: org.slf4j:slf4j-api:1.7.25" level="project" />
   </component>
   <component name="TestModuleProperties" production-module="bluestone_main" />
