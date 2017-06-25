@@ -48,7 +48,7 @@ public class KewlCog extends Cog {
             return;
         }
         ctx.channel.sendTyping().queue();
-        
+
         final String text = ctx.rawArgs;
         StringBuilder result = new StringBuilder(text);
 
