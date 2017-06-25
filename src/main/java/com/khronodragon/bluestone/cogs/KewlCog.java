@@ -30,6 +30,11 @@ public class KewlCog extends Cog {
     }
 
     public String getName() {
+        return "Kewl";
+    }
+
+    @Override
+    public String getCosmeticName() {
         return "Kewl Stuff";
     }
 
