@@ -18,8 +18,9 @@ public class CogmanCog extends Cog {
         return "Manage all the cogs.";
     }
 
-    @Command(name = "cog", desc = "Manage all the cogs.", perms = {"owner"})
+    @Command(name = "cog", desc = "Manage all the cogs.", perms = {"owner"}, aliases = {"cogs"})
     public void cmdCog(Context ctx) {
+        // list, reload, load, unload, enable, disable, info
         ctx.send("Not implemented yet!").queue(); // TODO: implement
     }
 }
