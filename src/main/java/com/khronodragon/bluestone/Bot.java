@@ -415,6 +415,15 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     commandCalls.put(command.name, new AtomicInteger(1));
                 }
             }
+        } else if (content.startsWith(message.getGuild() == null ?
+                jda.getSelfUser().getAsMention() : message.getGuild().getSelfMember().getAsMention())) {
+            if (content.substring(jda.getSelfUser().getAsMention().length())
+                    .trim().equalsIgnoreCase("prefix")) {
+                channel.sendMessage("My prefix here is `" + prefix + "`.").queue();
+            } else {
+                channel.sendMessage("Hey there! I can't talk to you yet. However, if you want my prefix, say `@" +
+                        Cog.getTag(jda.getSelfUser()) + " prefix`!").queue();
+            }
         }
     }
 
