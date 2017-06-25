@@ -24,8 +24,14 @@ public class Pokemon {
     private int speed;
     private int total;
     private int eggCycles;
-    @SerializedName("ev_yield")
-    private Integer effortValueYield;
+    private String growthRate;
+    private float height;
+    private float weight;
+    private int happiness;
+    private String maleFemaleRatio;
+    private Sprite[] sprites;
+//    @SerializedName("ev_yield")
+//    private Integer effortValueYield;
     private int exp;
 
     public int getNationalId() {
@@ -104,9 +110,11 @@ public class Pokemon {
         return eggCycles;
     }
 
+    /*
     public int getEffortValueYield() {
         return effortValueYield;
     }
+    */
 
     public int getExp() {
         return exp;
@@ -116,11 +124,11 @@ public class Pokemon {
         return growthRate;
     }
 
-    public int getHeight() {
+    public float getHeight() {
         return height;
     }
 
-    public int getWeight() {
+    public float getWeight() {
         return weight;
     }
 
@@ -135,11 +143,4 @@ public class Pokemon {
     public Sprite[] getSprites() {
         return sprites;
     }
-
-    private String growthRate;
-    private int height; // string
-    private int weight; // string
-    private int happiness;
-    private String maleFemaleRatio;
-    private Sprite[] sprites;
 }
