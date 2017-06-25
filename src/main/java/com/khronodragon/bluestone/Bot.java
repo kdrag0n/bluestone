@@ -375,12 +375,17 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         final MessageChannel channel = event.getChannel();
 
         if (content.startsWith(prefix)) {
-            ArrayList<String> args = new ArrayList<>(Arrays.asList(content.split("\\s+")));
-            String cmdName = args.get(0).substring(prefix.length()).toLowerCase();
-            args.remove(0);
+            String[] split = content.substring(prefix.length()).split("\\s+");
+            ArrayList<String> args = new ArrayList<>(split.length - 1);
+            
+            for (int i = 1; i < split.length; i++)
+                args.add(split[i]);
+
+            String cmdName = split[0].toLowerCase();
 
             if (commands.containsKey(cmdName)) {
                 Command command = commands.get(cmdName);
+
                 try {
                     command.invoke(this, event, args, prefix, cmdName);
                 } catch (IllegalAccessException e) {
@@ -392,6 +397,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                         logger.error("Unknown command ({}) invocation error:", cmdName, e);
                         channel.sendMessage(":x: An unknown internal error occurred.").queue();
                     } else if (cause instanceof PassException) {
+                        // assume error has already been sent
                     } else {
                         logger.error("Command ({}) invocation error:", cmdName, cause);
                         channel.sendMessage(format(":warning: Error!```java\n{2}```This error will be reported.", prefix, cmdName, vagueTrace(cause))).queue();
