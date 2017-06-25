@@ -7,6 +7,8 @@ import com.khronodragon.bluestone.annotations.Command;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.requests.RestAction;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.script.*;
 import java.util.ArrayList;
@@ -17,6 +19,7 @@ import java.util.Set;
 import static java.text.MessageFormat.format;
 
 public class ReplCog extends Cog {
+    private static final Logger logger = LogManager.getLogger(ReplCog.class);
     private static final String GROOVY_PRE_INJECT = "import net.dv8tion.jda.core.entities.*\n" +
             "import net.dv8tion.jda.core.*\n" +
             "import com.khronodragon.bluestone.*\n" +
@@ -122,6 +125,9 @@ public class ReplCog extends Cog {
                 if (result instanceof ScriptException) {
                     result = ((ScriptException) result).getCause();
                 }
+            } catch (Throwable e) {
+                logger.warn("Error executing code in REPL", e);
+                result = bot.renderStackTrace(e);
             }
             if (result instanceof RestAction)
                 result = ((RestAction) result).complete();
@@ -131,11 +137,11 @@ public class ReplCog extends Cog {
                 try {
                     ctx.send("```java\n" + result.toString() + "```").queue();
                 } catch (Exception e) {
-                    bot.logger.error("Error sending message in REPL", e);
+                    logger.warn("Error sending message in REPL", e);
                     try {
                         ctx.send("```java\n" + bot.renderStackTrace(e) + "```").queue();
                     } catch (Exception ex) {
-                        bot.logger.error("Error reporting send error in REPL", ex);
+                        logger.error("Error reporting send error in REPL", ex);
                     }
                 }
             } else {
