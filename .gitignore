@@ -199,3 +199,6 @@ gradle-app.setting
 config.json
 *.db
 *.sqlite
+store*.json
+store*.bson
+*.sql
