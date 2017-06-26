@@ -24,6 +24,7 @@ import com.mashape.unirest.http.async.Callback;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import io.codearte.jfairy.Fairy;
 import io.codearte.jfairy.producer.person.Person;
+import net.dv8tion.jda.client.entities.Group;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.Permission;
@@ -49,6 +50,7 @@ import static java.text.MessageFormat.format;
 import java.awt.*;
 import java.io.*;
 import java.net.InetAddress;
+import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.List;
@@ -78,6 +80,7 @@ public class UtilityCog extends Cog {
         put(EncodeHintType.CHARACTER_SET, "UTF-8");
     }};
 
+    private static final String NO_USER = ":warning: I need a valid @mention, user ID, or user#discriminator!";
     private static final String SHRUG = "¯\\_(ツ)_/¯";
     private final LoadingCache<String, EmbedBuilder> ipInfoCache = CacheBuilder.newBuilder()
             .maximumSize(36)
@@ -130,9 +133,85 @@ public class UtilityCog extends Cog {
         ctx.send(val(ctx.guild.getIconUrl()).or("There's no icon here!")).queue();
     }
 
-    @Command(name = "user", desc = "Get some info about a user.", usage = "{user}", aliases = {"userinfo", "whois"})
-    public void cmdUser(Context ctx) { // TODO: parseUser
-        ctx.send("mehh too lazy to implement this rn").queue();
+    @Command(name = "user", desc = "Get some info about a user.",
+            usage = "{user}", aliases = {"userinfo", "whois"}, thread = true)
+    public void cmdUser(Context ctx) throws UnsupportedEncodingException {
+        User user;
+        if (ctx.rawArgs.matches("^<@!?[0-9]{17,20}>$"))
+            user = ctx.message.getMentionedUsers().get(0);
+        else if (ctx.rawArgs.matches("^[0-9]{17,20}$"))
+            user = ctx.jda.retrieveUserById(Long.parseUnsignedLong(ctx.rawArgs)).complete();
+        else if (ctx.rawArgs.matches("^.{2,32}#[0-9]{4}$")) {
+            Collection<User> users;
+            switch (ctx.channel.getType()) {
+                case TEXT:
+                    users = ctx.guild.getMembers().stream().map(m -> m.getUser()).collect(Collectors.toList());
+                    break;
+                case PRIVATE:
+                    users = Arrays.asList(ctx.author, ctx.jda.getSelfUser());
+                    break;
+                case GROUP:
+                    users = ((Group) ctx.channel).getUsers();
+                    break;
+                default:
+                    users = Collections.singletonList(ctx.jda.getSelfUser());
+                    break;
+            }
+
+            user = users.stream()
+                    .filter(u -> getTag(u).contentEquals(ctx.rawArgs))
+                    .findFirst()
+                    .orElse(null);
+        } else if (ctx.rawArgs.length() < 1)
+            user = ctx.author;
+        else
+            user = null;
+
+        if (user == null) {
+            ctx.send(NO_USER).queue();
+            return;
+        }
+
+        EmbedBuilder emb = new EmbedBuilder()
+                .setColor(randomColor())
+                .setAuthor(getTag(user), user.getEffectiveAvatarUrl(), user.getEffectiveAvatarUrl())
+                .setThumbnail(user.getEffectiveAvatarUrl())
+                .addField("ID", user.getId(), true)
+                .addField("Creation Time", user.getCreationTime().toString(), true)
+                .addField("Bot?", user.isBot() ? "Yes" : "No", true);
+
+        if (ctx.guild != null) {
+            Member member = ctx.guild.getMember(user);
+
+            if (member != null) {
+                if (member.getNickname() != null)
+                    emb.addField("Nickname", member.getNickname(), true);
+
+                String status;
+                if (member.getGame() == null)
+                    status = WordUtils.capitalizeFully(member.getOnlineStatus()
+                            .name().replace('_', ' '));
+                else {
+                    Game game = member.getGame();
+
+                    if (game.getType() == Game.GameType.TWITCH) {
+                        status = "Streaming [**" + game.getName() + "**](" + game.getUrl() + ")";
+                    } else {
+                        status = "Playing [**" + game.getName() +
+                                "**](https://google.com/search?q=" + URLEncoder.encode(game.getName(), "UTF-8") +
+                                ')';
+                    }
+                }
+
+                emb.setColor(member.getColor())
+                        .addField("Status", status, true)
+                        .addField("Roles", member.getRoles().stream()
+                                .map(r -> r.getName())
+                                .collect(Collectors.joining(", ")), true);
+            }
+        }
+
+        ctx.send(emb.build()).queue();
     }
 
     @Command(name = "guildinfo", desc = "Get loads of info about this guild.", guildOnly = true, aliases = {"ginfo", "guild", "server", "serverinfo", "sinfo"})
