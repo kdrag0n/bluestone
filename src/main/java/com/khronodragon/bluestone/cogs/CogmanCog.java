@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.reflections.Reflections;
 
 import java.io.File;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -173,7 +174,14 @@ public class CogmanCog extends Cog {
             String classPath = split[split.length - 1];
             String uriPath = StringUtils.join(ArrayUtils.remove(split, split.length - 1), '/');
 
+            /*
+            URLClassLoader cl = (URLClassLoader) ClassLoader.getSystemClassLoader();
+            Method addURL = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
+            addURL.setAccessible(true);
+            addURL.invoke(cl, new URL(uriPath));
+            */
             ClassLoader cl = new URLClassLoader(new URL[] {new URL(uriPath)});
+
             clazz = cl.loadClass(classPath);
         } else if (input.matches("^(?:[a-z0-9\\-_]+\\.)*[a-zA-Z0-9]+$")) {
             if (input.indexOf('.') == -1)
