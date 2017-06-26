@@ -36,7 +36,8 @@ public class ShardUtil {
         this.config = config;
 
         try {
-            dbConn = new JdbcPooledConnectionSource("jdbc:" + config.optString("db_url", "h2:./database"));
+            dbConn = new JdbcPooledConnectionSource("jdbc:" + config.optString("db_url", "h2:./database"),
+                    config.optString("db_user", null), config.optString("db_pass", null));
         } catch (SQLException e) {
             logger.error("Failed to connect to database!", e);
             logger.warn("Using an in-memory database.");

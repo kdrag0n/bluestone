@@ -10,6 +10,8 @@ This is the template:
   "shard_count": 2,
   "type": "bot",
   "db_url": "h2:./database",
+  "db_user": "username",
+  "db_pass": "password",
   "keys": {
     "google": "",
     "discord_bots": "",
