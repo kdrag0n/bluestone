@@ -6,10 +6,16 @@ import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.errors.PassException;
 import net.dv8tion.jda.core.EmbedBuilder;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.reflections.Reflections;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Optional;
 import java.util.Set;
 
@@ -29,6 +35,16 @@ public class CogmanCog extends Cog {
             "\n" +
             "Cog classes can be given by full path (`com.khronodragon.bluestone.cogs.CogmanCog`), " +
             "or simple name (assumed to be in `com.khronodragon.bluestone.cogs`).";
+    private static final String INVALID_LOAD = ":warning: I need a valid class URI, path, or name!\n" +
+            "\n" +
+            "Examples:\n" +
+            "```\n" +
+            "../../extra_cogs/AwesomeCog\n" +
+            "file:///home/user/bot/cogs/AwesomeCog\n" +
+            "https://koolio.github.io/bot_cogs/set1.jar/io.iamkool.cogs.AwesomeCog\n" +
+            "CosmeticCog\n" +
+            "com.khronodragon.bluestone.cogs.FunCog\n" +
+            "```";
 
     public CogmanCog(Bot bot) {
         super(bot);
@@ -42,8 +58,8 @@ public class CogmanCog extends Cog {
         return "Manage all the cogs.";
     }
 
-    @Command(name = "cog", desc = "Manage all the cogs.", perms = {"owner"}, aliases = {"cogs"})
-    public void mainCmd(Context ctx) throws ReflectiveOperationException {
+    @Command(name = "cog", desc = "Manage all the cogs.", perms = {"owner"}, aliases = {"cogs"}, reportErrors = false)
+    public void mainCmd(Context ctx) throws ReflectiveOperationException, MalformedURLException {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(NO_COMMAND).queue();
             return;
@@ -75,7 +91,7 @@ public class CogmanCog extends Cog {
         }
         String arg = ctx.args.get(1);
 
-        if (!arg.matches("^(?:[a-z\\-_]+\\.)*[a-zA-Z0-9]+$")) {
+        if (!arg.matches("^(?:[a-z0-9\\-_]+\\.)*[a-zA-Z0-9]+$")) {
             ctx.send(":warning: Invalid cog name or class path!").queue();
             throw new PassException();
         }
@@ -139,14 +155,49 @@ public class CogmanCog extends Cog {
         ctx.send(result.toString()).queue();
     }
 
-    private void cmdReload(Context ctx) throws ReflectiveOperationException {
+    private void cmdReload(Context ctx) throws ReflectiveOperationException, MalformedURLException {
         cmdUnload(ctx);
         cmdLoad(ctx);
     }
 
-    private void cmdLoad(Context ctx) throws ReflectiveOperationException {
-        String path = getClassPath(ctx);
-        Class clazz = Class.forName(path);
+    private void cmdLoad(Context ctx) throws ReflectiveOperationException, MalformedURLException {
+        if (ctx.args.size() < 2) {
+            ctx.send(INVALID_LOAD).queue();
+            return;
+        }
+        String input = ctx.args.get(1);
+
+        Class clazz;
+        if (input.matches("^[a-z]+://?(?:[a-zA-Z0-9\\-_:]+/)+[a-zA-Z0-9\\-_.]+\\.jar/(?:[a-z0-9\\-_]+\\.)*[a-zA-Z0-9]+$")) {
+            String[] split = StringUtils.split(input, '/');
+            String classPath = split[split.length - 1];
+            String uriPath = StringUtils.join(ArrayUtils.remove(split, split.length - 1), '/');
+
+            ClassLoader cl = new URLClassLoader(new URL[] {new URL(uriPath)});
+            clazz = cl.loadClass(classPath);
+        } else if (input.matches("^(?:[a-z0-9\\-_]+\\.)*[a-zA-Z0-9]+$")) {
+            if (input.indexOf('.') == -1)
+                clazz = Class.forName(DEFAULT_COGS_PATH + '.' + input);
+            else
+                clazz = Class.forName(input);
+        } else if (input.matches("^/?(?:.+/)+[a-zA-Z0-9]+(?:\\.class)?$")) {
+            File file = new File(input);
+            URL url = file.getParentFile().toURI().toURL();
+            String name = file.getName().replaceFirst("\\.class$", "");
+
+            ClassLoader cl = new URLClassLoader(new URL[] {url}, this.getClass().getClassLoader().getParent());
+            clazz = cl.loadClass(name);
+        } else {
+            ctx.send(INVALID_LOAD).queue();
+            return;
+        }
+        logger.info("new class url {}", clazz.getProtectionDomain().getCodeSource().getLocation());
+
+        if (bot.cogs.values().stream()
+                .anyMatch(c -> c.getClass().equals(clazz))) {
+            ctx.send(":warning: Cog already loaded!").queue();
+            return;
+        }
 
         Cog cog = (Cog) clazz.getConstructor(Bot.class).newInstance(bot);
         bot.registerCog(cog);
