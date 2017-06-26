@@ -110,7 +110,29 @@ public class OwnerCog extends Cog {
             ctx.send(":warning: I need a message to broadcast!").queue();
             return;
         }
-        ctx.send("Starting broadcast...").queue();
+
+        String ss = "";
+        if (ctx.jda.getShardInfo() != null) {
+            ss = ctx.jda.getShardInfo().getShardString() + ' ';
+
+            if (!ctx._flag) {
+                ctx._flag = true;
+
+                Set<Bot> shards = bot.getShardUtil().getShards();
+                shards.remove(ctx.bot);
+                shards.forEach(b -> {
+                            if (b.cogs.containsKey("Owner")) {
+                                ctx.bot = b;
+                                ctx.jda = b.getJda();
+                                ((OwnerCog) b.cogs.get("Owner")).cmdBroadcast(ctx);
+                            }
+                        });
+            }
+        }
+        ctx.jda = bot.getJda();
+        ctx.bot = bot;
+
+        ctx.send(ss + "Starting broadcast...").queue();
         int errors = 0;
 
         for (Guild guild: ctx.jda.getGuilds()) {

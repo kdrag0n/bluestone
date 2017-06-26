@@ -9,14 +9,14 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.List;
 
 public class Context {
-    public final Bot bot;
+    public Bot bot;
     public final MessageReceivedEvent event;
     public final Message message;
     public final User author;
     public final Guild guild;
     public final MessageChannel channel;
     public final Member member;
-    public final JDA jda;
+    public JDA jda;
     public final String prefix;
     public final List<String> args;
     public final String invoker;
