@@ -103,7 +103,8 @@ public class OwnerCog extends Cog {
     }
 
     @Cooldown(scope = BucketType.GLOBAL, delay = 10)
-    @Command(name = "broadcast", desc = "Broadcast a message to all available guilds.", usage = "[message]", perms = {"owner"})
+    @Command(name = "broadcast", desc = "Broadcast a message to all available guilds.",
+            usage = "[message]", perms = {"owner"}, reportErrors = false)
     public void cmdBroadcast(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(":warning: I need a message to broadcast!").queue();
@@ -146,7 +147,8 @@ public class OwnerCog extends Cog {
         ctx.send(":white_check_mark: Broadcast finished, with **" + errors + "** errored guilds.").queue();
     }
 
-    @Command(name = "eval", desc = "Evaluate some Groovy code.", usage = "[code]", aliases = {"reval"}, perms = {"owner"}, thread = true)
+    @Command(name = "eval", desc = "Evaluate some Groovy code.", usage = "[code]",
+            aliases = {"reval"}, perms = {"owner"}, thread = true, reportErrors = false)
     public void cmdEval(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(":warning: I need some code!").queue();
@@ -180,7 +182,8 @@ public class OwnerCog extends Cog {
             ctx.send("```java\n" + result.toString() + "```").queue();
     }
 
-    @Command(name = "sendfile", desc = "Upload a local file here.", perms = {"owner"}, usage = "[file path]")
+    @Command(name = "sendfile", desc = "Upload a local file here.", perms = {"owner"},
+            usage = "[file path]", reportErrors = false)
     public void cmdSendfile(Context ctx) throws IOException {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(":thinking: I need a file path!").queue();
@@ -191,7 +194,8 @@ public class OwnerCog extends Cog {
                 .build()).queue();
     }
 
-    @Command(name = "command_calls", desc = "Get the top 25 command calls.", perms = {"owner"}, hidden = true, aliases = {"ccalls"})
+    @Command(name = "command_calls", desc = "Get the top 25 command calls.", perms = {"owner"},
+            hidden = true, aliases = {"ccalls"})
     public void cmdCmdCalls(Context ctx) {
         EmbedBuilder emb = new EmbedBuilder()
                 .setColor(randomColor())
