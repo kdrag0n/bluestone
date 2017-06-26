@@ -13,6 +13,7 @@ public class AudioState {
     public Guild guild;
     MusicCog parent;
     public Date creationTime = new Date();
+    private PlayerSendHandler sendHandler;
 
     public AudioState(AudioPlayerManager manager, Guild guild, MusicCog parent) {
         player = manager.createPlayer();
@@ -20,5 +21,10 @@ public class AudioState {
         this.parent = parent;
         scheduler = new TrackScheduler(player, this);
         player.addListener(scheduler);
+        sendHandler = new PlayerSendHandler(player);
+    }
+
+    public PlayerSendHandler getSendHandler() {
+        return sendHandler;
     }
 }

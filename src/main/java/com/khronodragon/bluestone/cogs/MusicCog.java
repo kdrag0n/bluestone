@@ -159,7 +159,7 @@ public class MusicCog extends Cog {
 
         AudioManager manager = ctx.guild.getAudioManager();
         AudioState state = getAudioState(ctx.guild);
-        manager.setSendingHandler(new PlayerSendHandler(state.player));
+        manager.setSendingHandler(state.getSendHandler());
         try {
             manager.openAudioConnection(channel);
         } catch (PermissionException e) {
