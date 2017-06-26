@@ -4,8 +4,8 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
-import com.khronodragon.bluestone.EventedCog;
 import com.khronodragon.bluestone.annotations.Command;
+import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.voice.*;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -31,7 +31,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class MusicCog extends Cog implements EventedCog {
+public class MusicCog extends Cog {
     private ScheduledThreadPoolExecutor bgExecutor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder()
             .setDaemon(true)
             .setNameFormat("Music Cog Cleanup Thread %d")
@@ -73,6 +73,7 @@ public class MusicCog extends Cog implements EventedCog {
         }
     }
 
+    @EventHandler(event = GuildVoiceLeaveEvent.class)
     public void onGuildVoiceLeave(GuildVoiceLeaveEvent event) {
         if (getVoiceEventSelfId(event) == event.getChannelLeft().getIdLong()) {
             AudioState state = getAudioState(event.getGuild());
@@ -91,6 +92,7 @@ public class MusicCog extends Cog implements EventedCog {
         }
     }
 
+    @EventHandler(event = GuildVoiceJoinEvent.class)
     public void onGuildVoiceJoin(GuildVoiceJoinEvent event) {
         if (getVoiceEventSelfId(event) == event.getChannelJoined().getIdLong()) {
             AudioState state = getAudioState(event.getGuild());

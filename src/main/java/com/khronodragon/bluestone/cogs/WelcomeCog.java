@@ -6,8 +6,8 @@ import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
-import com.khronodragon.bluestone.EventedCog;
 import com.khronodragon.bluestone.annotations.Command;
+import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.sql.GuildWelcomeMessages;
 import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.core.entities.Guild;
@@ -23,7 +23,7 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.regex.Pattern;
 
-public class WelcomeCog extends Cog implements EventedCog {
+public class WelcomeCog extends Cog {
     private static final Logger logger = LogManager.getLogger(WelcomeCog.class);
     private static final String DEFAULT_WELCOME = "[mention] **Welcome to [guild]!**\n" +
             "Enjoy your time here, and find out more about me with `[prefix]help`.";
@@ -60,10 +60,6 @@ public class WelcomeCog extends Cog implements EventedCog {
 
     public String getDescription() {
         return "The cog that welcomes people.";
-    }
-
-    public boolean needsThreadedEvents() {
-        return true;
     }
 
     @Command(name = "welcome", desc = "Manage member welcome messages.", guildOnly = true,
@@ -233,7 +229,7 @@ public class WelcomeCog extends Cog implements EventedCog {
         });
     }
 
-    @Override
+    @EventHandler(event = GuildMemberJoinEvent.class, threaded = true)
     public void onGuildMemberJoin(GuildMemberJoinEvent event) {
         if (event.getMember().getUser().getIdLong() == bot.getJda().getSelfUser().getIdLong())
             return;
@@ -254,7 +250,7 @@ public class WelcomeCog extends Cog implements EventedCog {
         }
     }
 
-    @Override
+    @EventHandler(event = GuildMemberLeaveEvent.class, threaded = true)
     public void onGuildMemberLeave(GuildMemberLeaveEvent event) {
         if (event.getMember().getUser().getIdLong() == bot.getJda().getSelfUser().getIdLong())
             return;
@@ -275,7 +271,7 @@ public class WelcomeCog extends Cog implements EventedCog {
         }
     }
 
-    @Override
+    @EventHandler(event = GuildJoinEvent.class, threaded = true)
     public void onGuildJoin(GuildJoinEvent event) {
         if (!event.getGuild().isAvailable()) return;
 
@@ -287,7 +283,7 @@ public class WelcomeCog extends Cog implements EventedCog {
         }
     }
 
-    @Override
+    @EventHandler(event = GuildLeaveEvent.class, threaded = true)
     public void onGuildLeave(GuildLeaveEvent event) {
         if (!event.getGuild().isAvailable()) return;
 

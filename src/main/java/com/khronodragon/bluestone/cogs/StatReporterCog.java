@@ -2,7 +2,7 @@ package com.khronodragon.bluestone.cogs;
 
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
-import com.khronodragon.bluestone.EventedCog;
+import com.khronodragon.bluestone.annotations.EventHandler;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.async.Callback;
@@ -17,7 +17,7 @@ import org.json.JSONObject;
 import java.io.InputStream;
 import java.text.MessageFormat;
 
-public class StatReporterCog extends Cog implements EventedCog {
+public class StatReporterCog extends Cog {
     private static final Logger logger = LogManager.getLogger(StatReporterCog.class);
 
     private enum Endpoints {
@@ -56,19 +56,22 @@ public class StatReporterCog extends Cog implements EventedCog {
         report();
     }
 
+    @EventHandler(event = ReadyEvent.class)
     public void onReady(ReadyEvent event) {
         report();
     }
 
+    @EventHandler(event = GuildJoinEvent.class)
     public void onGuildJoin(GuildJoinEvent event) {
         report();
     }
 
+    @EventHandler(event = GuildLeaveEvent.class)
     public void onGuildLeave(GuildLeaveEvent event) {
         report();
     }
 
-    public void report() {
+    private void report() {
         String dbotsKey = bot.getKeys().optString("discord_bots", null);
         String carbonitexKey = bot.getKeys().optString("carbonitex", null);
 
@@ -79,7 +82,7 @@ public class StatReporterCog extends Cog implements EventedCog {
             reportCarbonitex(carbonitexKey);
     }
 
-    protected void reportDiscordBots(String key) {
+    private void reportDiscordBots(String key) {
         JSONObject data = new JSONObject();
         data.put("guild_count", bot.getShardUtil().getGuildCount());
 
@@ -109,7 +112,7 @@ public class StatReporterCog extends Cog implements EventedCog {
                 });
     }
 
-    protected void reportCarbonitex(String key) {
+    private void reportCarbonitex(String key) {
         JSONObject data = new JSONObject();
         data.put("key", key);
         data.put("servercount", bot.getShardUtil().getGuildCount());

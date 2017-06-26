@@ -3,6 +3,7 @@ package com.khronodragon.bluestone;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
+import com.khronodragon.bluestone.annotations.*;
 import com.khronodragon.bluestone.errors.CheckFailure;
 import com.khronodragon.bluestone.errors.GuildOnlyError;
 import com.khronodragon.bluestone.errors.PassException;
@@ -51,17 +52,17 @@ import static java.text.MessageFormat.format;
 public class Bot extends ListenerAdapter implements ClassUtilities {
     public static final String USER_AGENT = "Goldmine/2 Discord Bot (tiny.cc/goldbot)";
     public Logger logger = LogManager.getLogger(Bot.class);
-    private ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder()
+    private ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(2, new ThreadFactoryBuilder()
                                                             .setDaemon(true)
                                                             .setNameFormat("Bot BG-Task Thread %d")
                                                             .build());
-    private ThreadPoolExecutor cogEventExecutor = new ThreadPoolExecutor(5, 50, 10, TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(30), new ThreadFactoryBuilder()
+    private ThreadPoolExecutor cogEventExecutor = new ThreadPoolExecutor(3, 50, 10, TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(32), new ThreadFactoryBuilder()
                                                 .setDaemon(true)
                                                 .setNameFormat("Bot Cog-Event Pool Thread %d")
                                                 .build(), new RejectedExecHandlerImpl("Cog-Event"));
     public ThreadPoolExecutor threadExecutor = new ThreadPoolExecutor(3, 85, 10, TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(60), new ThreadFactoryBuilder()
+            new ArrayBlockingQueue<>(72), new ThreadFactoryBuilder()
             .setDaemon(true)
             .setNameFormat("Bot Command-Exec Pool Thread %d")
             .build(), new RejectedExecHandlerImpl("Command-Exec"));
@@ -69,10 +70,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     private JDA jda;
     private ShardUtil shardUtil;
     private HashSet<ScheduledFuture> tasks = new HashSet<>();
-    public HashMap<String, Command> commands = new HashMap<>();
-    public HashMap<String, Cog> cogs = new HashMap<>();
-    public HashSet<EventedCog> eventedCogs = new HashSet<>();
-    public HashMap<String, AtomicInteger> commandCalls = new HashMap<>();
+    public Map<String, Command> commands = new HashMap<>();
+    public Map<String, Cog> cogs = new HashMap<>();
+    public Map<Class<? extends Event>, Set<ExtraEvent>> extraEvents = new HashMap<>();
+    public Map<String, AtomicInteger> commandCalls = new HashMap<>();
     public ApplicationInfo appInfo;
     public User owner;
 
@@ -198,13 +199,34 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     @Override
     public void onGenericEvent(Event event) {
-        for (EventedCog cog: eventedCogs) {
-            Runnable task = () -> cog.onEvent(event);
+        for (Map.Entry<Class<? extends Event>, Set<ExtraEvent>> entry: extraEvents.entrySet()) {
+            Class<? extends Event> eventClass = entry.getKey();
 
-            if (cog.needsThreadedEvents()) {
-                cogEventExecutor.execute(task);
-            } else {
-                task.run();
+            if (eventClass.isInstance(event)) {
+                Set<ExtraEvent> events = entry.getValue();
+
+                for (ExtraEvent extraEvent: events) {
+                    Runnable task = () -> {
+                        try {
+                            extraEvent.getMethod().invoke(extraEvent.getParent(), event);
+                        } catch (IllegalAccessException e) {
+                            logger.error("Error dispatching {} to {} - handler not public",
+                                    event.getClass().getSimpleName(),
+                                    extraEvent.getMethod().getDeclaringClass().getName(), e);
+                        } catch (InvocationTargetException eContainer) {
+                            Throwable e = eContainer.getCause();
+
+                            logger.error("{} errored while handling a {}",
+                                    extraEvent.getMethod().getDeclaringClass().getName(),
+                                    event.getClass().getSimpleName(), e);
+                        }
+                    };
+
+                    if (extraEvent.isThreaded())
+                        cogEventExecutor.execute(task);
+                    else
+                        task.run();
+                }
             }
         }
     }
@@ -283,7 +305,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     }
 
     public void registerCog(Cog cog) {
-        Class clazz = cog.getClass();
+        Class<? extends Cog> clazz = cog.getClass();
 
         for (Method method: clazz.getDeclaredMethods()) {
             if (method.isAnnotationPresent(com.khronodragon.bluestone.annotations.Command.class)) {
@@ -306,14 +328,23 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     else
                         commands.put(al, command);
                 }
+            } else if (method.isAnnotationPresent(EventHandler.class)) {
+                EventHandler anno = method.getAnnotation(EventHandler.class);
+                ExtraEvent extraEvent = new ExtraEvent(method, anno.threaded(), cog);
+                Class<? extends Event> eventClass = anno.event();
+
+                if (extraEvents.containsKey(eventClass)) {
+                    extraEvents.get(eventClass).add(extraEvent);
+                } else {
+                    Set<ExtraEvent> set = new HashSet<>();
+                    set.add(extraEvent);
+
+                    extraEvents.put(eventClass, set);
+                }
             }
         }
 
         cogs.put(cog.getName(), cog);
-
-        if (cog instanceof EventedCog) {
-            eventedCogs.add((EventedCog) cog);
-        }
     }
 
     public void unregisterCog(Cog cog) {
@@ -324,11 +355,17 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 commands.remove(entry.getKey());
             }
         }
-        cog.unload();
 
+        cog.unload();
         cogs.remove(cog.getName(), cog);
-        if (cog instanceof EventedCog)
-            eventedCogs.remove(cog);
+
+        for (Set<ExtraEvent> events: extraEvents.values()) {
+            for (ExtraEvent event: new HashSet<>(events)) {
+                if (event.getMethod().getDeclaringClass().equals(cog.getClass())) {
+                    events.remove(event);
+                }
+            }
+        }
     }
 
     @Override
@@ -359,6 +396,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         final JDA jda = event.getJDA();
         final User author = event.getAuthor();
 
+        if (author.getIdLong() != 160567046642335746L)
+            return;
         if (author.isBot())
             return;
         if (author.getIdLong() == jda.getSelfUser().getIdLong())
