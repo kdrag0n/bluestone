@@ -49,10 +49,10 @@ dependencies {
     compile 'com.j256.ormlite:ormlite-jdbc:5.0'
     compile 'com.h2database:h2:1.4.196'
     compile 'com.sedmelluq:jda-nas:1.0.5'
-    compile 'org.mariadb.jdbc:mariadb-java-client:2.0.2'
     compile 'com.zaxxer:HikariCP:2.6.2'
     compile 'com.google.code.gson:gson:2.8.1'
     compile 'org.languagetool:language-en:3.7'
+    compile 'mysql:mysql-connector-java:6.0.6'
 }
 
 compileJava.options.encoding = 'UTF-8'
