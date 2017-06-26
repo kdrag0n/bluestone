@@ -414,7 +414,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         final MessageChannel channel = event.getChannel();
 
         if (content.startsWith(prefix)) {
-            String[] split = content.substring(prefix.length()).split("\\s+");
+            String[] split = content.substring(prefix.length()).trim().split("\\s+");
             List<String> args = new ArrayList<>(split.length - 1);
 
             for (int i = 1; i < split.length; i++)

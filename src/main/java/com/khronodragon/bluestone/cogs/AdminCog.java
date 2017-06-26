@@ -145,14 +145,9 @@ public class AdminCog extends Cog {
             if (ctx.rawArgs.length() > 32) {
                 ctx.send(":x: Prefix too long!").queue();
             } else {
-                String rawPrefix = ctx.rawArgs;
-                if (rawPrefix.equals(ctx.guild.getSelfMember().getAsMention())) {
-                    rawPrefix += ' ';
-                }
-
-                GuildPrefix prefix = new GuildPrefix(ctx.guild.getIdLong(), rawPrefix);
+                GuildPrefix prefix = new GuildPrefix(ctx.guild.getIdLong(), ctx.rawArgs);
                 bot.getPrefixDao().createOrUpdate(prefix);
-                bot.getShardUtil().getPrefixStore().updateCache(ctx.guild.getIdLong(), rawPrefix);
+                bot.getShardUtil().getPrefixStore().updateCache(ctx.guild.getIdLong(), ctx.rawArgs);
 
                 ctx.send(":white_check_mark: Prefix set.").queue();
             }
