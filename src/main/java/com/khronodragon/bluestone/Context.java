@@ -22,6 +22,7 @@ public class Context {
     public final String invoker;
     public final String rawArgs;
     public final String mention;
+    public boolean _flag = false;
 
     public Context(Bot bot, MessageReceivedEvent event, List<String> args,
                    String prefix, String invoker) {
