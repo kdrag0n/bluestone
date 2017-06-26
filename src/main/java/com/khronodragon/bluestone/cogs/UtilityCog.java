@@ -373,6 +373,7 @@ public class UtilityCog extends Cog {
                     @Override
                     public void completed(HttpResponse<JsonNode> response) {
                         JSONObject resp = response.getBody().getObject();
+
                         logger.info(resp);
                         if (resp.getBoolean("success")) {
                             ctx.send(new EmbedBuilder()
