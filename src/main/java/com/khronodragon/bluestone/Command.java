@@ -27,13 +27,14 @@ public class Command {
     public final String[] aliases;
     public final String cogName;
     public final boolean needThread;
+    public final boolean reportErrors;
     private List<Method> checks = new ArrayList<>();
     private final Method func;
     public final Cog cog;
 
     public Command(String name, String desc, String usage, boolean hidden,
-                   String[] permsRequired, boolean guildOnly,
-                   String[] aliases, Method func, Cog cogInstance, boolean needThread) {
+                   String[] permsRequired, boolean guildOnly, String[] aliases,
+                   Method func, Cog cogInstance, boolean needThread, boolean reportErrors) {
         this.name = name;
         this.description = desc;
         this.usage = usage;
@@ -45,6 +46,7 @@ public class Command {
         this.cog = cogInstance;
         this.cogName = cogInstance.getName();
         this.needThread = needThread;
+        this.reportErrors = reportErrors;
     }
 
     public void invoke(Bot bot, MessageReceivedEvent event, List<String> args,
@@ -66,21 +68,28 @@ public class Command {
                         bot.logger.error("Unknown command ({}) invocation error:", invoker, e);
                         event.getChannel().sendMessage(":x: An unknown internal error occurred.").queue();
                     } else if (cause instanceof PassException) {
+                        // assume error has already been sent
                     } else {
                         bot.logger.error("Command ({}) invocation error:", invoker, cause);
-                        event.getChannel().sendMessage(format(":warning: Error!```java\n{2}```This error will be reported.", prefix, invoker, bot.vagueTrace(cause))).queue();
-                        bot.reportErrorToOwner(cause, event.getMessage(), this);
+                        event.getChannel().sendMessage(format(":warning: Error!```java\n{2}```This error will be reported.",
+                                prefix, invoker, bot.vagueTrace(cause))).queue();
+
+                        if (reportErrors)
+                            bot.reportErrorToOwner(cause, event.getMessage(), this);
                     }
                 } catch (PermissionError e) {
-                    event.getChannel().sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.", event.getAuthor().getAsMention(), prefix, invoker,
+                    event.getChannel().sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.",
+                            event.getAuthor().getAsMention(), prefix, invoker,
                             Strings.smartJoin(permsRequired, "or"))).queue();
                 } catch (GuildOnlyError e) {
                     event.getChannel().sendMessage("Sorry, that command only works in a guild.").queue();
                 } catch (CheckFailure e) {
-                    event.getChannel().sendMessage(format("{0} A check for `{1}{2}` failed. Do you not have permissions?", event.getAuthor().getAsMention(), prefix, invoker)).queue();
+                    event.getChannel().sendMessage(format("{0} A check for `{1}{2}` failed. Do you not have permissions?",
+                            event.getAuthor().getAsMention(), prefix, invoker)).queue();
                 } catch (Exception e) {
                     bot.logger.error("Unknown command ({}) error:", invoker, e);
-                    event.getChannel().sendMessage(format(":warning: Error in `{0}{1}`:```java\n{2}```", prefix, invoker, e.toString())).queue();
+                    event.getChannel().sendMessage(format(":warning: Error in `{0}{1}`:```java\n{2}```",
+                            prefix, invoker, e.toString())).queue();
                 } // CheckFailure and friends may seem redundant, but used for perm checks in threads
             };
 

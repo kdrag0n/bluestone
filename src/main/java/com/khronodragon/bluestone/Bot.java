@@ -166,7 +166,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
 
         if (!stack.stream()
-            .anyMatch(s -> s.contains("com.khronodragon.bluestone.cogs"))) {
+            .anyMatch(s -> s.contains("> bot.cogs"))) {
             Optional<StackTraceElement> optElem = Arrays.stream(elements)
                     .filter(el -> el.getClassName().startsWith("com.khronodragon.bluestone.cogs."))
                     .findFirst();
@@ -292,7 +292,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 Command command = new Command(
                         anno.name(), anno.desc(), anno.usage(), anno.hidden(),
                         anno.perms(), anno.guildOnly(), anno.aliases(), method, cog,
-                        anno.thread()
+                        anno.thread(), anno.reportErrors()
                 );
 
                 if (commands.containsKey(command.name))
@@ -401,16 +401,21 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                         // assume error has already been sent
                     } else {
                         logger.error("Command ({}) invocation error:", cmdName, cause);
-                        channel.sendMessage(format(":warning: Error!```java\n{2}```This error will be reported.", prefix, cmdName, vagueTrace(cause))).queue();
-                        reportErrorToOwner(cause, message, command);
+                        channel.sendMessage(format(":warning: Error!```java\n{2}```This error will be reported.",
+                                prefix, cmdName, vagueTrace(cause))).queue();
+
+                        if (command.reportErrors)
+                            reportErrorToOwner(cause, message, command);
                     }
                 } catch (PermissionError e) {
-                    channel.sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.", author.getAsMention(), prefix, cmdName,
+                    channel.sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.",
+                            author.getAsMention(), prefix, cmdName,
                             Strings.smartJoin(command.getFriendlyPerms(), "or"))).queue();
                 } catch (GuildOnlyError e) {
                     channel.sendMessage("Sorry, that command only works in a guild.").queue();
                 } catch (CheckFailure e) {
-                    channel.sendMessage(format("{0} A check for `{1}{2}` failed. Do you not have permissions?", author.getAsMention(), prefix, cmdName)).queue();
+                    channel.sendMessage(format("{0} A check for `{1}{2}` failed. Do you not have permissions?",
+                            author.getAsMention(), prefix, cmdName)).queue();
                 } catch (Exception e) {
                     logger.error("Unknown command ({}) error:", cmdName, e);
                     channel.sendMessage(":x: A severe internal error occurred.").queue();
