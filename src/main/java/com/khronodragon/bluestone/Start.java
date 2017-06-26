@@ -16,7 +16,7 @@ public class Start {
         JSONObject config = new JSONObject(jsonCode);
 
         String token = config.getString("token");
-        int shardCount = config.optInt("shardCount", 1); // 1
+        int shardCount = config.optInt("shard_count", 1); // 1
         String type = config.optString("type"); // "bot"
 
         AccountType accountType;
