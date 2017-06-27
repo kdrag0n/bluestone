@@ -9,6 +9,7 @@ import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.sql.BotAdmin;
 import com.khronodragon.bluestone.sql.GuildPrefix;
 import net.dv8tion.jda.core.JDA;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
@@ -37,7 +38,9 @@ public class ShardUtil {
         this.config = config;
 
         try {
-            dbConn = new JdbcPooledConnectionSource("jdbc:" + config.optString("db_url", "h2:./database"),
+            dbConn = new JdbcPooledConnectionSource("jdbc:" +
+                    StringUtils.replaceOnce(config.optString("db_url", "h2:./database"),
+                            "mysql://", "mariadb://"),
                     config.optString("db_user", null), config.optString("db_pass", null));
         } catch (SQLException e) {
             logger.error("Failed to connect to database!", e);

@@ -52,7 +52,7 @@ dependencies {
     compile 'com.zaxxer:HikariCP:2.6.2'
     compile 'com.google.code.gson:gson:2.8.1'
     compile 'org.languagetool:language-en:3.7'
-    compile 'mysql:mysql-connector-java:6.0.6'
+    compile 'org.mariadb.jdbc:mariadb-java-client:2.0.2'
 }
 
 compileJava.options.encoding = 'UTF-8'
