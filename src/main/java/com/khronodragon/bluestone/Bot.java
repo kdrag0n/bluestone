@@ -24,6 +24,7 @@ import net.dv8tion.jda.core.events.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import org.apache.commons.lang3.StringUtils;
@@ -436,6 +437,13 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                         channel.sendMessage(":x: An unknown internal error occurred.").queue();
                     } else if (cause instanceof PassException) {
                         // assume error has already been sent
+                    } else if (cause instanceof PermissionError) {
+                        channel.sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.",
+                                author.getAsMention(), prefix, cmdName,
+                                Strings.smartJoin(((PermissionError) cause).getFriendlyPerms(), "or"))).queue();
+                    } else if (cause instanceof PermissionException) {
+                        channel.sendMessage(":x: I need the **" +
+                                ((PermissionException) cause).getPermission().getName() + "** permission!").queue();
                     } else {
                         logger.error("Command ({}) invocation error:", cmdName, cause);
                         channel.sendMessage(format(":warning: Error!```java\n{2}```This error will be reported.",
@@ -447,7 +455,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 } catch (PermissionError e) {
                     channel.sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.",
                             author.getAsMention(), prefix, cmdName,
-                            Strings.smartJoin(command.getFriendlyPerms(), "or"))).queue();
+                            Strings.smartJoin(e.getFriendlyPerms(), "or"))).queue();
                 } catch (GuildOnlyError e) {
                     channel.sendMessage("Sorry, that command only works in a guild.").queue();
                 } catch (CheckFailure e) {

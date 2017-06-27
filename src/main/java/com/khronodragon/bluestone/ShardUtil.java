@@ -4,6 +4,7 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.jdbc.JdbcPooledConnectionSource;
+import com.j256.ormlite.support.DatabaseConnection;
 import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.sql.BotAdmin;
 import com.khronodragon.bluestone.sql.GuildPrefix;
@@ -47,6 +48,23 @@ public class ShardUtil {
             } catch (SQLException ex) {
                 logger.error("Failed to create in-memory database!", ex);
                 System.exit(-1);
+            }
+        }
+
+        if (config.optString("db_url").startsWith("mysql://")) {
+            DatabaseConnection tempConn = null;
+            try {
+                tempConn = dbConn.getReadWriteConnection(null);
+                tempConn.executeStatement("SET NAMES 'utf8mb4';", DatabaseConnection.DEFAULT_RESULT_FLAGS);
+            } catch (SQLException e) {
+                logger.warn("Detected MySQL and failed to force utf8mb4", e);
+            } finally {
+                try {
+                    if (tempConn != null)
+                        tempConn.close();
+                } catch (IOException e) {
+                    logger.warn("Failed to close temporary connection after setting utf8mb4", e);
+                }
             }
         }
 

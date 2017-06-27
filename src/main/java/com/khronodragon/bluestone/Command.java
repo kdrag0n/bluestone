@@ -7,6 +7,7 @@ import com.khronodragon.bluestone.errors.PermissionError;
 import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.InvocationTargetException;
@@ -69,6 +70,13 @@ public class Command {
                         event.getChannel().sendMessage(":x: An unknown internal error occurred.").queue();
                     } else if (cause instanceof PassException) {
                         // assume error has already been sent
+                    } else if (cause instanceof PermissionError) {
+                        event.getChannel().sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.",
+                                event.getAuthor().getAsMention(), prefix, invoker,
+                                Strings.smartJoin(((PermissionError) cause).getFriendlyPerms(), "or"))).queue();
+                    } else if (cause instanceof PermissionException) {
+                        event.getChannel().sendMessage(":x: I need the **" +
+                                ((PermissionException) cause).getPermission().getName() + "** permission!").queue();
                     } else {
                         bot.logger.error("Command ({}) invocation error:", invoker, cause);
                         event.getChannel().sendMessage(format(":warning: Error!```java\n{2}```This error will be reported.",
@@ -80,7 +88,7 @@ public class Command {
                 } catch (PermissionError e) {
                     event.getChannel().sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.",
                             event.getAuthor().getAsMention(), prefix, invoker,
-                            Strings.smartJoin(permsRequired, "or"))).queue();
+                            Strings.smartJoin(e.getFriendlyPerms(), "or"))).queue();
                 } catch (GuildOnlyError e) {
                     event.getChannel().sendMessage("Sorry, that command only works in a guild.").queue();
                 } catch (CheckFailure e) {
@@ -127,32 +135,13 @@ public class Command {
 
     private void checkPerms(Context ctx) throws PermissionError {
         if (!Permissions.check(permsRequired, ctx))
-            throw new PermissionError("Requester missing permissions for command " + name);
+            throw new PermissionError("Requester missing permissions for command " + name)
+                   .setPerms(permsRequired);
     }
 
     public static void checkPerms(Context ctx, String[] permsRequired) {
         if (!Permissions.check(permsRequired, ctx))
-            throw new PermissionError("Requester missing permissions for command");
-    }
-
-    public String[] getFriendlyPerms() {
-        return Arrays.stream(permsRequired).map(p -> {
-            if (p.equals("owner")) {
-                return "Bot Owner";
-            } else if (p.equals("admin")) {
-                return "Bot Admin";
-            } else {
-                String jdaPermStr = String.join("_",
-                        Arrays.stream(StringUtils.splitByCharacterTypeCamelCase(p))
-                                .map(String::toUpperCase)
-                                .collect(Collectors.toList()));
-                Permission perm = Permission.valueOf(jdaPermStr);
-                if (perm == null) {
-                    return "Unknown";
-                } else {
-                    return perm.getName();
-                }
-            }
-        }).collect(Collectors.toList()).toArray(new String[0]);
+            throw new PermissionError("Requester missing permissions for command")
+                    .setPerms(permsRequired);
     }
 }
