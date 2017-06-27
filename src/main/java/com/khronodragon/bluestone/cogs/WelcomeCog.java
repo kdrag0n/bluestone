@@ -29,7 +29,7 @@ public class WelcomeCog extends Cog {
             "Enjoy your time here, and find out more about me with `[prefix]help`.";
     private static final String DEFAULT_LEAVE = ":coffin: **RIP [member_tag]...**";
 
-    private static final Pattern SUB_REGEX = Pattern.compile("\\[[a-zA-Z_]+\\]");
+    private static final Pattern SUB_REGEX = Pattern.compile("\\[([a-zA-Z_]+)\\]");
     private static final String NO_COMMAND = ":thinking: **I need an action!**\n" +
             "The following are valid:\n" +
             "    \u2022 `status` - view the status of this message\n" +

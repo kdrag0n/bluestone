@@ -396,8 +396,6 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         final JDA jda = event.getJDA();
         final User author = event.getAuthor();
 
-        if (author.getIdLong() != 160567046642335746L)
-            return;
         if (author.isBot())
             return;
         if (author.getIdLong() == jda.getSelfUser().getIdLong())

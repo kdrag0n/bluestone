@@ -7,6 +7,7 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.async.Callback;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
@@ -16,6 +17,7 @@ import org.json.JSONObject;
 
 import java.io.InputStream;
 import java.text.MessageFormat;
+import java.util.logging.Level;
 
 public class StatReporterCog extends Cog {
     private static final Logger logger = LogManager.getLogger(StatReporterCog.class);
@@ -75,6 +77,10 @@ public class StatReporterCog extends Cog {
         String dbotsKey = bot.getKeys().optString("discord_bots", null);
         String carbonitexKey = bot.getKeys().optString("carbonitex", null);
 
+        if (dbotsKey != null || carbonitexKey != null)
+            java.util.logging.Logger.getLogger("org.apache.http.client.protocol.ResponseProcessCookies")
+                    .setLevel(Level.OFF);
+
         if (dbotsKey != null)
             reportDiscordBots(dbotsKey);
 
@@ -83,16 +89,24 @@ public class StatReporterCog extends Cog {
     }
 
     private void reportDiscordBots(String key) {
-        JSONObject data = new JSONObject();
-        data.put("guild_count", bot.getShardUtil().getGuildCount());
+        JSONObject json = new JSONObject();
+        if (bot.getJda().getShardInfo() != null) {
+            JDA.ShardInfo sInfo = bot.getJda().getShardInfo();
+
+            json.put("shard_id", sInfo.getShardId())
+                    .put("shard_count", sInfo.getShardTotal())
+                    .put("server_count", bot.getJda().getGuilds().size());
+        } else {
+            json.put("server_count", bot.getJda().getGuilds().size());
+        }
 
         Unirest.post(Endpoints.DISCORD_BOTS.format(bot.getJda().getSelfUser().getId()))
                 .header("Authorization", key)
                 .header("Content-Type", "application/json")
-                .body(data)
-                .asBinaryAsync(new Callback<InputStream>() {
+                .body(json.toString())
+                .asStringAsync(new Callback<String>() {
                     @Override
-                    public void completed(HttpResponse<InputStream> response) {
+                    public void completed(HttpResponse<String> response) {
                         if (response.getStatus() == 200) {
                             logger.info("[Discord Bots] Report sent.");
                         } else {
@@ -113,12 +127,9 @@ public class StatReporterCog extends Cog {
     }
 
     private void reportCarbonitex(String key) {
-        JSONObject data = new JSONObject();
-        data.put("key", key);
-        data.put("servercount", bot.getShardUtil().getGuildCount());
-
         Unirest.post(Endpoints.CARBONITEX.getUrl())
-                .body(data)
+                .field("key", key)
+                .field("servercount", bot.getShardUtil().getGuildCount())
                 .asBinaryAsync(new Callback<InputStream>() {
                     @Override
                     public void completed(HttpResponse<InputStream> response) {
