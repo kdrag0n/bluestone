@@ -125,6 +125,7 @@ public class GoogleCog extends Cog {
             ctx.send(":x: The system this bot is running on doesn't support an essential encoding.").queue();
             return;
         }
+        ctx.channel.sendTyping().queue();
 
         try {
             ctx.send(cache.get(format(API_URL_BASE, key, encodedQuery))).queue();

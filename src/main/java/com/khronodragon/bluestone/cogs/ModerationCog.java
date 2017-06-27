@@ -178,7 +178,10 @@ public class ModerationCog extends Cog {
             channel.deleteMessages(toDelete).complete();
         } else {
             for (int i = 0; i <= toDelete.size(); i += 100) {
-                channel.deleteMessages(toDelete.subList(i, Math.min(i + 100, toDelete.size()))).complete();
+                List<Message> list = toDelete.subList(i, Math.min(i + 100, toDelete.size()));
+                if (list.isEmpty()) break;
+
+                channel.deleteMessages(list).complete();
             }
         }
 

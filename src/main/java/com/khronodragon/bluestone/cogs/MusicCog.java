@@ -25,6 +25,8 @@ import net.dv8tion.jda.core.events.guild.voice.GuildVoiceJoinEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.managers.AudioManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -32,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class MusicCog extends Cog {
+    private static final Logger logger = LogManager.getLogger(MusicCog.class);
     private ScheduledThreadPoolExecutor bgExecutor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder()
             .setDaemon(true)
             .setNameFormat("Music Cog Cleanup Thread %d")
@@ -175,10 +178,16 @@ public class MusicCog extends Cog {
             return;
         }
 
-        if (ctx.guild.getSelfMember().getVoiceState().getChannel() == null) {
-            summon(ctx);
-        } else if (ctx.guild.getSelfMember().getVoiceState().getChannel().getIdLong() != ctx.member.getVoiceState().getChannel().getIdLong()) {
-            ctx.send(":octagonal_sign: You need to be in the same voice channel as me to do that!").queue();
+        try {
+            if (ctx.guild.getSelfMember().getVoiceState().getChannel() == null) {
+                summon(ctx);
+            } else if (ctx.guild.getSelfMember().getVoiceState().getChannel().getIdLong() != ctx.member.getVoiceState().getChannel().getIdLong()) {
+                ctx.send(":octagonal_sign: You need to be in the same voice channel as me to do that!").queue();
+                return;
+            }
+        } catch (NullPointerException e) {
+            logger.warn("NPE in play command!", e);
+            ctx.send(":x: Something's funky here. Try your command again, and contact the owner if this happens often.").queue();
             return;
         }
 

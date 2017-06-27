@@ -30,7 +30,8 @@ public class ReplCog extends Cog {
             "import org.json.*\n" +
             "import com.khronodragon.bluestone.sql.*\n" +
             "import com.khronodragon.bluestone.handlers.*\n" +
-            "import com.khronodragon.bluestone.enums.*\n";
+            "import com.khronodragon.bluestone.enums.*\n" +
+            "import java.time.*\n";
 
     private Set<Long> replSessions = new HashSet<Long>();
 
@@ -127,7 +128,7 @@ public class ReplCog extends Cog {
                 }
             } catch (Throwable e) {
                 logger.warn("Error executing code in REPL", e);
-                result = bot.renderStackTrace(e);
+                result = Bot.renderStackTrace(e);
             }
             if (result instanceof RestAction)
                 result = ((RestAction) result).complete();
@@ -135,7 +136,13 @@ public class ReplCog extends Cog {
 
             if (result != null) {
                 try {
-                    ctx.send("```java\n" + result.toString() + "```").queue();
+                    String strResult;
+                    if (language.equals("groovy"))
+                        strResult = result.toString().substring(GROOVY_PRE_INJECT.length());
+                    else
+                        strResult = result.toString();
+
+                    ctx.send("```java\n" + strResult + "```").queue();
                 } catch (Exception e) {
                     logger.warn("Error sending message in REPL", e);
                     try {

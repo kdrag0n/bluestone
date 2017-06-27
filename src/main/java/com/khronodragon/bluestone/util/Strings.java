@@ -79,7 +79,8 @@ public class Strings {
         StringBuffer result = new StringBuffer();
         Matcher matcher = regex.matcher(input);
         while (matcher.find()) {
-            result.append(callback.replace(matcher.group(1)));
+            String rep = callback.replace(matcher.group(1));
+            matcher.appendReplacement(result, Matcher.quoteReplacement(rep));
         }
         matcher.appendTail(result);
 

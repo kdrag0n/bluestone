@@ -29,13 +29,31 @@ public class WelcomeCog extends Cog {
             "Enjoy your time here, and find out more about me with `[prefix]help`.";
     private static final String DEFAULT_LEAVE = ":coffin: **RIP [member_tag]...**";
 
-    private static final Pattern SUB_REGEX = Pattern.compile("\\[([a-zA-Z_]+)\\]");
+    private static final Pattern SUB_REGEX = Pattern.compile("\\[([a-z_]+)]");
     private static final String NO_COMMAND = ":thinking: **I need an action!**\n" +
             "The following are valid:\n" +
             "    \u2022 `status` - view the status of this message\n" +
             "    \u2022 `show` - show the current message\n" +
             "    \u2022 `set [message]` - set the current message\n" +
-            "    \u2022 `toggle` - toggle the status of this message";
+            "    \u2022 `toggle` - toggle the status of this message\n" +
+            "    \u2022 `tags` - show the tags available for use in messages\n";
+    private static final String TAG_HELP = "**Here are all the tags:**\n" +
+            "    • `[mention/member_mention/member]` - @mention the member\n" +
+            "    • `[member_name]` - the name of the member\n" +
+            "    • `[member_tag]` - the tag (Username#XXXX) of the member\n" +
+            "    • `[member_discrim]` - the member's discriminator\n" +
+            "    • `[member_id]` - the member's user ID\n" +
+            "    • `[guild/guild_name]` - the name of this guild\n" +
+            "    • `[guild_icon]` - the link to this guild's icon\n" +
+            "    • `[guild_id]` - this guild's ID\n" +
+            "    • `[guild_owner]` - the nme of this guild's owner\n" +
+            "    • `[time/date]` - the current date and time, like `Tue Jun 27 10:06:59 EDT 2017`\n" +
+            "    • `[prefix]` - my command prefix here\n" +
+            "    • `[bot_owner]` - the tag of my owner\n" +
+            "\n" +
+            "Example message:```\n" +
+            "[mention] Hey there, and welcome to [guild]! The owner here is [guild_owner]. You joined at [time]. " +
+            "To use this bot, try [prefix]help. It was made by [bot_owner]. Have fun!```";
     private Dao<GuildWelcomeMessages, Long> messageDao;
 
     public WelcomeCog(Bot bot) {
@@ -81,6 +99,8 @@ public class WelcomeCog extends Cog {
                 welcomeCmdSet(ctx);
             else if (invoked.equals("toggle"))
                 welcomeCmdToggle(ctx);
+            else if (invoked.equals("tags"))
+                allCmdHelp(ctx);
             else
                 ctx.send(NO_COMMAND).queue();
         } catch (NullPointerException e) {
@@ -153,6 +173,8 @@ public class WelcomeCog extends Cog {
                 leaveCmdSet(ctx);
             else if (invoked.equals("toggle"))
                 leaveCmdToggle(ctx);
+            else if (invoked.equals("tags"))
+                allCmdHelp(ctx);
             else
                 ctx.send(NO_COMMAND).queue();
         } catch (NullPointerException e) {
@@ -206,18 +228,26 @@ public class WelcomeCog extends Cog {
         ctx.send(":white_check_mark: The leave message is now **" + st + "**.").queue();
     }
 
-    protected String formatMessage(String msg, Guild guild, Member member, String def) {
+    private GuildWelcomeMessages initGuild(Guild guild) throws SQLException {
+        GuildWelcomeMessages obj = new GuildWelcomeMessages(guild.getIdLong(),
+                "[default]", "[default]", true, true);
+        messageDao.createOrUpdate(obj);
+
+        return obj;
+    }
+
+    private String formatMessage(String msg, Guild guild, Member member, String def) {
         return Strings.replace(msg.replace("[default]", def), SUB_REGEX, m -> {
             return Strings.createMap()
                     .map("mention", member::getAsMention)
                     .map("member_name", member::getEffectiveName)
                     .map("member_tag", () -> getTag(member.getUser()))
-                    .map("member_discrim", () -> member.getUser().getDiscriminator())
-                    .map("member_id", () -> member.getUser().getId())
+                    .map("member_discrim", member.getUser()::getDiscriminator)
+                    .map("member_id", member.getUser()::getId)
                     .map("guild", guild::getName)
                     .map("guild_icon", guild::getIconUrl)
                     .map("guild_id", guild::getId)
-                    .map("guild_owner", () -> guild.getOwner().getEffectiveName())
+                    .map("guild_owner", guild.getOwner()::getEffectiveName)
                     .map("member", member::getAsMention)
                     .map("member_mention", member::getAsMention)
                     .map("time", () -> new Date().toString())
@@ -227,6 +257,10 @@ public class WelcomeCog extends Cog {
                     .map("bot_owner", "Dragon5232#1841")
                     .exec(m);
         });
+    }
+
+    private void allCmdHelp(Context ctx) {
+        ctx.send(TAG_HELP).queue();
     }
 
     @EventHandler(event = GuildMemberJoinEvent.class, threaded = true)
@@ -239,7 +273,16 @@ public class WelcomeCog extends Cog {
 
         try {
             GuildWelcomeMessages queryResult = messageDao.queryForId(event.getGuild().getIdLong());
-            if (queryResult == null || !queryResult.isWelcomeEnabled()) return;
+
+            if (queryResult == null) {
+                try {
+                    queryResult = initGuild(event.getGuild());
+                } catch (SQLException ex) {
+                    logger.error("Failed to recover from NPE (join event)", ex);
+                    return;
+                }
+            }
+            if (!queryResult.isWelcomeEnabled()) return;
 
             String msg = formatMessage(queryResult.getWelcome(), event.getGuild(),
                     event.getMember(), DEFAULT_WELCOME);
@@ -260,7 +303,16 @@ public class WelcomeCog extends Cog {
 
         try {
             GuildWelcomeMessages queryResult = messageDao.queryForId(event.getGuild().getIdLong());
-            if (queryResult == null || !queryResult.isLeaveEnabled()) return;
+
+            if (queryResult == null) {
+                try {
+                    queryResult = initGuild(event.getGuild());
+                } catch (SQLException ex) {
+                    logger.error("Failed to recover from NPE (leave event)", ex);
+                    return;
+                }
+            }
+            if (!queryResult.isLeaveEnabled()) return;
 
             String msg = formatMessage(queryResult.getLeave(), event.getGuild(),
                     event.getMember(), DEFAULT_LEAVE);

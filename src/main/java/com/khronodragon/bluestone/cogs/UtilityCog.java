@@ -177,7 +177,7 @@ public class UtilityCog extends Cog {
                 .setAuthor(getTag(user), user.getEffectiveAvatarUrl(), user.getEffectiveAvatarUrl())
                 .setThumbnail(user.getEffectiveAvatarUrl())
                 .addField("ID", user.getId(), true)
-                .addField("Creation Time", user.getCreationTime().toString(), true)
+                .addField("Creation Time", Date.from(user.getCreationTime().toInstant()).toString(), true)
                 .addField("Bot?", user.isBot() ? "Yes" : "No", true);
 
         if (ctx.guild != null) {
@@ -414,6 +414,7 @@ public class UtilityCog extends Cog {
             ctx.send(":warning: I need some text to use!").queue();
             return;
         }
+        ctx.channel.sendTyping().queue();
 
         JSONObject json = new JSONObject();
 
@@ -661,6 +662,8 @@ public class UtilityCog extends Cog {
             return;
         }
 
+        ctx.channel.sendTyping().queue();
+
         JSONObject data;
         logger.info("Connecting to Minecraft server {}:{}", server, port);
         try {
@@ -715,7 +718,7 @@ public class UtilityCog extends Cog {
         }
 
         emb.addField("Version", data.getJSONObject("version").getString("name").replaceAll(MC_COLOR_PATTERN, ""), true);
-        emb.addField("Protocol Version", data.getJSONObject("version").getString("protocol"), true);
+        emb.addField("Protocol Version", str(data.getJSONObject("version").getInt("protocol")), true);
 
         if (data.has("modinfo")) {
             JSONObject modinfo = data.getJSONObject("modinfo");
@@ -881,6 +884,8 @@ public class UtilityCog extends Cog {
         int comicNum;
 
         if (first.equalsIgnoreCase("latest")) {
+            ctx.channel.sendTyping().queue();
+
             try {
                 comicNum = Unirest.get("https://xkcd.com/info.0.json")
                         .asJson()
@@ -892,6 +897,8 @@ public class UtilityCog extends Cog {
                 return;
             }
         } else if (first.equalsIgnoreCase("random")) {
+            ctx.channel.sendTyping().queue();
+
             try {
                 comicNum = randint(1, Unirest.get("https://xkcd.com/info.0.json")
                         .asJson()
@@ -903,6 +910,8 @@ public class UtilityCog extends Cog {
                 return;
             }
         } else if ((first.equalsIgnoreCase("number") && second.matches("^[0-9]{1,4}$")) || first.matches("^[0-9]{1,4}$")) {
+            ctx.channel.sendTyping().queue();
+
             try {
                 int max = Unirest.get("https://xkcd.com/info.0.json")
                         .asJson()

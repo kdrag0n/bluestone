@@ -108,9 +108,9 @@ public class PokemonCog extends Cog {
         Pokemon pokemon;
         try {
             pokemon = pokeCache.get(url.toString());
-        } catch (ExecutionException container) {
+        } catch (ExecutionException|CacheLoader.InvalidCacheLoadException container) {
             Throwable e = container.getCause();
-            logger.error("Error contacting PokeAPI", e);
+            logger.warn("Error contacting PokeAPI", e);
             ctx.send(":warning: Failed to fetch Pokémon. `" + e.getMessage() + '`').queue();
             return;
         }
@@ -124,9 +124,9 @@ public class PokemonCog extends Cog {
 
         try {
             desc = descCache.get(descUrl);
-        } catch (ExecutionException container) {
+        } catch (ExecutionException|CacheLoader.InvalidCacheLoadException container) {
             Throwable e = container.getCause();
-            logger.error("Error contacting PokeAPI", e);
+            logger.warn("Error contacting PokeAPI", e);
             ctx.send(":warning: Failed to fetch Pokémon. `" + e.getMessage() + '`').queue();
             return;
         }
