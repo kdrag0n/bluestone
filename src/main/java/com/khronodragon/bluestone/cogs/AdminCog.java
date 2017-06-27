@@ -26,7 +26,9 @@ public class AdminCog extends Cog {
             "    \u2022 `add [mention or id]` - add an admin\n" +
             "    \u2022 `remove [mention or id]` - remove an admin\n" +
             "\n" +
-            "**NOTE: This has nothing to do with *server* admins!**";
+            "**__NOTE: This has nothing to do with *server* admins!__**\n" +
+            "I will not help you if you try adding an admin with this, and discover that it \"doesn't work\".\n" +
+            "It shouldn't. This is for bot-wide admins that have extra powers.";
 
     public AdminCog(Bot bot) {
         super(bot);
