@@ -51,23 +51,6 @@ public class ShardUtil {
             }
         }
 
-        if (config.optString("db_url").startsWith("mysql://")) {
-            DatabaseConnection tempConn = null;
-            try {
-                tempConn = dbConn.getReadWriteConnection(null);
-                tempConn.executeStatement("SET NAMES 'utf8mb4';", DatabaseConnection.DEFAULT_RESULT_FLAGS);
-            } catch (SQLException e) {
-                logger.warn("Detected MySQL and failed to force utf8mb4", e);
-            } finally {
-                try {
-                    if (tempConn != null)
-                        tempConn.close();
-                } catch (IOException e) {
-                    logger.warn("Failed to close temporary connection after setting utf8mb4", e);
-                }
-            }
-        }
-
         try {
             TableUtils.createTableIfNotExists(dbConn, BotAdmin.class);
         } catch (SQLException e) {
