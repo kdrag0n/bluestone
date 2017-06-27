@@ -178,7 +178,7 @@ public class QuotesCog extends Cog {
 
     private void quoteCmdRandom(Context ctx) throws SQLException {
         Quote quote = dao.queryBuilder()
-                .orderByRaw("RANDOM()")
+                .orderByRaw("RAND()")
                 .limit(1L)
                 .queryForFirst();
 
