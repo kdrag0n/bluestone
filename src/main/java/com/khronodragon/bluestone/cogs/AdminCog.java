@@ -60,7 +60,6 @@ public class AdminCog extends Cog {
             adminCmdTest(ctx);
         else
             ctx.send(ADMIN_NO_COMMAND).queue();
-
     }
 
     private void adminCmdTest(Context ctx) throws SQLException {
