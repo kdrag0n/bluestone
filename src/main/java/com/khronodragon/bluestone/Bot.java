@@ -107,6 +107,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     public void setJda(JDA jda) {
         this.jda = jda;
+        jda.addEventListener(eventWaiter);
         final ShardInfo sInfo = jda.getShardInfo();
 
         if (sInfo != null) {

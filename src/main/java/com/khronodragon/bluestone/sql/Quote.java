@@ -9,7 +9,7 @@ import static java.text.MessageFormat.format;
 
 @DatabaseTable(tableName = "quotes")
 public class Quote {
-    public static final String QUOTE_FORMAT = "[{0}] {4}\"{1}\"{4} — `{2}` ({3,date})";
+    public static final String QUOTE_FORMAT = "**[{0}]** {4}\"{1}\"{4} — `{2}` (__{3,date}__)";
 
     @DatabaseField(generatedId = true, canBeNull = false, width = 4)
     private int id;

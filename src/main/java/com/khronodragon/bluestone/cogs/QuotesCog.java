@@ -10,10 +10,13 @@ import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.sql.Quote;
+import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -106,7 +109,8 @@ public class QuotesCog extends Cog {
             return;
         }
 
-        Quote quote = new Quote(text, ctx.author.getIdLong(), ctx.author.getName());
+        Quote quote = new Quote(text.replace('\n', ' '),
+                ctx.author.getIdLong(), ctx.author.getName());
         dao.create(quote);
 
         ctx.send(":white_check_mark: Quote added with ID `" + quote.getId() + "`.").queue();
@@ -152,29 +156,42 @@ public class QuotesCog extends Cog {
         for (int i = 0; i < quotes.size(); i++)
             renderedQuotes[i] = quotes.get(i).render();
 
+        String name;
+        Color color;
+        if (ctx.guild == null) {
+            color = Color.BLUE;
+            name = ctx.author.getName();
+        } else {
+            color = val(ctx.member.getColor()).or(Color.RED);
+            name = ctx.member.getEffectiveName();
+        }
+
         PaginatorBuilder builder = new PaginatorBuilder()
                 .setColumns(1)
                 .useNumberedItems(false)
                 .setItemsPerPage(12)
-                .waitOnSinglePage(true)
+                .waitOnSinglePage(false)
                 .showPageNumbers(true)
+                .setColor(color)
                 .setText("Listing all quotes:")
                 .setItems(renderedQuotes)
                 .setFinalAction(msg -> {
-                    msg.editMessage("Finished.").queue();
+                    msg.editMessage(new MessageBuilder()
+                            .append("Finished.")
+                            .setEmbed(new EmbedBuilder()
+                                    .setColor(color)
+                                    .setAuthor(name, null, ctx.author.getEffectiveAvatarUrl())
+                                    .setFooter("Full quote list", null)
+                                    .build())
+                            .build()).queue();
 
                     try {
                         msg.clearReactions().queue();
                     } catch (PermissionException ignored) {}
                 })
-                .setEventWaiter(new EventWaiter())
+                .setEventWaiter(bot.getEventWaiter())
                 .setTimeout(2, TimeUnit.MINUTES)
                 .addUsers(ctx.author);
-
-        if (ctx.guild == null)
-            builder.setColor(randomColor());
-        else
-            builder.setColor(val(ctx.member.getColor()).or(randomColor()));
 
         builder.build().paginate(ctx.channel, 1);
     }
