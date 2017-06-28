@@ -15,7 +15,7 @@ public class Quote {
     @DatabaseField(generatedId = true, canBeNull = false, width = 4)
     private int id;
 
-    @DatabaseField(width = 360, canBeNull = false, dataType = DataType.STRING_BYTES, format = "UTF16")
+    @DatabaseField(width = 360, canBeNull = false)
     private String quote;
 
     @DatabaseField(canBeNull = false)
