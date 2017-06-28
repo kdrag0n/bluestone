@@ -8,31 +8,31 @@ from datetime import datetime
 
 header = f'''-- Goldmine-->Bluestone JSON-->SQL migration (for MySQL)
 -- generated {datetime.now()}
-SET NAMES 'utf8mb4';
+SET NAMES 'utf16';
 START TRANSACTION;
-ALTER DATABASE `bluestone` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER DATABASE `bluestone` CHARACTER SET utf16 COLLATE utf16_unicode_ci;
 '''
 
 table_creation = '''
 CREATE TABLE IF NOT EXISTS `admins` (`userId` BIGINT NOT NULL , `lastUsername` VARCHAR(32) DEFAULT '' , PRIMARY KEY (`userId`) );
-ALTER TABLE `admins` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
-ALTER TABLE `admins` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+ALTER TABLE `admins` DEFAULT CHARACTER SET utf16 COLLATE utf16_bin;
+ALTER TABLE `admins` CONVERT TO CHARACTER SET utf16 COLLATE utf16_bin;
 
 CREATE TABLE IF NOT EXISTS `guild_prefixes` (`guildId` BIGINT NOT NULL , `prefix` VARCHAR(32) NOT NULL , PRIMARY KEY (`guildId`) );
-ALTER TABLE `guild_prefixes` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
-ALTER TABLE `guild_prefixes` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+ALTER TABLE `guild_prefixes` DEFAULT CHARACTER SET utf16 COLLATE utf16_bin;
+ALTER TABLE `guild_prefixes` CONVERT TO CHARACTER SET utf16 COLLATE utf16_bin;
 
 CREATE TABLE IF NOT EXISTS `guild_welcome_msgs`
 (`guildId` BIGINT NOT NULL , `welcome` VARCHAR(2000) DEFAULT '[default]' NOT NULL , `leave` VARCHAR(2000) DEFAULT '[default]' NOT NULL ,
 `welcomeEnabled` TINYINT(1) NOT NULL , `leaveEnabled` TINYINT(1) NOT NULL , PRIMARY KEY (`guildId`) );
-ALTER TABLE `guild_welcome_msgs` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
-ALTER TABLE `guild_welcome_msgs` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+ALTER TABLE `guild_welcome_msgs` DEFAULT CHARACTER SET utf16 COLLATE utf16_bin;
+ALTER TABLE `guild_welcome_msgs` CONVERT TO CHARACTER SET utf16 COLLATE utf16_bin;
 
 CREATE TABLE IF NOT EXISTS `quotes`
 (`id` VARCHAR(4) NOT NULL , `quote` VARCHAR(360) NOT NULL , `date` TIMESTAMP NOT NULL ,
 `authorId` BIGINT NOT NULL , `authorName` VARCHAR(32) NOT NULL , PRIMARY KEY (`id`) );
-ALTER TABLE `quotes` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
-ALTER TABLE `quotes` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+ALTER TABLE `quotes` DEFAULT CHARACTER SET utf16 COLLATE utf16_bin;
+ALTER TABLE `quotes` CONVERT TO CHARACTER SET utf16 COLLATE utf16_bin;
 
 CREATE INDEX IF NOT EXISTS `quotes_authorId_idx` ON `quotes` ( `authorId` );
 
