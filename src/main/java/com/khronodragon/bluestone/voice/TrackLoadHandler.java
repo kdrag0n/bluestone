@@ -1,5 +1,6 @@
 package com.khronodragon.bluestone.voice;
 
+import com.jagrosh.jdautilities.menu.orderedmenu.OrderedMenuBuilder;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
@@ -12,6 +13,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static java.text.MessageFormat.format;
 
 public class TrackLoadHandler implements AudioLoadResultHandler {
     private static final String[] PREFIXES = {"", "ytsearch:", "scsearch:"};
@@ -44,8 +47,58 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
 
             ctx.send(":white_check_mark: Queued **" + info.title + "** by **" + info.author + "**, length **" + Bot.formatDuration(info.length / 1000L) + "**").queue();
             Cog.removeReactionIfExists(ctx.message, "⌛");
-            ctx.message.addReaction("☑").queue();
+            ctx.message.addReaction("✅").queue();
         }
+    }
+
+    private String formatTime(long duration) {
+        if (duration == Long.MAX_VALUE)
+            return "LIVE";
+
+        long seconds = Math.round(duration / 1000.0);
+        long hours = seconds / (60 * 60);
+        seconds %= 60 * 60;
+        long minutes = seconds / 60;
+        seconds %= 60;
+
+        return (hours > 0 ? hours + ":" : "") + (minutes < 10 ? "0" + minutes : minutes) +
+                ":" + (seconds < 10 ? "0" + seconds : seconds);
+    }
+
+    private void searchResults(List<AudioTrack> tracks) {
+        ctx.send(":hourglass: Pick a search result.").queue(msg -> {
+            OrderedMenuBuilder builder = new OrderedMenuBuilder()
+                    .allowTextInput(true)
+                    .useCancelButton(true)
+                    .useNumbers()
+                    .setAction(i -> {
+                        AudioTrack track;
+                        try {
+                            track = tracks.get(i - 1);
+                        } catch (IndexOutOfBoundsException e) {
+                            ctx.send(":x: No such track!").queue();
+                            return;
+                        }
+
+                        trackLoaded(track);
+                    })
+                    .setText(":hourglass: Pick a search result.")
+                    .setCancel(() -> msg.delete().queue())
+                    .setUsers(ctx.author)
+                    .setEventWaiter(ctx.bot.getEventWaiter())
+                    .setTimeout(90, TimeUnit.SECONDS);
+
+            for (int i = 0; i < 5 && i < tracks.size(); i++) {
+                AudioTrack track = tracks.get(i);
+                AudioTrackInfo info = track.getInfo();
+
+                builder.addChoices(format("`[{0}]` [**{1}** (by {2})]({3})",
+                        formatTime(track.getDuration()), info.title, info.author,
+                        info.uri));
+            }
+
+            builder.build().display(msg);
+        });
     }
 
     @Override
@@ -55,7 +108,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
             if (tracks.size() < 1)
                 noMatches();
             else
-                trackLoaded(tracks.get(0));
+                searchResults(playlist.getTracks());
 
             return;
         }
