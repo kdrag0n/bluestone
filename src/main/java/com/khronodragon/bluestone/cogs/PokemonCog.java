@@ -124,10 +124,13 @@ public class PokemonCog extends Cog {
 
         try {
             desc = descCache.get(descUrl);
-        } catch (ExecutionException|CacheLoader.InvalidCacheLoadException container) {
+        } catch (ExecutionException container) {
             Throwable e = container.getCause();
             logger.warn("Error contacting PokeAPI", e);
             ctx.send(":warning: Failed to fetch Pokémon. `" + e.getMessage() + '`').queue();
+            return;
+        } catch (CacheLoader.InvalidCacheLoadException e) {
+            ctx.send(":warning: No such Pokémon!").queue();
             return;
         }
 
