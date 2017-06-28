@@ -11,8 +11,8 @@ import static java.text.MessageFormat.format;
 public class Quote {
     public static final String QUOTE_FORMAT = "[{0}] {4}\"{1}\"{4} — `{2}` ({3,date})";
 
-    @DatabaseField(generatedId = true, canBeNull = false, width = 4)
-    private int id;
+    @DatabaseField(id = true, canBeNull = false, width = 4)
+    private String id;
 
     @DatabaseField(width = 360, canBeNull = false)
     private String quote;
@@ -26,7 +26,7 @@ public class Quote {
     @DatabaseField(canBeNull = false, width = 32)
     private String authorName;
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
@@ -48,7 +48,8 @@ public class Quote {
 
     public Quote() {}
 
-    public Quote(String quote, long authorId, String authorName) {
+    public Quote(String id, String quote, long authorId, String authorName) {
+        this.id = id;
         this.quote = quote;
         this.authorId = authorId;
         this.authorName = authorName;
