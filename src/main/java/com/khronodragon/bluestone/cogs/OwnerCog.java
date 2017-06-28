@@ -9,10 +9,7 @@ import com.khronodragon.bluestone.enums.BucketType;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.OnlineStatus;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Icon;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.requests.RestAction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -245,5 +242,16 @@ public class OwnerCog extends Cog {
 
         ctx.jda.getSelfUser().getManager().setAvatar(Icon.from(new File(ctx.rawArgs))).queue();
         ctx.send(":thumbsup: Avatar changed.").queue();
+    }
+
+    @Command(name = "setgame", desc = "Set my game.", perms = {"owner"}, aliases = {"set_game"})
+    public void cmdSetGame(Context ctx) {
+        if (ctx.rawArgs.length() < 1) {
+            ctx.send(":thinking: I need a game to set!").queue();
+            return;
+        }
+
+        ctx.jda.getPresence().setGame(Game.of(ctx.rawArgs));
+        ctx.send(":thumbsup: Game set.").queue();
     }
 }

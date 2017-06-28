@@ -22,6 +22,13 @@ public class ReplCog extends Cog {
     private static final Logger logger = LogManager.getLogger(ReplCog.class);
     private static final String GROOVY_PRE_INJECT = "import net.dv8tion.jda.core.entities.*\n" +
             "import net.dv8tion.jda.core.*\n" +
+            "import net.dv8tion.jda.core.entities.impl.*\n" +
+            "import net.dv8tion.jda.core.audio.*\n" +
+            "import net.dv8tion.jda.core.audit.*\n" +
+            "import net.dv8tion.jda.core.managers.*\n" +
+            "import net.dv8tion.jda.core.exceptions.*\n" +
+            "import net.dv8tion.jda.core.events.*\n" +
+            "import net.dv8tion.jda.core.utils.*\n" +
             "import com.khronodragon.bluestone.*\n" +
             "import org.apache.logging.log4j.*\n" +
             "import javax.script.*\n" +

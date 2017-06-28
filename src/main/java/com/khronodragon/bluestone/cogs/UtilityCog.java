@@ -263,7 +263,7 @@ public class UtilityCog extends Cog {
     @Command(name = "invite", desc = "Generate an invite link for myself or another bot.", aliases = {"addbot"})
     public void cmdInvite(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(ctx.jda.asBot().getInviteUrl(PERMS_NEEDED)).queue();
+            ctx.send('<' + ctx.jda.asBot().getInviteUrl(PERMS_NEEDED) + '>').queue();
         } else {
             if (!ctx.rawArgs.matches("^[0-9]{16,20}$")) {
                 ctx.send(":warning: Invalid ID!").queue();

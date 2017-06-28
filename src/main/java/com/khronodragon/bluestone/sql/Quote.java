@@ -1,5 +1,6 @@
 package com.khronodragon.bluestone.sql;
 
+import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
@@ -14,7 +15,7 @@ public class Quote {
     @DatabaseField(generatedId = true, canBeNull = false, width = 4)
     private int id;
 
-    @DatabaseField(width = 360, canBeNull = false)
+    @DatabaseField(width = 360, canBeNull = false, dataType = DataType.STRING_BYTES, format = "UTF16")
     private String quote;
 
     @DatabaseField(canBeNull = false)

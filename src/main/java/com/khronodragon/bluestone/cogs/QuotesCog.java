@@ -156,6 +156,21 @@ public class QuotesCog extends Cog {
         for (int i = 0; i < quotes.size(); i++)
             renderedQuotes[i] = quotes.get(i).render();
 
+        int page = 1;
+        if (ctx.args.size() > 1) {
+            if (ctx.args.get(1).matches("^[0-9]{1,3}$")) {
+                int wantedPage = Integer.parseInt(ctx.args.get(1));
+                int max = (int) Math.ceil(renderedQuotes.length / 12);
+
+                if (wantedPage > max) {
+                    ctx.send(":warning: No such page! There are **" + max + "** pages.").queue();
+                    return;
+                } else {
+                    page = wantedPage;
+                }
+            }
+        }
+
         String name;
         Color color;
         if (ctx.guild == null) {
@@ -193,7 +208,7 @@ public class QuotesCog extends Cog {
                 .setTimeout(2, TimeUnit.MINUTES)
                 .addUsers(ctx.author);
 
-        builder.build().paginate(ctx.channel, 1);
+        builder.build().paginate(ctx.channel, page);
     }
 
     private void quoteCmdRandom(Context ctx) throws SQLException {

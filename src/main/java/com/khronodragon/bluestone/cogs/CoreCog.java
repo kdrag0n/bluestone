@@ -40,7 +40,7 @@ public class CoreCog extends Cog {
 
     @Command(name = "ping", desc = "Ping, pong!")
     public void cmdPing(Context ctx) {
-        String msg = "Pong! WebSockets: " + ctx.jda.getPing() + "ms";
+        String msg = ":ping_pong: WebSockets: " + ctx.jda.getPing() + "ms";
         long beforeTime = System.currentTimeMillis();
 
         ctx.send(msg).queue(message1 -> {

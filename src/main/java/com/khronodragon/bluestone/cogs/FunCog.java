@@ -392,7 +392,7 @@ public class FunCog extends Cog {
             ctx.send(":warning: I need someone to " + ctx.invoker + "!").queue();
             return;
         }
-        final String target = format("*{0}}*", ctx.rawArgs);
+        final String target = format("*{0}*", ctx.rawArgs);
 
         ctx.send(format("{0} {1}. {2}", (ctx.guild == null ? ctx.author : ctx.member).getAsMention(),
                 format(randomChoice(FIGHTS), target), format(randomChoice(DEATHS), target))).queue();
