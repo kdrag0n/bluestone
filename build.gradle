@@ -30,7 +30,7 @@ task fatJar(type: Jar) {
 }
 
 dependencies {
-    compile 'net.dv8tion:JDA:3.1.1_217'
+    compile 'net.dv8tion:JDA:3.1.1_218'
     compile 'com.sedmelluq:lavaplayer:1.2.42'
     compile 'com.mashape.unirest:unirest-java:1.4.9'
     compile 'com.google.guava:guava:22.0'
@@ -53,6 +53,8 @@ dependencies {
     compile 'com.google.code.gson:gson:2.8.1'
     compile 'org.languagetool:language-en:3.7'
     compile 'org.mariadb.jdbc:mariadb-java-client:2.0.2'
+    compile 'net.sf.trove4j:trove4j:3.0.3'
+    compile 'com.jagrosh:JDA-Utilities:1.2'
 }
 
 compileJava.options.encoding = 'UTF-8'

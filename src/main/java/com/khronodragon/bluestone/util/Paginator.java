@@ -1,13 +1,14 @@
 package com.khronodragon.bluestone.util;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Paginator {
     private int maxSize = 2000;
     private int count = 0;
-    private List<String> currentPage = new ArrayList<>();
-    private List<String> pages = new ArrayList<>();
+    private List<String> currentPage = new LinkedList<>();
+    private List<String> pages = new LinkedList<>();
 
     public Paginator() {}
 

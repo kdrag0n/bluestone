@@ -3,6 +3,7 @@ package com.khronodragon.bluestone;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
+import com.jagrosh.jdautilities.waiter.EventWaiter;
 import com.khronodragon.bluestone.annotations.*;
 import com.khronodragon.bluestone.errors.CheckFailure;
 import com.khronodragon.bluestone.errors.GuildOnlyError;
@@ -45,7 +46,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
-import java.util.stream.IntStream;
 
 import static com.khronodragon.bluestone.util.Strings.str;
 import static java.text.MessageFormat.format;
@@ -53,29 +53,29 @@ import static java.text.MessageFormat.format;
 public class Bot extends ListenerAdapter implements ClassUtilities {
     public static final String USER_AGENT = "Goldmine/2 Discord Bot (tiny.cc/goldbot)";
     public Logger logger = LogManager.getLogger(Bot.class);
-    private ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(2, new ThreadFactoryBuilder()
+    private final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(2, new ThreadFactoryBuilder()
                                                             .setDaemon(true)
                                                             .setNameFormat("Bot BG-Task Thread %d")
                                                             .build());
-    private ThreadPoolExecutor cogEventExecutor = new ThreadPoolExecutor(3, 50, 10, TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(32), new ThreadFactoryBuilder()
+    private final ThreadPoolExecutor cogEventExecutor = new ThreadPoolExecutor(3, 32, 10, TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(64), new ThreadFactoryBuilder()
                                                 .setDaemon(true)
                                                 .setNameFormat("Bot Cog-Event Pool Thread %d")
                                                 .build(), new RejectedExecHandlerImpl("Cog-Event"));
-    public ThreadPoolExecutor threadExecutor = new ThreadPoolExecutor(3, 85, 10, TimeUnit.SECONDS,
+    public final ThreadPoolExecutor threadExecutor = new ThreadPoolExecutor(3, 85, 10, TimeUnit.SECONDS,
             new ArrayBlockingQueue<>(72), new ThreadFactoryBuilder()
             .setDaemon(true)
             .setNameFormat("Bot Command-Exec Pool Thread %d")
             .build(), new RejectedExecHandlerImpl("Command-Exec"));
-    public Date startTime = new Date();
+    public final Date startTime = new Date();
+    private final EventWaiter eventWaiter = new EventWaiter();
     private JDA jda;
     private ShardUtil shardUtil;
-    private HashSet<ScheduledFuture> tasks = new HashSet<>();
-    public Map<String, Command> commands = new HashMap<>();
-    public Map<String, Cog> cogs = new HashMap<>();
-    public Map<Class<? extends Event>, Set<ExtraEvent>> extraEvents = new HashMap<>();
-    public Map<String, AtomicInteger> commandCalls = new HashMap<>();
-    public ApplicationInfo appInfo;
+    private final HashSet<ScheduledFuture> tasks = new HashSet<>();
+    public final Map<String, Command> commands = new HashMap<>();
+    public final Map<String, Cog> cogs = new HashMap<>();
+    private final Map<Class<? extends Event>, Set<ExtraEvent>> extraEvents = new HashMap<>();
+    private ApplicationInfo appInfo;
     public User owner;
 
     public Dao<BotAdmin, Long> getAdminDao() {
@@ -94,15 +94,15 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         return getConfig().getJSONObject("keys");
     }
 
+    public EventWaiter getEventWaiter() {
+        return eventWaiter;
+    }
+
     public Bot() {
         super();
 
         scheduledExecutor.setMaximumPoolSize(6);
         scheduledExecutor.setKeepAliveTime(16L, TimeUnit.SECONDS);
-    }
-
-    public JdbcConnectionSource getDatabase() {
-        return shardUtil.getDatabase();
     }
 
     public void setJda(JDA jda) {
@@ -148,37 +148,39 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
     }
 
-    protected static String vagueTraceElement(StackTraceElement elem) {
-        String base = "> " + StringUtils.replaceOnce(StringUtils.replaceOnce(elem.getClassName(),
-                "java.util", "stdlib"),
-                "com.khronodragon.bluestone", "bot") + '.' + elem.getMethodName();
-        base += elem.isNativeMethod() ? "(native)" : format("({0})", elem.getLineNumber());
-
-        return base;
+    protected static StringBuilder addVagueElement(StringBuilder builder, StackTraceElement elem) {
+        return builder.append("> ")
+                .append(StringUtils.replaceOnce(StringUtils.replaceOnce(elem.getClassName(),
+                        "java.util", "stdlib"),
+                        "com.khronodragon.bluestone", "bot"))
+                .append('.')
+                .append(elem.getMethodName())
+                .append(elem.isNativeMethod() ? "(native)" : format("({0})", elem.getLineNumber()));
     }
 
     public static String vagueTrace(Throwable e) {
         StackTraceElement[] elements = e.getStackTrace();
         StackTraceElement[] limitedElems = {elements[0], elements[1]};
-        List<String> stack = new ArrayList<>();
-        stack.add(e.getClass().getSimpleName() + ": " + e.getMessage());
+        StringBuilder stack = new StringBuilder(e.getClass().getSimpleName())
+                .append(": ")
+                .append(e.getMessage());
 
         for (StackTraceElement elem: limitedElems) {
-            stack.add(vagueTraceElement(elem));
+            stack.append("\n\u2007\u2007");
+            addVagueElement(stack, elem);
         }
 
-        if (!stack.stream()
-            .anyMatch(s -> s.contains("> bot.cogs"))) {
-            Optional<StackTraceElement> optElem = Arrays.stream(elements)
-                    .filter(el -> el.getClassName().startsWith("com.khronodragon.bluestone.cogs."))
-                    .findFirst();
-
-            if (optElem.isPresent()) {
-                stack.add("");
-                stack.add(vagueTraceElement(optElem.get()));
+        if (stack.indexOf("> bot.cogs") == -1) {
+            for (StackTraceElement elem: elements) {
+                if (elem.getClassName().startsWith("com.khronodragon.bluestone.cogs.")) {
+                    stack.append('\n');
+                    addVagueElement(stack, elem);
+                    break;
+                }
             }
         }
-        return String.join("\n\u2007\u2007", stack);
+
+        return stack.toString();
     }
 
     public static String renderStackTrace(Throwable e) {
@@ -187,15 +189,18 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     public static String renderStackTrace(Throwable e, String joinSpaces, String elemPrefix) {
         StackTraceElement[] elements = e.getStackTrace();
-        List<String> stack = new LinkedList<>();
-        stack.add(e.getClass().getName() + ": " + e.getMessage());
+        StringBuilder stack = new StringBuilder(e.getClass().getSimpleName())
+                .append(": ")
+                .append(e.getMessage());
 
         for (StackTraceElement elem: elements) {
-            String base = elemPrefix + elem.toString();
-            stack.add(base);
+            stack.append('\n')
+                    .append(joinSpaces)
+                    .append(elemPrefix)
+                    .append(elem);
         }
 
-        return StringUtils.join(stack, '\n' + joinSpaces);
+        return stack.toString();
     }
 
     @Override
@@ -261,7 +266,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     statusLine = format("in {0} guilds", shardUtil.getGuildCount());
                     break;
                 case 5:
-                    statusLine = format("from shard {0} of {0}", getShardNum(), getShardTotal());
+                    statusLine = format("from shard {0} of {0}", getShardNum(), shardUtil.getShardCount());
                     break;
                 case 6:
                     statusLine = "with my buddies";
@@ -466,10 +471,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     channel.sendMessage(":x: A severe internal error occurred.").queue();
                 }
 
-                if (commandCalls.containsKey(command.name)) {
-                    commandCalls.get(command.name).incrementAndGet();
-                } else {
-                    commandCalls.put(command.name, new AtomicInteger(1));
+                try {
+                    shardUtil.getCommandCalls().get(command.name).incrementAndGet();
+                } catch (NullPointerException ignored) {
+                    shardUtil.getCommandCalls().put(command.name, new AtomicInteger(1));
                 }
             }
         } else {
@@ -607,7 +612,9 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
         ShardUtil shardUtil = new ShardUtil(shardCount, config);
 
-        IntStream.range(0, shardCount).forEach(shardId -> {
+        for (int i = 0; i < shardCount; i++) {
+            final int shardId = i;
+
             Runnable monitor = () -> {
                 final Logger logger = LogManager.getLogger("ShardMonitor " + shardId);
                 while (true) {
@@ -636,9 +643,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                         jda = builder.buildAsync();
                     } catch (Exception e) {
                         logger.error("Failed to log in.", e);
-                        if (shardCount == 1) {
+                        if (shardCount == 1)
                             System.exit(1);
-                        }
                         try {
                             Thread.sleep(1000);
                         } catch (InterruptedException ex) {}
@@ -655,11 +661,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                             while (jda.getStatus() == JDA.Status.CONNECTED) {
                                 try {
                                     Thread.sleep(25);
-                                } catch (InterruptedException ex) {
-                                    try {
-                                        Thread.sleep(15000);
-                                    } catch (InterruptedException exx) {}
-                                }
+                                } catch (InterruptedException ex) {}
                             }
                         }
                     }
@@ -685,7 +687,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             try {
                 Thread.sleep(5100);
             } catch (InterruptedException e) {}
-        });
+        }
 
         return 0;
     }

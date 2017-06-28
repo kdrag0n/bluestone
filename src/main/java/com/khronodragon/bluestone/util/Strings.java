@@ -1,5 +1,7 @@
 package com.khronodragon.bluestone.util;
 
+import gnu.trove.list.TIntList;
+import gnu.trove.list.linked.TIntLinkedList;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.ArrayList;
@@ -14,7 +16,7 @@ public class Strings {
     private static final int low = 0xdc00;
 
     public static int[] spread(String str) {
-        List<Integer> codePoints = new ArrayList<>();
+        TIntList codePoints = new TIntLinkedList();
         int i = 0;
 
         while (i < str.length()) {
@@ -32,7 +34,8 @@ public class Strings {
                 codePoints.add(first);
             }
         }
-        return ArrayUtils.toPrimitive(codePoints.toArray(new Integer[0]));
+
+        return codePoints.toArray();
     }
 
     public static String smartJoin(String[] array) {
@@ -63,6 +66,10 @@ public class Strings {
 
     public static String str(int value) {
         return Integer.toString(value);
+    }
+
+    public static String str(short value) {
+        return Short.toString(value);
     }
 
     public static String simpleJoin(List<String> strings) {

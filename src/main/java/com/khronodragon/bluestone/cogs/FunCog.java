@@ -12,6 +12,8 @@ import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.async.Callback;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import gnu.trove.map.TCharObjectMap;
+import gnu.trove.map.hash.TCharObjectHashMap;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Message;
@@ -48,7 +50,7 @@ public class FunCog extends Cog {
         put("upside_down", uniString("ɐqɔpǝɟƃɥᴉɾʞlɯuodbɹsʇnʌʍxʎz∀qƆpƎℲפHIſʞ˥WNOԀQɹS┴∩ΛMX⅄Z0ƖᄅƐㄣϛ9ㄥ86~ ,¡@#$%^⅋*)(-‾=+][}{|;:,,,'>˙</¿"));
     }};
     private static final int[] normalChars = {97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 126, 32, 96, 33, 64, 35, 36, 37, 94, 38, 42, 40, 41, 45, 95, 61, 43, 91, 93, 123, 125, 124, 59, 58, 39, 34, 44, 60, 46, 62, 47, 63};
-    private static final Map<Character, String> alphabetToEmote = new HashMap<Character, String>() {{
+    private static final TCharObjectMap<String> alphabetToEmote = new TCharObjectHashMap<String>() {{
         put(' ', "    ");
         put('#', ":hash:");
         put('!', ":exclamation:");
@@ -191,12 +193,12 @@ public class FunCog extends Cog {
         }
 
         ctx.send(Strings.simpleJoin(ctx.rawArgs.chars().mapToObj(c -> {
-            final Character character = (Character) (char) c;
+            final char character = (char) c;
 
             if (alphabetToEmote.containsKey(character)) {
                 return alphabetToEmote.get(character);
             } else {
-                return String.valueOf(character);
+                return new String(new char[] {character});
             }
         }).collect(Collectors.toList()))).queue();
     }

@@ -136,11 +136,9 @@ public class ReplCog extends Cog {
 
             if (result != null) {
                 try {
-                    String strResult;
-                    if (language.equals("groovy"))
-                        strResult = result.toString().substring(GROOVY_PRE_INJECT.length());
-                    else
-                        strResult = result.toString();
+                    String strResult = result.toString();
+                    if (language.equals("groovy") && strResult.startsWith(GROOVY_PRE_INJECT))
+                        strResult = strResult.substring(GROOVY_PRE_INJECT.length());
 
                     ctx.send("```java\n" + strResult + "```").queue();
                 } catch (Exception e) {

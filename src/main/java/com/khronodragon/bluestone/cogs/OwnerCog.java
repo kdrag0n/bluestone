@@ -120,13 +120,14 @@ public class OwnerCog extends Cog {
 
                 Set<Bot> shards = bot.getShardUtil().getShards();
                 shards.remove(ctx.bot);
-                shards.forEach(b -> {
-                            if (b.cogs.containsKey("Owner")) {
-                                ctx.bot = b;
-                                ctx.jda = b.getJda();
-                                ((OwnerCog) b.cogs.get("Owner")).cmdBroadcast(ctx);
-                            }
-                        });
+
+                for (Bot b: shards) {
+                    if (b.cogs.containsKey("Owner")) {
+                        ctx.bot = b;
+                        ctx.jda = b.getJda();
+                        ((OwnerCog) b.cogs.get("Owner")).cmdBroadcast(ctx);
+                    }
+                }
             }
         }
         ctx.jda = bot.getJda();
@@ -223,11 +224,9 @@ public class OwnerCog extends Cog {
                 .setColor(randomColor())
                 .setAuthor("Command Calls", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
                 .setDescription("Here are the top 25 command calls, sorted by amount.")
-                .addField("Total", str(bot.commandCalls.values().stream()
-                                        .mapToInt(AtomicInteger::get)
-                                        .sum()), true);
+                .addField("Total", str(bot.getShardUtil().getRequestCount()), true);
 
-        bot.commandCalls.entrySet().stream()
+        bot.getShardUtil().getCommandCalls().entrySet().stream()
                 .sorted(Map.Entry.comparingByValue(Collections.reverseOrder(Comparator.comparingInt(AtomicInteger::get))))
                 .limit(24)
                 .forEach(entry -> {

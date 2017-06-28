@@ -4,6 +4,8 @@ import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.annotations.Command;
+import gnu.trove.list.TLongList;
+import gnu.trove.list.linked.TLongLinkedList;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.exceptions.PermissionException;
@@ -89,7 +91,7 @@ public class ModerationCog extends Cog {
         String args = ctx.rawArgs;
         String regex = null;
         List<String> substrings = new LinkedList<>();
-        List<Long> userIds = new LinkedList<>();
+        TLongList userIds = new TLongLinkedList();
         int limit = 0;
         TextChannel channel = ctx.event.getTextChannel();
 

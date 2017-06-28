@@ -151,6 +151,7 @@ public class WelcomeCog extends Cog {
         query.setWelcomeEnabled(!query.isWelcomeEnabled());
         String st = query.isWelcomeEnabled() ? "on" : "off";
 
+        messageDao.update(query);
         ctx.send(":white_check_mark: The welcome message is now **" + st + "**.").queue();
     }
 
@@ -225,6 +226,7 @@ public class WelcomeCog extends Cog {
         query.setLeaveEnabled(!query.isLeaveEnabled());
         String st = query.isLeaveEnabled() ? "on" : "off";
 
+        messageDao.update(query);
         ctx.send(":white_check_mark: The leave message is now **" + st + "**.").queue();
     }
 

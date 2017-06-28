@@ -70,7 +70,7 @@ public class CoreCog extends Cog {
             for (com.khronodragon.bluestone.Command cmd: new HashSet<>(bot.commands.values())) {
                 if (!cmd.hidden) {
                     String cName = cmd.cog.getCosmeticName();
-                    String entry = "\u2022 **" + cmd.name + "**: *" + cmd.description + '*';
+                    String entry = "\u2022 **" + cmd.name + "**: " + cmd.description;
 
                     if (fields.containsKey(cName)) {
                         fields.get(cName).add(entry);
@@ -93,7 +93,7 @@ public class CoreCog extends Cog {
                     for (com.khronodragon.bluestone.Command cmd: new HashSet<>(bot.commands.values())) {
                         if (cmd.cog == cog && !cmd.hidden) {
                             String cName = cmd.cog.getCosmeticName();
-                            String entry = "\u2022 **" + cmd.name + "**: *" + cmd.description + '*';
+                            String entry = "\u2022 **" + cmd.name + "**: " + cmd.description;
 
                             if (fields.containsKey(cName)) {
                                 fields.get(cName).add(entry);
@@ -153,7 +153,7 @@ public class CoreCog extends Cog {
                 emb.addField(cog, content, false);
             } else {
                 Paginator pager = new Paginator(1024);
-                field.stream().forEach(s -> pager.addLine(s));
+                for (String s: field) pager.addLine(s);
 
                 for (String page: pager.getPages()) {
                     emb.addField(cog, page, true);

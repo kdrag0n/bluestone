@@ -4,7 +4,6 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.jdbc.JdbcPooledConnectionSource;
-import com.j256.ormlite.support.DatabaseConnection;
 import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.sql.BotAdmin;
 import com.khronodragon.bluestone.sql.GuildPrefix;
@@ -23,7 +22,7 @@ public class ShardUtil {
     private static final Logger logger = LogManager.getLogger(ShardUtil.class);
     private Map<Integer, Bot> shards = new LinkedHashMap<>();
     private int shardCount;
-
+    private Map<String, AtomicInteger> commandCalls = new HashMap<>();
     private Dao<BotAdmin, Long> adminDao;
     private JdbcConnectionSource dbConn;
     private JSONObject config;
@@ -31,6 +30,10 @@ public class ShardUtil {
 
     public PrefixStore getPrefixStore() {
         return prefixStore;
+    }
+
+    public Map<String, AtomicInteger> getCommandCalls() {
+        return commandCalls;
     }
 
     ShardUtil(int shardCount, JSONObject config) {
@@ -132,8 +135,6 @@ public class ShardUtil {
     }
 
     public int getRequestCount() {
-        return shards.values().stream().mapToInt(b -> b.commandCalls.values().stream().mapToInt(AtomicInteger::get).sum()).sum();
+        return commandCalls.values().stream().mapToInt(AtomicInteger::get).sum();
     }
-
-
 }

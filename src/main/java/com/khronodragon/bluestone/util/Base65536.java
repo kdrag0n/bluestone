@@ -1,12 +1,14 @@
 package com.khronodragon.bluestone.util;
 
+import gnu.trove.iterator.TIntIterator;
+import gnu.trove.list.TByteList;
+import gnu.trove.list.TIntList;
+import gnu.trove.list.linked.TByteLinkedList;
+import gnu.trove.list.linked.TIntLinkedList;
+import gnu.trove.map.TIntIntMap;
+import gnu.trove.map.hash.TIntIntHashMap;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.lang3.ArrayUtils;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class Base65536 {
     private static final int bmpThreshold = 1 << 16;
@@ -33,18 +35,14 @@ public class Base65536 {
             "𦘀𦜀𦠀𦤀𦨀𦬀𦰀𦴀𦸀𦼀𧀀𧄀𧈀𧌀𧐀𧔀" +
             "𧘀𧜀𧠀𧤀𧨀𧬀𧰀𧴀𧸀𧼀𨀀𨄀𨈀𨌀𨐀𨔀");
 
-    private static final HashMap<Integer, Integer> b2s = getB2s();
-
-    private static HashMap<Integer, Integer> getB2s() {
-        HashMap<Integer, Integer> b2s = new HashMap<>();
-        for (int b = 0; b < possibleBytes; b++) {
-            b2s.put(blockStarts[b], b);
-        }
-        return b2s;
-    }
+    private static final TIntIntMap b2s = new TIntIntHashMap() {{
+        for (int b = 0; b < possibleBytes; b++)
+            put(blockStarts[b], b);
+    }};
 
     public static String encode(byte[] bytes) {
-        List<Integer> codePoints = new ArrayList<>();
+        TIntList codePoints = new TIntLinkedList();
+
         for (int i = 0; i < bytes.length; i += 2) {
             int b1 = bytes[i];
             int blockStart = i + 1 < bytes.length ? blockStarts[bytes[i + 1]] : paddingBlockStart;
@@ -52,45 +50,58 @@ public class Base65536 {
             codePoints.add(codePoint);
         }
 
-        return Strings.simpleJoin(codePoints.stream().map(codePoint -> {
-            if (codePoint < bmpThreshold) {
-                return Character.toString((char) (int) codePoint);
-            }
+        TIntIterator iter = codePoints.iterator();
+        StringBuilder builder = new StringBuilder();
+
+        while (iter.hasNext()) {
+            int codePoint = iter.next();
+
+            if (codePoint < bmpThreshold)
+                builder.appendCodePoint(codePoint);
 
             int first = high + ((codePoint - bmpThreshold) / offset);
             int second = low + (codePoint % offset);
-            return Character.toString((char) first) + Character.toString((char) second);
-        }).collect(Collectors.toList()));
+
+            builder.appendCodePoint(first)
+                    .appendCodePoint(second);
+        }
+
+        return builder.toString();
     }
 
     public static byte[] decode(String str) throws DecoderException {
-        List<Integer> bytes = new ArrayList<>();
+        int[] spread = Strings.spread(str);
+        byte[] array = new byte[spread.length];
         boolean done = false;
 
-        for (int codePoint: Strings.spread(str)) {
+        int i = 0;
+        for (int codePoint: spread) {
             int b1 = codePoint & (possibleBytes - 1);
             int blockStart = codePoint - b1;
 
             if (blockStart == paddingBlockStart) {
-                if (done) {
+                if (done)
                     throw new DecoderException("Base65536 sequence continued after final byte");
-                }
-                bytes.add(b1);
+
+                array[i] = (byte) b1;
                 done = true;
             } else {
-                Integer b2 = b2s.get(blockStart);
+                int b2 = b2s.get(blockStart);
 
-                if (b2 != null) {
-                    if (done) {
+                if (b2 != b2s.getNoEntryValue()) {
+                    if (done)
                         throw new DecoderException("Base65536 sequence continued after final byte");
-                    }
-                    bytes.add(b1);
-                    bytes.add(b2);
+
+                    array[i] = (byte) b1;
+                    array[++i] = (byte) b2;
                 } else {
                     throw new DecoderException("Not a valid Base65536 codepoint: " + codePoint);
                 }
             }
+
+            i++;
         }
-        return ArrayUtils.toPrimitive(bytes.stream().map(i -> Byte.valueOf((byte) (int) i)).toArray(Byte[]::new));
+
+        return array;
     }
 }

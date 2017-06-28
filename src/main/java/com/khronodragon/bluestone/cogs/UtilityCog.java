@@ -1017,7 +1017,7 @@ public class UtilityCog extends Cog {
         }
     }
 
-    @Command(name = "mcskin", desc = "Get someone's Minecraft skin.")
+    @Command(name = "mcskin", desc = "Get someone's Minecraft skin.", usage = "[username]")
     public void cmdMcskin(Context ctx) {
         if (!ctx.rawArgs.matches("^[a-zA-Z0-9_]{1,32}$")) {
             ctx.send(":warning: I need a valid username!").queue();
@@ -1032,7 +1032,7 @@ public class UtilityCog extends Cog {
                 .build()).queue();
     }
 
-    @Command(name = "mchead", desc = "Get someone's Minecraft head.")
+    @Command(name = "mchead", desc = "Get someone's Minecraft head.", usage = "[username]")
     public void cmdMchead(Context ctx) {
         if (!ctx.rawArgs.matches("^[a-zA-Z0-9_]{1,32}$")) {
             ctx.send(":warning: I need a valid username!").queue();

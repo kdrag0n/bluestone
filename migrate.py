@@ -89,18 +89,6 @@ bool_true = [
 id_chars = list('0123456789abcdef')
 quote_used_ids = ['0000', '0001']
 
-def gen_unique_quote_id() -> str:
-    satisfied = False
-    new = '0001'
-
-    while not satisfied:
-        new = ''.join(random.choice(id_chars) for _ in range(4))
-        if new not in quote_used_ids:
-            satisfied = True
-
-    quote_used_ids.append(new)
-    return new
-
 def sqlstr(orig: str) -> str:
     return orig.replace("'", "''")
 
@@ -132,8 +120,8 @@ for quote in json['quotes']:
     date = datetime(quote['date'][2], quote['date'][0], quote['date'][1], hour=12, minute=30, second=30)
     sqldate = date.strftime('%Y-%m-%d %H:%M:%S')
     statements.append(f'''
-INSERT INTO quotes (id, quote, date, authorId, authorName)
-VALUES ('{gen_unique_quote_id()}', '{sqlstr(quote['quote'][:360])}',
+INSERT INTO quotes (quote, date, authorId, authorName)
+VALUES ('{sqlstr(quote['quote'][:360])}',
         '{sqldate}', {quote['author_ids'][0]}, '{sqlstr(quote['author'])}');''')
 
 # END CONVERSION

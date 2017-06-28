@@ -16,6 +16,9 @@ import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
+import gnu.trove.map.TLongObjectMap;
+import gnu.trove.map.hash.TLongObjectHashMap;
+import gnu.trove.procedure.TLongObjectProcedure;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Guild;
@@ -40,7 +43,7 @@ public class MusicCog extends Cog {
             .setNameFormat("Music Cog Cleanup Thread %d")
             .build());
     private final DefaultAudioPlayerManager playerManager = new DefaultAudioPlayerManager();
-    public Map<Long, AudioState> audioStates = new HashMap<>();
+    public TLongObjectMap<AudioState> audioStates = new TLongObjectHashMap<>();
 
     public MusicCog(Bot bot) {
         super(bot);
@@ -67,6 +70,7 @@ public class MusicCog extends Cog {
 
     private AudioState getAudioState(Guild guild) {
         long guildId = guild.getIdLong();
+
         if (audioStates.containsKey(guildId)) {
             return audioStates.get(guildId);
         } else {
@@ -118,24 +122,23 @@ public class MusicCog extends Cog {
     }
 
     private void doCleanup() {
-        for (Map.Entry entry: audioStates.entrySet()) {
-            long guildId = (long) entry.getKey();
-            AudioState state = (AudioState) entry.getValue();
-
+        audioStates.forEachEntry((guildId, state) -> {
             if (new Date().getTime() - state.creationTime.getTime() < TimeUnit.MINUTES.toMillis(3)) {
-                continue;
+                return true;
             }
 
             if (state.scheduler.isEmptyPaused()) {
                 if (new Date().getTime() - state.scheduler.getEmptyPauseTime().getTime() < TimeUnit.MINUTES.toMillis(10)) {
-                    continue;
+                    return true;
                 }
 
                 state.guild.getAudioManager().closeAudioConnection();
                 state.guild.getAudioManager().setSendingHandler(new DummySendHandler());
                 audioStates.remove(guildId);
             }
-        }
+
+            return true;
+        });
     }
 
     private void channelChecks(Context ctx) {
@@ -192,8 +195,8 @@ public class MusicCog extends Cog {
         }
 
         AudioState state = getAudioState(ctx.guild);
-        if (state.scheduler.queue.size() >= 10) {
-            ctx.send(":x: There can only be up to 10 items in the queue!").queue();
+        if (state.scheduler.queue.size() >= 12) {
+            ctx.send(":x: There can only be up to 12 items in the queue!").queue();
             return;
         }
         final String term = String.join(" ", ctx.args);
@@ -298,10 +301,14 @@ public class MusicCog extends Cog {
             builder.addField(info.title, renderInfo(info), false);
         }
 
-        ctx.send(new MessageBuilder()
-        .append(":notes::musical_note:")
-        .setEmbed(builder.build())
-        .build()).queue();
+        try {
+            ctx.send(new MessageBuilder()
+                    .append(":notes::musical_note:")
+                    .setEmbed(builder.build())
+                    .build()).queue();
+        } catch (IllegalArgumentException e) {
+            ctx.send(":warning: Queue too long to be displayed!").queue();
+        }
     }
 
     @Command(name = "skip", desc = "Skip the current track.", guildOnly = true)
@@ -310,7 +317,7 @@ public class MusicCog extends Cog {
         AudioState state = getAudioState(ctx.guild);
         ExtraTrackInfo info = state.scheduler.infoMap.get(state.scheduler.current);
         if (info == null) {
-            ctx.send("").queue();
+            ctx.send(":warning: The current track is missing a state!").queue();
             return;
         }
 

@@ -2,26 +2,27 @@ package com.khronodragon.bluestone;
 
 import com.j256.ormlite.dao.Dao;
 import com.khronodragon.bluestone.sql.GuildPrefix;
+import gnu.trove.map.TLongObjectMap;
+import gnu.trove.map.hash.TLongObjectHashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.Map;
 
 public class PrefixStore {
     private static final Logger logger = LogManager.getLogger(PrefixStore.class);
     private String defaultPrefix = "!";
     private Dao<GuildPrefix, Long> dao;
-    private Map<Long, String> cache = new HashMap<>();
+    private TLongObjectMap<String> cache = new TLongObjectHashMap<>();
 
     PrefixStore(Dao<GuildPrefix, Long> dao) {
         this.dao = dao;
     }
 
     PrefixStore(Dao<GuildPrefix, Long> dao, String defaultPrefix) {
-        this.dao = dao;
-        this.defaultPrefix = defaultPrefix;
+        this(dao);
+        setDefaultPrefix(defaultPrefix);
     }
 
     public String getPrefix(long guildId) {
