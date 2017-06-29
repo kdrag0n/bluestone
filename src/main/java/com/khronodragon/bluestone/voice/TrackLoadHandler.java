@@ -46,7 +46,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
         if (!state.scheduler.queue.isEmpty()) {
             AudioTrackInfo info = track.getInfo();
 
-            ctx.send(Emotes.getSuccess() + ' ' + "Queued **" + info.title + "** by **" + info.author + "**, length **" + Bot.formatDuration(info.length / 1000L) + "**").queue();
+            ctx.send(Emotes.getSuccess() + " Queued **" + info.title + "** by **" + info.author + "**, length **" + Bot.formatDuration(info.length / 1000L) + "**").queue();
             Cog.removeReactionIfExists(ctx.message, "⌛");
             ctx.message.addReaction("✅").queue();
         }
@@ -77,7 +77,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
                         try {
                             track = tracks.get(i - 1);
                         } catch (IndexOutOfBoundsException e) {
-                            ctx.send(Emotes.getFailure() + ' ' + "No such track!").queue();
+                            ctx.send(Emotes.getFailure() + " No such track!").queue();
                             return;
                         }
 
@@ -114,7 +114,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
             return;
         }
         if (tracks.size() > 24) {
-            ctx.send(Emotes.getFailure() + ' ' + "Playlist is longer than 24 tracks!").queue();
+            ctx.send(Emotes.getFailure() + " Playlist is longer than 24 tracks!").queue();
             return;
         }
         long duration = 0L;
@@ -127,7 +127,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
             state.scheduler.queue(track, new ExtraTrackInfo(ctx.channel, ctx.member));
             duration += track.getDuration();
         }
-        ctx.send(Emotes.getSuccess() + ' ' + "Queued playlist **" + playlist.getName() + "**, length **" + Bot.formatDuration(duration / 1000L) + "**").queue();
+        ctx.send(Emotes.getSuccess() + " Queued playlist **" + playlist.getName() + "**, length **" + Bot.formatDuration(duration / 1000L) + "**").queue();
         Cog.removeReactionIfExists(ctx.message, "⌛");
         ctx.message.addReaction("☑").queue();
     }
@@ -138,7 +138,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
             iteration += 1;
             manager.loadItem(PREFIXES[iteration] + term, this);
         } else {
-            ctx.send(Emotes.getFailure() + ' ' + "No matches found!").queue();
+            ctx.send(Emotes.getFailure() + " No matches found!").queue();
             Cog.removeReactionIfExists(ctx.message, "⌛");
             ctx.message.addReaction("❌").queue();
         }

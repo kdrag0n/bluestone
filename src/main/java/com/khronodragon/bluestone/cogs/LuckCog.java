@@ -42,7 +42,7 @@ public class LuckCog extends Cog {
         if (ctx.args.size() > 1) {
             ctx.send("I choose **" + randomChoice(ctx.args) + "**").queue();
         } else {
-            ctx.send(Emotes.getFailure() + ' ' + "You need at least 2 choices!").queue();
+            ctx.send(Emotes.getFailure() + " You need at least 2 choices!").queue();
         }
     }
 

@@ -114,7 +114,7 @@ public class TrackScheduler extends AudioEventAdapter {
     @Override
     public void onTrackStuck(AudioPlayer player, AudioTrack track, long thresholdMs) {
         if (infoMap.containsKey(track)) {
-            infoMap.get(track).textChannel.sendMessage(Emotes.getFailure() + ' ' + "Song appears to be frozen, skipping.").queue();
+            infoMap.get(track).textChannel.sendMessage(Emotes.getFailure() + " Song appears to be frozen, skipping.").queue();
         }
 
         track.stop();

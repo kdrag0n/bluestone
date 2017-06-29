@@ -47,7 +47,7 @@ public class KewlCog extends Cog {
     @Command(name = "correct", desc = "Correct spelling in some text.", thread = true)
     public void cmdSpellcheck(Context ctx) throws IOException {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + ' ' + "I need something to correct!").queue();
+            ctx.send(Emotes.getFailure() + " I need something to correct!").queue();
             return;
         }
         ctx.channel.sendTyping().queue();

@@ -26,7 +26,7 @@ public class CoreCog extends Cog {
     @Command(name = "say", desc = "Say something! Say it!", aliases = {"echo"}, usage = "[message]")
     public void cmdSay(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + ' ' + "I need text to say!").queue();
+            ctx.send(Emotes.getFailure() + " I need text to say!").queue();
             return;
         }
 

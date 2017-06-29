@@ -439,13 +439,13 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     command.invoke(this, event, args, prefix, cmdName);
                 } catch (IllegalAccessException e) {
                     logger.error("Severe command ({}) invocation error:", cmdName, e);
-                    channel.sendMessage(Emotes.getFailure() + ' ' + "A severe internal error occurred.").queue();
+                    channel.sendMessage(Emotes.getFailure() + " A severe internal error occurred.").queue();
                 } catch (InvocationTargetException e) {
                     Throwable cause = e.getCause();
 
                     if (cause == null) {
                         logger.error("Unknown command ({}) invocation error:", cmdName, e);
-                        channel.sendMessage(Emotes.getFailure() + ' ' + "An unknown internal error occurred.").queue();
+                        channel.sendMessage(Emotes.getFailure() + " An unknown internal error occurred.").queue();
                     } else if (cause instanceof PassException) {
                         // assume error has already been sent
                     } else if (cause instanceof PermissionError) {
@@ -453,11 +453,11 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                                 author.getAsMention(), prefix, cmdName,
                                 Strings.smartJoin(((PermissionError) cause).getFriendlyPerms(), "or"))).queue();
                     } else if (cause instanceof PermissionException) {
-                        channel.sendMessage(Emotes.getFailure() + ' ' + "I need the **" +
+                        channel.sendMessage(Emotes.getFailure() + " I need the **" +
                                 ((PermissionException) cause).getPermission().getName() + "** permission!").queue();
                     } else {
                         logger.error("Command ({}) invocation error:", cmdName, cause);
-                        channel.sendMessage(format(Emotes.getFailure() + ' ' + "Error!```java\n{2}```This error will be reported.",
+                        channel.sendMessage(format(Emotes.getFailure() + " Error!```java\n{2}```This error will be reported.",
                                 prefix, cmdName, vagueTrace(cause))).queue();
 
                         if (command.reportErrors)
@@ -474,7 +474,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                             author.getAsMention(), prefix, cmdName)).queue();
                 } catch (Exception e) {
                     logger.error("Unknown command ({}) error:", cmdName, e);
-                    channel.sendMessage(Emotes.getFailure() + ' ' + "A severe internal error occurred.").queue();
+                    channel.sendMessage(Emotes.getFailure() + " A severe internal error occurred.").queue();
                 }
 
                 try {

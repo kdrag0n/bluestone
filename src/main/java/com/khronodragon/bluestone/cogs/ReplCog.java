@@ -85,7 +85,7 @@ public class ReplCog extends Cog {
 
         ScriptEngine engine = man.getEngineByName(language.toLowerCase());
         if (engine == null) {
-            ctx.send(Emotes.getFailure() + ' ' + "Invalid REPL language!").queue();
+            ctx.send(Emotes.getFailure() + " Invalid REPL language!").queue();
             return;
         }
 

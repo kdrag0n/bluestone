@@ -37,7 +37,7 @@ public class CogmanCog extends Cog {
             "\n" +
             "Cog classes can be given by full path (`com.khronodragon.bluestone.cogs.CogmanCog`), " +
             "or simple name (assumed to be in `com.khronodragon.bluestone.cogs`).";
-    private static final String INVALID_LOAD = Emotes.getFailure() + ' ' + "I need a valid class URI, path, or name!\n" +
+    private static final String INVALID_LOAD = Emotes.getFailure() + " I need a valid class URI, path, or name!\n" +
             "\n" +
             "Examples:\n" +
             "```\n" +
@@ -88,13 +88,13 @@ public class CogmanCog extends Cog {
 
     private String getClassPath(Context ctx) {
         if (ctx.args.size() < 2) {
-            ctx.send(Emotes.getFailure() + ' ' + "I need a cog name or class path!").queue();
+            ctx.send(Emotes.getFailure() + " I need a cog name or class path!").queue();
             throw new PassException();
         }
         String arg = ctx.args.get(1);
 
         if (!arg.matches("^(?:[a-z0-9\\-_]+\\.)*[a-zA-Z0-9]+$")) {
-            ctx.send(Emotes.getFailure() + ' ' + "Invalid cog name or class path!").queue();
+            ctx.send(Emotes.getFailure() + " Invalid cog name or class path!").queue();
             throw new PassException();
         }
 
@@ -107,7 +107,7 @@ public class CogmanCog extends Cog {
         try {
             Class.forName(path);
         } catch (ClassNotFoundException e) {
-            ctx.send(Emotes.getFailure() + ' ' + "That class doesn't exist!").queue();
+            ctx.send(Emotes.getFailure() + " That class doesn't exist!").queue();
             throw new PassException();
         }
 
@@ -121,7 +121,7 @@ public class CogmanCog extends Cog {
         if (opt.isPresent()) {
             return opt.get();
         } else {
-            ctx.send(Emotes.getFailure() + ' ' + "That cog isn't loaded!").queue();
+            ctx.send(Emotes.getFailure() + " That cog isn't loaded!").queue();
             throw new PassException();
         }
     }
@@ -204,7 +204,7 @@ public class CogmanCog extends Cog {
 
         if (bot.cogs.values().stream()
                 .anyMatch(c -> c.getClass().equals(clazz))) {
-            ctx.send(Emotes.getFailure() + ' ' + "Cog already loaded!").queue();
+            ctx.send(Emotes.getFailure() + " Cog already loaded!").queue();
             return;
         }
 
@@ -212,7 +212,7 @@ public class CogmanCog extends Cog {
         bot.registerCog(cog);
         cog.load();
 
-        ctx.send(Emotes.getSuccess() + ' ' + "Cog `" + clazz.getName() + "` loaded.").queue();
+        ctx.send(Emotes.getSuccess() + " Cog `" + clazz.getName() + "` loaded.").queue();
     }
 
     private void cmdUnload(Context ctx) {
@@ -220,19 +220,19 @@ public class CogmanCog extends Cog {
         Cog cog = ensureLoaded(ctx, path);
 
         bot.unregisterCog(cog);
-        ctx.send(Emotes.getSuccess() + ' ' + "Cog `" + cog.getClass().getName() + "` unloaded.").queue();
+        ctx.send(Emotes.getSuccess() + " Cog `" + cog.getClass().getName() + "` unloaded.").queue();
     }
 
     private void cmdEnable(Context ctx) {
         String path = getClassPath(ctx);
 
-        ctx.send(Emotes.getFailure() + ' ' + "This feature hasn't been implemented yet.").queue();
+        ctx.send(Emotes.getFailure() + " This feature hasn't been implemented yet.").queue();
     }
 
     private void cmdDisable(Context ctx) {
         String path = getClassPath(ctx);
 
-        ctx.send(Emotes.getFailure() + ' ' + "This feature hasn't been implemented yet.").queue();
+        ctx.send(Emotes.getFailure() + " This feature hasn't been implemented yet.").queue();
     }
 
     private void cmdInfo(Context ctx) {

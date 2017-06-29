@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 public class ModerationCog extends Cog {
-    private static final String PURGE_NO_PARAMS = Emotes.getFailure() + ' ' + "**No valid parameters included!**\n" +
+    private static final String PURGE_NO_PARAMS = Emotes.getFailure() + " **No valid parameters included!**\n" +
             "Valid parameters:\n" +
             "    \u2022 `<num 2-500>` - number of messages to include **(required)**\n" +
             "    \u2022 `links` - include messages with links\n" +
@@ -75,7 +75,7 @@ public class ModerationCog extends Cog {
             usage = "[parameters]", thread = true)
     public void cmdPurge(Context ctx) {
         if (bot.isSelfbot()) {
-            ctx.send(Emotes.getFailure() + ' ' + "Discord doesn't allow selfbots to purge.").queue();
+            ctx.send(Emotes.getFailure() + " Discord doesn't allow selfbots to purge.").queue();
             return;
         }
         if (ctx.rawArgs.length() < 1) {
@@ -83,7 +83,7 @@ public class ModerationCog extends Cog {
             return;
         }
         if (!ctx.guild.getSelfMember().hasPermission((Channel) ctx.channel, Permission.MESSAGE_MANAGE)) {
-            ctx.send(Emotes.getFailure() + ' ' + "I need to be able to **manage messages**!").queue();
+            ctx.send(Emotes.getFailure() + " I need to be able to **manage messages**!").queue();
             return;
         }
         ctx.channel.sendTyping().queue();
@@ -114,14 +114,14 @@ public class ModerationCog extends Cog {
             try {
                 limit = Integer.parseInt(matcher.group(1).trim());
             } catch (NumberFormatException e) {
-                ctx.send(Emotes.getFailure() + ' ' + "Invalid number given for limit!").queue();
+                ctx.send(Emotes.getFailure() + " Invalid number given for limit!").queue();
                 return;
             }
         }
         args = args.replaceAll(PURGE_NUM_PATTERN.pattern(), " ");
 
         if (limit > 500 || limit < 2) {
-            ctx.send(Emotes.getFailure() + ' ' + "Invalid message limit!").queue();
+            ctx.send(Emotes.getFailure() + " Invalid message limit!").queue();
             return;
         }
 
@@ -164,16 +164,16 @@ public class ModerationCog extends Cog {
                 if (regex != null && msg.getRawContent().matches(regex))
                     toDelete.add(msg);
             } catch (PatternSyntaxException e) {
-                ctx.send(Emotes.getFailure() + ' ' + "Invalid regex given!").queue();
+                ctx.send(Emotes.getFailure() + " Invalid regex given!").queue();
                 return;
             }
         }
 
         if (toDelete.isEmpty()) {
-            ctx.send(Emotes.getFailure() + ' ' + "No messages match your criteria!").queue();
+            ctx.send(Emotes.getFailure() + " No messages match your criteria!").queue();
             return;
         } else if (toDelete.size() < 2) {
-            ctx.send(Emotes.getFailure() + ' ' + "Not enough messages match your criteria!").queue();
+            ctx.send(Emotes.getFailure() + " Not enough messages match your criteria!").queue();
             return;
         }
 
@@ -188,7 +188,7 @@ public class ModerationCog extends Cog {
             }
         }
 
-        ctx.send(Emotes.getSuccess() + ' ' + "Deleted **" + toDelete.size() +
+        ctx.send(Emotes.getSuccess() + " Deleted **" + toDelete.size() +
                 "** messages!" + twoWeekWarn).queue(msg -> {
             msg.delete().queueAfter(2, TimeUnit.SECONDS);
             ctx.message.addReaction("\uD83D\uDC4D").queue();
@@ -200,13 +200,13 @@ public class ModerationCog extends Cog {
             thread = true, usage = "[@user] {reason}")
     public void cmdMute(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + ' ' + "I need someone to mute!").queue();
+            ctx.send(Emotes.getFailure() + " I need someone to mute!").queue();
             return;
         } else if (!ctx.rawArgs.matches("^<@!?(\\d{17,20})>$")) {
-            ctx.send(Emotes.getFailure() + ' ' + "Invalid mention!").queue();
+            ctx.send(Emotes.getFailure() + " Invalid mention!").queue();
             return;
         } else if (!ctx.guild.getSelfMember().hasPermission(Permission.MANAGE_CHANNEL)) {
-            ctx.send(Emotes.getFailure() + ' ' + "I don't have permission to **manage channels**!").queue();
+            ctx.send(Emotes.getFailure() + " I don't have permission to **manage channels**!").queue();
             return;
         }
 
@@ -232,7 +232,7 @@ public class ModerationCog extends Cog {
                 override.getManager().deny(MUTED_PERMS).reason(reason).complete();
         }
 
-        status.editMessage(Emotes.getSuccess() + ' ' + "Muted **" +
+        status.editMessage(Emotes.getSuccess() + " Muted **" +
                 user.getUser().getName() +
                 '#' +
                 user.getUser().getDiscriminator() +
@@ -244,13 +244,13 @@ public class ModerationCog extends Cog {
             thread = true, usage = "[@user] {reason}")
     public void cmdUnmute(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + ' ' + "I need someone to unmute!").queue();
+            ctx.send(Emotes.getFailure() + " I need someone to unmute!").queue();
             return;
         } else if (!ctx.rawArgs.matches("^<@!?(\\d{17,20})>$")) {
-            ctx.send(Emotes.getFailure() + ' ' + "Invalid mention!").queue();
+            ctx.send(Emotes.getFailure() + " Invalid mention!").queue();
             return;
         } else if (!ctx.guild.getSelfMember().hasPermission(Permission.MANAGE_CHANNEL)) {
-            ctx.send(Emotes.getFailure() + ' ' + "I don't have permission to **manage channels**!").queue();
+            ctx.send(Emotes.getFailure() + " I don't have permission to **manage channels**!").queue();
             return;
         }
 
@@ -274,7 +274,7 @@ public class ModerationCog extends Cog {
                 override.getManager().grant(MUTED_PERMS).reason(reason).complete();
         }
 
-        status.editMessage(Emotes.getSuccess() + ' ' + "Unmuted **" +
+        status.editMessage(Emotes.getSuccess() + " Unmuted **" +
                 user.getUser().getName() +
                 '#' +
                 user.getUser().getDiscriminator() +
@@ -285,13 +285,13 @@ public class ModerationCog extends Cog {
             perms = {"banMembers"}, usage = "[@user] {reason}")
     public void cmdBan(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + ' ' + "I need someone to ban!").queue();
+            ctx.send(Emotes.getFailure() + " I need someone to ban!").queue();
             return;
         } else if (!MENTION_PATTERN.matcher(ctx.rawArgs).find()) {
-            ctx.send(Emotes.getFailure() + ' ' + "Invalid mention!").queue();
+            ctx.send(Emotes.getFailure() + " Invalid mention!").queue();
             return;
         } else if (!ctx.guild.getSelfMember().hasPermission(Permission.BAN_MEMBERS)) {
-            ctx.send(Emotes.getFailure() + ' ' + "I don't have permission to **ban members**!").queue();
+            ctx.send(Emotes.getFailure() + " I don't have permission to **ban members**!").queue();
             return;
         }
         String reason;
@@ -305,10 +305,10 @@ public class ModerationCog extends Cog {
         try {
             ctx.guild.getController().ban(user, 0).reason(reason).queue();
         } catch (PermissionException e) {
-            ctx.send(Emotes.getFailure() + ' ' + "Error: `" + e.getMessage() + "`").queue();
+            ctx.send(Emotes.getFailure() + " Error: `" + e.getMessage() + "`").queue();
             return;
         }
 
-        ctx.send(Emotes.getSuccess() + ' ' + "Banned.").queue();
+        ctx.send(Emotes.getSuccess() + " Banned.").queue();
     }
 }

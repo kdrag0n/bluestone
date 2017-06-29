@@ -58,7 +58,7 @@ public class OwnerCog extends Cog {
 
     @Command(name = "shutdown", desc = "Shutdown the bot.", perms = {"owner"}, thread = true)
     public void cmdShutdown(Context ctx) {
-        ctx.send(Emotes.getFailure() + ' ' + "Are you **sure** you want to stop the entire bot? Type `yes` to continue.").complete();
+        ctx.send(Emotes.getFailure() + " Are you **sure** you want to stop the entire bot? Type `yes` to continue.").complete();
         Message resp = bot.waitForMessage(7000, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
                 msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
                 msg.getRawContent().equalsIgnoreCase("yes"));
@@ -76,7 +76,7 @@ public class OwnerCog extends Cog {
     @Command(name = "stopshard", desc = "Stop the current shard.", perms = {"owner"}, aliases = {"restart"}, thread = true)
     public void cmdStopShard(Context ctx) {
         final Integer n = ctx.rawArgs.length() > 0 ? Integer.valueOf(ctx.rawArgs) : ctx.bot.getShardNum() - 1;
-        ctx.send(Emotes.getFailure() + ' ' + "Are you **sure** you want to stop (restart) shard " + n + "? Type `yes` to continue.").complete();
+        ctx.send(Emotes.getFailure() + " Are you **sure** you want to stop (restart) shard " + n + "? Type `yes` to continue.").complete();
         Message resp = bot.waitForMessage(7000, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
                 msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
                 msg.getRawContent().equalsIgnoreCase("yes"));
@@ -105,7 +105,7 @@ public class OwnerCog extends Cog {
             usage = "[message]", perms = {"owner"}, reportErrors = false)
     public void cmdBroadcast(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + ' ' + "I need a message to broadcast!").queue();
+            ctx.send(Emotes.getFailure() + " I need a message to broadcast!").queue();
             return;
         }
 
@@ -136,7 +136,7 @@ public class OwnerCog extends Cog {
 
         for (Guild guild: ctx.jda.getGuilds()) {
             if (!guild.isAvailable()) {
-                ctx.send(Emotes.getFailure() + ' ' + "Guild **" + val(guild.getName()).or("[unknown]") +
+                ctx.send(Emotes.getFailure() + " Guild **" + val(guild.getName()).or("[unknown]") +
                         "** (`" + val(guild.getIdLong()).or(0L) + "`) unavailable.").queue();
                 errors++;
                 continue;
@@ -158,21 +158,21 @@ public class OwnerCog extends Cog {
                 if (opt.isPresent())
                     opt.get().sendMessage(message).queue();
                 else {
-                    ctx.send(Emotes.getFailure() + ' ' + "Guild **" + guild.getName() +
+                    ctx.send(Emotes.getFailure() + " Guild **" + guild.getName() +
                             "** (`" + guild.getIdLong() + "`) muted us in all channels...").queue();
                     errors++;
                 }
             }
         }
 
-        ctx.send(Emotes.getSuccess() + ' ' + "Broadcast finished, with **" + errors + "** errored guilds.").queue();
+        ctx.send(Emotes.getSuccess() + " Broadcast finished, with **" + errors + "** errored guilds.").queue();
     }
 
     @Command(name = "eval", desc = "Evaluate some Groovy code.", usage = "[code]",
             aliases = {"reval"}, perms = {"owner"}, thread = true, reportErrors = false)
     public void cmdEval(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + ' ' + "I need some code!").queue();
+            ctx.send(Emotes.getFailure() + " I need some code!").queue();
             return;
         }
 
@@ -242,7 +242,7 @@ public class OwnerCog extends Cog {
         }
 
         ctx.jda.getSelfUser().getManager().setAvatar(Icon.from(new File(ctx.rawArgs))).queue();
-        ctx.send(Emotes.getSuccess() + ' ' + "Avatar changed.").queue();
+        ctx.send(Emotes.getSuccess() + " Avatar changed.").queue();
     }
 
     @Command(name = "setgame", desc = "Set my game.", perms = {"owner"}, aliases = {"set_game"})
@@ -253,6 +253,6 @@ public class OwnerCog extends Cog {
         }
 
         ctx.jda.getPresence().setGame(Game.of(ctx.rawArgs));
-        ctx.send(Emotes.getSuccess() + ' ' + "Game set.").queue();
+        ctx.send(Emotes.getSuccess() + " Game set.").queue();
     }
 }

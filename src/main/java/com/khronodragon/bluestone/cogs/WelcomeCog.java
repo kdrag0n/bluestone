@@ -107,7 +107,7 @@ public class WelcomeCog extends Cog {
                 ctx.send(NO_COMMAND).queue();
         } catch (NullPointerException e) {
             logger.warn("Message control: NPE", e);
-            ctx.send(Emotes.getFailure() + ' ' + "Something's not right with this server's message settings. Let me try to fix that...").queue();
+            ctx.send(Emotes.getFailure() + " Something's not right with this server's message settings. Let me try to fix that...").queue();
 
             try {
                 messageDao.createOrUpdate(new GuildWelcomeMessages(ctx.guild.getIdLong(),
@@ -118,7 +118,7 @@ public class WelcomeCog extends Cog {
                 return;
             }
 
-            ctx.send(Emotes.getSuccess() + ' ' + "I fixed it for you! Try your command again.").queue();
+            ctx.send(Emotes.getSuccess() + " I fixed it for you! Try your command again.").queue();
         }
     }
 
@@ -137,7 +137,7 @@ public class WelcomeCog extends Cog {
 
     private void welcomeCmdSet(Context ctx) throws SQLException {
         if (ctx.args.size() < 2) {
-            ctx.send(Emotes.getFailure() + ' ' + "I need a new message to set!").queue();
+            ctx.send(Emotes.getFailure() + " I need a new message to set!").queue();
             return;
         }
         String newMessage = ctx.rawArgs.substring(3).trim();
@@ -145,7 +145,7 @@ public class WelcomeCog extends Cog {
         GuildWelcomeMessages query = messageDao.queryForId(ctx.guild.getIdLong());
         query.setWelcome(newMessage);
 
-        ctx.send(Emotes.getSuccess() + ' ' + "Welcome message set.").queue();
+        ctx.send(Emotes.getSuccess() + " Welcome message set.").queue();
     }
 
     public void welcomeCmdToggle(Context ctx) throws SQLException {
@@ -154,7 +154,7 @@ public class WelcomeCog extends Cog {
         String st = query.isWelcomeEnabled() ? "on" : "off";
 
         messageDao.update(query);
-        ctx.send(Emotes.getSuccess() + ' ' + "The welcome message is now **" + st + "**.").queue();
+        ctx.send(Emotes.getSuccess() + " The welcome message is now **" + st + "**.").queue();
     }
 
     @Command(name = "leave", desc = "Manage member leave messages.", guildOnly = true,
@@ -182,7 +182,7 @@ public class WelcomeCog extends Cog {
                 ctx.send(NO_COMMAND).queue();
         } catch (NullPointerException e) {
             logger.warn("Message control: NPE", e);
-            ctx.send(Emotes.getFailure() + ' ' + "Something's not right with this server's message settings. Let me try to fix that...").queue();
+            ctx.send(Emotes.getFailure() + " Something's not right with this server's message settings. Let me try to fix that...").queue();
 
             try {
                 messageDao.createOrUpdate(new GuildWelcomeMessages(ctx.guild.getIdLong(),
@@ -193,7 +193,7 @@ public class WelcomeCog extends Cog {
                 return;
             }
 
-            ctx.send(Emotes.getSuccess() + ' ' + "I fixed it for you! Try your command again.").queue();
+            ctx.send(Emotes.getSuccess() + " I fixed it for you! Try your command again.").queue();
         }
     }
 
@@ -212,7 +212,7 @@ public class WelcomeCog extends Cog {
 
     private void leaveCmdSet(Context ctx) throws SQLException {
         if (ctx.args.size() < 2) {
-            ctx.send(Emotes.getFailure() + ' ' + "I need a new message to set!").queue();
+            ctx.send(Emotes.getFailure() + " I need a new message to set!").queue();
             return;
         }
         String newMessage = ctx.rawArgs.substring(3).trim();
@@ -220,7 +220,7 @@ public class WelcomeCog extends Cog {
         GuildWelcomeMessages query = messageDao.queryForId(ctx.guild.getIdLong());
         query.setLeave(newMessage);
 
-        ctx.send(Emotes.getSuccess() + ' ' + "Leave message set.").queue();
+        ctx.send(Emotes.getSuccess() + " Leave message set.").queue();
     }
 
     public void leaveCmdToggle(Context ctx) throws SQLException {
@@ -229,7 +229,7 @@ public class WelcomeCog extends Cog {
         String st = query.isLeaveEnabled() ? "on" : "off";
 
         messageDao.update(query);
-        ctx.send(Emotes.getSuccess() + ' ' + "The leave message is now **" + st + "**.").queue();
+        ctx.send(Emotes.getSuccess() + " The leave message is now **" + st + "**.").queue();
     }
 
     private GuildWelcomeMessages initGuild(Guild guild) throws SQLException {
