@@ -12,7 +12,7 @@ public class Emotes {
         Emotes.hasDbots = hasDbots;
     }
 
-   static void setHasJda(boolean hasJda) {
+    static void setHasJda(boolean hasJda) {
         Emotes.hasJda = hasJda;
     }
 
