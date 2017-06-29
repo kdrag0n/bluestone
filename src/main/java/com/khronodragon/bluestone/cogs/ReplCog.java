@@ -5,6 +5,8 @@ import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
+import gnu.trove.set.TLongSet;
+import gnu.trove.set.hash.TLongHashSet;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.requests.RestAction;
 import org.apache.commons.lang3.StringUtils;
@@ -41,7 +43,7 @@ public class ReplCog extends Cog {
             "import com.khronodragon.bluestone.enums.*\n" +
             "import java.time.*\n";
 
-    private Set<Long> replSessions = new HashSet<Long>();
+    private TLongSet replSessions = new TLongHashSet();
 
     public ReplCog(Bot bot) {
         super(bot);

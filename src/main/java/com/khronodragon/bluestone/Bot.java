@@ -617,32 +617,35 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
 
         ShardUtil shardUtil = new ShardUtil(shardCount, config);
+        JDABuilder builder = new JDABuilder(accountType)
+                .setToken(token)
+                .setAudioEnabled(true)
+                .setAutoReconnect(true)
+                .setWebSocketTimeout(120000)
+                .setBulkDeleteSplittingEnabled(false)
+                .setStatus(OnlineStatus.ONLINE)
+                .setCorePoolSize(5)
+                .setEnableShutdownHook(true)
+                .setGame(Game.of("something"));
+
+        if ((System.getProperty("os.arch").startsWith("x86") ||
+                System.getProperty("os.arch").equals("amd64")) &&
+                (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX))
+            builder.setAudioSendFactory(new NativeAudioSendFactory());
 
         for (int i = 0; i < shardCount; i++) {
             final int shardId = i;
 
             Runnable monitor = () -> {
                 final Logger logger = LogManager.getLogger("ShardMonitor " + shardId);
+
                 while (true) {
                     Bot bot = new Bot();
-                    JDABuilder builder = new JDABuilder(accountType)
-                            .setToken(token)
-                            .addEventListener(bot)
-                            .setAudioEnabled(true)
-                            .setAutoReconnect(true)
-                            .setWebSocketTimeout(120000)
-                            .setBulkDeleteSplittingEnabled(false)
-                            .setStatus(OnlineStatus.ONLINE)
-                            .setGame(Game.of("something"));
-
-                    if ((System.getProperty("os.arch").startsWith("x86") ||
-                            System.getProperty("os.arch").equals("amd64")) &&
-                            (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX))
-                        builder.setAudioSendFactory(new NativeAudioSendFactory());
 
                     if (shardCount != 1) {
                         builder.useSharding(shardId, shardCount);
                     }
+                    builder.addEventListener(bot);
 
                     JDA jda;
                     try {
@@ -655,7 +658,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                             Thread.sleep(1000);
                         } catch (InterruptedException ex) {}
                         continue;
+                    } finally {
+                        builder.removeEventListener(bot);
                     }
+
                     bot.setJda(jda);
                     shardUtil.setShard(shardId, bot);
                     bot.setShardUtil(shardUtil);
