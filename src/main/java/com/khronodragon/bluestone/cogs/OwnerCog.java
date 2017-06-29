@@ -3,6 +3,7 @@ package com.khronodragon.bluestone.cogs;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
+import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.Cooldown;
 import com.khronodragon.bluestone.enums.BucketType;
@@ -104,7 +105,7 @@ public class OwnerCog extends Cog {
             usage = "[message]", perms = {"owner"}, reportErrors = false)
     public void cmdBroadcast(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need a message to broadcast!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need a message to broadcast!").queue();
             return;
         }
 
@@ -164,14 +165,14 @@ public class OwnerCog extends Cog {
             }
         }
 
-        ctx.send(":white_check_mark: Broadcast finished, with **" + errors + "** errored guilds.").queue();
+        ctx.send(Emotes.getSuccess() + ' ' + "Broadcast finished, with **" + errors + "** errored guilds.").queue();
     }
 
     @Command(name = "eval", desc = "Evaluate some Groovy code.", usage = "[code]",
             aliases = {"reval"}, perms = {"owner"}, thread = true, reportErrors = false)
     public void cmdEval(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need some code!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need some code!").queue();
             return;
         }
 
@@ -241,7 +242,7 @@ public class OwnerCog extends Cog {
         }
 
         ctx.jda.getSelfUser().getManager().setAvatar(Icon.from(new File(ctx.rawArgs))).queue();
-        ctx.send(":thumbsup: Avatar changed.").queue();
+        ctx.send(Emotes.getSuccess() + ' ' + "Avatar changed.").queue();
     }
 
     @Command(name = "setgame", desc = "Set my game.", perms = {"owner"}, aliases = {"set_game"})
@@ -252,6 +253,6 @@ public class OwnerCog extends Cog {
         }
 
         ctx.jda.getPresence().setGame(Game.of(ctx.rawArgs));
-        ctx.send(":thumbsup: Game set.").queue();
+        ctx.send(Emotes.getSuccess() + ' ' + "Game set.").queue();
     }
 }

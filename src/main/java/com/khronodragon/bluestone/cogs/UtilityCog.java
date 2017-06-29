@@ -27,6 +27,7 @@ import io.codearte.jfairy.producer.person.Person;
 import net.dv8tion.jda.client.entities.Group;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
+import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.entities.MessageReaction.ReactionEmote;
@@ -80,7 +81,7 @@ public class UtilityCog extends Cog {
         put(EncodeHintType.CHARACTER_SET, "UTF-8");
     }};
 
-    private static final String NO_USER = ":warning: I need a valid @mention, user ID, or user#discriminator!";
+    private static final String NO_USER = Emotes.getFailure() + ' ' + "I need a valid @mention, user ID, or user#discriminator!";
     private static final String SHRUG = "¯\\_(ツ)_/¯";
     private final LoadingCache<String, EmbedBuilder> ipInfoCache = CacheBuilder.newBuilder()
             .maximumSize(36)
@@ -172,13 +173,16 @@ public class UtilityCog extends Cog {
             return;
         }
 
+        String author = getTag(user);
+        if (user.isBot())
+            author += Emotes.getBotTag();
+
         EmbedBuilder emb = new EmbedBuilder()
                 .setColor(randomColor())
-                .setAuthor(getTag(user), user.getEffectiveAvatarUrl(), user.getEffectiveAvatarUrl())
+                .setAuthor(author, user.getEffectiveAvatarUrl(), user.getEffectiveAvatarUrl())
                 .setThumbnail(user.getEffectiveAvatarUrl())
                 .addField("ID", user.getId(), true)
-                .addField("Creation Time", Date.from(user.getCreationTime().toInstant()).toString(), true)
-                .addField("Bot?", user.isBot() ? "Yes" : "No", true);
+                .addField("Creation Time", Date.from(user.getCreationTime().toInstant()).toString(), true);
 
         if (ctx.guild != null) {
             Member member = ctx.guild.getMember(user);
@@ -189,24 +193,26 @@ public class UtilityCog extends Cog {
 
                 String status;
                 if (member.getGame() == null)
-                    status = WordUtils.capitalizeFully(member.getOnlineStatus()
-                            .name().replace('_', ' '));
+                    status = Emotes.getFullMemberStatus(member);
                 else {
                     Game game = member.getGame();
 
                     if (game.getType() == Game.GameType.TWITCH) {
-                        status = "Streaming [**" + game.getName() + "**](" + game.getUrl() + ")";
+                        status = Emotes.getMemberStatus(member) + "Streaming [**" + game.getName() +
+                                "**](" + game.getUrl() + ")";
                     } else {
-                        status = "Playing [**" + game.getName() +
+                        status = Emotes.getMemberStatus(member) + " Playing [**" + game.getName() +
                                 "**](https://google.com/search?q=" + URLEncoder.encode(game.getName(), "UTF-8") +
                                 ')';
                     }
                 }
 
                 emb.setColor(member.getColor())
+                        .addField("Guild Join Time",
+                                Date.from(member.getJoinDate().toInstant()).toString(), true)
                         .addField("Status", status, true)
                         .addField("Roles", member.getRoles().stream()
-                                .map(r -> r.getName())
+                                .map(Role::getName)
                                 .collect(Collectors.joining(", ")), true);
             }
         }
@@ -266,7 +272,7 @@ public class UtilityCog extends Cog {
             ctx.send('<' + ctx.jda.asBot().getInviteUrl(PERMS_NEEDED) + '>').queue();
         } else {
             if (!ctx.rawArgs.matches("^[0-9]{16,20}$")) {
-                ctx.send(":warning: Invalid ID!").queue();
+                ctx.send(Emotes.getFailure() + ' ' + "Invalid ID!").queue();
                 return;
             }
 
@@ -299,7 +305,7 @@ public class UtilityCog extends Cog {
     @Command(name = "poll", desc = "Start a poll, with reactions.", usage = "[emotes] [question] [time in minutes]", guildOnly = true)
     public void cmdPoll(Context ctx) {
         if (ctx.args.size() < 1) {
-            ctx.send(":warning: Missing question, emotes, and time (in minutes)!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "Missing question, emotes, and time (in minutes)!").queue();
             return;
         }
 
@@ -307,7 +313,7 @@ public class UtilityCog extends Cog {
         try {
             pollTime = Long.parseUnsignedLong(ctx.args.get(ctx.args.size() - 1));
         } catch (NumberFormatException e) {
-            ctx.send(":warning: Invalid time! Time is given as integer minutes.").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "Invalid time! Time is given as integer minutes.").queue();
             return;
         }
         ctx.args.remove(ctx.args.size() - 1);
@@ -322,7 +328,7 @@ public class UtilityCog extends Cog {
         if (customEmotes.contains(null)) {
             customEmotes.remove(null);
         } else if (unicodeEmotes.size() + customEmotes.size() < 2) {
-            ctx.send(":warning: You need at least 2 emotes to poll!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "You need at least 2 emotes to poll!").queue();
             return;
         }
 
@@ -411,7 +417,7 @@ public class UtilityCog extends Cog {
     @Command(name = "meme", desc = "Generate a custom meme.", usage = "[top text] | [bottom text]")
     public void cmdMeme(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need some text to use!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need some text to use!").queue();
             return;
         }
         ctx.channel.sendTyping().queue();
@@ -468,12 +474,12 @@ public class UtilityCog extends Cog {
                     @Override
                     public void failed(UnirestException e) {
                         logger.error("Imgflip request errored", e);
-                        ctx.send(":x: Request failed. `" + e.getMessage() + '`').queue();
+                        ctx.send(Emotes.getFailure() + ' ' + "Request failed. `" + e.getMessage() + '`').queue();
                     }
 
                     @Override
                     public void cancelled() {
-                        ctx.send(":x: Request cancelled.").queue();
+                        ctx.send(Emotes.getFailure() + ' ' + "Request cancelled.").queue();
                     }
                 });
     }
@@ -481,7 +487,7 @@ public class UtilityCog extends Cog {
     @Command(name = "urban", desc = "Define something with Urban Dictionary.", aliases = {"define"})
     public void cmdUrban(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need a term!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need a term!").queue();
             return;
         }
 
@@ -530,12 +536,12 @@ public class UtilityCog extends Cog {
                     @Override
                     public void failed(UnirestException e) {
                         logger.error("Urban Dictionary API error", e);
-                        ctx.send(":x: Request failed.").queue();
+                        ctx.send(Emotes.getFailure() + ' ' + "Request failed.").queue();
                     }
 
                     @Override
                     public void cancelled() {
-                        ctx.send(":x: Request cancelled for some reason...").queue();
+                        ctx.send(Emotes.getFailure() + ' ' + "Request cancelled for some reason...").queue();
                     }
                 });
     }
@@ -568,7 +574,7 @@ public class UtilityCog extends Cog {
     @Command(name = "charinfo", desc = "Get the Unicode character info for some text.", usage = "[text]")
     public void cmdCharInfo(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need some text!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need some text!").queue();
             return;
         }
 
@@ -598,7 +604,7 @@ public class UtilityCog extends Cog {
     @Command(name = "encode", desc = "Encode some text into Base65536.", usage = "[text]")
     public void cmdEncode(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need some text!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need some text!").queue();
             return;
         }
 
@@ -606,7 +612,7 @@ public class UtilityCog extends Cog {
         try {
             bytes = ctx.rawArgs.getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
-            ctx.send(":x: The bot's system doesn't support an essential encoding.").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "The bot's system doesn't support an essential encoding.").queue();
             return;
         }
 
@@ -616,7 +622,7 @@ public class UtilityCog extends Cog {
     @Command(name = "decode", desc = "Decode Base65536 into regular text.", usage = "[text]")
     public void cmdDecode(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need some text!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need some text!").queue();
             return;
         }
 
@@ -632,7 +638,7 @@ public class UtilityCog extends Cog {
         try {
             decoded = new String(rawOutput, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            ctx.send(":x: The bot's system doesn't support an essential encoding.").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "The bot's system doesn't support an essential encoding.").queue();
             return;
         }
 
@@ -644,7 +650,7 @@ public class UtilityCog extends Cog {
             usage = "[server address]", aliases = {"mc", "mcserver"}, thread = true)
     public void cmdMineServer(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need a server address.").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need a server address.").queue();
             return;
         }
 
@@ -658,7 +664,7 @@ public class UtilityCog extends Cog {
             } catch (NumberFormatException ignored) {}
         }
         if (server.indexOf((int)'.') == -1 || ctx.rawArgs.indexOf((int)' ') != -1) {
-            ctx.send(":warning: Invalid address.").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "Invalid address.").queue();
             return;
         }
 
@@ -670,7 +676,7 @@ public class UtilityCog extends Cog {
             data = new MinecraftPing().getPing(new MinecraftPingOptions().setHostname(server).setPort(port).setTimeout(5000));
         } catch (IOException e) {
             logger.error("Error connecting to Minecraft server:", e);
-            ctx.send(":x: A network error occurred.").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "A network error occurred.").queue();
             return;
         }
 
@@ -763,7 +769,7 @@ public class UtilityCog extends Cog {
     @Command(name = "contact", desc = "Contact the bot owner with a message.", usage = "[message]")
     public void cmdContact(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need a message!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need a message!").queue();
         }
 
         EmbedBuilder emb = new EmbedBuilder()
@@ -794,7 +800,7 @@ public class UtilityCog extends Cog {
                                     .setEmbed(emb.build())
                                     .build()).queue();
 
-        ctx.send(":thumbsup: Message sent.").queue();
+        ctx.send(Emotes.getSuccess() + ' ' + "Message sent.").queue();
     }
 
     @Command(name = "rprofile", desc = "Generate a random person.", aliases = {"rperson"})
@@ -832,7 +838,7 @@ public class UtilityCog extends Cog {
     @Command(name = "qrcode", desc = "Generate a QR code.", aliases = {"qr"}, thread = true)
     public void cmdQrcode(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need some text!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need some text!").queue();
         }
 
         byte[] data;
@@ -840,7 +846,7 @@ public class UtilityCog extends Cog {
             data = encodeBarcode(ctx.rawArgs, BarcodeFormat.QR_CODE, 256);
         } catch (WriterException|IOException e) {
             logger.error("QR code error", e);
-            ctx.send(":x: An error occurred. Text too long?").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "An error occurred. Text too long?").queue();
             return;
         }
 
@@ -893,7 +899,7 @@ public class UtilityCog extends Cog {
                         .getInt("num");
             } catch (UnirestException e) {
                 logger.error("xkcd > latest: http error", e);
-                ctx.send(":x: An error occurred.").queue();
+                ctx.send(Emotes.getFailure() + ' ' + "An error occurred.").queue();
                 return;
             }
         } else if (first.equalsIgnoreCase("random")) {
@@ -906,7 +912,7 @@ public class UtilityCog extends Cog {
                         .getInt("num") + 1);
             } catch (UnirestException e) {
                 logger.error("xkcd > random: http error", e);
-                ctx.send(":x: An error occurred.").queue();
+                ctx.send(Emotes.getFailure() + ' ' + "An error occurred.").queue();
                 return;
             }
         } else if ((first.equalsIgnoreCase("number") && second.matches("^[0-9]{1,4}$")) || first.matches("^[0-9]{1,4}$")) {
@@ -927,12 +933,12 @@ public class UtilityCog extends Cog {
                 if (requested > 0 && requested <= max) {
                     comicNum = requested;
                 } else {
-                    ctx.send(":warning: Invalid comic. The latest is " + max + '.').queue();
+                    ctx.send(Emotes.getFailure() + ' ' + "Invalid comic. The latest is " + max + '.').queue();
                     return;
                 }
             } catch (UnirestException e) {
                 logger.error("xkcd > random: http error", e);
-                ctx.send(":x: An error occurred.").queue();
+                ctx.send(Emotes.getFailure() + ' ' + "An error occurred.").queue();
                 return;
             }
         } else {
@@ -955,7 +961,7 @@ public class UtilityCog extends Cog {
             comicUrl = resp.getString("img");
         } catch (UnirestException e) {
             logger.error("xkcd: http error", e);
-            ctx.send(":x: An error occurred.").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "An error occurred.").queue();
             return;
         }
 
@@ -976,7 +982,7 @@ public class UtilityCog extends Cog {
     @Command(name = "b64encode", desc = "Encode text into Base64.")
     public void cmdB64encode(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need some text!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need some text!").queue();
             return;
         }
 
@@ -986,7 +992,7 @@ public class UtilityCog extends Cog {
     @Command(name = "b64decode", desc = "Decode Base64 into text.")
     public void cmdB64decode(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need some text!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need some text!").queue();
             return;
         }
 
@@ -996,10 +1002,10 @@ public class UtilityCog extends Cog {
     @Command(name = "ipinfo", desc = "Get information about an IP or domain.", aliases = {"ip"}, thread = true)
     public void cmdIpInfo(Context ctx) throws Throwable {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need an IP or domain!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need an IP or domain!").queue();
             return;
         } else if (!ctx.rawArgs.matches("^(?:localhost|[a-zA-Z\\-.]+\\.[a-z]{2,15}|(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|[0-9a-f:]+)$")) {
-            ctx.send(":warning: Invalid domain, IPV4, or IPV6 address!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "Invalid domain, IPV4, or IPV6 address!").queue();
             return;
         }
 
@@ -1010,7 +1016,7 @@ public class UtilityCog extends Cog {
         } catch (ExecutionException e) {
             if (e.getCause() instanceof UnirestException) {
                 logger.error("ipinfo API error", e.getCause());
-                ctx.send(":x: Request failed.").queue();
+                ctx.send(Emotes.getFailure() + ' ' + "Request failed.").queue();
             } else {
                 throw e.getCause();
             }
@@ -1020,7 +1026,7 @@ public class UtilityCog extends Cog {
     @Command(name = "mcskin", desc = "Get someone's Minecraft skin.", usage = "[username]")
     public void cmdMcskin(Context ctx) {
         if (!ctx.rawArgs.matches("^[a-zA-Z0-9_]{1,32}$")) {
-            ctx.send(":warning: I need a valid username!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need a valid username!").queue();
             return;
         }
         final String name = ctx.rawArgs;
@@ -1035,7 +1041,7 @@ public class UtilityCog extends Cog {
     @Command(name = "mchead", desc = "Get someone's Minecraft head.", usage = "[username]")
     public void cmdMchead(Context ctx) {
         if (!ctx.rawArgs.matches("^[a-zA-Z0-9_]{1,32}$")) {
-            ctx.send(":warning: I need a valid username!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need a valid username!").queue();
             return;
         }
         final String name = ctx.rawArgs;

@@ -8,6 +8,7 @@ import com.jagrosh.jdautilities.waiter.EventWaiter;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
+import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.sql.Quote;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -89,13 +90,13 @@ public class QuotesCog extends Cog {
 
     private void quoteCmdAdd(Context ctx) throws SQLException {
         if (ctx.args.size() < 2) {
-            ctx.send(":warning: I need text to quote!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need text to quote!").queue();
             return;
         }
         String text = ctx.rawArgs.substring(ctx.args.get(0).length()).trim();
 
         if (text.length() > 360) {
-            ctx.send(":warning: Text too long!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "Text too long!").queue();
             return;
         }
 
@@ -105,7 +106,7 @@ public class QuotesCog extends Cog {
                 .countOf();
 
         if (quotes >= 25) {
-            ctx.send(":x: You already have 25 quotes!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "You already have 25 quotes!").queue();
             return;
         }
 
@@ -113,33 +114,33 @@ public class QuotesCog extends Cog {
                 ctx.author.getIdLong(), ctx.author.getName());
         dao.create(quote);
 
-        ctx.send(":white_check_mark: Quote added with ID `" + quote.getId() + "`.").queue();
+        ctx.send(Emotes.getSuccess() + ' ' + "Quote added with ID `" + quote.getId() + "`.").queue();
     }
 
     private void quoteCmdDelete(Context ctx) throws SQLException {
         if (ctx.args.size() < 2) {
-            ctx.send(":warning: I need a quote ID to delete!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need a quote ID to delete!").queue();
             return;
         }
         int id;
         try {
             id = Integer.parseInt(ctx.rawArgs.substring(ctx.args.get(0).length()).trim());
         } catch (NumberFormatException ignored) {
-            ctx.send(":warning: Invalid quote ID!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "Invalid quote ID!").queue();
             return;
         }
 
         Quote quote = dao.queryForId(id);
         if (quote == null) {
-            ctx.send(":warning: No such quote!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "No such quote!").queue();
             return;
         } else if (quote.getAuthorId() != ctx.author.getIdLong()) {
-            ctx.send(":x: You didn't write that quote!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "You didn't write that quote!").queue();
             return;
         }
 
         dao.deleteById(id);
-        ctx.send(":white_check_mark: Quote deleted.").queue();
+        ctx.send(Emotes.getSuccess() + ' ' + "Quote deleted.").queue();
     }
 
     private void quoteCmdList(Context ctx) throws SQLException {
@@ -163,7 +164,7 @@ public class QuotesCog extends Cog {
                 int max = (int) Math.ceil(renderedQuotes.length / 12);
 
                 if (wantedPage > max) {
-                    ctx.send(":warning: No such page! There are **" + max + "** pages.").queue();
+                    ctx.send(Emotes.getFailure() + ' ' + "No such page! There are **" + max + "** pages.").queue();
                     return;
                 } else {
                     page = wantedPage;
@@ -228,7 +229,7 @@ public class QuotesCog extends Cog {
         Quote quote = dao.queryForId(id);
 
         if (quote == null)
-            ctx.send(":warning: No such quote!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "No such quote!").queue();
         else
             ctx.send(quote.render()).queue();
     }

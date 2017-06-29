@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
+import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.errors.PassException;
@@ -144,10 +145,10 @@ public class MusicCog extends Cog {
     private void channelChecks(Context ctx) {
         VoiceChannel ch = ctx.member.getVoiceState().getChannel();
         if (ctx.guild.getSelfMember().getVoiceState().getChannel() == null) {
-            ctx.send(":x: I'm not in a voice channel...").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I'm not in a voice channel...").queue();
             throw new PassException();
         } else if (ch == null) {
-            ctx.send(":warning: You're not in a voice channel!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "You're not in a voice channel!").queue();
             throw new PassException();
         } else if (ctx.guild.getSelfMember().getVoiceState().getChannel().getIdLong() != ch.getIdLong()) {
             ctx.send(":octagonal_sign: You need to be in the same voice channel as me to do that!").queue();
@@ -159,7 +160,7 @@ public class MusicCog extends Cog {
     public void summon(Context ctx) {
         VoiceChannel channel = ctx.member.getVoiceState().getChannel();
         if (channel == null) {
-            ctx.send(":x: You aren't in a voice channel!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "You aren't in a voice channel!").queue();
             throw new PassException();
         }
 
@@ -177,7 +178,7 @@ public class MusicCog extends Cog {
     @Command(name = "play", desc = "Play something!", usage = "[search terms / link]", guildOnly = true)
     public void cmdPlay(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need something to play!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need something to play!").queue();
             return;
         }
 
@@ -190,13 +191,13 @@ public class MusicCog extends Cog {
             }
         } catch (NullPointerException e) {
             logger.warn("NPE in play command!", e);
-            ctx.send(":x: Something's funky here. Try your command again, and contact the owner if this happens often.").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "Something's funky here. Try your command again, and contact the owner if this happens often.").queue();
             return;
         }
 
         AudioState state = getAudioState(ctx.guild);
         if (state.scheduler.queue.size() >= 12) {
-            ctx.send(":x: There can only be up to 12 items in the queue!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "There can only be up to 12 items in the queue!").queue();
             return;
         }
         final String term = String.join(" ", ctx.args);
@@ -268,7 +269,7 @@ public class MusicCog extends Cog {
     @Command(name = "queue", desc = "Show the current queue.", guildOnly = true)
     public void cmdQueue(Context ctx) {
         if (ctx.guild.getSelfMember().getVoiceState().getChannel() == null) {
-            ctx.send(":x: I'm not in a voice channel...").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I'm not in a voice channel...").queue();
             return;
         }
         AudioState state = getAudioState(ctx.guild);
@@ -307,7 +308,7 @@ public class MusicCog extends Cog {
                     .setEmbed(builder.build())
                     .build()).queue();
         } catch (IllegalArgumentException e) {
-            ctx.send(":warning: Queue too long to be displayed!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "Queue too long to be displayed!").queue();
         }
     }
 
@@ -317,7 +318,7 @@ public class MusicCog extends Cog {
         AudioState state = getAudioState(ctx.guild);
         ExtraTrackInfo info = state.scheduler.infoMap.get(state.scheduler.current);
         if (info == null) {
-            ctx.send(":warning: The current track is missing a state!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "The current track is missing a state!").queue();
             return;
         }
 

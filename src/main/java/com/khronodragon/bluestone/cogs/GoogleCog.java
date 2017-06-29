@@ -79,12 +79,12 @@ public class GoogleCog extends Cog {
                         }
                     } else if (resp.has("error")) {
                         logger.error("Google returned an error: {}", resp.getJSONObject("error"));
-                        emb.setDescription(":warning: An error occurred, probably because I've searched too many times today.");
+                        emb.setDescription(Emotes.getFailure() + ' ' + "An error occurred, probably because I've searched too many times today.");
                     } else if (resp.has("searchInformation") && resp.getJSONObject("searchInformation").getInt("totalResults") < 1) {
                         emb.setDescription("No results.");
                     } else {
                         logger.info("Weird response from Google: {}", resp);
-                        emb.setDescription(":warning: The response seems to have been invalid. Try again later?");
+                        emb.setDescription(Emotes.getFailure() + ' ' + "The response seems to have been invalid. Try again later?");
                     }
 
                     return emb.build();
@@ -106,14 +106,14 @@ public class GoogleCog extends Cog {
     @Command(name = "google", desc = "We all need Google.", usage = "[search terms]", aliases = {"search"}, thread = true)
     public void cmdGoogle(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: You need some search terms!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "You need some search terms!").queue();
             return;
         }
 
         final String query = String.join(" ", ctx.args);
         String key = bot.getKeys().optString("google");
         if (key == null) {
-            ctx.send(":x: The bot doesn't have a Google API key set up!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "The bot doesn't have a Google API key set up!").queue();
             return;
         }
 
@@ -122,7 +122,7 @@ public class GoogleCog extends Cog {
             encodedQuery = URLEncoder.encode(query, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             bot.logger.error("System doesn't support UTF-8!", e);
-            ctx.send(":x: The system this bot is running on doesn't support an essential encoding.").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "The system this bot is running on doesn't support an essential encoding.").queue();
             return;
         }
         ctx.channel.sendTyping().queue();

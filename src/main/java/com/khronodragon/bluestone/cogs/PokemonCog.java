@@ -89,7 +89,7 @@ public class PokemonCog extends Cog {
                 if (requested >= 1 && requested <= ENTRY_COUNT)
                     url.append(requested);
                 else {
-                    ctx.send(":warning: Invalid national ID!").queue();
+                    ctx.send(Emotes.getFailure() + ' ' + "Invalid national ID!").queue();
                     return;
                 }
             } else if (ctx.rawArgs.matches("^[a-zA-Z .]{1,16}$")) {
@@ -98,7 +98,7 @@ public class PokemonCog extends Cog {
 
                 url.append(pokemonName);
             } else {
-                ctx.send(":warning: Invalid Pokemon name/national ID!").queue();
+                ctx.send(Emotes.getFailure() + ' ' + "Invalid Pokemon name/national ID!").queue();
                 return;
             }
         }
@@ -114,7 +114,7 @@ public class PokemonCog extends Cog {
             ctx.send(":warning: Failed to fetch Pokémon. `" + e.getMessage() + '`').queue();
             return;
         } catch (CacheLoader.InvalidCacheLoadException e) {
-            ctx.send(":warning: No such Pokémon!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "No such Pokémon!").queue();
             return;
         }
 
@@ -133,7 +133,7 @@ public class PokemonCog extends Cog {
             ctx.send(":warning: Failed to fetch description. `" + e.getMessage() + '`').queue();
             return;
         } catch (CacheLoader.InvalidCacheLoadException e) {
-            ctx.send(":warning: Pokémon has no description!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "Pokémon has no description!").queue();
             return;
         }
 

@@ -58,12 +58,12 @@ public class Command {
                     func.invoke(cog, ctx);
                 } catch (IllegalAccessException e) {
                     bot.logger.error("Severe command ({}) invocation error:", invoker, e);
-                    event.getChannel().sendMessage(":x: A severe internal error occurred.").queue();
+                    event.getChannel().sendMessage(Emotes.getFailure() + ' ' + "A severe internal error occurred.").queue();
                 } catch (InvocationTargetException e) {
                     Throwable cause = e.getCause();
                     if (cause == null) {
                         bot.logger.error("Unknown command ({}) invocation error:", invoker, e);
-                        event.getChannel().sendMessage(":x: An unknown internal error occurred.").queue();
+                        event.getChannel().sendMessage(Emotes.getFailure() + ' ' + "An unknown internal error occurred.").queue();
                     } else if (cause instanceof PassException) {
                         // assume error has already been sent
                     } else if (cause instanceof PermissionError) {
@@ -71,7 +71,7 @@ public class Command {
                                 event.getAuthor().getAsMention(), prefix, invoker,
                                 Strings.smartJoin(((PermissionError) cause).getFriendlyPerms(), "or"))).queue();
                     } else if (cause instanceof PermissionException) {
-                        event.getChannel().sendMessage(":x: I need the **" +
+                        event.getChannel().sendMessage(Emotes.getFailure() + ' ' + "I need the **" +
                                 ((PermissionException) cause).getPermission().getName() + "** permission!").queue();
                     } else {
                         bot.logger.error("Command ({}) invocation error:", invoker, cause);

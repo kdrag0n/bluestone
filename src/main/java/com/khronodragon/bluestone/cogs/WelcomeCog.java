@@ -6,6 +6,7 @@ import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
+import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.sql.GuildWelcomeMessages;
@@ -27,7 +28,7 @@ public class WelcomeCog extends Cog {
     private static final Logger logger = LogManager.getLogger(WelcomeCog.class);
     private static final String DEFAULT_WELCOME = "[mention] **Welcome to [guild]!**\n" +
             "Enjoy your time here, and find out more about me with `[prefix]help`.";
-    private static final String DEFAULT_LEAVE = ":coffin: **RIP [member_tag]...**";
+    private static final String DEFAULT_LEAVE = "[rip] **RIP [member_tag]...**";
 
     private static final Pattern SUB_REGEX = Pattern.compile("\\[([a-z_]+)]");
     private static final String NO_COMMAND = ":thinking: **I need an action!**\n" +
@@ -50,6 +51,7 @@ public class WelcomeCog extends Cog {
             "    • `[time/date]` - the current date and time, like `Tue Jun 27 10:06:59 EDT 2017`\n" +
             "    • `[prefix]` - my command prefix here\n" +
             "    • `[bot_owner]` - the tag of my owner\n" +
+            "    • `[rip]` - a gravestone\n" +
             "\n" +
             "Example message:```\n" +
             "[mention] Hey there, and welcome to [guild]! The owner here is [guild_owner]. You joined at [time]. " +
@@ -116,7 +118,7 @@ public class WelcomeCog extends Cog {
                 return;
             }
 
-            ctx.send(":white_check_mark: I fixed it for you! Try your command again.").queue();
+            ctx.send(Emotes.getSuccess() + ' ' + "I fixed it for you! Try your command again.").queue();
         }
     }
 
@@ -135,7 +137,7 @@ public class WelcomeCog extends Cog {
 
     private void welcomeCmdSet(Context ctx) throws SQLException {
         if (ctx.args.size() < 2) {
-            ctx.send(":warning: I need a new message to set!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need a new message to set!").queue();
             return;
         }
         String newMessage = ctx.rawArgs.substring(3).trim();
@@ -143,7 +145,7 @@ public class WelcomeCog extends Cog {
         GuildWelcomeMessages query = messageDao.queryForId(ctx.guild.getIdLong());
         query.setWelcome(newMessage);
 
-        ctx.send(":white_check_mark: Welcome message set.").queue();
+        ctx.send(Emotes.getSuccess() + ' ' + "Welcome message set.").queue();
     }
 
     public void welcomeCmdToggle(Context ctx) throws SQLException {
@@ -152,7 +154,7 @@ public class WelcomeCog extends Cog {
         String st = query.isWelcomeEnabled() ? "on" : "off";
 
         messageDao.update(query);
-        ctx.send(":white_check_mark: The welcome message is now **" + st + "**.").queue();
+        ctx.send(Emotes.getSuccess() + ' ' + "The welcome message is now **" + st + "**.").queue();
     }
 
     @Command(name = "leave", desc = "Manage member leave messages.", guildOnly = true,
@@ -191,7 +193,7 @@ public class WelcomeCog extends Cog {
                 return;
             }
 
-            ctx.send(":white_check_mark: I fixed it for you! Try your command again.").queue();
+            ctx.send(Emotes.getSuccess() + ' ' + "I fixed it for you! Try your command again.").queue();
         }
     }
 
@@ -210,7 +212,7 @@ public class WelcomeCog extends Cog {
 
     private void leaveCmdSet(Context ctx) throws SQLException {
         if (ctx.args.size() < 2) {
-            ctx.send(":warning: I need a new message to set!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need a new message to set!").queue();
             return;
         }
         String newMessage = ctx.rawArgs.substring(3).trim();
@@ -218,7 +220,7 @@ public class WelcomeCog extends Cog {
         GuildWelcomeMessages query = messageDao.queryForId(ctx.guild.getIdLong());
         query.setLeave(newMessage);
 
-        ctx.send(":white_check_mark: Leave message set.").queue();
+        ctx.send(Emotes.getSuccess() + ' ' + "Leave message set.").queue();
     }
 
     public void leaveCmdToggle(Context ctx) throws SQLException {
@@ -227,7 +229,7 @@ public class WelcomeCog extends Cog {
         String st = query.isLeaveEnabled() ? "on" : "off";
 
         messageDao.update(query);
-        ctx.send(":white_check_mark: The leave message is now **" + st + "**.").queue();
+        ctx.send(Emotes.getSuccess() + ' ' + "The leave message is now **" + st + "**.").queue();
     }
 
     private GuildWelcomeMessages initGuild(Guild guild) throws SQLException {
@@ -257,6 +259,7 @@ public class WelcomeCog extends Cog {
                     .map("guild_name", guild::getName)
                     .map("prefix", () -> bot.getShardUtil().getPrefixStore().getPrefix(guild.getIdLong()))
                     .map("bot_owner", "Dragon5232#1841")
+                    .map("RIP", Emotes::getGrave)
                     .exec(m);
         });
     }

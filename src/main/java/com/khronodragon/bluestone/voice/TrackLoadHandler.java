@@ -4,6 +4,7 @@ import com.jagrosh.jdautilities.menu.orderedmenu.OrderedMenuBuilder;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
+import com.khronodragon.bluestone.Emotes;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
@@ -45,7 +46,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
         if (!state.scheduler.queue.isEmpty()) {
             AudioTrackInfo info = track.getInfo();
 
-            ctx.send(":white_check_mark: Queued **" + info.title + "** by **" + info.author + "**, length **" + Bot.formatDuration(info.length / 1000L) + "**").queue();
+            ctx.send(Emotes.getSuccess() + ' ' + "Queued **" + info.title + "** by **" + info.author + "**, length **" + Bot.formatDuration(info.length / 1000L) + "**").queue();
             Cog.removeReactionIfExists(ctx.message, "⌛");
             ctx.message.addReaction("✅").queue();
         }
@@ -76,7 +77,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
                         try {
                             track = tracks.get(i - 1);
                         } catch (IndexOutOfBoundsException e) {
-                            ctx.send(":x: No such track!").queue();
+                            ctx.send(Emotes.getFailure() + ' ' + "No such track!").queue();
                             return;
                         }
 
@@ -113,7 +114,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
             return;
         }
         if (tracks.size() > 24) {
-            ctx.send(":x: Playlist is longer than 24 tracks!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "Playlist is longer than 24 tracks!").queue();
             return;
         }
         long duration = 0L;
@@ -126,7 +127,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
             state.scheduler.queue(track, new ExtraTrackInfo(ctx.channel, ctx.member));
             duration += track.getDuration();
         }
-        ctx.send(":white_check_mark: Queued playlist **" + playlist.getName() + "**, length **" + Bot.formatDuration(duration / 1000L) + "**").queue();
+        ctx.send(Emotes.getSuccess() + ' ' + "Queued playlist **" + playlist.getName() + "**, length **" + Bot.formatDuration(duration / 1000L) + "**").queue();
         Cog.removeReactionIfExists(ctx.message, "⌛");
         ctx.message.addReaction("☑").queue();
     }

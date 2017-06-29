@@ -188,7 +188,7 @@ public class FunCog extends Cog {
     @Command(name = "emotisay", desc = "Show some text as cool block letters.", aliases = {"emotesay", "esay"}, usage = "[text]")
     public void cmdEmotisay(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: You need some text!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "You need some text!").queue();
             return;
         }
 
@@ -249,7 +249,7 @@ public class FunCog extends Cog {
                     public void completed(HttpResponse<JsonNode> response) {
                         String imageUrl = response.getBody().getObject().getString("file");
                         if (imageUrl == null) {
-                            ctx.send(":warning: Couldn't get a cat!").queue();
+                            ctx.send(Emotes.getFailure() + ' ' + "Couldn't get a cat!").queue();
                         } else {
                             ctx.send(new EmbedBuilder()
                                     .setImage(imageUrl)
@@ -259,11 +259,11 @@ public class FunCog extends Cog {
                     }
 
                     public void failed(UnirestException e) {
-                        ctx.send(":warning: Failed to get a cat!").queue();
+                        ctx.send(Emotes.getFailure() + ' ' + "Failed to get a cat!").queue();
                     }
 
                     public void cancelled() {
-                        ctx.send(":x: The request was cancelled!").queue();
+                        ctx.send(Emotes.getFailure() + ' ' + "The request was cancelled!").queue();
                     }
                 });
     }
@@ -271,17 +271,17 @@ public class FunCog extends Cog {
     @Command(name = "emote", desc = "Get an emoticon, from many sources.", usage = "[emote name]")
     public void cmdEmote(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: You need to specify an emote!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "You need to specify an emote!").queue();
             return;
         }
         if (!EMOTE_PROVIDER_MANAGER.isFullyLoaded()) {
-            ctx.send(":x: The emote data hasn't been loaded yet! Try again soon.").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "The emote data hasn't been loaded yet! Try again soon.").queue();
             return;
         }
 
         final String url = EMOTE_PROVIDER_MANAGER.getFirstUrl(ctx.rawArgs);
         if (url == null) {
-            ctx.send(":warning: No such emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV should work.").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "No such emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV should work.").queue();
             return;
         }
         EmoteInfo info = EMOTE_PROVIDER_MANAGER.getFirstInfo(ctx.rawArgs);
@@ -301,12 +301,12 @@ public class FunCog extends Cog {
 
                     @Override
                     public void failed(UnirestException e) {
-                        ctx.send(":warning: Failed to fetch emote.").queue();
+                        ctx.send(Emotes.getFailure() + ' ' + "Failed to fetch emote.").queue();
                     }
 
                     @Override
                     public void cancelled() {
-                        ctx.send(":x: The request was cancelled.").queue();
+                        ctx.send(Emotes.getFailure() + ' ' + "The request was cancelled.").queue();
                     }
                 });
     }
@@ -344,18 +344,18 @@ public class FunCog extends Cog {
     @Command(name = "style", desc = "Apply a style to some text.", aliases = {"font"})
     public void cmdStyle(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: Usage is `style [style name] [text]`.\n" +
+            ctx.send(Emotes.getFailure() + ' ' + "Usage is `style [style name] [text]`.\n" +
                     "\nTip: *use the `styles` command to see what there is.*").queue();
             return;
         }
         if (ctx.args.size() < 2) {
-            ctx.send(":warning: Usage is `style [style name] [text]`.").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "Usage is `style [style name] [text]`.").queue();
             return;
         }
 
         String styleName = ctx.args.get(0);
         if (!charsets.containsKey(styleName)) {
-            ctx.send(":warning: No such style! List them with the `styles` command.").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "No such style! List them with the `styles` command.").queue();
             return;
         }
 
@@ -366,7 +366,7 @@ public class FunCog extends Cog {
     @Command(name = "lmgtfy", desc = "Let me Google that for you!")
     public void cmdLmgtfy(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need some search terms!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need some search terms!").queue();
             return;
         }
 
@@ -378,7 +378,7 @@ public class FunCog extends Cog {
     @Command(name = "slap", desc = "Slap someone, with passion.", aliases = {"boop", "poke", "hit"})
     public void cmdSlap(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need someone to " + ctx.invoker + "!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need someone to " + ctx.invoker + "!").queue();
             return;
         }
 
@@ -389,7 +389,7 @@ public class FunCog extends Cog {
     @Command(name = "attack", desc = "Hurt someone, with determination.", aliases = {"stab", "kill", "punch", "shoot", "hurt", "fight"})
     public void cmdAttack(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need someone to " + ctx.invoker + "!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need someone to " + ctx.invoker + "!").queue();
             return;
         }
         final String target = format("*{0}*", ctx.rawArgs);
@@ -401,7 +401,7 @@ public class FunCog extends Cog {
     @Command(name = "charlie", desc = "Ask a question... Charlie Charlie are you there?")
     public void cmdCharlie(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need a question!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need a question!").queue();
             return;
         }
         String question = ctx.rawArgs.endsWith("?") ? ctx.rawArgs : ctx.rawArgs + "?";
