@@ -272,7 +272,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     statusLine = format("in {0} guilds", shardUtil.getGuildCount());
                     break;
                 case 5:
-                    statusLine = format("from shard {0} of {0}", getShardNum(), shardUtil.getShardCount());
+                    statusLine = format("from shard {0} of {1}", getShardNum(), getShardTotal());
                     break;
                 case 6:
                     statusLine = "with my buddies";
