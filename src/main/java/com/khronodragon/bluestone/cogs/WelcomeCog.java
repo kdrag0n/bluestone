@@ -276,6 +276,9 @@ public class WelcomeCog extends Cog {
         if (!event.getGuild().isAvailable())
             return;
 
+        if (!event.getGuild().getPublicChannel().canTalk())
+            return;
+
         try {
             GuildWelcomeMessages queryResult = messageDao.queryForId(event.getGuild().getIdLong());
 
@@ -306,6 +309,9 @@ public class WelcomeCog extends Cog {
         if (!event.getGuild().isAvailable())
             return;
 
+        if (!event.getGuild().getPublicChannel().canTalk())
+            return;
+        
         try {
             GuildWelcomeMessages queryResult = messageDao.queryForId(event.getGuild().getIdLong());
 
