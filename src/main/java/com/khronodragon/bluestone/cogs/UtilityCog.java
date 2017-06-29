@@ -256,7 +256,8 @@ public class UtilityCog extends Cog {
                 .addField("Memory Used", bot.formatMemory(), true)
                 .addField("Users", str(shardUtil.getUserCount()), true)
                 .addField("Channels", str(shardUtil.getChannelCount()), true)
-                .addField("Commands", str(new HashSet<>(bot.commands.values()).size()), true);
+                .addField("Commands", str(new HashSet<>(bot.commands.values()).size()), true)
+                .setFooter(Emotes.getCredits(), null);
 
         if (ctx.jda.getSelfUser().getIdLong() == 239775420470394897L) {
             emb.addField("Invite Link", "https://tiny.cc/goldbot", true);

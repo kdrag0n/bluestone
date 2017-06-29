@@ -311,7 +311,7 @@ public class WelcomeCog extends Cog {
 
         if (!event.getGuild().getPublicChannel().canTalk())
             return;
-        
+
         try {
             GuildWelcomeMessages queryResult = messageDao.queryForId(event.getGuild().getIdLong());
 
