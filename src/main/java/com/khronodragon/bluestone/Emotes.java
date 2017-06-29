@@ -67,9 +67,9 @@ public class Emotes {
 
     public static String getCredits() {
         if (hasJda)
-            return "<:jda:230988580904763393> by <:DV8:245233172189675520>, with <:idea:245257202305073152>";
+            return "by **Dragon5232#1841** with <:jda:230988580904763393> by <:DV8:245233172189675520>, and <:idea:245257202305073152>";
         else
-            return "JDA by DV8FromTheWorld, with IntelliJ IDEA";
+            return "by **Dragon5232#1841** with JDA by DV8FromTheWorld, and IntelliJ IDEA";
     }
 
     public static String getGrave() {
