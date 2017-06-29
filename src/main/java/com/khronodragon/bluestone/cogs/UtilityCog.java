@@ -27,7 +27,6 @@ import io.codearte.jfairy.producer.person.Person;
 import net.dv8tion.jda.client.entities.Group;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
-import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.entities.MessageReaction.ReactionEmote;
@@ -146,7 +145,7 @@ public class UtilityCog extends Cog {
             Collection<User> users;
             switch (ctx.channel.getType()) {
                 case TEXT:
-                    users = ctx.guild.getMembers().stream().map(m -> m.getUser()).collect(Collectors.toList());
+                    users = ctx.guild.getMembers().stream().map(Member::getUser).collect(Collectors.toList());
                     break;
                 case PRIVATE:
                     users = Arrays.asList(ctx.author, ctx.jda.getSelfUser());
