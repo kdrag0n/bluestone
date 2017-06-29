@@ -112,7 +112,7 @@ public class PokemonCog extends Cog {
         } catch (ExecutionException container) {
             Throwable e = container.getCause();
             logger.warn("Error contacting PokeAPI", e);
-            ctx.send(":warning: Failed to fetch Pokémon. `" + e.getMessage() + '`').queue();
+            ctx.send(Emotes.getFailure() + ' ' + "Failed to fetch Pokémon. `" + e.getMessage() + '`').queue();
             return;
         } catch (CacheLoader.InvalidCacheLoadException e) {
             ctx.send(Emotes.getFailure() + ' ' + "No such Pokémon!").queue();
@@ -131,7 +131,7 @@ public class PokemonCog extends Cog {
         } catch (ExecutionException container) {
             Throwable e = container.getCause();
             logger.warn("Error contacting PokeAPI", e);
-            ctx.send(":warning: Failed to fetch description. `" + e.getMessage() + '`').queue();
+            ctx.send(Emotes.getFailure() + ' ' + "Failed to fetch description. `" + e.getMessage() + '`').queue();
             return;
         } catch (CacheLoader.InvalidCacheLoadException e) {
             ctx.send(Emotes.getFailure() + ' ' + "Pokémon has no description!").queue();

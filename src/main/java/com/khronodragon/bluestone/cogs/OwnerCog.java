@@ -58,7 +58,7 @@ public class OwnerCog extends Cog {
 
     @Command(name = "shutdown", desc = "Shutdown the bot.", perms = {"owner"}, thread = true)
     public void cmdShutdown(Context ctx) {
-        ctx.send(":warning: Are you **sure** you want to stop the entire bot? Type `yes` to continue.").complete();
+        ctx.send(Emotes.getFailure() + ' ' + "Are you **sure** you want to stop the entire bot? Type `yes` to continue.").complete();
         Message resp = bot.waitForMessage(7000, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
                 msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
                 msg.getRawContent().equalsIgnoreCase("yes"));
@@ -76,7 +76,7 @@ public class OwnerCog extends Cog {
     @Command(name = "stopshard", desc = "Stop the current shard.", perms = {"owner"}, aliases = {"restart"}, thread = true)
     public void cmdStopShard(Context ctx) {
         final Integer n = ctx.rawArgs.length() > 0 ? Integer.valueOf(ctx.rawArgs) : ctx.bot.getShardNum() - 1;
-        ctx.send(":warning: Are you **sure** you want to stop (restart) shard " + n + "? Type `yes` to continue.").complete();
+        ctx.send(Emotes.getFailure() + ' ' + "Are you **sure** you want to stop (restart) shard " + n + "? Type `yes` to continue.").complete();
         Message resp = bot.waitForMessage(7000, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
                 msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
                 msg.getRawContent().equalsIgnoreCase("yes"));
@@ -136,7 +136,7 @@ public class OwnerCog extends Cog {
 
         for (Guild guild: ctx.jda.getGuilds()) {
             if (!guild.isAvailable()) {
-                ctx.send(":warning: Guild **" + val(guild.getName()).or("[unknown]") +
+                ctx.send(Emotes.getFailure() + ' ' + "Guild **" + val(guild.getName()).or("[unknown]") +
                         "** (`" + val(guild.getIdLong()).or(0L) + "`) unavailable.").queue();
                 errors++;
                 continue;
@@ -158,7 +158,7 @@ public class OwnerCog extends Cog {
                 if (opt.isPresent())
                     opt.get().sendMessage(message).queue();
                 else {
-                    ctx.send(":warning: Guild **" + guild.getName() +
+                    ctx.send(Emotes.getFailure() + ' ' + "Guild **" + guild.getName() +
                             "** (`" + guild.getIdLong() + "`) muted us in all channels...").queue();
                     errors++;
                 }

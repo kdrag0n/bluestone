@@ -457,7 +457,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                                 ((PermissionException) cause).getPermission().getName() + "** permission!").queue();
                     } else {
                         logger.error("Command ({}) invocation error:", cmdName, cause);
-                        channel.sendMessage(format(":warning: Error!```java\n{2}```This error will be reported.",
+                        channel.sendMessage(format(Emotes.getFailure() + ' ' + "Error!```java\n{2}```This error will be reported.",
                                 prefix, cmdName, vagueTrace(cause))).queue();
 
                         if (command.reportErrors)

@@ -402,7 +402,7 @@ public class FunCog extends Cog {
     @Command(name = "charlie", desc = "Ask a question... Charlie Charlie are you there?")
     public void cmdCharlie(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":warning: I need a question!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I need a question!").queue();
             return;
         }
         String question = ctx.rawArgs.endsWith("?") ? ctx.rawArgs : ctx.rawArgs + "?";

@@ -86,4 +86,8 @@ public class Emotes {
         else
             return "[BOT]";
     }
+
+    public static String getWarning() {
+        return "⚠"; // don't have a custom one yet
+    }
 }

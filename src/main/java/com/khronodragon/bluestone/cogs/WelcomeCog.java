@@ -107,7 +107,7 @@ public class WelcomeCog extends Cog {
                 ctx.send(NO_COMMAND).queue();
         } catch (NullPointerException e) {
             logger.warn("Message control: NPE", e);
-            ctx.send(":warning: Something's not right with this server's message settings. Let me try to fix that...").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "Something's not right with this server's message settings. Let me try to fix that...").queue();
 
             try {
                 messageDao.createOrUpdate(new GuildWelcomeMessages(ctx.guild.getIdLong(),
@@ -182,7 +182,7 @@ public class WelcomeCog extends Cog {
                 ctx.send(NO_COMMAND).queue();
         } catch (NullPointerException e) {
             logger.warn("Message control: NPE", e);
-            ctx.send(":warning: Something's not right with this server's message settings. Let me try to fix that...").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "Something's not right with this server's message settings. Let me try to fix that...").queue();
 
             try {
                 messageDao.createOrUpdate(new GuildWelcomeMessages(ctx.guild.getIdLong(),

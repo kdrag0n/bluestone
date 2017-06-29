@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 public class ModerationCog extends Cog {
-    private static final String PURGE_NO_PARAMS = ":warning: **No valid parameters included!**\n" +
+    private static final String PURGE_NO_PARAMS = Emotes.getFailure() + ' ' + "**No valid parameters included!**\n" +
             "Valid parameters:\n" +
             "    \u2022 `<num 2-500>` - number of messages to include **(required)**\n" +
             "    \u2022 `links` - include messages with links\n" +
@@ -305,7 +305,7 @@ public class ModerationCog extends Cog {
         try {
             ctx.guild.getController().ban(user, 0).reason(reason).queue();
         } catch (PermissionException e) {
-            ctx.send(":warning: Error: `" + e.getMessage() + "`").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "Error: `" + e.getMessage() + "`").queue();
             return;
         }
 

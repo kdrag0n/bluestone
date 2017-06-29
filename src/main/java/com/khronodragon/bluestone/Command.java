@@ -75,7 +75,7 @@ public class Command {
                                 ((PermissionException) cause).getPermission().getName() + "** permission!").queue();
                     } else {
                         bot.logger.error("Command ({}) invocation error:", invoker, cause);
-                        event.getChannel().sendMessage(format(":warning: Error!```java\n{2}```This error will be reported.",
+                        event.getChannel().sendMessage(format(Emotes.getFailure() + ' ' + "Error!```java\n{2}```This error will be reported.",
                                 prefix, invoker, bot.vagueTrace(cause))).queue();
 
                         if (reportErrors)
@@ -92,7 +92,7 @@ public class Command {
                             event.getAuthor().getAsMention(), prefix, invoker)).queue();
                 } catch (Exception e) {
                     bot.logger.error("Unknown command ({}) error:", invoker, e);
-                    event.getChannel().sendMessage(format(":warning: Error in `{0}{1}`:```java\n{2}```",
+                    event.getChannel().sendMessage(format(Emotes.getFailure() + ' ' + "Error in `{0}{1}`:```java\n{2}```",
                             prefix, invoker, e.toString())).queue();
                 } // CheckFailure and friends may seem redundant, but used for perm checks in threads
             };

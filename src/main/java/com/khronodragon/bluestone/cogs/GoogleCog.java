@@ -114,7 +114,7 @@ public class GoogleCog extends Cog {
         final String query = String.join(" ", ctx.args);
         String key = bot.getKeys().optString("google");
         if (key == null) {
-            ctx.send(":warning: The bot doesn't have a Google API key set up!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "The bot doesn't have a Google API key set up!").queue();
             return;
         }
 
@@ -123,7 +123,7 @@ public class GoogleCog extends Cog {
             encodedQuery = URLEncoder.encode(query, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             bot.logger.error("System doesn't support UTF-8!", e);
-            ctx.send(":warning: The system this bot is running on doesn't support an essential encoding.").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "The system this bot is running on doesn't support an essential encoding.").queue();
             return;
         }
         ctx.channel.sendTyping().queue();

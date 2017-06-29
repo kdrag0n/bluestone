@@ -138,7 +138,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
             iteration += 1;
             manager.loadItem(PREFIXES[iteration] + term, this);
         } else {
-            ctx.send(":warning: No matches found!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "No matches found!").queue();
             Cog.removeReactionIfExists(ctx.message, "⌛");
             ctx.message.addReaction("❌").queue();
         }

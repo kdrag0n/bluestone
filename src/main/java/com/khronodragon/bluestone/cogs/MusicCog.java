@@ -170,7 +170,7 @@ public class MusicCog extends Cog {
         try {
             manager.openAudioConnection(channel);
         } catch (PermissionException e) {
-            ctx.send(":warning: I don't have permission to join that channel!").queue();
+            ctx.send(Emotes.getFailure() + ' ' + "I don't have permission to join that channel!").queue();
             throw new PassException();
         }
     }

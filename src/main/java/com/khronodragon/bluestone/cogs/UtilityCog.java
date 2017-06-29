@@ -467,7 +467,7 @@ public class UtilityCog extends Cog {
                             .setImage(resp.getJSONObject("data").getString("url"))
                             .build()).queue();
                         } else {
-                            ctx.send(":warning: Error: `" + resp.getString("error_message") + '`').queue();
+                            ctx.send(Emotes.getFailure() + ' ' + "Error: `" + resp.getString("error_message") + '`').queue();
                         }
                     }
 
@@ -499,7 +499,7 @@ public class UtilityCog extends Cog {
                         JSONArray results = response.getBody().getObject().getJSONArray("list");
 
                         if (results.length() < 1) {
-                            ctx.send(":warning: No matches found.").queue();
+                            ctx.send(Emotes.getFailure() + ' ' + "No matches found.").queue();
                             return;
                         }
                         JSONObject word = results.getJSONObject(0);
@@ -630,7 +630,7 @@ public class UtilityCog extends Cog {
         try {
             rawOutput = Base65536.decode(ctx.rawArgs);
         } catch (DecoderException e) {
-            ctx.send(":warning: Error: `" + e.getMessage() + '`').queue();
+            ctx.send(Emotes.getFailure() + ' ' + "Error: `" + e.getMessage() + '`').queue();
             return;
         }
 
