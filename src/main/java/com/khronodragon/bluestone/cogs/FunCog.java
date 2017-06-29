@@ -3,6 +3,7 @@ package com.khronodragon.bluestone.cogs;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
+import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.emotes.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.util.Strings;
@@ -401,7 +402,7 @@ public class FunCog extends Cog {
     @Command(name = "charlie", desc = "Ask a question... Charlie Charlie are you there?")
     public void cmdCharlie(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + ' ' + "I need a question!").queue();
+            ctx.send(":warning: I need a question!").queue();
             return;
         }
         String question = ctx.rawArgs.endsWith("?") ? ctx.rawArgs : ctx.rawArgs + "?";

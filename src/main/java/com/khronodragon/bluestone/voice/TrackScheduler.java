@@ -115,7 +115,7 @@ public class TrackScheduler extends AudioEventAdapter {
         if (infoMap.containsKey(track)) {
             infoMap.get(track).textChannel.sendMessage(":warning: Song appears to be frozen, skipping.").queue();
         }
-        
+
         track.stop();
         nextTrack();
     }

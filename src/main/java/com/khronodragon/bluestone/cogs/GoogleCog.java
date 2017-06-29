@@ -6,6 +6,7 @@ import com.google.common.cache.LoadingCache;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
+import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -79,12 +80,12 @@ public class GoogleCog extends Cog {
                         }
                     } else if (resp.has("error")) {
                         logger.error("Google returned an error: {}", resp.getJSONObject("error"));
-                        emb.setDescription(Emotes.getFailure() + ' ' + "An error occurred, probably because I've searched too many times today.");
+                        emb.setDescription("⚠ An error occurred, probably because I've searched too many times today.");
                     } else if (resp.has("searchInformation") && resp.getJSONObject("searchInformation").getInt("totalResults") < 1) {
                         emb.setDescription("No results.");
                     } else {
                         logger.info("Weird response from Google: {}", resp);
-                        emb.setDescription(Emotes.getFailure() + ' ' + "The response seems to have been invalid. Try again later?");
+                        emb.setDescription("⚠ The response seems to have been invalid. Try again later?");
                     }
 
                     return emb.build();
@@ -113,7 +114,7 @@ public class GoogleCog extends Cog {
         final String query = String.join(" ", ctx.args);
         String key = bot.getKeys().optString("google");
         if (key == null) {
-            ctx.send(Emotes.getFailure() + ' ' + "The bot doesn't have a Google API key set up!").queue();
+            ctx.send(":warning: The bot doesn't have a Google API key set up!").queue();
             return;
         }
 
@@ -122,7 +123,7 @@ public class GoogleCog extends Cog {
             encodedQuery = URLEncoder.encode(query, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             bot.logger.error("System doesn't support UTF-8!", e);
-            ctx.send(Emotes.getFailure() + ' ' + "The system this bot is running on doesn't support an essential encoding.").queue();
+            ctx.send(":warning: The system this bot is running on doesn't support an essential encoding.").queue();
             return;
         }
         ctx.channel.sendTyping().queue();
