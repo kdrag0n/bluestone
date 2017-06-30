@@ -87,7 +87,11 @@ public class Strings {
         Matcher matcher = regex.matcher(input);
         while (matcher.find()) {
             String rep = callback.replace(matcher.group(1));
-            matcher.appendReplacement(result, Matcher.quoteReplacement(rep));
+
+            if (rep == null)
+                matcher.appendReplacement(result, "**[__unknown key__]**");
+            else
+                matcher.appendReplacement(result, Matcher.quoteReplacement(rep));
         }
         matcher.appendTail(result);
 

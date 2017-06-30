@@ -259,7 +259,7 @@ public class WelcomeCog extends Cog {
                     .map("guild_name", guild::getName)
                     .map("prefix", () -> bot.getShardUtil().getPrefixStore().getPrefix(guild.getIdLong()))
                     .map("bot_owner", "Dragon5232#1841")
-                    .map("RIP", Emotes::getGrave)
+                    .map("rip", Emotes::getGrave)
                     .exec(m);
         });
     }
@@ -274,6 +274,9 @@ public class WelcomeCog extends Cog {
             return;
 
         if (!event.getGuild().isAvailable())
+            return;
+
+        if (!event.getGuild().getPublicChannel().canTalk())
             return;
 
         try {
@@ -304,6 +307,9 @@ public class WelcomeCog extends Cog {
             return;
 
         if (!event.getGuild().isAvailable())
+            return;
+
+        if (!event.getGuild().getPublicChannel().canTalk())
             return;
 
         try {
