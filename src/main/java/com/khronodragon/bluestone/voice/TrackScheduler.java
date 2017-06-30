@@ -17,7 +17,6 @@ public class TrackScheduler extends AudioEventAdapter {
     private Date emptyPauseTime = new Date();
     public final AudioPlayer player;
     public final Queue<AudioTrack> queue = new LinkedList<>();
-    public final Map<AudioTrack, ExtraTrackInfo> infoMap = new HashMap<>();
     private AudioTrack lastTrack;
     public AudioTrack current;
     public AudioState state;
@@ -49,7 +48,7 @@ public class TrackScheduler extends AudioEventAdapter {
     }
 
     public void queue(AudioTrack track, ExtraTrackInfo info) {
-        infoMap.put(track, info);
+        track.setUserData(info);
         queue(track);
     }
 
@@ -71,9 +70,11 @@ public class TrackScheduler extends AudioEventAdapter {
     @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
         current = track;
-        if (infoMap.containsKey(track)) {
+        if (track.getUserData() != null) {
             AudioTrackInfo info = track.getInfo();
-            infoMap.get(track).textChannel.sendMessage(":arrow_forward: **" + mentionClean(info.title) + "**, length **" + Bot.formatDuration(info.length / 1000L) + "**").queue();
+            track.getUserData(ExtraTrackInfo.class).textChannel
+                    .sendMessage(":arrow_forward: **" + mentionClean(info.title) + "**, length **" +
+                            Bot.formatDuration(info.length / 1000L) + "**").queue();
         }
     }
 
@@ -81,40 +82,37 @@ public class TrackScheduler extends AudioEventAdapter {
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         lastTrack = track;
         current = null;
-        try {
-            try {
-                track.stop();
-            } catch (Throwable e) {}
 
-            if (endReason.mayStartNext) {
-                if (repeating) {
-                    AudioTrack clone = track.makeClone();
-                    if (infoMap.containsKey(track)) {
-                        infoMap.put(clone, infoMap.get(track));
-                    }
-                    player.startTrack(clone, false);
-                } else {
-                    nextTrack();
+        try {
+            track.stop();
+        } catch (Throwable e) {}
+
+        if (endReason.mayStartNext) {
+            if (repeating) {
+                AudioTrack clone = track.makeClone();
+                if (track.getUserData() != null) {
+                    clone.setUserData(track.getUserData());
                 }
-            }
-        } finally {
-            if (infoMap.containsKey(track)) {
-                infoMap.remove(track);
+                player.startTrack(clone, false);
+            } else {
+                nextTrack();
             }
         }
     }
 
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
-        if (infoMap.containsKey(track)) {
-            infoMap.get(track).textChannel.sendMessage(":bangbang: Error in audio player! " + exception.getMessage());
+        if (track.getUserData() != null) {
+            track.getUserData(ExtraTrackInfo.class).textChannel
+                    .sendMessage(":bangbang: Error in audio player! " + exception.getMessage()).queue();
         }
     }
 
     @Override
     public void onTrackStuck(AudioPlayer player, AudioTrack track, long thresholdMs) {
-        if (infoMap.containsKey(track)) {
-            infoMap.get(track).textChannel.sendMessage(Emotes.getFailure() + " Song appears to be frozen, skipping.").queue();
+        if (track.getUserData() != null) {
+            track.getUserData(ExtraTrackInfo.class).textChannel
+                    .sendMessage(Emotes.getFailure() + " Song appears to be frozen, skipping.").queue();
         }
 
         track.stop();

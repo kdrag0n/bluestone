@@ -53,7 +53,7 @@ public class MusicCog extends Cog {
         playerManager.registerSourceManager(new BandcampAudioSourceManager());
         playerManager.registerSourceManager(new VimeoAudioSourceManager());
         playerManager.registerSourceManager(new TwitchStreamAudioSourceManager());
-        bgExecutor.scheduleWithFixedDelay(() -> doCleanup(), 5, 5, TimeUnit.MINUTES);
+        bgExecutor.scheduleWithFixedDelay(this::doCleanup, 5, 5, TimeUnit.MINUTES);
     }
 
     public String getName() {
@@ -92,7 +92,7 @@ public class MusicCog extends Cog {
                 state.scheduler.setEmptyPauseTime(new Date());
                 state.scheduler.setEmptyPaused(true);
 
-                ExtraTrackInfo info = state.scheduler.infoMap.get(state.scheduler.current);
+                ExtraTrackInfo info = state.scheduler.current.getUserData(ExtraTrackInfo.class);
                 if (info != null) {
                     info.textChannel.sendMessage("Voice channel empty - player paused.").queue();
                 }
@@ -316,7 +316,7 @@ public class MusicCog extends Cog {
     public void cmdSkip(Context ctx) {
         channelChecks(ctx);
         AudioState state = getAudioState(ctx.guild);
-        ExtraTrackInfo info = state.scheduler.infoMap.get(state.scheduler.current);
+        ExtraTrackInfo info = state.scheduler.current.getUserData(ExtraTrackInfo.class);
         if (info == null) {
             ctx.send(Emotes.getFailure() + " The current track is missing a state!").queue();
             return;
