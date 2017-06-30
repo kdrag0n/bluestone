@@ -1,5 +1,6 @@
 package com.khronodragon.bluestone;
 
+import com.google.common.reflect.ClassPath;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.j256.ormlite.dao.Dao;
 import com.jagrosh.jdautilities.waiter.EventWaiter;
@@ -36,6 +37,7 @@ import org.reflections.Reflections;
 
 import javax.security.auth.login.LoginException;
 import java.awt.*;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.NumberFormat;
@@ -255,6 +257,9 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
         if (jda.getGuildById(125227483518861312L) != null)
             Emotes.setHasJda(true);
+
+        if (jda.getGuildById(239772188649979904L) != null)
+            Emotes.setHasHideout(true);
 
         Runnable task = () -> {
             String statusLine;

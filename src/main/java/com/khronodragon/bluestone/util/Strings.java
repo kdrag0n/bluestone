@@ -72,6 +72,10 @@ public class Strings {
         return Short.toString(value);
     }
 
+    public static String str(double value) {
+        return Double.toString(value);
+    }
+
     public static String simpleJoin(List<String> strings) {
         StringBuilder builder = new StringBuilder();
 

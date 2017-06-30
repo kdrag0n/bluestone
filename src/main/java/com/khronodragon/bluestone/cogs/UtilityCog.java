@@ -22,6 +22,7 @@ import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.async.Callback;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.sun.management.OperatingSystemMXBean;
 import io.codearte.jfairy.Fairy;
 import io.codearte.jfairy.producer.person.Person;
 import net.dv8tion.jda.client.entities.Group;
@@ -49,6 +50,7 @@ import static java.text.MessageFormat.format;
 
 import java.awt.*;
 import java.io.*;
+import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
@@ -56,6 +58,7 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -72,6 +75,8 @@ public class UtilityCog extends Cog {
                 Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE};
     private static final String MC_COLOR_PATTERN = "\\u00a7[4c6e2ab319d5f78lnokmr]";
     private static final JSONArray EMPTY_JSON_ARRAY = new JSONArray();
+    private static final OperatingSystemMXBean systemBean = (OperatingSystemMXBean)
+            ManagementFactory.getOperatingSystemMXBean();
 
     private static final Fairy fairy = Fairy.create();
     private static final QRCodeWriter qrWriter = new QRCodeWriter();
@@ -172,16 +177,15 @@ public class UtilityCog extends Cog {
             return;
         }
 
-        String author = getTag(user);
-        if (user.isBot())
-            author += Emotes.getBotTag();
-
         EmbedBuilder emb = new EmbedBuilder()
                 .setColor(randomColor())
-                .setAuthor(author, user.getEffectiveAvatarUrl(), user.getEffectiveAvatarUrl())
+                .setAuthor(getTag(user), user.getEffectiveAvatarUrl(), user.getEffectiveAvatarUrl())
                 .setThumbnail(user.getEffectiveAvatarUrl())
                 .addField("ID", user.getId(), true)
                 .addField("Creation Time", Date.from(user.getCreationTime().toInstant()).toString(), true);
+
+        if (user.isBot())
+            emb.setDescription("User is " + Emotes.getBotTag());
 
         if (ctx.guild != null) {
             Member member = ctx.guild.getMember(user);
@@ -248,12 +252,23 @@ public class UtilityCog extends Cog {
         ShardUtil shardUtil = bot.getShardUtil();
         EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://khronodragon.com/")
                 .setColor(randomColor())
-                .setDescription("Made " + Emotes.getCredits())
+                .setDescription(Emotes.getCredits())
                 .addField("Guilds", str(shardUtil.getGuildCount()), true)
                 .addField("Uptime", bot.formatUptime(), true)
                 .addField("Requests", str(shardUtil.getRequestCount()), true)
                 .addField("Threads", str(Thread.activeCount()), true)
                 .addField("Memory Used", bot.formatMemory(), true)
+                .addField("CPU Usage", format("{0}% - system {1}%",
+                        (int) Math.ceil(systemBean.getProcessCpuLoad() * 100),
+                        (int) Math.ceil(systemBean.getSystemCpuLoad() * 100)), true)
+                .addField("Load Average", ((Supplier<String>) () -> {
+                    double load = systemBean.getSystemLoadAverage();
+
+                    if (load == -1.0d)
+                        return "¯\\_(ツ)_/¯";
+                    else
+                        return str(load);
+                }).get(), true)
                 .addField("Users", str(shardUtil.getUserCount()), true)
                 .addField("Channels", str(shardUtil.getChannelCount()), true)
                 .addField("Commands", str(new HashSet<>(bot.commands.values()).size()), true);

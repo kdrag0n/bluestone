@@ -23,7 +23,7 @@ import static java.text.MessageFormat.format;
 
 public class ReplCog extends Cog {
     private static final Logger logger = LogManager.getLogger(ReplCog.class);
-    private static final String GROOVY_PRE_INJECT = "import net.dv8tion.jda.core.entities.*\n" +
+    public static final String GROOVY_PRE_INJECT = "import net.dv8tion.jda.core.entities.*\n" +
             "import net.dv8tion.jda.core.*\n" +
             "import net.dv8tion.jda.core.entities.impl.*\n" +
             "import net.dv8tion.jda.core.audio.*\n" +
@@ -41,7 +41,33 @@ public class ReplCog extends Cog {
             "import com.khronodragon.bluestone.sql.*\n" +
             "import com.khronodragon.bluestone.handlers.*\n" +
             "import com.khronodragon.bluestone.enums.*\n" +
+            "import com.khronodragon.bluestone.util.*\n" +
             "import java.time.*\n";
+    private static final String PYTHON_IMPORTS = "from net.dv8tion.jda.core.entities import AudioChannel, Channel, ChannelType, EmbedType, Emote, EntityBuilder, Game, Guild, GuildVoiceState, Icon, IFakeable, IMentionable, Invite, IPermissionHolder, ISnowflake, Member, Message, MessageChannel, MessageEmbed, MessageHistory, MessageReaction, MessageType, PermissionOverride, PrivateChannel, Role, SelfUser, TextChannel, User, VoiceChannel, VoiceState, Webhook\n" +
+            "from net.dv8tion.jda.core import AccountType, EmbedBuilder, JDA, JDABuilder, JDAInfo, MessageBuilder, OnlineStatus, Permission, Region\n" +
+            "from net.dv8tion.jda.core.entities.impl import AbstractChannelImpl, EmoteImpl, GameImpl, GuildImpl, GuildVoiceStateImpl, InviteImpl, JDAImpl, MemberImpl, MessageEmbedImpl, MessageImpl, PermissionOverrideImpl, PrivateChannelImpl, RoleImpl, SelfUserImpl, TextChannelImpl, UserImpl, VoiceChannelImpl, WebhookImpl\n" +
+            "from net.dv8tion.jda.core.audio import AudioConnection, AudioPacket, AudioReceiveHandler, AudioSendHandler, AudioWebSocket, CombinedAudio, Decoder, UserAudio\n" +
+            "from net.dv8tion.jda.core.audit import ActionType, AuditLogChange, AuditLogEntry, AuditLogKey, AuditLogOption, TargetType\n" +
+            "from net.dv8tion.jda.core.managers import AccountManager, AccountManagerUpdatable, AudioManager, ChannelManager, ChannelManagerUpdatable, GuildController, GuildManager, GuildManagerUpdatable, PermOverrideManager, PermOverrideManagerUpdatable, Presence, RoleManager, RoleManagerUpdatable, WebhookManager, WebhookManagerUpdatable\n" +
+            "from net.dv8tion.jda.core.exceptions import AccountTypeException, ErrorResponseException, GuildUnavailableException, PermissionException, RateLimitedException\n" +
+            "from net.dv8tion.jda.core.events import DisconnectEvent, Event, ExceptionEvent, ReadyEvent, ReconnectedEvent, ResumedEvent, ShutdownEvent, StatusChangeEvent\n" +
+            "from net.dv8tion.jda.core.utils import IOUtil, MiscUtil, NativeUtil, PermissionUtil, SimpleLog, WidgetUtil\n" +
+            "from com.khronodragon.bluestone import Bot, Cog, Command, Context, DataStore, Emotes, ExtraEvent, Permissions, PrefixStore, ShardUtil, Start\n" +
+            "from org.apache.logging.log4j import CloseableThreadContext, EventLogger, Level, Logger, Marker, MarkerManager, ThreadContext, LoggingException, LogManager\n" +
+            "from javax.script import ScriptEngineManager, ScriptEngine\n" +
+            "from com.khronodragon.bluestone.cogs import AdminCog, CogmanCog, CoreCog, FunCog, GoogleCog, KewlCog, LuckCog, ModerationCog, MusicCog, OwnerCog, PokemonCog, QuotesCog, ReplCog, StatReporterCog, UtilityCog, WebCog, WelcomeCog\n" +
+            "from com.khronodragon.bluestone.errors import CheckFailure, GuildOnlyError, MessageException, PassException, PermissionError, UserNotFound\n" +
+            "from org.json import CDL, Cookie, CookieList, HTTP, HTTPTokener, JSONArray, JSONException, JSONML, JSONObject, JSONPointer, JSONPointerException, JSONString, JSONStringer, JSONTokener, JSONWriter, Property, XML, XMLTokener\n" +
+            "from com.khronodragon.bluestone.sql import BotAdmin, GuildPrefix, GuildWelcomeMessages, Quote\n" +
+            "from com.khronodragon.bluestone.handlers import MessageWaitEventListener, ReactionWaitEventListener, RejectedExecHandlerImpl\n" +
+            "from com.khronodragon.bluestone.enums import BucketType, MessageDestination\n" +
+            "from com.khronodragon.bluestone.util import Base65536, ClassUtilities, EqualitySet, IntegerZeroTypeAdapter, MinecraftUtil, NullValueWrapper, Paginator, RegexUtil, StreamUtils, Strftime, StringMapper, StringReplacerCallback, Strings, UnisafeString\n" +
+            "from com.khronodragon.bluestone.pokemon import Ability, Description, EggGroup, Evolution, Move, Pokemon, Sprite, Type\n" +
+            "from com.khronodragon.bluestone.emotes import BetterTTVEmoteProvider, DiscordEmoteProvider, EmoteInfo, EmoteProvider, EmoteProviderManager, FrankerFaceZEmoteProvider, TwitchEmoteProvider\n" +
+            "from org.apache.logging.log4j import CloseableThreadContext, EventLogger, Level, Logger, Marker, MarkerManager, ThreadContext, LoggingException, LogManager\n" +
+            "from java.time import Clock, DateTimeException, DayOfWeek, Duration, Instant, LocalDate, LocalDateTime, LocalTime, Month, MonthDay, OffsetDateTime, OffsetTime, Period, Ser, Year, YearMonth, ZonedDateTime, ZoneId, ZoneOffset, ZoneRegion\n" +
+            "from java.util import HashMap, HashSet, LinkedHashSet, LinkedHashMap, TreeSet, Set, List, Map, Optional, ArrayList, LinkedList, TreeMap, ConcurrentHashMap, Date, Base64, AbstractList, AbstractMap, Collection, AbstractCollection, IdentityHashMap, Random\n" +
+            "from java.lang import System, Long, Integer, Character, String, Short, Byte, Boolean";
 
     private TLongSet replSessions = new TLongHashSet();
 
@@ -108,6 +134,8 @@ public class ReplCog extends Cog {
         engine.put("guild", ctx.guild);
         engine.put("test", "Test right back at ya!");
         engine.put("msg", ctx.message);
+        if (language.equalsIgnoreCase("python"))
+            engine.put("imports", PYTHON_IMPORTS);
 
         ctx.send("REPL started. Prefix is " + prefix).queue();
         while (true) {
@@ -127,7 +155,7 @@ public class ReplCog extends Cog {
 
             Object result;
             try {
-                if (language.equals("groovy"))
+                if (language.equalsIgnoreCase("groovy"))
                     result = GROOVY_PRE_INJECT + engine.eval(cleaned);
                 else
                     result = engine.eval(cleaned);
