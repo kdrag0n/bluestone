@@ -3,6 +3,7 @@ package com.khronodragon.bluestone.cogs;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
@@ -130,7 +131,7 @@ public class GoogleCog extends Cog {
 
         try {
             ctx.send(cache.get(format(API_URL_BASE, key, encodedQuery))).queue();
-        } catch (ExecutionException e) {
+        } catch (ExecutionException|UncheckedExecutionException e) {
             logger.error("Failed to get results", e.getCause());
             ctx.send(FAILED_EMBED).queue();
         }

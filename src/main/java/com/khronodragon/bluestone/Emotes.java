@@ -1,6 +1,5 @@
 package com.khronodragon.bluestone;
 
-import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.Member;
 import org.apache.commons.lang3.text.WordUtils;
@@ -8,21 +7,18 @@ import org.apache.commons.lang3.text.WordUtils;
 public class Emotes {
     private static boolean hasDbots = false;
     private static boolean hasJda = false;
+    private static boolean hasHideout = false;
+
+    public static void setHasHideout(boolean hasHideout) {
+        Emotes.hasHideout = hasHideout;
+    }
 
     static void setHasDbots(boolean hasDbots) {
         Emotes.hasDbots = hasDbots;
     }
 
-   static void setHasJda(boolean hasJda) {
+    static void setHasJda(boolean hasJda) {
         Emotes.hasJda = hasJda;
-    }
-
-    public static boolean hasDbots() {
-        return hasDbots;
-    }
-
-    public static boolean hasJda() {
-        return hasJda;
     }
 
     public static String getFullMemberStatus(Member member) {
@@ -35,7 +31,7 @@ public class Emotes {
 
     public static String getMemberStatus(Member member) {
         if (hasDbots) {
-            if (member.getGame().getType() == Game.GameType.TWITCH)
+            if (member.getGame() != null && member.getGame().getType() == Game.GameType.TWITCH)
                 return "<:streaming:313956277132853248>";
 
             switch (member.getOnlineStatus()) {
@@ -67,10 +63,14 @@ public class Emotes {
     }
 
     public static String getCredits() {
-        if (hasJda)
-            return "<:jda:230988580904763393> by <:DV8:245233172189675520>, with <:idea:245257202305073152>";
+        if (hasHideout && hasJda)
+            return "A <:discord:267900903833600000> bot by **Dragon5232#1841** made with <:jda:230988580904763393> by <:DV8:245233172189675520>, <:gradle:252555466498899969>, and <:idea:245257202305073152>";
+        else if (hasHideout)
+            return "A <:discord:267900903833600000> bot by **Dragon5232#1841** made with JDA by DV8FromTheWorld, and IntelliJ IDEA";
+        else if (hasJda)
+            return "A Discord bot by **Dragon5232#1841** made with <:jda:230988580904763393> by <:DV8:245233172189675520>, <:gradle:252555466498899969>, and <:idea:245257202305073152>";
         else
-            return "JDA by DV8FromTheWorld, with IntelliJ IDEA";
+            return "A Discord bot by **Dragon5232#1841** made with JDA by DV8FromTheWorld, and IntelliJ IDEA";
     }
 
     public static String getGrave() {

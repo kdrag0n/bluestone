@@ -30,17 +30,6 @@ import static java.text.MessageFormat.format;
 public class OwnerCog extends Cog {
     private static final Logger logger = LogManager.getLogger(OwnerCog.class);
     private ScriptEngine evalEngine = new ScriptEngineManager().getEngineByName("groovy");
-    private static final String EVAL_PRE_INJECT = "import net.dv8tion.jda.core.entities.*\n" +
-            "import net.dv8tion.jda.core.*\n" +
-            "import com.khronodragon.bluestone.*\n" +
-            "import org.apache.logging.log4j.*\n" +
-            "import javax.script.*\n" +
-            "import com.khronodragon.bluestone.cogs.*\n" +
-            "import com.khronodragon.bluestone.errors.*\n" +
-            "import org.json.*\n" +
-            "import com.khronodragon.bluestone.sql.*\n" +
-            "import com.khronodragon.bluestone.handlers.*\n" +
-            "import com.khronodragon.bluestone.enums.*\n";
 
     public OwnerCog(Bot bot) {
         super(bot);
@@ -186,7 +175,7 @@ public class OwnerCog extends Cog {
 
         Object result;
         try {
-            result = evalEngine.eval(EVAL_PRE_INJECT + ReplCog.cleanupCode(ctx.rawArgs));
+            result = evalEngine.eval(ReplCog.GROOVY_PRE_INJECT + ReplCog.cleanupCode(ctx.rawArgs));
         } catch (ScriptException e) {
             result = e.getCause();
             if (result instanceof ScriptException) {

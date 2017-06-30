@@ -1,5 +1,6 @@
 package com.khronodragon.bluestone;
 
+import com.google.common.reflect.ClassPath;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.j256.ormlite.dao.Dao;
 import com.jagrosh.jdautilities.waiter.EventWaiter;
@@ -36,6 +37,7 @@ import org.reflections.Reflections;
 
 import javax.security.auth.login.LoginException;
 import java.awt.*;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.NumberFormat;
@@ -256,6 +258,9 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         if (jda.getGuildById(125227483518861312L) != null)
             Emotes.setHasJda(true);
 
+        if (jda.getGuildById(239772188649979904L) != null)
+            Emotes.setHasHideout(true);
+
         Runnable task = () -> {
             String statusLine;
             switch (ThreadLocalRandom.current().nextInt(1, 12)) {
@@ -272,7 +277,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     statusLine = format("in {0} guilds", shardUtil.getGuildCount());
                     break;
                 case 5:
-                    statusLine = format("from shard {0} of {0}", getShardNum(), shardUtil.getShardCount());
+                    statusLine = format("from shard {0} of {1}", getShardNum(), getShardTotal());
                     break;
                 case 6:
                     statusLine = "with my buddies";
@@ -617,32 +622,35 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
 
         ShardUtil shardUtil = new ShardUtil(shardCount, config);
+        JDABuilder builder = new JDABuilder(accountType)
+                .setToken(token)
+                .setAudioEnabled(true)
+                .setAutoReconnect(true)
+                .setWebSocketTimeout(120000)
+                .setBulkDeleteSplittingEnabled(false)
+                .setStatus(OnlineStatus.ONLINE)
+                .setCorePoolSize(5)
+                .setEnableShutdownHook(true)
+                .setGame(Game.of("something"));
+
+        if ((System.getProperty("os.arch").startsWith("x86") ||
+                System.getProperty("os.arch").equals("amd64")) &&
+                (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX))
+            builder.setAudioSendFactory(new NativeAudioSendFactory());
 
         for (int i = 0; i < shardCount; i++) {
             final int shardId = i;
 
             Runnable monitor = () -> {
                 final Logger logger = LogManager.getLogger("ShardMonitor " + shardId);
+
                 while (true) {
                     Bot bot = new Bot();
-                    JDABuilder builder = new JDABuilder(accountType)
-                            .setToken(token)
-                            .addEventListener(bot)
-                            .setAudioEnabled(true)
-                            .setAutoReconnect(true)
-                            .setWebSocketTimeout(120000)
-                            .setBulkDeleteSplittingEnabled(false)
-                            .setStatus(OnlineStatus.ONLINE)
-                            .setGame(Game.of("something"));
-
-                    if ((System.getProperty("os.arch").startsWith("x86") ||
-                            System.getProperty("os.arch").equals("amd64")) &&
-                            (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX))
-                        builder.setAudioSendFactory(new NativeAudioSendFactory());
 
                     if (shardCount != 1) {
                         builder.useSharding(shardId, shardCount);
                     }
+                    builder.addEventListener(bot);
 
                     JDA jda;
                     try {
@@ -655,7 +663,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                             Thread.sleep(1000);
                         } catch (InterruptedException ex) {}
                         continue;
+                    } finally {
+                        builder.removeEventListener(bot);
                     }
+
                     bot.setJda(jda);
                     shardUtil.setShard(shardId, bot);
                     bot.setShardUtil(shardUtil);
