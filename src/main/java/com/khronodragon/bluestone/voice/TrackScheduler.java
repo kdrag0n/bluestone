@@ -85,7 +85,7 @@ public class TrackScheduler extends AudioEventAdapter {
 
         try {
             track.stop();
-        } catch (Throwable e) {}
+        } catch (Throwable ignored) {}
 
         if (endReason.mayStartNext) {
             if (repeating) {
