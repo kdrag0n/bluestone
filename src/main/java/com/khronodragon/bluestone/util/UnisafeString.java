@@ -1,6 +1,5 @@
 package com.khronodragon.bluestone.util;
 
-import javax.annotation.Nonnull;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.PrimitiveIterator;
@@ -11,7 +10,7 @@ public class UnisafeString {
     private final String data;
     private final int length;
 
-    public UnisafeString(@Nonnull String stringIn) {
+    public UnisafeString(String stringIn) {
         data = Objects.requireNonNull(stringIn);
         length = data.codePointCount(0, data.length());
     }

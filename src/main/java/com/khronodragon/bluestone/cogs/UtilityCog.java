@@ -513,7 +513,7 @@ public class UtilityCog extends Cog {
                         JSONArray results = response.getBody().getObject().getJSONArray("list");
 
                         if (results.length() < 1) {
-                            ctx.send(Emotes.getFailure() + " No matches found.").queue();
+                            ctx.send(Emotes.getFailure() + " No definitions found.").queue();
                             return;
                         }
                         JSONObject word = results.getJSONObject(0);

@@ -7,6 +7,7 @@ import com.khronodragon.bluestone.util.Paginator;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.MessageEmbed;
+import net.dv8tion.jda.core.exceptions.PermissionException;
 
 import java.util.*;
 import static java.text.MessageFormat.format;
@@ -178,7 +179,11 @@ public class CoreCog extends Cog {
         }
 
         if (destination == MessageDestination.AUTHOR && ctx.guild != null) {
-            ctx.send("**__I sent you my help, check your DMs!__**").queue();
+            try {
+                ctx.message.addReaction("").queue();
+            } catch (PermissionException ignored) {
+                ctx.send(Emotes.getSuccess() + " Check your DMs!").queue();
+            }
         }
     }
 
