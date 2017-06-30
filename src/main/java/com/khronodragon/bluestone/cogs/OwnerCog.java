@@ -77,16 +77,37 @@ public class OwnerCog extends Cog {
 
     @Command(name = "shardtree", desc = "Display a shard-guild tree.", perms = {"owner"})
     public void cmdShardTree(Context ctx) {
-        List<String> items = new ArrayList<>();
+        StringBuilder result = new StringBuilder("```css\n");
 
-        for (Bot shard: ctx.bot.getShardUtil().getShards()) {
-            items.add("Shard " + (shard.getShardNum() - 1) + ':');
-            for (Guild guild: shard.getJda().getGuilds()) {
-                items.add("    - " + guild.getName());
+        if (bot.getShardUtil().getGuildCount() < 100) {
+            for (Bot shard: ctx.bot.getShardUtil().getShards()) {
+                result.append("Shard ")
+                        .append(shard.getShardNum() - 1)
+                        .append(':');
+
+                for (Guild guild: shard.getJda().getGuilds()) {
+                    result.append('\n')
+                            .append("    - ")
+                            .append(guild.getName());
+                }
+
+                result.append('\n');
+            }
+        } else {
+            for (Bot shard: ctx.bot.getShardUtil().getShards()) {
+                result.append('[')
+                        .append(ctx.jda.getShardInfo().getShardId() == shard.getJda().getShardInfo().getShardId() ?
+                                    '*' : ' ')
+                        .append("] Shard ")
+                        .append(shard.getShardNum() - 1)
+                        .append(": ")
+                        .append(shard.getJda().getGuilds().size())
+                        .append(" guilds\n");
             }
         }
+        result.append("```");
 
-        ctx.send(format("```java\n{0}```", String.join("\n", items))).queue();
+        ctx.send(result.toString()).queue();
     }
 
     @Cooldown(scope = BucketType.GLOBAL, delay = 10)
@@ -241,7 +262,7 @@ public class OwnerCog extends Cog {
             return;
         }
 
-        ctx.jda.getPresence().setGame(Game.of(ctx.rawArgs));
+        bot.getShardUtil().getShards().forEach(b -> b.getJda().getPresence().setGame(Game.of(ctx.rawArgs)));
         ctx.send(Emotes.getSuccess() + " Game set.").queue();
     }
 }

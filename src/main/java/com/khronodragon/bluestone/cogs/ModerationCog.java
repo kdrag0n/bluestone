@@ -36,8 +36,8 @@ public class ModerationCog extends Cog {
     private static final Pattern PURGE_REGEX_PATTERN = Pattern.compile("\\[(.*?)]", Pattern.DOTALL);
     private static final Pattern PURGE_MENTION_PATTERN = Pattern.compile("<@!?(\\d{17,20})>");
     private static final Pattern PURGE_NUM_PATTERN = Pattern.compile("(?:^|\\s)(\\d{1,3})(?:$|\\s)");
-    private static final Collection<Permission> MUTED_PERMS = Collections.unmodifiableCollection(
-            Arrays.asList(Permission.MESSAGE_WRITE, Permission.MESSAGE_ADD_REACTION));
+    private static final Collection<Permission> MUTED_PERMS = Arrays.asList(Permission.MESSAGE_WRITE,
+            Permission.MESSAGE_ADD_REACTION);
     private static final Pattern MENTION_PATTERN = Pattern.compile("<@!?(\\d{17,20})>");
 
     public ModerationCog(Bot bot) {
@@ -196,8 +196,7 @@ public class ModerationCog extends Cog {
     }
 
     @Command(name = "mute", desc = "Mute someone in all text channels.", guildOnly = true,
-            perms = {"manageRoles", "manageChannel"},
-            thread = true, usage = "[@user] {reason}")
+            perms = {"manageRoles", "manageChannel"}, usage = "[@user] {reason}")
     public void cmdMute(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need someone to mute!").queue();
@@ -211,37 +210,38 @@ public class ModerationCog extends Cog {
         }
 
         Member user = ctx.guild.getMember(ctx.message.getMentionedUsers().get(0));
-        Message status = ctx.send(":hourglass: Muting...").complete();
-        String reason;
-        String userReason = ctx.rawArgs.replaceAll(MENTION_PATTERN.pattern(), "").trim();
-        if (userReason.length() < 1 || userReason.length() > 450)
-            reason = getTag(ctx.author) + " used the mute command (with sufficient permissions)";
-        else
-            reason = getTag(ctx.author) + ": " + userReason;
+        ctx.send(":hourglass: Muting...").queue(status -> {
+            String reason;
+            String userReason = ctx.rawArgs.replaceAll(MENTION_PATTERN.pattern(), "").trim();
 
-        for (TextChannel channel: ctx.guild.getTextChannels()) {
-            if (!user.hasPermission(channel, Permission.MESSAGE_WRITE))
-                continue;
-
-            PermissionOverride override = channel.getPermissionOverride(user);
-            if (override == null)
-                channel.createPermissionOverride(user)
-                        .setDeny(MUTED_PERMS)
-                        .reason(reason).complete();
+            if (userReason.length() < 1 || userReason.length() > 450)
+                reason = getTag(ctx.author) + " used the mute command (with sufficient permissions)";
             else
-                override.getManager().deny(MUTED_PERMS).reason(reason).complete();
-        }
+                reason = getTag(ctx.author) + ": " + userReason;
 
-        status.editMessage(Emotes.getSuccess() + " Muted **" +
-                user.getUser().getName() +
-                '#' +
-                user.getUser().getDiscriminator() +
-                "**.").queue();
+            for (TextChannel channel: ctx.guild.getTextChannels()) {
+                if (!user.hasPermission(channel, Permission.MESSAGE_WRITE))
+                    continue;
+
+                PermissionOverride override = channel.getPermissionOverride(user);
+                if (override == null)
+                    channel.createPermissionOverride(user)
+                            .setDeny(MUTED_PERMS)
+                            .reason(reason).queue();
+                else
+                    override.getManager().deny(MUTED_PERMS).reason(reason).queue();
+            }
+
+            status.editMessage(Emotes.getSuccess() + " Muted **" +
+                    user.getUser().getName() +
+                    '#' +
+                    user.getUser().getDiscriminator() +
+                    "**.").queue();
+        });
     }
 
     @Command(name = "unmute", desc = "Unmute someone in all text channels.", guildOnly = true,
-            perms = {"manageRoles", "manageChannel"},
-            thread = true, usage = "[@user] {reason}")
+            perms = {"manageRoles", "manageChannel"}, usage = "[@user] {reason}")
     public void cmdUnmute(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need someone to unmute!").queue();
@@ -255,30 +255,32 @@ public class ModerationCog extends Cog {
         }
 
         Member user = ctx.guild.getMember(ctx.message.getMentionedUsers().get(0));
-        Message status = ctx.send(":hourglass: Unmuting...").complete();
-        String reason;
-        String userReason = ctx.rawArgs.replaceAll(MENTION_PATTERN.pattern(), "").trim();
-        if (userReason.length() < 1 || userReason.length() > 450)
-            reason = getTag(ctx.author) + " used the unmute command (with sufficient permissions)";
-        else
-            reason = getTag(ctx.author) + ": " + userReason;
+        ctx.send(":hourglass: Unmuting...").queue(status -> {
+            String reason;
+            String userReason = ctx.rawArgs.replaceAll(MENTION_PATTERN.pattern(), "").trim();
 
-        for (TextChannel channel: ctx.guild.getTextChannels()) {
-            if (user.hasPermission(channel, Permission.MESSAGE_WRITE))
-                continue;
-
-            PermissionOverride override = channel.getPermissionOverride(user);
-            if (override == null)
-                continue;
+            if (userReason.length() < 1 || userReason.length() > 450)
+                reason = getTag(ctx.author) + " used the unmute command (with sufficient permissions)";
             else
-                override.getManager().grant(MUTED_PERMS).reason(reason).complete();
-        }
+                reason = getTag(ctx.author) + ": " + userReason;
 
-        status.editMessage(Emotes.getSuccess() + " Unmuted **" +
-                user.getUser().getName() +
-                '#' +
-                user.getUser().getDiscriminator() +
-                "**.").queue();
+            for (TextChannel channel: ctx.guild.getTextChannels()) {
+                if (user.hasPermission(channel, Permission.MESSAGE_WRITE))
+                    continue;
+
+                PermissionOverride override = channel.getPermissionOverride(user);
+                if (override == null)
+                    continue;
+                else
+                    override.getManager().grant(MUTED_PERMS).reason(reason).queue();
+            }
+
+            status.editMessage(Emotes.getSuccess() + " Unmuted **" +
+                    user.getUser().getName() +
+                    '#' +
+                    user.getUser().getDiscriminator() +
+                    "**.").queue();
+        });
     }
 
     @Command(name = "ban", desc = "Swing the ban hammer on someone.", guildOnly = true,
