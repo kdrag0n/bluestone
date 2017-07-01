@@ -42,8 +42,7 @@ public class ShardUtil {
 
         try {
             dbConn = new JdbcPooledConnectionSource("jdbc:" +
-                    StringUtils.replaceOnce(config.optString("db_url", "h2:./database"),
-                            "mysql://", "mariadb://"),
+                    config.optString("db_url", "h2:./database"),
                     config.optString("db_user", null), config.optString("db_pass", null));
         } catch (SQLException e) {
             logger.error("Failed to connect to database!", e);

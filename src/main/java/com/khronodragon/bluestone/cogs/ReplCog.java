@@ -5,24 +5,25 @@ import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
+import com.khronodragon.bluestone.util.ScriptExceptionThrower;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
+import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.requests.RestAction;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import javax.script.*;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static java.text.MessageFormat.format;
 
 public class ReplCog extends Cog {
     private static final Logger logger = LogManager.getLogger(ReplCog.class);
+    private static final String[] NASHORN_ARGS = {"--language=es6", "-scripting"};
     public static final String GROOVY_PRE_INJECT = "import net.dv8tion.jda.core.entities.*\n" +
             "import net.dv8tion.jda.core.*\n" +
             "import net.dv8tion.jda.core.entities.impl.*\n" +
@@ -42,7 +43,8 @@ public class ReplCog extends Cog {
             "import com.khronodragon.bluestone.handlers.*\n" +
             "import com.khronodragon.bluestone.enums.*\n" +
             "import com.khronodragon.bluestone.util.*\n" +
-            "import java.time.*\n";
+            "import java.time.*\n" +
+            "import java.math.*\n";
     private static final String PYTHON_IMPORTS = "from net.dv8tion.jda.core.entities import AudioChannel, Channel, ChannelType, EmbedType, Emote, EntityBuilder, Game, Guild, GuildVoiceState, Icon, IFakeable, IMentionable, Invite, IPermissionHolder, ISnowflake, Member, Message, MessageChannel, MessageEmbed, MessageHistory, MessageReaction, MessageType, PermissionOverride, PrivateChannel, Role, SelfUser, TextChannel, User, VoiceChannel, VoiceState, Webhook\n" +
             "from net.dv8tion.jda.core import AccountType, EmbedBuilder, JDA, JDABuilder, JDAInfo, MessageBuilder, OnlineStatus, Permission, Region\n" +
             "from net.dv8tion.jda.core.entities.impl import AbstractChannelImpl, EmoteImpl, GameImpl, GuildImpl, GuildVoiceStateImpl, InviteImpl, JDAImpl, MemberImpl, MessageEmbedImpl, MessageImpl, PermissionOverrideImpl, PrivateChannelImpl, RoleImpl, SelfUserImpl, TextChannelImpl, UserImpl, VoiceChannelImpl, WebhookImpl\n" +
@@ -65,7 +67,8 @@ public class ReplCog extends Cog {
             "from org.apache.logging.log4j import CloseableThreadContext, EventLogger, Level, Logger, Marker, MarkerManager, ThreadContext, LoggingException, LogManager\n" +
             "from java.time import Clock, DateTimeException, DayOfWeek, Duration, Instant, LocalDate, LocalDateTime, LocalTime, Month, MonthDay, OffsetDateTime, OffsetTime, Period, Ser, Year, YearMonth, ZonedDateTime, ZoneId, ZoneOffset, ZoneRegion\n" +
             "from java.util import HashMap, HashSet, LinkedHashSet, LinkedHashMap, TreeSet, Set, List, Map, Optional, ArrayList, LinkedList, TreeMap, Date, Base64, AbstractList, AbstractMap, Collection, AbstractCollection, IdentityHashMap, Random\n" +
-            "from java.lang import System, Long, Integer, Character, String, Short, Byte, Boolean, Class\n";
+            "from java.lang import System, Long, Integer, Character, String, Short, Byte, Boolean, Class\n" +
+            "from java.math import BigInteger, BigDecimal\n";
 
     private TLongSet replSessions = new TLongHashSet();
 
@@ -86,7 +89,7 @@ public class ReplCog extends Cog {
     }
 
     @Command(name = "repl", desc = "A multilingual REPL, in Discord!", perms = {"owner"}, usage = "[language] {flags}", thread=true)
-    public void cmdRepl(Context ctx) {
+    public void cmdRepl(Context ctx) throws ScriptException {
         if (ctx.args.size() < 1) {
             ctx.send("You need to specify a language, like `scala` or `js`!").queue();
             return;
@@ -109,10 +112,53 @@ public class ReplCog extends Cog {
             return;
         }
 
-        ScriptEngine engine = man.getEngineByName(language.toLowerCase());
-        if (engine == null) {
-            ctx.send(Emotes.getFailure() + " Invalid REPL language!").queue();
-            return;
+        boolean isJavascript = language.equalsIgnoreCase("nashorn") ||
+                language.equalsIgnoreCase("js") ||
+                language.equalsIgnoreCase("javascript");
+        StringBuilder jsiBuilder = null;
+        ScriptEngine engine;
+        if (isJavascript) {
+            engine = new NashornScriptEngineFactory().getScriptEngine(NASHORN_ARGS);
+            jsiBuilder = new StringBuilder();
+            StringBuilder importsObj = new StringBuilder("const classes={dummy:null");
+
+            for (String stmt: StringUtils.split(PYTHON_IMPORTS, '\n')) {
+                String[] mainSegments = StringUtils.split(stmt, ' ');
+                String pkg = mainSegments[1];
+                String[] classes = StringUtils.split(stmt.substring(pkg.length() + 13), ", ");
+
+                for (String clazz: classes) {
+                    jsiBuilder.append("const ")
+                            .append(clazz)
+                            .append("=Java.type('")
+                            .append(pkg)
+                            .append('.')
+                            .append(clazz)
+                            .append("');");
+
+                    importsObj.append(',')
+                            .append(clazz)
+                            .append(":Java.type('")
+                            .append(pkg)
+                            .append('.')
+                            .append(clazz)
+                            .append("')");
+                }
+            }
+
+            jsiBuilder.append('\n');
+            importsObj.append('}');
+            String imports = importsObj.toString();
+
+            engine.put("impFuncRunnable", (ScriptExceptionThrower) () -> engine.eval(imports));
+            engine.eval("const doImportsObj=impFuncRunnable.exec;");
+        } else {
+            engine = man.getEngineByName(language.toLowerCase());
+
+            if (engine == null) {
+                ctx.send(Emotes.getFailure() + " Invalid REPL language!").queue();
+                return;
+            }
         }
 
         if (replSessions.contains(ctx.channel.getIdLong())) {
@@ -134,6 +180,8 @@ public class ReplCog extends Cog {
         engine.put("msg", ctx.message);
         if (language.equalsIgnoreCase("python"))
             engine.put("imports", PYTHON_IMPORTS);
+        else if (isJavascript)
+            engine.put("imports", jsiBuilder.toString());
 
         ctx.send("REPL started. Prefix is " + prefix).queue();
         while (true) {
@@ -159,6 +207,7 @@ public class ReplCog extends Cog {
                     result = engine.eval(cleaned);
             } catch (ScriptException e) {
                 result = e.getCause();
+
                 if (result instanceof ScriptException) {
                     result = ((ScriptException) result).getCause();
                 }
@@ -166,6 +215,7 @@ public class ReplCog extends Cog {
                 logger.warn("Error executing code in REPL", e);
                 result = Bot.renderStackTrace(e);
             }
+
             if (result instanceof RestAction)
                 result = ((RestAction) result).complete();
             engine.put("last", result);
@@ -173,14 +223,21 @@ public class ReplCog extends Cog {
             if (result != null) {
                 try {
                     String strResult = result.toString();
-                    if (language.equals("groovy") && strResult.startsWith(GROOVY_PRE_INJECT))
+                    if (language.equalsIgnoreCase("groovy") && strResult.startsWith(GROOVY_PRE_INJECT))
                         strResult = strResult.substring(GROOVY_PRE_INJECT.length());
+                    else if (isJavascript && strResult.matches("^\\[object [A-Z][a-z0-9]*]$")) {
+                        try {
+                            strResult = (String) engine.eval("JSON.stringify(last)");
+                        } catch (ScriptException e) {
+                            strResult = Bot.renderStackTrace(e);
+                        }
+                    }
 
                     ctx.send("```java\n" + strResult + "```").queue();
                 } catch (Exception e) {
                     logger.warn("Error sending message in REPL", e);
                     try {
-                        ctx.send("```java\n" + bot.renderStackTrace(e) + "```").queue();
+                        ctx.send("```java\n" + Bot.renderStackTrace(e) + "```").queue();
                     } catch (Exception ex) {
                         logger.error("Error reporting send error in REPL", ex);
                     }

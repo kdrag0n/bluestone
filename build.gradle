@@ -4,6 +4,7 @@ plugins {
     id 'application'
     id 'com.github.johnrengelman.shadow' version '1.2.4'
     id 'com.github.hierynomus.jython' version '0.6.0'
+    id 'com.sedmelluq.jdaction' version '1.0.2'
 }
 
 group 'com.khronodragon'
@@ -52,7 +53,7 @@ dependencies {
     compile 'com.zaxxer:HikariCP:2.6.2'
     compile 'com.google.code.gson:gson:2.8.1'
     compile 'org.languagetool:language-en:3.7'
-    compile 'org.mariadb.jdbc:mariadb-java-client:2.0.2'
+    compile 'mysql:mysql-connector-java:6.0.6'
     compile 'net.sf.trove4j:trove4j:3.0.3'
     compile 'com.jagrosh:JDA-Utilities:1.2'
 }
