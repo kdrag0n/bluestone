@@ -151,7 +151,7 @@ public class ReplCog extends Cog {
             String imports = importsObj.toString();
 
             engine.put("impFuncRunnable", (ScriptExceptionThrower) () -> engine.eval(imports));
-            engine.eval("const doImportsObj=impFuncRunnable.exec;");
+            engine.eval("function doImportsObj(){impFuncRunnable.exec();};function loadShims(){load('https://raw.githubusercontent.com/es-shims/es5-shim/master/es5-shim.min.js');load('https://raw.githubusercontent.com/paulmillr/es6-shim/master/es6-shim.min.js');}");
         } else {
             engine = man.getEngineByName(language.toLowerCase());
 

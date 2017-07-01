@@ -1,5 +1,6 @@
 package com.khronodragon.bluestone.cogs;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
@@ -44,6 +45,8 @@ public class MusicCog extends Cog {
             .setNameFormat("Music Cog Cleanup Thread %d")
             .build());
     private final DefaultAudioPlayerManager playerManager = new DefaultAudioPlayerManager();
+
+    @VisibleForTesting
     public TLongObjectMap<AudioState> audioStates = new TLongObjectHashMap<>();
 
     public MusicCog(Bot bot) {

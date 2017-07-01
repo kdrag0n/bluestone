@@ -87,7 +87,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
                     .setCancel(() -> msg.delete().queue())
                     .setUsers(ctx.author)
                     .setEventWaiter(ctx.bot.getEventWaiter())
-                    .setTimeout(90, TimeUnit.SECONDS);
+                    .setTimeout(20, TimeUnit.SECONDS);
 
             for (int i = 0; i < 5 && i < tracks.size(); i++) {
                 AudioTrack track = tracks.get(i);
@@ -129,7 +129,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
         }
         ctx.send(Emotes.getSuccess() + " Queued playlist **" + playlist.getName() + "**, length **" + Bot.formatDuration(duration / 1000L) + "**").queue();
         Cog.removeReactionIfExists(ctx.message, "⌛");
-        ctx.message.addReaction("☑").queue();
+        ctx.message.addReaction("✅").queue();
     }
 
     @Override

@@ -180,7 +180,7 @@ public class CoreCog extends Cog {
 
         if (destination == MessageDestination.AUTHOR && ctx.guild != null) {
             try {
-                ctx.message.addReaction("").queue();
+                ctx.message.addReaction("✅").queue();
             } catch (PermissionException ignored) {
                 ctx.send(Emotes.getSuccess() + " Check your DMs!").queue();
             }
