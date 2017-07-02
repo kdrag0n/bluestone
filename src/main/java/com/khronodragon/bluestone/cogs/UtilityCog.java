@@ -247,7 +247,7 @@ public class UtilityCog extends Cog {
         ctx.send(emb.build()).queue();
     }
 
-    @Command(name = "info", desc = "Get some info about me.", aliases = {"about", "stats", "statistics"})
+    @Command(name = "info", desc = "Get some info about me.", aliases = {"about", "stats", "statistics", "status"})
     public void cmdInfo(Context ctx) {
         ShardUtil shardUtil = bot.getShardUtil();
         EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://khronodragon.com/")
@@ -257,7 +257,7 @@ public class UtilityCog extends Cog {
                 .addField("Uptime", bot.formatUptime(), true)
                 .addField("Requests", str(shardUtil.getRequestCount()), true)
                 .addField("Threads", str(Thread.activeCount()), true)
-                .addField("Memory Used", bot.formatMemory(), true)
+                .addField("Memory Used", Bot.formatMemory(), true)
                 .addField("CPU Usage", format("{0}% - system {1}%",
                         (int) Math.ceil(systemBean.getProcessCpuLoad() * 100),
                         (int) Math.ceil(systemBean.getSystemCpuLoad() * 100)), true)

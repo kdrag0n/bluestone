@@ -97,7 +97,13 @@ public class MusicCog extends Cog {
                 state.scheduler.setEmptyPauseTime(new Date());
                 state.scheduler.setEmptyPaused(true);
 
-                ExtraTrackInfo info = state.scheduler.current.getUserData(ExtraTrackInfo.class);
+                ExtraTrackInfo info;
+                if (state.scheduler.current == null) {
+                    info = null;
+                } else {
+                    info = state.scheduler.current.getUserData(ExtraTrackInfo.class);
+                }
+
                 if (info != null) {
                     info.textChannel.sendMessage("Voice channel empty - player paused.").queue();
                 }

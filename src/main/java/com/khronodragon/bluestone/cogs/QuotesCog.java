@@ -4,7 +4,6 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.table.TableUtils;
 import com.jagrosh.jdautilities.menu.pagination.PaginatorBuilder;
-import com.jagrosh.jdautilities.waiter.EventWaiter;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
@@ -13,11 +12,11 @@ import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.sql.Quote;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.management.ObjectName;
 import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
@@ -53,8 +52,6 @@ public class QuotesCog extends Cog {
         } catch (SQLException e) {
             logger.warn("Failed to create quote DAO!", e);
         }
-
-        //ObjectName objectName = new ObjectName("com.khronodragon.bluestone.cogs:type=QuotesCog");
     }
 
     public String getName() {
@@ -96,7 +93,8 @@ public class QuotesCog extends Cog {
             ctx.send(Emotes.getFailure() + " I need text to quote!").queue();
             return;
         }
-        String text = ctx.rawArgs.substring(ctx.args.get(0).length()).trim();
+        String text = quoteify(ctx, ctx.rawArgs.substring(ctx.args.get(0).length()).trim()
+                .replace('\n', ' '));
 
         if (text.length() > 360) {
             ctx.send(Emotes.getFailure() + " Text too long!").queue();
@@ -108,12 +106,12 @@ public class QuotesCog extends Cog {
                 .eq("authorId", ctx.author.getIdLong())
                 .countOf();
 
-        if (quotes >= 25) {
+        if (quotes >= 25 && ctx.author.getIdLong() != bot.owner.getIdLong()) {
             ctx.send(Emotes.getFailure() + " You already have 25 quotes!").queue();
             return;
         }
 
-        Quote quote = new Quote(text.replace('\n', ' '),
+        Quote quote = new Quote(text,
                 ctx.author.getIdLong(), ctx.author.getName());
         dao.create(quote);
 
@@ -236,5 +234,36 @@ public class QuotesCog extends Cog {
             ctx.send(Emotes.getFailure() + " No such quote!").queue();
         else
             ctx.send(quote.render()).queue();
+    }
+
+    public String quoteify(Context ctx, String msg) {
+        String tmp = msg;
+
+        for (User user : ctx.message.getMentionedUsers()) {
+            if (ctx.message.isFromType(ChannelType.PRIVATE) || ctx.message.isFromType(ChannelType.GROUP)) {
+                tmp = tmp.replace("<@" + user.getId() + '>', '@' + user.getName())
+                        .replace("<@!" + user.getId() + '>', '@' + user.getName());
+            } else {
+                String name;
+
+                if (ctx.guild.isMember(user))
+                    name = ctx.guild.getMember(user).getEffectiveName();
+                else name = user.getName();
+
+                tmp = tmp.replace("<@" + user.getId() + '>', '@' + name)
+                        .replace("<@!" + user.getId() + '>', '@' + name);
+            }
+        }
+
+        for (Emote emote : ctx.message.getEmotes())
+            tmp = tmp.replace(emote.getAsMention(), ":" + emote.getName() + ":");
+
+        for (TextChannel mentionedChannel : ctx.message.getMentionedChannels())
+            tmp = tmp.replace("<#" + mentionedChannel.getId() + '>', '#' + mentionedChannel.getName());
+
+        for (Role mentionedRole : ctx.message.getMentionedRoles())
+            tmp = tmp.replace("<@&" + mentionedRole.getId() + '>', '@' + mentionedRole.getName());
+
+        return tmp;
     }
 }

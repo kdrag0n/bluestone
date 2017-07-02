@@ -3,6 +3,8 @@ package com.khronodragon.bluestone;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.db.DatabaseType;
+import com.j256.ormlite.db.DatabaseTypeUtils;
+import com.j256.ormlite.db.MysqlDatabaseType;
 import com.j256.ormlite.jdbc.DataSourceConnectionSource;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
@@ -14,20 +16,17 @@ import com.zaxxer.hikari.HikariDataSource;
 import net.dv8tion.jda.core.JDA;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ShardUtil {
     private static final Logger logger = LogManager.getLogger(ShardUtil.class);
-    private Map<Integer, Bot> shards = new LinkedHashMap<>();
+    private static final MySQLDatabaseType mysqlDbType = new MySQLDatabaseType();
+    private final Map<Integer, Bot> shards = new LinkedHashMap<>();
     private int shardCount;
     private Map<String, AtomicInteger> commandCalls = new HashMap<>();
     private Dao<BotAdmin, Long> adminDao;
@@ -65,8 +64,12 @@ public class ShardUtil {
             dataSource.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
         }
 
+        DatabaseType dbType = DatabaseTypeUtils.createDatabaseType(connectionUrl);
+        if (dbType instanceof MysqlDatabaseType)
+            dbType = mysqlDbType;
+
         try {
-            dbConn = new DataSourceConnectionSource(dataSource, new MySQLDatabaseType());
+            dbConn = new DataSourceConnectionSource(dataSource, dbType);
         } catch (SQLException e) {
             logger.error("Failed to connect to database!", e);
             logger.warn("Using an in-memory database.");

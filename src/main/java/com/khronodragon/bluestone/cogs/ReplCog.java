@@ -168,6 +168,7 @@ public class ReplCog extends Cog {
         replSessions.add(ctx.channel.getIdLong());
 
         engine.put("ctx", ctx);
+        engine.put("event", ctx.event);
         engine.put("context", ctx);
         engine.put("bot", ctx.bot);
         engine.put("last", null);

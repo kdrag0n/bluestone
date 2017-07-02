@@ -187,6 +187,7 @@ public class OwnerCog extends Cog {
         }
 
         evalEngine.put("ctx", ctx);
+        evalEngine.put("event", ctx.event);
         evalEngine.put("jda", ctx.jda);
         evalEngine.put("message", ctx.message);
         evalEngine.put("author", ctx.author);
