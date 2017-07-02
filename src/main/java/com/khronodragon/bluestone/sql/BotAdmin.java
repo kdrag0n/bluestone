@@ -1,14 +1,21 @@
 package com.khronodragon.bluestone.sql;
 
-import com.j256.ormlite.field.DatabaseField;
-import com.j256.ormlite.table.DatabaseTable;
+import org.hibernate.annotations.ColumnDefault;
 
-@DatabaseTable(tableName = "admins")
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "admins")
 public class BotAdmin {
-    @DatabaseField(id = true, canBeNull = false)
+    @Id
+    @Column(nullable = false, unique = true)
     private long userId;
 
-    @DatabaseField(defaultValue = "", width = 32)
+    @ColumnDefault("")
+    @Column(length = 32)
     private String lastUsername;
 
     public long getUserId() {
