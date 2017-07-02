@@ -57,7 +57,12 @@ public class ShardUtil {
         dataSource.setPoolName("Bot Pool [ShardUtil]");
         dataSource.setAllowPoolSuspension(true);
         dataSource.setRegisterMbeans(true);
-        dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
+
+        if (connectionUrl.startsWith("mysql://")) {
+            dataSource.addDataSourceProperty("cachePrepStmts", "true");
+            dataSource.addDataSourceProperty("prepStmtCacheSize", "250");
+            dataSource.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+        }
 
         try {
             dbConn = new DataSourceConnectionSource(dataSource, new MySQLDatabaseType());
