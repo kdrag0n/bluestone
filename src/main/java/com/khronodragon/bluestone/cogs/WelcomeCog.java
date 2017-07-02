@@ -145,6 +145,7 @@ public class WelcomeCog extends Cog {
         GuildWelcomeMessages query = messageDao.queryForId(ctx.guild.getIdLong());
         query.setWelcome(newMessage);
 
+        messageDao.update(query);
         ctx.send(Emotes.getSuccess() + " Welcome message set.").queue();
     }
 
@@ -220,6 +221,7 @@ public class WelcomeCog extends Cog {
         GuildWelcomeMessages query = messageDao.queryForId(ctx.guild.getIdLong());
         query.setLeave(newMessage);
 
+        messageDao.update(query);
         ctx.send(Emotes.getSuccess() + " Leave message set.").queue();
     }
 
