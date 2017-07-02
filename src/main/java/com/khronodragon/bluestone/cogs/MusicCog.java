@@ -24,6 +24,8 @@ import gnu.trove.procedure.TLongObjectProcedure;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.GuildVoiceState;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.events.guild.voice.GenericGuildVoiceEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceJoinEvent;
@@ -117,11 +119,19 @@ public class MusicCog extends Cog {
     }
 
     private long getVoiceEventSelfId(GenericGuildVoiceEvent event) {
-        VoiceChannel ch = event.getGuild().getSelfMember().getVoiceState().getChannel();
-        if (ch == null) {
+        try {
+            Member member = event.getGuild().getSelfMember();
+            GuildVoiceState vs = member.getVoiceState();
+            VoiceChannel ch = vs.getChannel();
+
+            if (ch == null) {
+                return 0L;
+            } else {
+                return ch.getIdLong();
+            }
+        } catch (NullPointerException e) {
+            logger.warn("NPE in getVoiceEventSelfId", e);
             return 0L;
-        } else {
-            return ch.getIdLong();
         }
     }
 

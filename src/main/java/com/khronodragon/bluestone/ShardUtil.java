@@ -57,6 +57,7 @@ public class ShardUtil {
         dataSource.setPoolName("Bot Pool [ShardUtil]");
         dataSource.setAllowPoolSuspension(true);
         dataSource.setRegisterMbeans(true);
+        dataSource.setLeakDetectionThreshold(7500);
 
         if (connectionUrl.startsWith("mysql://")) {
             dataSource.addDataSourceProperty("cachePrepStmts", "true");
