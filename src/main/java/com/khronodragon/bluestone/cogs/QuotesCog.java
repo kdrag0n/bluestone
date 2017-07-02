@@ -17,6 +17,7 @@ import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.management.ObjectName;
 import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
@@ -52,6 +53,8 @@ public class QuotesCog extends Cog {
         } catch (SQLException e) {
             logger.warn("Failed to create quote DAO!", e);
         }
+
+        //ObjectName objectName = new ObjectName("com.khronodragon.bluestone.cogs:type=QuotesCog");
     }
 
     public String getName() {

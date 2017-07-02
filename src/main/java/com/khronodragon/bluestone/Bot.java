@@ -35,9 +35,11 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import org.reflections.Reflections;
 
+import javax.management.MBeanServer;
 import javax.security.auth.login.LoginException;
 import java.awt.*;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.NumberFormat;
@@ -605,11 +607,15 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         long s = duration % 60;
         long d = h / 24;
         h = h % 24;
-        String sd = (d > 0 ? String.valueOf(d) + ' ' + "day" + (d == 1 ? "" : "s") : "");
-        String sh = (h > 0 ? String.valueOf(h) + ' ' + "hr" : "");
-        String sm = (m < 10 && m > 0 && h > 0 ? "0" : "") + (m > 0 ? (h > 0 && s == 0 ? String.valueOf(m) : String.valueOf(m) + ' ' + "min") : "");
-        String ss = (s == 0 && (h > 0 || m > 0) ? "" : (s < 10 && (h > 0 || m > 0) ? "0" : "") + String.valueOf(s) + ' ' + "sec");
+        String sd = (d > 0 ? String.valueOf(d) + " day" + (d == 1 ? "" : "s") : "");
+        String sh = (h > 0 ? String.valueOf(h) + " hr" : "");
+        String sm = (m < 10 && m > 0 && h > 0 ? "0" : "") + (m > 0 ? (h > 0 && s == 0 ? String.valueOf(m) : String.valueOf(m) + " min") : "");
+        String ss = (s == 0 && (h > 0 || m > 0) ? "" : (s < 10 && (h > 0 || m > 0) ? "0" : "") + String.valueOf(s) + " sec");
         return sd + (d > 0 ? " " : "") + sh + (h > 0 ? " " : "") + sm + (m > 0 ? " " : "") + ss;
+    }
+
+    public static MBeanServer getMBeanServer() {
+        return ManagementFactory.getPlatformMBeanServer();
     }
 
     public static int start(String token, int shardCount, AccountType accountType, JSONObject config) throws LoginException, RateLimitedException {
