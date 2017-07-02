@@ -307,7 +307,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             jda.getPresence().setGame(Game.of(statusLine));
         };
 
-        ScheduledFuture future = scheduledExecutor.scheduleAtFixedRate(task, 10, 75, TimeUnit.SECONDS);
+        ScheduledFuture future = scheduledExecutor.scheduleAtFixedRate(task, 10, 120, TimeUnit.SECONDS);
         tasks.add(future);
 
         Reflections reflector = new Reflections("com.khronodragon.bluestone.cogs");
