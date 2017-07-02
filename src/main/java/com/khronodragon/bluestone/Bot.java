@@ -505,6 +505,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     }
 
     public void reportErrorToOwner(Throwable e, Message msg, Command cmd) {
+        if (jda.getGuilds().size() < 100) return;
+
         owner.openPrivateChannel().queue(ch -> {
             ch.sendMessage(errorEmbed(e, msg, cmd)).queue();
         });
