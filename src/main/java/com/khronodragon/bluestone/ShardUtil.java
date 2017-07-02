@@ -2,18 +2,25 @@ package com.khronodragon.bluestone;
 
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
+import com.j256.ormlite.db.DatabaseType;
+import com.j256.ormlite.jdbc.DataSourceConnectionSource;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
-import com.j256.ormlite.jdbc.JdbcPooledConnectionSource;
+import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.sql.BotAdmin;
 import com.khronodragon.bluestone.sql.GuildPrefix;
+import com.khronodragon.bluestone.sql.MySQLDatabaseType;
+import com.zaxxer.hikari.HikariDataSource;
 import net.dv8tion.jda.core.JDA;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -24,7 +31,7 @@ public class ShardUtil {
     private int shardCount;
     private Map<String, AtomicInteger> commandCalls = new HashMap<>();
     private Dao<BotAdmin, Long> adminDao;
-    private JdbcConnectionSource dbConn;
+    private ConnectionSource dbConn;
     private JSONObject config;
     private PrefixStore prefixStore;
 
@@ -40,10 +47,20 @@ public class ShardUtil {
         this.shardCount = shardCount;
         this.config = config;
 
+        String connectionUrl = "jdbc:" + config.optString("db_url", "h2:./database");
+        HikariDataSource dataSource = new HikariDataSource();
+        dataSource.setJdbcUrl(connectionUrl);
+        dataSource.setUsername(config.optString("db_user", null));
+        dataSource.setPassword(config.optString("db_pass", null));
+        dataSource.setMinimumIdle(5);
+        dataSource.setMaximumPoolSize(15);
+        dataSource.setPoolName("Bot Pool [ShardUtil]");
+        dataSource.setAllowPoolSuspension(true);
+        dataSource.setRegisterMbeans(true);
+        dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
+
         try {
-            dbConn = new JdbcPooledConnectionSource("jdbc:" +
-                    config.optString("db_url", "h2:./database"),
-                    config.optString("db_user", null), config.optString("db_pass", null));
+            dbConn = new DataSourceConnectionSource(dataSource, new MySQLDatabaseType());
         } catch (SQLException e) {
             logger.error("Failed to connect to database!", e);
             logger.warn("Using an in-memory database.");
@@ -94,7 +111,7 @@ public class ShardUtil {
         return adminDao;
     }
 
-    public JdbcConnectionSource getDatabase() {
+    public ConnectionSource getDatabase() {
         return dbConn;
     }
 

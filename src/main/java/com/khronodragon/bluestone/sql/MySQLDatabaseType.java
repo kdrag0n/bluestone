@@ -1,0 +1,27 @@
+package com.khronodragon.bluestone.sql;
+
+import com.j256.ormlite.db.MysqlDatabaseType;
+import com.j256.ormlite.field.FieldType;
+
+public class MySQLDatabaseType extends MysqlDatabaseType {
+    private static final String DRIVER_CLASS_NAME = "com.mysql.cj.jdbc.Driver";
+
+    public MySQLDatabaseType() {
+        setCreateTableSuffix("ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    }
+
+    @Override
+    protected String getDriverClassName() {
+        return DRIVER_CLASS_NAME;
+    }
+
+    @Override
+    protected void appendBooleanType(StringBuilder sb, FieldType fieldType, int fieldWidth) {
+        sb.append("BOOLEAN");
+    }
+
+    @Override
+    public boolean isCreateIndexIfNotExistsSupported() {
+        return true;
+    }
+}
