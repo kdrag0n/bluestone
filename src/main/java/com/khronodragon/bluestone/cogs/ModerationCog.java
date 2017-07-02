@@ -71,7 +71,7 @@ public class ModerationCog extends Cog {
     }
 
     @Command(name = "purge", desc = "Purge messages from a channel.", guildOnly = true,
-            aliases = {"clean", "nuke"}, perms = {"messageManage", "messageHistory"},
+            aliases = {"clean", "nuke", "prune"}, perms = {"messageManage", "messageHistory"},
             usage = "[parameters]", thread = true)
     public void cmdPurge(Context ctx) {
         if (bot.isSelfbot()) {
