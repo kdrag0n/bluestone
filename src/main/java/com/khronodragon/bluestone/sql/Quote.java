@@ -1,30 +1,30 @@
 package com.khronodragon.bluestone.sql;
 
-import javax.persistence.*;
+import com.j256.ormlite.field.DataType;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
+
 import java.util.Date;
 
 import static java.text.MessageFormat.format;
 
-@Entity
-@Table(name = "quotes", indexes = {@Index(columnList = "authorId")})
+@DatabaseTable(tableName = "quotes")
 public class Quote {
     public static final String QUOTE_FORMAT = "**[{0}]** {4}\"{1}\"{4} — `{2}` (__{3,date}__)";
 
-    @Id
-    @GeneratedValue
-    @Column(length = 4, nullable = false)
+    @DatabaseField(generatedId = true, canBeNull = false, width = 4)
     private int id;
 
-    @Column(length = 360, nullable = false)
+    @DatabaseField(width = 360, canBeNull = false)
     private String quote;
 
-    @Column(nullable = false)
+    @DatabaseField(canBeNull = false)
     private Date date;
 
-    @Column(nullable = false)
+    @DatabaseField(canBeNull = false, index = true)
     private long authorId;
 
-    @Column(length = 32, nullable = false)
+    @DatabaseField(canBeNull = false, width = 32)
     private String authorName;
 
     public int getId() {

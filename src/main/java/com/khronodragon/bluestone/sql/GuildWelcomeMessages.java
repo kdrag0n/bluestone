@@ -1,31 +1,23 @@
 package com.khronodragon.bluestone.sql;
 
-import org.hibernate.annotations.ColumnDefault;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-
-@Entity
-@Table(name = "guild_welcome_msgs")
+@DatabaseTable(tableName = "guild_welcome_msgs")
 public class GuildWelcomeMessages {
-    @Id
-    @Column(nullable = false)
+    @DatabaseField(id = true, canBeNull = false)
     private long guildId;
 
-    @ColumnDefault("[default]")
-    @Column(length = 2000, nullable = false)
+    @DatabaseField(defaultValue = "[default]", width = 2000, canBeNull = false)
     private String welcome;
 
-    @ColumnDefault("[default]")
-    @Column(length = 2000, nullable = false)
+    @DatabaseField(defaultValue = "[default]", width = 2000, canBeNull = false)
     private String leave;
 
-    @Column(nullable = false)
+    @DatabaseField(canBeNull = false)
     private boolean welcomeEnabled;
 
-    @Column(nullable = false)
+    @DatabaseField(canBeNull = false)
     private boolean leaveEnabled;
 
     public long getGuildId() {

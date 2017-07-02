@@ -1,18 +1,14 @@
 package com.khronodragon.bluestone.sql;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
 
-@Entity
-@Table(name = "guild_prefixes")
+@DatabaseTable(tableName = "guild_prefixes")
 public class GuildPrefix {
-    @Id
-    @Column(nullable = false)
+    @DatabaseField(id = true, canBeNull = false)
     private long guildId;
 
-    @Column(length = 32, nullable = false)
+    @DatabaseField(width = 32, canBeNull = false)
     private String prefix;
 
     public long getGuildId() {
