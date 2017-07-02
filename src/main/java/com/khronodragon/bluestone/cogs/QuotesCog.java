@@ -134,7 +134,8 @@ public class QuotesCog extends Cog {
         if (quote == null) {
             ctx.send(Emotes.getFailure() + " No such quote!").queue();
             return;
-        } else if (quote.getAuthorId() != ctx.author.getIdLong()) {
+        } else if (quote.getAuthorId() != ctx.author.getIdLong() &&
+                ctx.author.getIdLong() != bot.owner.getIdLong()) {
             ctx.send(Emotes.getFailure() + " You didn't write that quote!").queue();
             return;
         }

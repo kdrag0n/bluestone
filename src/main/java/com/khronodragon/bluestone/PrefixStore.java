@@ -61,4 +61,8 @@ public class PrefixStore {
     public void updateCache(long guildId, String prefix) {
         cache.put(guildId, prefix);
     }
+
+    public void clearCache() {
+        cache.clear();
+    }
 }
