@@ -204,7 +204,7 @@ public class MonitorCog extends Cog {
 
             line = format(":clock{0}: {1} [<:spool:331187771173634049>{3}] {2} {5}: {4}",
                     clockNum.toString(), LocalDateTime.ofInstant(Instant.ofEpochMilli(e.getTimeMillis()),
-                            ZoneId.of("US/Pacific")).format(DateTimeFormatter.ofPattern("EEE MM dd hh:mm aa")),
+                            ZoneId.of("US/Pacific")).format(DateTimeFormatter.ofPattern("EEE MM dd hh:mm a")),
                     levelEmote, e.getThreadName(), line, e.getLoggerName());
 
             messageQueue.add(new MessageBuilder().append(line).build());
