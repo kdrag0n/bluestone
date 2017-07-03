@@ -270,7 +270,7 @@ public class WelcomeCog extends Cog {
         ctx.send(TAG_HELP).queue();
     }
 
-    @EventHandler(event = GuildMemberJoinEvent.class, threaded = true)
+    @EventHandler(threaded = true)
     public void onGuildMemberJoin(GuildMemberJoinEvent event) {
         if (event.getMember().getUser().getIdLong() == bot.getJda().getSelfUser().getIdLong())
             return;
@@ -303,7 +303,7 @@ public class WelcomeCog extends Cog {
         }
     }
 
-    @EventHandler(event = GuildMemberLeaveEvent.class, threaded = true)
+    @EventHandler(threaded = true)
     public void onGuildMemberLeave(GuildMemberLeaveEvent event) {
         if (event.getMember().getUser().getIdLong() == bot.getJda().getSelfUser().getIdLong())
             return;
@@ -336,7 +336,7 @@ public class WelcomeCog extends Cog {
         }
     }
 
-    @EventHandler(event = GuildJoinEvent.class, threaded = true)
+    @EventHandler(threaded = true)
     public void onGuildJoin(GuildJoinEvent event) {
         if (!event.getGuild().isAvailable()) return;
 
@@ -348,7 +348,7 @@ public class WelcomeCog extends Cog {
         }
     }
 
-    @EventHandler(event = GuildLeaveEvent.class, threaded = true)
+    @EventHandler(threaded = true)
     public void onGuildLeave(GuildLeaveEvent event) {
         if (!event.getGuild().isAvailable()) return;
 

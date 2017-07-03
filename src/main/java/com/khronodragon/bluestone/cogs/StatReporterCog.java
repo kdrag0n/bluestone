@@ -58,17 +58,17 @@ public class StatReporterCog extends Cog {
         report();
     }
 
-    @EventHandler(event = ReadyEvent.class)
+    @EventHandler
     public void onReady(ReadyEvent event) {
         report();
     }
 
-    @EventHandler(event = GuildJoinEvent.class)
+    @EventHandler
     public void onGuildJoin(GuildJoinEvent event) {
         report();
     }
 
-    @EventHandler(event = GuildLeaveEvent.class)
+    @EventHandler
     public void onGuildLeave(GuildLeaveEvent event) {
         report();
     }
