@@ -65,7 +65,7 @@ public class MonitorCog extends Cog {
         queueSender.interrupt();
     }
 
-    @EventHandler
+    @EventHandler(event = GuildJoinEvent.class)
     public void onGuildJoin(GuildJoinEvent event) {
         TextChannel channel = event.getJDA().getTextChannelById(guildEventChannelId);
         channel.sendMessage("<:plus:331224997362139136> __**" + event.getGuild().getName() + "**__ - " +
@@ -74,7 +74,7 @@ public class MonitorCog extends Cog {
                             bot.getShardUtil().getGuildCount()).queue();
     }
 
-    @EventHandler
+    @EventHandler(event = GuildLeaveEvent.class)
     public void onGuildLeave(GuildLeaveEvent event) {
         TextChannel channel = event.getJDA().getTextChannelById(guildEventChannelId);
         channel.sendMessage("<:minus:331225043445088258> __**" + event.getGuild().getName() + "**__ - " +
