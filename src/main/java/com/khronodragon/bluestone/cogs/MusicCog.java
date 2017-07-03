@@ -86,7 +86,7 @@ public class MusicCog extends Cog {
         }
     }
 
-    @EventHandler(event = GuildVoiceLeaveEvent.class)
+    @EventHandler
     public void onGuildVoiceLeave(GuildVoiceLeaveEvent event) {
         if (getVoiceEventSelfId(event) == event.getChannelLeft().getIdLong()) {
             AudioState state = getAudioState(event.getGuild());
@@ -111,7 +111,7 @@ public class MusicCog extends Cog {
         }
     }
 
-    @EventHandler(event = GuildVoiceJoinEvent.class)
+    @EventHandler
     public void onGuildVoiceJoin(GuildVoiceJoinEvent event) {
         if (getVoiceEventSelfId(event) == event.getChannelJoined().getIdLong()) {
             AudioState state = getAudioState(event.getGuild());

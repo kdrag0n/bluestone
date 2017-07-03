@@ -1,6 +1,5 @@
 package com.khronodragon.bluestone;
 
-import com.google.common.reflect.ClassPath;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.j256.ormlite.dao.Dao;
 import com.jagrosh.jdautilities.waiter.EventWaiter;
@@ -28,6 +27,7 @@ import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.core.utils.SimpleLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
@@ -35,11 +35,8 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import org.reflections.Reflections;
 
-import javax.management.MBeanServer;
 import javax.security.auth.login.LoginException;
 import java.awt.*;
-import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.NumberFormat;
@@ -350,7 +347,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             } else if (method.isAnnotationPresent(EventHandler.class)) {
                 EventHandler anno = method.getAnnotation(EventHandler.class);
                 ExtraEvent extraEvent = new ExtraEvent(method, anno.threaded(), cog);
-                Class<? extends Event> eventClass = anno.event();
+                Class eventClass = method.getParameterTypes()[0];
 
                 if (extraEvents.containsKey(eventClass)) {
                     extraEvents.get(eventClass).add(extraEvent);
@@ -614,8 +611,43 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         return sd + (d > 0 ? " " : "") + sh + (h > 0 ? " " : "") + sm + (m > 0 ? " " : "") + ss;
     }
 
-    public static MBeanServer getMBeanServer() {
-        return ManagementFactory.getPlatformMBeanServer();
+    private static void setupJdaLogging() {
+        SimpleLog.LEVEL = SimpleLog.Level.OFF;
+
+        SimpleLog.addListener(new SimpleLog.LogListener() {
+            @Override
+            public void onLog(SimpleLog log, SimpleLog.Level level, Object msg) {
+                Logger logger = LogManager.getLogger(log.name);
+
+                switch (level) {
+                    case TRACE:
+                        logger.trace(msg);
+                        break;
+                    case DEBUG:
+                        logger.debug(msg);
+                        break;
+                    case FATAL:
+                        logger.fatal(msg);
+                        break;
+                    case WARNING:
+                        logger.warn(msg);
+                        break;
+                    case INFO:
+                        logger.info(msg);
+                        break;
+                    default:
+                        logger.info("[unknown] {}", msg);
+                        break;
+                }
+            }
+
+            @Override
+            public void onError(SimpleLog log, Throwable err) {
+                Logger logger = LogManager.getLogger(log.name);
+
+                logger.warn("JDA errored", err);
+            }
+        });
     }
 
     public static int start(String token, int shardCount, AccountType accountType, JSONObject config) throws LoginException, RateLimitedException {
@@ -645,6 +677,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 System.getProperty("os.arch").equals("amd64")) &&
                 (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX))
             builder.setAudioSendFactory(new NativeAudioSendFactory());
+
+        setupJdaLogging();
 
         for (int i = 0; i < shardCount; i++) {
             final int shardId = i;
