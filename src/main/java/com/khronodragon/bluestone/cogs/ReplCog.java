@@ -5,7 +5,6 @@ import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
-import com.khronodragon.bluestone.util.ScriptExceptionThrower;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
@@ -14,7 +13,6 @@ import net.dv8tion.jda.core.requests.RestAction;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 import javax.script.*;
 import java.util.*;
@@ -24,7 +22,7 @@ import static java.text.MessageFormat.format;
 public class ReplCog extends Cog {
     private static final Logger logger = LogManager.getLogger(ReplCog.class);
     private static final String[] NASHORN_ARGS = {"--language=es6", "-scripting"};
-    public static final String GROOVY_PRE_INJECT = "import net.dv8tion.jda.core.entities.*\n" +
+    static final String GROOVY_PRE_INJECT = "import net.dv8tion.jda.core.entities.*\n" +
             "import net.dv8tion.jda.core.*\n" +
             "import net.dv8tion.jda.core.entities.impl.*\n" +
             "import net.dv8tion.jda.core.audio.*\n" +
@@ -115,43 +113,24 @@ public class ReplCog extends Cog {
         boolean isJavascript = language.equalsIgnoreCase("nashorn") ||
                 language.equalsIgnoreCase("js") ||
                 language.equalsIgnoreCase("javascript");
-        StringBuilder jsiBuilder = null;
+
         ScriptEngine engine;
         if (isJavascript) {
             engine = new NashornScriptEngineFactory().getScriptEngine(NASHORN_ARGS);
-            jsiBuilder = new StringBuilder();
-            StringBuilder importsObj = new StringBuilder("const classes={dummy:null");
+            StringBuilder importsObj = new StringBuilder("const imports=new JavaImporter(null");
 
-            for (String stmt: StringUtils.split(PYTHON_IMPORTS, '\n')) {
-                String[] mainSegments = StringUtils.split(stmt, ' ');
-                String pkg = mainSegments[1];
-                String[] classes = StringUtils.split(stmt.substring(pkg.length() + 13), ", ");
+            for (String stmt: StringUtils.split(GROOVY_PRE_INJECT, '\n')) {
+                String pkg = StringUtils.split(stmt, ' ')[1];
+                pkg = pkg.substring(0, pkg.length() - 2);
 
-                for (String clazz: classes) {
-                    jsiBuilder.append("const ")
-                            .append(clazz)
-                            .append("=Java.type('")
-                            .append(pkg)
-                            .append('.')
-                            .append(clazz)
-                            .append("');");
-
-                    importsObj.append(',')
-                            .append(clazz)
-                            .append(":Java.type('")
-                            .append(pkg)
-                            .append('.')
-                            .append(clazz)
-                            .append("')");
-                }
+                importsObj.append(",Packages.")
+                        .append(pkg);
             }
 
-            jsiBuilder.append('\n');
-            importsObj.append('}');
-            String imports = importsObj.toString();
+            importsObj.append(')');
+            String exec = importsObj.toString();
 
-            engine.put("impFuncRunnable", (ScriptExceptionThrower) () -> engine.eval(imports));
-            engine.eval("function doImportsObj(){impFuncRunnable.exec();};function loadShims(){load('https://raw.githubusercontent.com/es-shims/es5-shim/master/es5-shim.min.js');load('https://raw.githubusercontent.com/paulmillr/es6-shim/master/es6-shim.min.js');}");
+            engine.eval(exec + ";function loadShims(){load('https://raw.githubusercontent.com/es-shims/es5-shim/master/es5-shim.min.js');load('https://raw.githubusercontent.com/paulmillr/es6-shim/master/es6-shim.min.js');}");
         } else {
             engine = man.getEngineByName(language.toLowerCase());
 
@@ -181,8 +160,6 @@ public class ReplCog extends Cog {
         engine.put("msg", ctx.message);
         if (language.equalsIgnoreCase("python"))
             engine.put("imports", PYTHON_IMPORTS);
-        else if (isJavascript)
-            engine.put("imports", jsiBuilder.toString());
 
         ctx.send("REPL started. Prefix is " + prefix).queue();
         while (true) {
@@ -203,7 +180,9 @@ public class ReplCog extends Cog {
             Object result;
             try {
                 if (language.equalsIgnoreCase("groovy"))
-                    result = GROOVY_PRE_INJECT + engine.eval(cleaned);
+                    result = engine.eval(GROOVY_PRE_INJECT + cleaned);
+                else if (isJavascript)
+                    result = engine.eval("with(imports){" + cleaned + "}");
                 else
                     result = engine.eval(cleaned);
             } catch (ScriptException e) {
@@ -224,9 +203,7 @@ public class ReplCog extends Cog {
             if (result != null) {
                 try {
                     String strResult = result.toString();
-                    if (language.equalsIgnoreCase("groovy") && strResult.startsWith(GROOVY_PRE_INJECT))
-                        strResult = strResult.substring(GROOVY_PRE_INJECT.length());
-                    else if (isJavascript && strResult.matches("^\\[object [A-Z][a-z0-9]*]$")) {
+                    if (isJavascript && strResult.matches("^\\[object [A-Z][a-z0-9]*]$")) {
                         try {
                             strResult = (String) engine.eval("JSON.stringify(last)");
                         } catch (ScriptException e) {

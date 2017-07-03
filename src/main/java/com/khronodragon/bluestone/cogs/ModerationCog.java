@@ -9,7 +9,9 @@ import gnu.trove.list.TLongList;
 import gnu.trove.list.linked.TLongLinkedList;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.exceptions.PermissionException;
+import net.dv8tion.jda.core.requests.RestAction;
 import net.dv8tion.jda.core.utils.MiscUtil;
 
 import java.time.OffsetDateTime;
@@ -172,12 +174,11 @@ public class ModerationCog extends Cog {
         if (toDelete.isEmpty()) {
             ctx.send(Emotes.getFailure() + " No messages match your criteria!").queue();
             return;
-        } else if (toDelete.size() < 2) {
-            ctx.send(Emotes.getFailure() + " Not enough messages match your criteria!").queue();
-            return;
         }
 
-        if (toDelete.size() <= 100) {
+        if (toDelete.size() == 1) {
+            toDelete.get(0).delete().reason("Purge command").complete();
+        } else if (toDelete.size() <= 100) {
             channel.deleteMessages(toDelete).complete();
         } else {
             for (int i = 0; i <= toDelete.size(); i += 99) {
@@ -190,7 +191,14 @@ public class ModerationCog extends Cog {
 
         ctx.send(Emotes.getSuccess() + " Deleted **" + toDelete.size() +
                 "** messages!" + twoWeekWarn).queue(msg -> {
-            msg.delete().queueAfter(2, TimeUnit.SECONDS);
+            msg.delete().queueAfter(2, TimeUnit.SECONDS, unused -> {}, exp -> {
+                if (exp instanceof ErrorResponseException) {
+                    if (((ErrorResponseException) exp).getErrorCode() != 10008) {
+                        RestAction.DEFAULT_FAILURE.accept(exp);
+                    }
+                }
+            });
+
             ctx.message.addReaction("\uD83D\uDC4D").queue();
         });
     }
@@ -304,12 +312,7 @@ public class ModerationCog extends Cog {
             reason = getTag(ctx.author) + ": " + userReason;
 
         Member user = ctx.guild.getMember(ctx.message.getMentionedUsers().get(0));
-        try {
-            ctx.guild.getController().ban(user, 0).reason(reason).queue();
-        } catch (PermissionException e) {
-            ctx.send(Emotes.getFailure() + " Error: `" + e.getMessage() + "`").queue();
-            return;
-        }
+        ctx.guild.getController().ban(user, 0).reason(reason).queue();
 
         ctx.send(Emotes.getSuccess() + " Banned.").queue();
     }

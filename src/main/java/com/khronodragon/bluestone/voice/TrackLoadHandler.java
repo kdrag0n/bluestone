@@ -46,7 +46,8 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
         if (!state.scheduler.queue.isEmpty()) {
             AudioTrackInfo info = track.getInfo();
 
-            ctx.send(Emotes.getSuccess() + " Queued **" + info.title + "** by **" + info.author + "**, length **" + Bot.formatDuration(info.length / 1000L) + "**").queue();
+            ctx.send(Emotes.getSuccess() + " Queued **" + info.title + "** by **" + info.author +
+                    "**, length **" + Bot.formatDuration(info.length / 1000L) + "**").queue();
             Cog.removeReactionIfExists(ctx.message, "⌛");
             ctx.message.addReaction("✅").queue();
         }
@@ -85,7 +86,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
                     })
                     .setText(":hourglass: Pick a search result.")
                     .setCancel(() -> msg.delete().queue())
-                    .setUsers(ctx.author)
+                    .setUsers(ctx.author) // from MessageReceivedEvent#getAuthor
                     .setEventWaiter(ctx.bot.getEventWaiter())
                     .setTimeout(20, TimeUnit.SECONDS);
 

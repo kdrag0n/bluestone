@@ -8,7 +8,6 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
-import net.dv8tion.jda.core.utils.SimpleLog;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -31,6 +30,7 @@ import static java.text.MessageFormat.format;
 
 public class MonitorCog extends Cog {
     private static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(MonitorCog.class);
+    private static final long monitorGuildId = 250780048943087618L;
     private static final long consoleChannelId = 331144992003325955L;
     private static final long guildEventChannelId = 331145024161054720L;
     private LogMessageQueueSender queueSender;
@@ -67,20 +67,40 @@ public class MonitorCog extends Cog {
 
     @EventHandler
     public void onGuildJoin(GuildJoinEvent event) {
-        TextChannel channel = event.getJDA().getTextChannelById(guildEventChannelId);
+        TextChannel channel = findChannel(guildEventChannelId);
+
+        if (!event.getGuild().isAvailable()) {
+            channel.sendMessage("<:plus:331224997362139136> __**Guild Unavailable**__ | ? members, ? emotes | `" +
+                    event.getGuild().getIdLong() + "` | Current Total: " + bot.getShardUtil().getGuildCount()).queue();
+            return;
+        }
+
         channel.sendMessage("<:plus:331224997362139136> __**" + event.getGuild().getName() + "**__ - " +
-                            event.getGuild().getMembers().size() + " members, " + event.getGuild().getEmotes().size() +
-                            " emotes | `" + event.getGuild().getId() + "` | Current Total: " +
-                            bot.getShardUtil().getGuildCount()).queue();
+                event.getGuild().getMembers().size() + " members, " + event.getGuild().getEmotes().size() +
+                " emotes | `" + event.getGuild().getId() + "` | Current Total: " +
+                bot.getShardUtil().getGuildCount()).queue();
     }
 
     @EventHandler
     public void onGuildLeave(GuildLeaveEvent event) {
-        TextChannel channel = event.getJDA().getTextChannelById(guildEventChannelId);
+        TextChannel channel = findChannel(guildEventChannelId);
+
+        if (!event.getGuild().isAvailable()) {
+            channel.sendMessage("<:minus:331225043445088258> __**Guild Unavailable**__ | ? members, ? emotes | `" +
+                    event.getGuild().getIdLong() + "` | Current Total: " + bot.getShardUtil().getGuildCount()).queue();
+            return;
+        }
+
         channel.sendMessage("<:minus:331225043445088258> __**" + event.getGuild().getName() + "**__ - " +
                 event.getGuild().getMembers().size() + " members, " + event.getGuild().getEmotes().size() +
                 " emotes | `" + event.getGuild().getId() + "` | Current Total: " +
                 bot.getShardUtil().getGuildCount()).queue();
+    }
+
+    private TextChannel findChannel(long channelId) {
+        int shardId = (int) ((monitorGuildId >> 22) % bot.getShardTotal());
+
+        return bot.getShardUtil().getShard(shardId).getJda().getTextChannelById(channelId);
     }
 
     private TextChannel getConsoleChannel() {
@@ -172,8 +192,12 @@ public class MonitorCog extends Cog {
             if (channel == null || !channel.canTalk())
                 return;
 
-            String line = e.getMessage().getFormattedMessage();
-            if (!isValid(line)) return;
+            String message = e.getMessage().getFormattedMessage();
+            if (!isValid(message)) return;
+
+            if (e.getThrown() != null) {
+                message += '\n' + Bot.renderStackTrace(e.getThrown(), "    ", "at ");
+            }
 
             StringBuilder clockNum = new StringBuilder();
             LocalDateTime time = LocalDateTime.ofInstant(Instant.ofEpochMilli(e.getTimeMillis()),
@@ -202,56 +226,28 @@ public class MonitorCog extends Cog {
             else
                 levelEmote = "🤷";
 
-            line = format(":clock{0}: {1} [<:spool:331187771173634049>{3}] {2} {5}: {4}",
+            message = format(":clock{0}: {1} <:spool:331187771173634049>{3} {2} **{5}**: {4}",
                     clockNum.toString(), LocalDateTime.ofInstant(Instant.ofEpochMilli(e.getTimeMillis()),
                             ZoneId.of("US/Pacific")).format(DateTimeFormatter.ofPattern("EEE MM dd hh:mm a")),
-                    levelEmote, e.getThreadName(), line, e.getLoggerName());
+                    levelEmote, e.getThreadName(), message, e.getLoggerName());
 
-            messageQueue.add(new MessageBuilder().append(line).build());
+            for (String line : StringUtils.split(message, '\n')) {
+                if (StringUtils.isBlank(line))
+                    continue;
+
+                String processedLine = line;
+                if (processedLine.startsWith(" "))
+                    processedLine = '\u200b' + processedLine;
+
+                messageQueue.add(new MessageBuilder()
+                        .append(processedLine.substring(0, Math.min(processedLine.length(), 2000)))
+                        .build());
+            }
         }
 
         private boolean isValid(String input) {
             return input != null &&
                     !input.replace(" ", "").replace("\n", "").isEmpty();
         }
-    }
-
-    public static void setupJdaLogging() {
-        SimpleLog.LEVEL = SimpleLog.Level.OFF;
-
-        SimpleLog.addListener(new SimpleLog.LogListener() {
-            @Override
-            public void onLog(SimpleLog log, SimpleLog.Level level, Object msg) {
-                org.apache.logging.log4j.Logger logger = LogManager.getLogger(log.name);
-
-                switch (level) {
-                    case TRACE:
-                        logger.trace(msg);
-                        break;
-                    case DEBUG:
-                        logger.debug(msg);
-                        break;
-                    case FATAL:
-                        logger.fatal(msg);
-                        break;
-                    case WARNING:
-                        logger.warn(msg);
-                        break;
-                    case INFO:
-                        logger.info(msg);
-                        break;
-                    default:
-                        logger.info("[unknown] {}", msg);
-                        break;
-                }
-            }
-
-            @Override
-            public void onError(SimpleLog log, Throwable err) {
-                org.apache.logging.log4j.Logger logger = LogManager.getLogger(log.name);
-
-                logger.warn("JDA errored", err);
-            }
-        });
     }
 }

@@ -457,8 +457,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                                 author.getAsMention(), prefix, cmdName,
                                 Strings.smartJoin(((PermissionError) cause).getFriendlyPerms(), "or"))).queue();
                     } else if (cause instanceof PermissionException) {
-                        channel.sendMessage(Emotes.getFailure() + " I need the **" +
-                                ((PermissionException) cause).getPermission().getName() + "** permission!").queue();
+                        try {
+                            channel.sendMessage(Emotes.getFailure() + " I need the **" +
+                                    ((PermissionException) cause).getPermission().getName() + "** permission!").queue();
+                        } catch (PermissionException ignored) {} // can't talk there...
                     } else {
                         logger.error("Command ({}) invocation error:", cmdName, cause);
                         channel.sendMessage(format(Emotes.getFailure() + " Error!```java\n{2}```This error will be reported.",
@@ -645,7 +647,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             public void onError(SimpleLog log, Throwable err) {
                 Logger logger = LogManager.getLogger(log.name);
 
-                logger.warn("JDA errored", err);
+                logger.warn("JDA threw an error", err);
             }
         });
     }
