@@ -143,6 +143,14 @@ public class MusicCog extends Cog {
 
     private void doCleanup() {
         audioStates.forEachEntry((guildId, state) -> {
+            if (state.scheduler.current == null && state.scheduler.queue.size() < 1) {
+                state.guild.getAudioManager().closeAudioConnection();
+                state.guild.getAudioManager().setSendingHandler(new DummySendHandler());
+                audioStates.remove(guildId);
+
+                return true;
+            }
+
             if (new Date().getTime() - state.creationTime.getTime() < TimeUnit.MINUTES.toMillis(3)) {
                 return true;
             }
@@ -208,9 +216,8 @@ public class MusicCog extends Cog {
                 ctx.send(":octagonal_sign: You need to be in the same voice channel as me to do that!").queue();
                 return;
             }
-        } catch (NullPointerException e) {
-            logger.warn("NPE in play command!", e);
-            ctx.send(Emotes.getFailure() + " Something's funky here. Try your command again, and contact the owner if this happens often.").queue();
+        } catch (NullPointerException ignored) {
+            ctx.send(Emotes.getFailure() + " We both need to be connected to a voice channel!").queue();
             return;
         }
 
@@ -335,6 +342,11 @@ public class MusicCog extends Cog {
     public void cmdSkip(Context ctx) {
         channelChecks(ctx);
         AudioState state = getAudioState(ctx.guild);
+        if (state.scheduler.current == null) {
+            ctx.send("There's no current track.").queue();
+            return;
+        }
+
         ExtraTrackInfo info = state.scheduler.current.getUserData(ExtraTrackInfo.class);
         if (info == null) {
             ctx.send(Emotes.getFailure() + " The current track is missing a state!").queue();
@@ -368,7 +380,7 @@ public class MusicCog extends Cog {
         AudioState state = getAudioState(ctx.guild);
 
         if (state.scheduler.current == null)
-            ctx.send("There's no track loaded... what?!").queue();
+            ctx.send("There's no current track.").queue();
         else {
             AudioTrackInfo info = state.scheduler.current.getInfo();
             ctx.send(":arrow_forward: **" + info.title + "**, length **" + Bot.formatDuration(info.length / 1000) + "**").queue();
