@@ -30,6 +30,7 @@ import static java.text.MessageFormat.format;
 
 public class MonitorCog extends Cog {
     private static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(MonitorCog.class);
+    private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("EEE MMM dd hh:mm a");
     private static final long monitorGuildId = 250780048943087618L;
     private static final long consoleChannelId = 331144992003325955L;
     private static final long guildEventChannelId = 331145024161054720L;
@@ -228,7 +229,7 @@ public class MonitorCog extends Cog {
 
             message = format(":clock{0}: {1} <:spool:331187771173634049>{3} {2} **{5}**: {4}",
                     clockNum.toString(), LocalDateTime.ofInstant(Instant.ofEpochMilli(e.getTimeMillis()),
-                            ZoneId.of("US/Pacific")).format(DateTimeFormatter.ofPattern("EEE MM dd hh:mm a")),
+                            ZoneId.of("US/Pacific")).format(TIME_FORMAT),
                     levelEmote, e.getThreadName(), message, e.getLoggerName());
 
             for (String line : StringUtils.split(message, '\n')) {

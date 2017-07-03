@@ -209,7 +209,7 @@ public class ModerationCog extends Cog {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need someone to mute!").queue();
             return;
-        } else if (!ctx.rawArgs.matches("^<@!?(\\d{17,20})>$")) {
+        } else if (!ctx.rawArgs.matches("^<@!?(\\d{17,20})>$") || ctx.message.getMentionedUsers().size() < 1) {
             ctx.send(Emotes.getFailure() + " Invalid mention!").queue();
             return;
         } else if (!ctx.guild.getSelfMember().hasPermission(Permission.MANAGE_CHANNEL)) {
@@ -254,7 +254,7 @@ public class ModerationCog extends Cog {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need someone to unmute!").queue();
             return;
-        } else if (!ctx.rawArgs.matches("^<@!?(\\d{17,20})>$")) {
+        } else if (!ctx.rawArgs.matches("^<@!?(\\d{17,20})>$") || ctx.message.getMentionedUsers().size() < 1) {
             ctx.send(Emotes.getFailure() + " Invalid mention!").queue();
             return;
         } else if (!ctx.guild.getSelfMember().hasPermission(Permission.MANAGE_CHANNEL)) {
@@ -297,7 +297,7 @@ public class ModerationCog extends Cog {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need someone to ban!").queue();
             return;
-        } else if (!MENTION_PATTERN.matcher(ctx.rawArgs).find()) {
+        } else if (!MENTION_PATTERN.matcher(ctx.rawArgs).find() || ctx.message.getMentionedUsers().size() < 1) {
             ctx.send(Emotes.getFailure() + " Invalid mention!").queue();
             return;
         } else if (!ctx.guild.getSelfMember().hasPermission(Permission.BAN_MEMBERS)) {

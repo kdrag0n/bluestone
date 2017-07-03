@@ -142,7 +142,7 @@ public class UtilityCog extends Cog {
             usage = "{user}", aliases = {"userinfo", "whois"}, thread = true)
     public void cmdUser(Context ctx) throws UnsupportedEncodingException {
         User user;
-        if (ctx.rawArgs.matches("^<@!?[0-9]{17,20}>$"))
+        if (ctx.rawArgs.matches("^<@!?[0-9]{17,20}>$") && ctx.message.getMentionedUsers().size() > 0)
             user = ctx.message.getMentionedUsers().get(0);
         else if (ctx.rawArgs.matches("^[0-9]{17,20}$"))
             user = ctx.jda.retrieveUserById(Long.parseUnsignedLong(ctx.rawArgs)).complete();
