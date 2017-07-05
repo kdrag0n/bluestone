@@ -784,6 +784,7 @@ public class UtilityCog extends Cog {
     public void cmdContact(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need a message!").queue();
+            return;
         }
 
         EmbedBuilder emb = new EmbedBuilder()

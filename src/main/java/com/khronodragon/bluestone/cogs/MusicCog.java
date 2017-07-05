@@ -136,7 +136,6 @@ public class MusicCog extends Cog {
                 return ch.getIdLong();
             }
         } catch (NullPointerException e) {
-            logger.warn("NPE in getVoiceEventSelfId", e);
             return 0L;
         }
     }

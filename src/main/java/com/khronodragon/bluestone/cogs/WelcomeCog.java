@@ -106,7 +106,6 @@ public class WelcomeCog extends Cog {
             else
                 ctx.send(NO_COMMAND).queue();
         } catch (NullPointerException e) {
-            logger.warn("Message control: NPE", e);
             ctx.send(Emotes.getFailure() + " Something's not right with this server's message settings. Let me try to fix that...").queue();
 
             try {
