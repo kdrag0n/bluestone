@@ -66,7 +66,7 @@ import java.util.stream.Stream;
 public class UtilityCog extends Cog {
     private static final Logger logger = LogManager.getLogger(UtilityCog.class);
 
-    private static final Collection<Permission> PERMS_NEEDED = Collections.unmodifiableCollection(Permission.getPermissions(1609825363));
+    private static final Collection<Permission> PERMS_NEEDED = Permission.getPermissions(473295957L);
     private static final Pattern UNICODE_EMOTE_PATTERN = Pattern.compile("([\\u20a0-\\u32ff\\x{1f000}-\\x{1ffff}\\x{fe4e5}-\\x{fe4ee}])");
     private static final Pattern CUSTOM_EMOTE_PATTERN = Pattern.compile("<:[a-z_]+:([0-9]{17,19})>", Pattern.CASE_INSENSITIVE);
 
@@ -271,11 +271,8 @@ public class UtilityCog extends Cog {
                 }).get(), true)
                 .addField("Users", str(shardUtil.getUserCount()), true)
                 .addField("Channels", str(shardUtil.getChannelCount()), true)
-                .addField("Commands", str(new HashSet<>(bot.commands.values()).size()), true);
-
-        if (ctx.jda.getSelfUser().getIdLong() == 239775420470394897L) {
-            emb.addField("Invite Link", "https://tiny.cc/goldbot", true);
-        }
+                .addField("Commands", str(new HashSet<>(bot.commands.values()).size()), true)
+                .addField("Invite Link", ctx.jda.asBot().getInviteUrl(PERMS_NEEDED), true);
 
         ctx.send(emb.build()).queue();
     }
