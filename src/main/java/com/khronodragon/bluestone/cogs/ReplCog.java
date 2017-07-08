@@ -21,7 +21,7 @@ import static java.text.MessageFormat.format;
 
 public class ReplCog extends Cog {
     private static final Logger logger = LogManager.getLogger(ReplCog.class);
-    private static final String[] NASHORN_ARGS = {"--language=es6", "-scripting"};
+    private static final String[] NASHORN_ARGS = {"--language=es6", "-scripting", "-strict"};
     static final String GROOVY_PRE_INJECT = "import net.dv8tion.jda.core.entities.*\n" +
             "import net.dv8tion.jda.core.*\n" +
             "import net.dv8tion.jda.core.entities.impl.*\n" +
@@ -61,7 +61,7 @@ public class ReplCog extends Cog {
             "from com.khronodragon.bluestone.sql import BotAdmin, GuildPrefix, GuildWelcomeMessages, Quote\n" +
             "from com.khronodragon.bluestone.handlers import MessageWaitEventListener, ReactionWaitEventListener, RejectedExecHandlerImpl\n" +
             "from com.khronodragon.bluestone.enums import BucketType, MessageDestination\n" +
-            "from com.khronodragon.bluestone.util import Base65536, ClassUtilities, EqualitySet, IntegerZeroTypeAdapter, MinecraftUtil, NullValueWrapper, Paginator, RegexUtil, StreamUtils, Strftime, StringMapper, StringReplacerCallback, Strings, UnisafeString\n" +
+            "from com.khronodragon.bluestone.util import Base65536, ClassUtilities, EqualitySet, IntegerZeroTypeAdapter, MinecraftUtil, NullValueWrapper, Paginator, RegexUtil, StreamUtils, StringMapper, StringReplacerCallback, Strings, UnisafeString\n" +
             "from org.apache.logging.log4j import CloseableThreadContext, EventLogger, Level, Logger, Marker, MarkerManager, ThreadContext, LoggingException, LogManager\n" +
             "from java.time import Clock, DateTimeException, DayOfWeek, Duration, Instant, LocalDate, LocalDateTime, LocalTime, Month, MonthDay, OffsetDateTime, OffsetTime, Period, Ser, Year, YearMonth, ZonedDateTime, ZoneId, ZoneOffset, ZoneRegion\n" +
             "from java.util import HashMap, HashSet, LinkedHashSet, LinkedHashMap, TreeSet, Set, List, Map, Optional, ArrayList, LinkedList, TreeMap, Date, Base64, AbstractList, AbstractMap, Collection, AbstractCollection, IdentityHashMap, Random\n" +
