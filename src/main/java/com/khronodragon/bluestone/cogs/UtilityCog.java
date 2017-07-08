@@ -33,6 +33,7 @@ import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.entities.MessageReaction.ReactionEmote;
 import net.dv8tion.jda.core.entities.impl.UserImpl;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -144,9 +145,13 @@ public class UtilityCog extends Cog {
         User user;
         if (ctx.rawArgs.matches("^<@!?[0-9]{17,20}>$") && ctx.message.getMentionedUsers().size() > 0)
             user = ctx.message.getMentionedUsers().get(0);
-        else if (ctx.rawArgs.matches("^[0-9]{17,20}$"))
-            user = ctx.jda.retrieveUserById(Long.parseUnsignedLong(ctx.rawArgs)).complete();
-        else if (ctx.rawArgs.matches("^.{2,32}#[0-9]{4}$")) {
+        else if (ctx.rawArgs.matches("^[0-9]{17,20}$")) {
+            try {
+                user = ctx.jda.retrieveUserById(Long.parseUnsignedLong(ctx.rawArgs)).complete();
+            } catch (ErrorResponseException ignored) {
+                user = null;
+            }
+        } else if (ctx.rawArgs.matches("^.{2,32}#[0-9]{4}$")) {
             Collection<User> users;
             switch (ctx.channel.getType()) {
                 case TEXT:
