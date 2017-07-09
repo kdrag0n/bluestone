@@ -15,6 +15,10 @@ import com.khronodragon.bluestone.sql.BotAdmin;
 import com.khronodragon.bluestone.sql.GuildPrefix;
 import com.khronodragon.bluestone.util.ClassUtilities;
 import com.khronodragon.bluestone.util.Strings;
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.async.Callback;
+import com.mashape.unirest.http.exceptions.UnirestException;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import net.dv8tion.jda.bot.entities.ApplicationInfo;
 import net.dv8tion.jda.core.*;
@@ -494,12 +498,44 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     jda.getSelfUser().getAsMention() : message.getGuild().getSelfMember().getAsMention();
 
             if (content.startsWith(mention)) {
-                if (content.substring(mention.length())
-                        .trim().equalsIgnoreCase("prefix")) {
+                String request = content.substring(mention.length())
+                        .trim();
+
+                if (request.equalsIgnoreCase("prefix")) {
                     channel.sendMessage("My prefix here is `" + prefix + "`.").queue();
+                } else if (request.length() > 0) {
+                    String reqDest = getConfig().optString("chatengine_url", null);
+                    if (reqDest == null) {
+                        channel.sendMessage("My owner hasn't set up ChatEngine yet.").queue();
+                        return;
+                    }
+                    channel.sendTyping().queue();
+
+                    Unirest.post(reqDest)
+                            .header("Referer", getKeys().optString("chatengine"))
+                            .body(request)
+                            .asStringAsync(new Callback<String>() {
+                                @Override
+                                public void completed(HttpResponse<String> response) {
+                                    channel.sendMessage(response.getBody()).queue();
+                                }
+
+                                @Override
+                                public void failed(UnirestException e) {
+                                    logger.error("Error getting ChatEngine response", e);
+                                    channel.sendMessage(":x: My brain isn't really working right now.").queue();
+                                }
+
+                                @Override
+                                public void cancelled() {
+                                    channel.sendMessage(":x: My brain isn't really working right now.").queue();
+                                }
+                            });
                 } else {
-                    channel.sendMessage("Hey there! I can't talk to you yet. However, if you want my prefix, say `@" +
-                            Cog.getTag(jda.getSelfUser()) + " prefix`!").queue();
+                    String tag = Cog.getTag(jda.getSelfUser());
+
+                    channel.sendMessage("Hey there! You can talk to me like `@" + tag +
+                            " [message]`. And if you want my prefix, say `@" + tag + " prefix`!").queue();
                 }
             }
         }

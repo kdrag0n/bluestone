@@ -16,7 +16,8 @@ This is the template:
     "google": "",
     "discord_bots": "",
     "carbonitex": ""
-  }
+  },
+  "chatengine_url": "http://my-chatengine-server.com/ask"
 }
 ```
 Put your token in for the `token` key.
