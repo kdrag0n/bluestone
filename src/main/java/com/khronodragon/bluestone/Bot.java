@@ -496,10 +496,11 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         } else {
             String mention = message.getGuild() == null ?
                     jda.getSelfUser().getAsMention() : message.getGuild().getSelfMember().getAsMention();
+            String name = message.getGuild() == null ?
+                    jda.getSelfUser().getName() : message.getGuild().getSelfMember().getEffectiveName();
 
             if (content.startsWith(mention)) {
-                String request = content.substring(mention.length())
-                        .trim();
+                String request = message.getContent().substring(name.length() + 2).trim();
 
                 if (request.equalsIgnoreCase("prefix")) {
                     channel.sendMessage("My prefix here is `" + prefix + "`.").queue();
@@ -537,6 +538,37 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     channel.sendMessage("Hey there! You can talk to me like `@" + tag +
                             " [message]`. And if you want my prefix, say `@" + tag + " prefix`!").queue();
                 }
+            } else if (channel instanceof PrivateChannel) {
+                String request = message.getContent();
+
+                String reqDest = getConfig().optString("chatengine_url", null);
+                if (reqDest == null) {
+                    channel.sendMessage("My owner hasn't set up ChatEngine yet.").queue();
+                    return;
+                }
+                channel.sendTyping().queue();
+
+                Unirest.post(reqDest)
+                        .header("Referer", getKeys().optString("chatengine"))
+                        .body(request)
+                        .asStringAsync(new Callback<String>() {
+                            @Override
+                            public void completed(HttpResponse<String> response) {
+                                channel.sendMessage("\uD83D\uDCAC " + response.getBody()).queue();
+                            }
+
+                            @Override
+                            public void failed(UnirestException e) {
+                                logger.error("Error getting ChatEngine response", e);
+                                channel.sendMessage(":x: My brain isn't really working right now.").queue();
+                            }
+
+                            @Override
+                            public void cancelled() {
+                                channel.sendMessage(":x: My brain isn't really working right now.").queue();
+                            }
+                        });
+
             }
         }
     }
