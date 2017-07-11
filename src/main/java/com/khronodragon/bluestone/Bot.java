@@ -410,7 +410,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public void onException(ExceptionEvent event) {
         if (event.getCause() instanceof OutOfMemoryError) {
             logger.fatal("OUT OF MEMORY! Exiting.");
-            System.exit(2);
+            Runtime.getRuntime().halt(2);
         }
 
         logger.error("Error", event.getCause());
