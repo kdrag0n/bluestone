@@ -71,7 +71,7 @@ public class OwnerCog extends Cog {
                 msg.getRawContent().equalsIgnoreCase("yes"));
         if (resp != null) {
             logger.info("Shard {} shutting down...", n);
-            ctx.bot.getShardUtil().getShard(n).getJda().shutdown(false);
+            ctx.bot.getShardUtil().getShard(n).getJda().shutdown();
         }
     }
 

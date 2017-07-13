@@ -28,8 +28,6 @@ public class Start {
             accountType = AccountType.BOT;
         }
 
-        // Unirest.setDefaultHeader("User-Agent", Bot.USER_AGENT);
-
         try {
             Bot.start(token, shardCount, accountType, config);
         } catch (LoginException|RateLimitedException e) {

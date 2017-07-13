@@ -14,8 +14,6 @@ import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.pokemon.Description;
 import com.khronodragon.bluestone.pokemon.Pokemon;
 import com.khronodragon.bluestone.util.IntegerZeroTypeAdapter;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import net.dv8tion.jda.core.EmbedBuilder;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;

@@ -17,11 +17,6 @@ import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.Cooldown;
 import com.khronodragon.bluestone.enums.BucketType;
 import com.khronodragon.bluestone.util.*;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.async.Callback;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import com.sun.management.OperatingSystemMXBean;
 import io.codearte.jfairy.Fairy;
 import io.codearte.jfairy.producer.person.Person;
@@ -34,6 +29,7 @@ import net.dv8tion.jda.core.entities.MessageReaction.ReactionEmote;
 import net.dv8tion.jda.core.entities.impl.UserImpl;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
+import okhttp3.*;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -66,6 +62,7 @@ import java.util.stream.Stream;
 
 public class UtilityCog extends Cog {
     private static final Logger logger = LogManager.getLogger(UtilityCog.class);
+    private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
 
     private static final Collection<Permission> PERMS_NEEDED = Permission.getPermissions(473295957L);
     private static final Pattern UNICODE_EMOTE_PATTERN = Pattern.compile("([\\u20a0-\\u32ff\\x{1f000}-\\x{1ffff}\\x{fe4e5}-\\x{fe4ee}])");
@@ -93,9 +90,12 @@ public class UtilityCog extends Cog {
             .expireAfterAccess(6, TimeUnit.HOURS)
             .build(new CacheLoader<String, EmbedBuilder>() {
                 @Override
-                public EmbedBuilder load(String key) throws UnirestException {
+                public EmbedBuilder load(String key) throws IOException {
                     String uri = "https://freegeoip.net/json/" + key;
-                    JSONObject data = Unirest.get(uri).asJson().getBody().getObject();
+                    JSONObject data = new JSONObject(bot.http.newCall(new Request.Builder()
+                            .get()
+                            .url(uri)
+                            .build()).execute().body().string());
 
                     String rdns;
                     try {
@@ -469,35 +469,31 @@ public class UtilityCog extends Cog {
         json.put("text1", bottomText);
         logger.info("req {}", json);
 
-        Unirest.post("https://api.imgflip.com/caption_image")
-                .body(json)
-                .asJsonAsync(new Callback<JsonNode>() {
-                    @Override
-                    public void completed(HttpResponse<JsonNode> response) {
-                        JSONObject resp = response.getBody().getObject();
+        bot.http.newCall(new Request.Builder()
+                .post(RequestBody.create(JSON_MEDIA_TYPE, json.toString()))
+                .url("https://api.imgflip.com/caption_image")
+                .build()).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                logger.error("Imgflip request errored", e);
+                ctx.send(Emotes.getFailure() + " Request failed. `" + e.getMessage() + '`').queue();
+            }
 
-                        logger.info(resp);
-                        if (resp.getBoolean("success")) {
-                            ctx.send(new EmbedBuilder()
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                JSONObject resp = new JSONObject(response.body().string());
+
+                logger.info(resp);
+                if (resp.getBoolean("success")) {
+                    ctx.send(new EmbedBuilder()
                             .setColor(randomColor())
                             .setImage(resp.getJSONObject("data").getString("url"))
                             .build()).queue();
-                        } else {
-                            ctx.send(Emotes.getFailure() + " Error: `" + resp.getString("error_message") + '`').queue();
-                        }
-                    }
-
-                    @Override
-                    public void failed(UnirestException e) {
-                        logger.error("Imgflip request errored", e);
-                        ctx.send(Emotes.getFailure() + " Request failed. `" + e.getMessage() + '`').queue();
-                    }
-
-                    @Override
-                    public void cancelled() {
-                        ctx.send(Emotes.getFailure() + " Request cancelled.").queue();
-                    }
-                });
+                } else {
+                    ctx.send(Emotes.getFailure() + " Error: `" + resp.getString("error_message") + '`').queue();
+                }
+            }
+        });
     }
 
     @Command(name = "urban", desc = "Define something with Urban Dictionary.", aliases = {"define"})
@@ -506,60 +502,62 @@ public class UtilityCog extends Cog {
             ctx.send(Emotes.getFailure() + " I need a term!").queue();
             return;
         }
+        ctx.channel.sendTyping().queue();
 
-        Unirest.get("http://api.urbandictionary.com/v0/define")
-                .queryString("term", ctx.rawArgs)
-                .asJsonAsync(new Callback<JsonNode>() {
-                    @Override
-                    public void completed(HttpResponse<JsonNode> response) {
-                        JSONArray results = response.getBody().getObject().getJSONArray("list");
+        bot.http.newCall(new Request.Builder()
+                .get()
+                .url(new HttpUrl.Builder()
+                            .scheme("http")
+                            .host("api.urbandictionary.com")
+                            .addPathSegments("v0/define")
+                            .addQueryParameter("term", ctx.rawArgs)
+                            .build())
+                .build()).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                logger.error("Urban Dictionary API error", e);
+                ctx.send(Emotes.getFailure() + " Request failed.").queue();
+            }
 
-                        if (results.length() < 1) {
-                            ctx.send(Emotes.getFailure() + " No definitions found.").queue();
-                            return;
-                        }
-                        JSONObject word = results.getJSONObject(0);
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                JSONArray results = new JSONObject(response.body().string()).getJSONArray("list");
 
-                        EmbedBuilder emb = new EmbedBuilder()
-                                .setColor(randomColor())
-                                .setTitle(word.getString("word"))
-                                .setAuthor("Urban Dictionary", word.getString("permalink"), "https://images.discordapp.net/.eJwFwdsNwyAMAMBdGICHhUPIMpULiCAlGIHzUVXdvXdf9cxLHeoUGeswJreVeGa9hCfVoitzvQqNtnTi25AIpfMuXZaBDSM4G9wWAdA5vxuIAQNCQB9369F7a575pv7KLUnjTvOjR6_q9wdVRCZ_.BorCGmKDHUzN6L0CodSwX7Yv3kg");
+                if (results.length() < 1) {
+                    ctx.send(Emotes.getFailure() + " No definitions found.").queue();
+                    return;
+                }
+                JSONObject word = results.getJSONObject(0);
 
-                        String definition = word.getString("definition");
-                        if (definition.length() > 0) {
-                            for (String page: embedFieldPages(definition)) {
-                                emb.addField("Definition", page, false);
-                            }
-                        } else {
-                            emb.addField("Definition", "None?!", false);
-                        }
+                EmbedBuilder emb = new EmbedBuilder()
+                        .setColor(randomColor())
+                        .setTitle(word.getString("word"))
+                        .setAuthor("Urban Dictionary", word.getString("permalink"), "https://images.discordapp.net/.eJwFwdsNwyAMAMBdGICHhUPIMpULiCAlGIHzUVXdvXdf9cxLHeoUGeswJreVeGa9hCfVoitzvQqNtnTi25AIpfMuXZaBDSM4G9wWAdA5vxuIAQNCQB9369F7a575pv7KLUnjTvOjR6_q9wdVRCZ_.BorCGmKDHUzN6L0CodSwX7Yv3kg");
 
-                        String example = word.getString("example");
-                        if (example.length() > 0) {
-                            for (String page: embedFieldPages(example)) {
-                                emb.addField("Example", page, false);
-                            }
-                        } else {
-                            emb.addField("Example", "None?!", false);
-                        }
-
-                        emb.addField("\uD83D\uDC4D", str(word.getInt("thumbs_up")), true)
-                                .addField("\uD83D\uDC4E", str(word.getInt("thumbs_down")), true);
-
-                        ctx.send(emb.build()).queue();
+                String definition = word.getString("definition");
+                if (definition.length() > 0) {
+                    for (String page: embedFieldPages(definition)) {
+                        emb.addField("Definition", page, false);
                     }
+                } else {
+                    emb.addField("Definition", "None?!", false);
+                }
 
-                    @Override
-                    public void failed(UnirestException e) {
-                        logger.error("Urban Dictionary API error", e);
-                        ctx.send(Emotes.getFailure() + " Request failed.").queue();
+                String example = word.getString("example");
+                if (example.length() > 0) {
+                    for (String page: embedFieldPages(example)) {
+                        emb.addField("Example", page, false);
                     }
+                } else {
+                    emb.addField("Example", "None?!", false);
+                }
 
-                    @Override
-                    public void cancelled() {
-                        ctx.send(Emotes.getFailure() + " Request cancelled for some reason...").queue();
-                    }
-                });
+                emb.addField("\uD83D\uDC4D", str(word.getInt("thumbs_up")), true)
+                        .addField("\uD83D\uDC4E", str(word.getInt("thumbs_down")), true);
+
+                ctx.send(emb.build()).queue();
+            }
+        });
     }
 
     @Command(name = "rcolor", desc = "Generate a random color.", aliases = {"rc", "randcolor"})
@@ -910,11 +908,12 @@ public class UtilityCog extends Cog {
             ctx.channel.sendTyping().queue();
 
             try {
-                comicNum = Unirest.get("https://xkcd.com/info.0.json")
-                        .asJson()
-                        .getBody().getObject()
+                comicNum = new JSONObject(bot.http.newCall(new Request.Builder()
+                        .get()
+                        .url("https://xkcd.com/info.0.json")
+                        .build()).execute().body().string())
                         .getInt("num");
-            } catch (UnirestException e) {
+            } catch (IOException e) {
                 logger.error("xkcd > latest: http error", e);
                 ctx.send(Emotes.getFailure() + " An error occurred.").queue();
                 return;
@@ -923,11 +922,12 @@ public class UtilityCog extends Cog {
             ctx.channel.sendTyping().queue();
 
             try {
-                comicNum = randint(1, Unirest.get("https://xkcd.com/info.0.json")
-                        .asJson()
-                        .getBody().getObject()
+                comicNum = randint(1, new JSONObject(bot.http.newCall(new Request.Builder()
+                        .get()
+                        .url("https://xkcd.com/info.0.json")
+                        .build()).execute().body().string())
                         .getInt("num") + 1);
-            } catch (UnirestException e) {
+            } catch (IOException e) {
                 logger.error("xkcd > random: http error", e);
                 ctx.send(Emotes.getFailure() + " An error occurred.").queue();
                 return;
@@ -936,9 +936,10 @@ public class UtilityCog extends Cog {
             ctx.channel.sendTyping().queue();
 
             try {
-                int max = Unirest.get("https://xkcd.com/info.0.json")
-                        .asJson()
-                        .getBody().getObject()
+                int max = new JSONObject(bot.http.newCall(new Request.Builder()
+                        .get()
+                        .url("https://xkcd.com/info.0.json")
+                        .build()).execute().body().string())
                         .getInt("num");
                 int requested;
                 try {
@@ -953,7 +954,7 @@ public class UtilityCog extends Cog {
                     ctx.send(Emotes.getFailure() + " Invalid comic. The latest is " + max + '.').queue();
                     return;
                 }
-            } catch (UnirestException e) {
+            } catch (IOException e) {
                 logger.error("xkcd > random: http error", e);
                 ctx.send(Emotes.getFailure() + " An error occurred.").queue();
                 return;
@@ -969,14 +970,15 @@ public class UtilityCog extends Cog {
         }
 
         try {
-            JSONObject resp = Unirest.get("http://www.xkcd.com/" + comicNum + "/info.0.json")
-                    .asJson()
-                    .getBody().getObject();
+            JSONObject resp = new JSONObject(bot.http.newCall(new Request.Builder()
+                    .get()
+                    .url("http://www.xkcd.com/" + comicNum + "/info.0.json")
+                    .build()).execute().body().string());
 
             comicTitle = resp.getString("safe_title");
             comicDesc = resp.getString("alt");
             comicUrl = resp.getString("img");
-        } catch (UnirestException e) {
+        } catch (IOException e) {
             logger.error("xkcd: http error", e);
             ctx.send(Emotes.getFailure() + " An error occurred.").queue();
             return;
@@ -1031,7 +1033,7 @@ public class UtilityCog extends Cog {
                 .setAuthor("IP Data", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
                 .build()).queue();
         } catch (ExecutionException e) {
-            if (e.getCause() instanceof UnirestException) {
+            if (e.getCause() instanceof IOException) {
                 logger.error("ipinfo API error", e.getCause());
                 ctx.send(Emotes.getFailure() + " Request failed.").queue();
             } else {

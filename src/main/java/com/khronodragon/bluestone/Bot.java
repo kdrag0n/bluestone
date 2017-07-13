@@ -15,6 +15,7 @@ import com.khronodragon.bluestone.sql.BotAdmin;
 import com.khronodragon.bluestone.sql.GuildPrefix;
 import com.khronodragon.bluestone.util.ClassUtilities;
 import com.khronodragon.bluestone.util.Strings;
+import com.neovisionaries.ws.client.WebSocketFactory;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import net.dv8tion.jda.bot.entities.ApplicationInfo;
 import net.dv8tion.jda.core.*;
@@ -732,7 +733,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 .setToken(token)
                 .setAudioEnabled(true)
                 .setAutoReconnect(true)
-                .setWebSocketTimeout(120000)
+                .setWebsocketFactory(new WebSocketFactory()
+                        .setConnectionTimeout(120000))
                 .setBulkDeleteSplittingEnabled(false)
                 .setStatus(OnlineStatus.ONLINE)
                 .setCorePoolSize(5)
@@ -795,7 +797,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                         if (jda.getStatus() == JDA.Status.CONNECTED) {
                             jda.getPresence().setStatus(OnlineStatus.INVISIBLE);
                         }
-                        jda.shutdown(false);
+                        jda.shutdown();
                     }
                     if (shardCount == 1) {
                         System.exit(0);
