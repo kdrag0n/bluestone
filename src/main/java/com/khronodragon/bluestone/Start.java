@@ -1,6 +1,5 @@
 package com.khronodragon.bluestone;
 
-import com.mashape.unirest.http.Unirest;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import org.json.JSONObject;
@@ -29,7 +28,7 @@ public class Start {
             accountType = AccountType.BOT;
         }
 
-        Unirest.setDefaultHeader("User-Agent", Bot.USER_AGENT);
+        // Unirest.setDefaultHeader("User-Agent", Bot.USER_AGENT);
 
         try {
             Bot.start(token, shardCount, accountType, config);

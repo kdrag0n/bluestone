@@ -1,13 +1,14 @@
 package com.khronodragon.bluestone.emotes;
 
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.async.Callback;
-import com.mashape.unirest.http.exceptions.UnirestException;
+import okhttp3.Call;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.json.JSONObject;
+
+import java.io.IOException;
 
 import static com.khronodragon.bluestone.util.Strings.str;
 
@@ -15,27 +16,28 @@ public class TwitchEmoteProvider implements EmoteProvider {
     public JSONObject emotes = null;
     public JSONObject templates = null;
 
-    public TwitchEmoteProvider() {
-        Unirest.get("https://twitchemotes.com/api_cache/v2/global.json")
-                .asJsonAsync(new Callback<JsonNode>() {
-                    @Override
-                    public void completed(HttpResponse<JsonNode> response) {
-                        JSONObject data = response.getBody().getObject();
-                        emotes = data.getJSONObject("emotes");
-                        templates = data.getJSONObject("template");
-                        LogManager.getLogger(TwitchEmoteProvider.class).info("Data loaded.");
-                    }
+    public TwitchEmoteProvider(OkHttpClient client) {
+        client.newCall(new Request.Builder()
+                .get()
+                .url("https://twitchemotes.com/api_cache/v2/global.json")
+                .build()).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                LogManager.getLogger(TwitchEmoteProvider.class).error("Failed to get data", e);
 
-                    @Override
-                    public void failed(UnirestException e) {
-                        LogManager.getLogger(TwitchEmoteProvider.class).error("Failed to get data", e);
-                    }
+                emotes = new JSONObject();
+                templates = new JSONObject();
+            }
 
-                    @Override
-                    public void cancelled() {
-                        LogManager.getLogger(TwitchEmoteProvider.class).error("Data request cancelled!");
-                    }
-                });
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                JSONObject data = new JSONObject(response.body().string());
+
+                emotes = data.getJSONObject("emotes");
+                templates = data.getJSONObject("template");
+                LogManager.getLogger(TwitchEmoteProvider.class).info("Data loaded.");
+            }
+        });
     }
 
     @Override

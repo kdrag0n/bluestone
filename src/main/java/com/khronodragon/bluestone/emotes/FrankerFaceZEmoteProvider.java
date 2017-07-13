@@ -1,55 +1,54 @@
 package com.khronodragon.bluestone.emotes;
 
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.async.Callback;
-import com.mashape.unirest.http.exceptions.UnirestException;
+import okhttp3.Call;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.apache.logging.log4j.LogManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.io.IOException;
 
 import static com.khronodragon.bluestone.util.Strings.str;
 
 public class FrankerFaceZEmoteProvider implements EmoteProvider {
     private JSONObject emotes = null;
 
-    public FrankerFaceZEmoteProvider() {
-        Unirest.get("https://api.frankerfacez.com/v1/emoticons?sort=count-desc&per_page=200&page=1")
-                .asJsonAsync(new Callback<JsonNode>() {
-                    @Override
-                    public void completed(HttpResponse<JsonNode> response) {
-                        JSONObject data = response.getBody().getObject();
-                        JSONArray rawEmotes = data.getJSONArray("emoticons");
-                        JSONObject tempEmotes = new JSONObject();
+    public FrankerFaceZEmoteProvider(OkHttpClient client) {
+        client.newCall(new Request.Builder()
+                .get()
+                .url("https://api.frankerfacez.com/v1/emoticons?sort=count-desc&per_page=200&page=1")
+                .build()).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                LogManager.getLogger(FrankerFaceZEmoteProvider.class).error("Failed to get data", e);
+                emotes = new JSONObject();
+            }
 
-                        for (Object emote: rawEmotes) {
-                            JSONObject realEmote = (JSONObject) emote;
-                            final String name = realEmote.getString("name");
-                            realEmote.remove("name");
-                            realEmote.remove("css");
-                            realEmote.remove("margins");
-                            realEmote.remove("public");
-                            realEmote.remove("hidden");
-                            realEmote.remove("modifier");
-                            realEmote.remove("offset");
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                JSONObject data = new JSONObject(response.body().string());
+                JSONArray rawEmotes = data.getJSONArray("emoticons");
+                JSONObject tempEmotes = new JSONObject();
 
-                            tempEmotes.put(name, realEmote);
-                        }
-                        emotes = tempEmotes;
-                        LogManager.getLogger(FrankerFaceZEmoteProvider.class).info("Data loaded.");
-                    }
+                for (Object emote: rawEmotes) {
+                    JSONObject realEmote = (JSONObject) emote;
+                    final String name = realEmote.getString("name");
+                    realEmote.remove("name");
+                    realEmote.remove("css");
+                    realEmote.remove("margins");
+                    realEmote.remove("public");
+                    realEmote.remove("hidden");
+                    realEmote.remove("modifier");
+                    realEmote.remove("offset");
 
-                    @Override
-                    public void failed(UnirestException e) {
-                        LogManager.getLogger(FrankerFaceZEmoteProvider.class).error("Failed to get data", e);
-                    }
-
-                    @Override
-                    public void cancelled() {
-                        LogManager.getLogger(FrankerFaceZEmoteProvider.class).error("Data request cancelled!");
-                    }
-                });
+                    tempEmotes.put(name, realEmote);
+                }
+                emotes = tempEmotes;
+                LogManager.getLogger(FrankerFaceZEmoteProvider.class).info("Data loaded.");
+            }
+        });
     }
 
     @Override

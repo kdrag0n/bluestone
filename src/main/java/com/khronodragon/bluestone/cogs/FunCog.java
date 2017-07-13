@@ -8,20 +8,20 @@ import com.khronodragon.bluestone.emotes.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.util.Strings;
 import com.khronodragon.bluestone.util.UnisafeString;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.async.Callback;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import gnu.trove.map.TCharObjectMap;
 import gnu.trove.map.hash.TCharObjectHashMap;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Message;
+import okhttp3.Call;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONObject;
 
-import java.io.InputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 import static java.text.MessageFormat.format;
 
 public class FunCog extends Cog {
-    private static final EmoteProviderManager EMOTE_PROVIDER_MANAGER = new EmoteProviderManager();
     private static final Map<String, UnisafeString> charsets = new HashMap<String, UnisafeString>() {{
         put("normal", uniString("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~ `!@#$%^&*()-_=+[]{}|;:'\",<.>/?"));
         put("fullwidth", uniString("ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ０１２３４５６７８９～ ｀！＠＃＄％＾＆＊（）－＿＝＋［］｛｝|；：＇＂,＜．＞/？"));
@@ -160,6 +159,7 @@ public class FunCog extends Cog {
             "An old man carries {0} away.",
             "{0} is in shock.",
             "{0} passes out."};
+    private final EmoteProviderManager emoteProviderManager = new EmoteProviderManager();
 
     private static final UnisafeString uniString(String javaString) {
         return new UnisafeString(javaString);
@@ -167,10 +167,12 @@ public class FunCog extends Cog {
 
     public FunCog(Bot bot) {
         super(bot);
-        EMOTE_PROVIDER_MANAGER.addProvider(new TwitchEmoteProvider());
-        EMOTE_PROVIDER_MANAGER.addProvider(new BetterTTVEmoteProvider());
-        EMOTE_PROVIDER_MANAGER.addProvider(new FrankerFaceZEmoteProvider());
-        EMOTE_PROVIDER_MANAGER.addProvider(new DiscordEmoteProvider());
+
+        OkHttpClient http = new OkHttpClient();
+        emoteProviderManager.addProvider(new TwitchEmoteProvider(http));
+        emoteProviderManager.addProvider(new BetterTTVEmoteProvider(http));
+        emoteProviderManager.addProvider(new FrankerFaceZEmoteProvider(http));
+        emoteProviderManager.addProvider(new DiscordEmoteProvider());
     }
 
     public String getName() {
@@ -245,28 +247,29 @@ public class FunCog extends Cog {
 
     @Command(name = "cat", desc = "Get a random cat!")
     public void cmdCat(Context ctx) {
-        Unirest.get("http://random.cat/meow")
-                .asJsonAsync(new Callback<JsonNode>() {
-                    public void completed(HttpResponse<JsonNode> response) {
-                        String imageUrl = response.getBody().getObject().getString("file");
-                        if (imageUrl == null) {
-                            ctx.send(Emotes.getFailure() + " Couldn't get a cat!").queue();
-                        } else {
-                            ctx.send(new EmbedBuilder()
-                                    .setImage(imageUrl)
-                                    .setColor(randomColor())
-                                    .build()).queue();
-                        }
-                    }
+        bot.http.newCall(new Request.Builder()
+                .get()
+                .url("http://random.cat/meow")
+                .build()).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                ctx.send(Emotes.getFailure() + " Failed to get a cat!").queue();
+            }
 
-                    public void failed(UnirestException e) {
-                        ctx.send(Emotes.getFailure() + " Failed to get a cat!").queue();
-                    }
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String imageUrl = new JSONObject(response.body().string()).getString("file");
 
-                    public void cancelled() {
-                        ctx.send(Emotes.getFailure() + " The request was cancelled!").queue();
-                    }
-                });
+                if (imageUrl == null) {
+                    ctx.send(Emotes.getFailure() + " Couldn't get a cat!").queue();
+                } else {
+                    ctx.send(new EmbedBuilder()
+                            .setImage(imageUrl)
+                            .setColor(randomColor())
+                            .build()).queue();
+                }
+            }
+        });
     }
 
     @Command(name = "emote", desc = "Get an emoticon, from many sources.", usage = "[emote name]")
@@ -275,41 +278,40 @@ public class FunCog extends Cog {
             ctx.send(Emotes.getFailure() + " You need to specify an emote!").queue();
             return;
         }
-        if (!EMOTE_PROVIDER_MANAGER.isFullyLoaded()) {
+        if (!emoteProviderManager.isFullyLoaded()) {
             ctx.send(Emotes.getFailure() + " The emote data hasn't been loaded yet! Try again soon.").queue();
             return;
         }
 
-        final String url = EMOTE_PROVIDER_MANAGER.getFirstUrl(ctx.rawArgs);
+        final String url = emoteProviderManager.getFirstUrl(ctx.rawArgs);
         if (url == null) {
             ctx.send(Emotes.getFailure() + " No such emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV should work.").queue();
             return;
         }
-        EmoteInfo info = EMOTE_PROVIDER_MANAGER.getFirstInfo(ctx.rawArgs);
+        EmoteInfo info = emoteProviderManager.getFirstInfo(ctx.rawArgs);
 
-        Unirest.get(url)
-                .asBinaryAsync(new Callback<InputStream>() {
-                    @Override
-                    public void completed(HttpResponse<InputStream> response) {
-                        Message msg = null;
-                        if (info.description != null) {
-                            msg = new MessageBuilder()
-                                    .append(info.description)
-                                    .build();
-                        }
-                        ctx.channel.sendFile(response.getBody(), "emote.png", msg).queue();
-                    }
+        bot.http.newCall(new Request.Builder()
+                .get()
+                .url(url)
+                .build()).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                ctx.send(Emotes.getFailure() + " Failed to fetch emote.").queue();
+            }
 
-                    @Override
-                    public void failed(UnirestException e) {
-                        ctx.send(Emotes.getFailure() + " Failed to fetch emote.").queue();
-                    }
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                Message msg = null;
 
-                    @Override
-                    public void cancelled() {
-                        ctx.send(Emotes.getFailure() + " The request was cancelled.").queue();
-                    }
-                });
+                if (info.description != null) {
+                    msg = new MessageBuilder()
+                            .append(info.description)
+                            .build();
+                }
+
+                ctx.channel.sendFile(response.body().byteStream(), "emote.png", msg).queue();
+            }
+        });
     }
 
     private String applyStyle(String orig, UnisafeString mapTo) {

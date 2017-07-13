@@ -1,53 +1,54 @@
 package com.khronodragon.bluestone.emotes;
 
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.async.Callback;
-import com.mashape.unirest.http.exceptions.UnirestException;
+import okhttp3.Call;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.IOException;
+
 public class BetterTTVEmoteProvider implements EmoteProvider {
     private JSONObject emotes = null;
     private String template = null;
 
-    public BetterTTVEmoteProvider() {
-        Unirest.get("https://api.betterttv.net/2/emotes")
-                .asJsonAsync(new Callback<JsonNode>() {
-                    @Override
-                    public void completed(HttpResponse<JsonNode> response) {
-                        JSONObject data = response.getBody().getObject();
-                        JSONArray rawEmotes = data.getJSONArray("emotes");
-                        JSONObject tempEmotes = new JSONObject();
+    public BetterTTVEmoteProvider(OkHttpClient client) {
+        client.newCall(new Request.Builder()
+                .get()
+                .url("https://api.betterttv.net/2/emotes")
+                .build()).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                LogManager.getLogger(BetterTTVEmoteProvider.class).error("Failed to get data", e);
 
-                        for (Object emote: rawEmotes) {
-                            JSONObject realEmote = (JSONObject) emote;
-                            final String name = realEmote.getString("code");
-                            realEmote.remove("code");
-                            realEmote.remove("restrictions");
-                            realEmote.remove("channel");
+                emotes = new JSONObject();
+                template = "";
+            }
 
-                            tempEmotes.put(name, realEmote);
-                        }
-                        emotes = tempEmotes;
-                        template = "https:" + StringUtils.replaceOnce(data.getString("urlTemplate"), "{{image}}", "2x");
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                JSONObject data = new JSONObject(response.body().string());
+                JSONArray rawEmotes = data.getJSONArray("emotes");
+                JSONObject tempEmotes = new JSONObject();
 
-                        LogManager.getLogger(BetterTTVEmoteProvider.class).info("Data loaded.");
-                    }
+                for (Object emote: rawEmotes) {
+                    JSONObject realEmote = (JSONObject) emote;
+                    final String name = realEmote.getString("code");
+                    realEmote.remove("code");
+                    realEmote.remove("restrictions");
+                    realEmote.remove("channel");
 
-                    @Override
-                    public void failed(UnirestException e) {
-                        LogManager.getLogger(BetterTTVEmoteProvider.class).error("Failed to get data", e);
-                    }
+                    tempEmotes.put(name, realEmote);
+                }
+                emotes = tempEmotes;
+                template = "https:" + StringUtils.replaceOnce(data.getString("urlTemplate"), "{{image}}", "2x");
 
-                    @Override
-                    public void cancelled() {
-                        LogManager.getLogger(BetterTTVEmoteProvider.class).error("Data request cancelled!");
-                    }
-                });
+                LogManager.getLogger(BetterTTVEmoteProvider.class).info("Data loaded.");
+            }
+        });
     }
 
     @Override

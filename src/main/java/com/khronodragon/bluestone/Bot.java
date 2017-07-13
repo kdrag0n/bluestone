@@ -15,10 +15,6 @@ import com.khronodragon.bluestone.sql.BotAdmin;
 import com.khronodragon.bluestone.sql.GuildPrefix;
 import com.khronodragon.bluestone.util.ClassUtilities;
 import com.khronodragon.bluestone.util.Strings;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.async.Callback;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import net.dv8tion.jda.bot.entities.ApplicationInfo;
 import net.dv8tion.jda.core.*;
@@ -32,6 +28,7 @@ import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import net.dv8tion.jda.core.utils.SimpleLog;
+import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
@@ -41,6 +38,7 @@ import org.reflections.Reflections;
 
 import javax.security.auth.login.LoginException;
 import java.awt.*;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.NumberFormat;
@@ -55,7 +53,7 @@ import static com.khronodragon.bluestone.util.Strings.str;
 import static java.text.MessageFormat.format;
 
 public class Bot extends ListenerAdapter implements ClassUtilities {
-    public static final String USER_AGENT = "Goldmine/2 Discord Bot (tiny.cc/goldbot)";
+    private static final MediaType STRING_MEDIA_TYPE = MediaType.parse("text/plain; charset=utf-8");
     public Logger logger = LogManager.getLogger(Bot.class);
     private final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(2, new ThreadFactoryBuilder()
                                                             .setDaemon(true)
@@ -79,6 +77,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public final Map<String, Command> commands = new HashMap<>();
     public final Map<String, Cog> cogs = new HashMap<>();
     private final Map<Class<? extends Event>, Set<ExtraEvent>> extraEvents = new HashMap<>();
+    public final OkHttpClient http = new OkHttpClient();
     private ApplicationInfo appInfo;
     public User owner;
 
@@ -517,26 +516,22 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     }
                     channel.sendTyping().queue();
 
-                    Unirest.post(reqDest)
+                    http.newCall(new Request.Builder()
+                            .post(RequestBody.create(STRING_MEDIA_TYPE, request))
+                            .url(reqDest)
                             .header("Referer", getKeys().optString("chatengine"))
-                            .body(request)
-                            .asStringAsync(new Callback<String>() {
-                                @Override
-                                public void completed(HttpResponse<String> response) {
-                                    channel.sendMessage(response.getBody()).queue();
-                                }
+                            .build()).enqueue(new okhttp3.Callback() {
+                        @Override
+                        public void onFailure(Call call, IOException e) {
+                            logger.error("Error getting ChatEngine response", e);
+                            channel.sendMessage(":x: My brain isn't really working right now.").queue();
+                        }
 
-                                @Override
-                                public void failed(UnirestException e) {
-                                    logger.error("Error getting ChatEngine response", e);
-                                    channel.sendMessage(":x: My brain isn't really working right now.").queue();
-                                }
-
-                                @Override
-                                public void cancelled() {
-                                    channel.sendMessage(":x: My brain isn't really working right now.").queue();
-                                }
-                            });
+                        @Override
+                        public void onResponse(Call call, Response response) throws IOException {
+                            channel.sendMessage(response.body().string()).queue();
+                        }
+                    });
                 } else {
                     String tag = Cog.getTag(jda.getSelfUser());
 
@@ -553,26 +548,22 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 }
                 channel.sendTyping().queue();
 
-                Unirest.post(reqDest)
+                http.newCall(new Request.Builder()
+                        .post(RequestBody.create(STRING_MEDIA_TYPE, request))
+                        .url(reqDest)
                         .header("Referer", getKeys().optString("chatengine"))
-                        .body(request)
-                        .asStringAsync(new Callback<String>() {
-                            @Override
-                            public void completed(HttpResponse<String> response) {
-                                channel.sendMessage("\uD83D\uDCAC " + response.getBody()).queue();
-                            }
+                        .build()).enqueue(new okhttp3.Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        logger.error("Error getting ChatEngine response", e);
+                        channel.sendMessage(":x: My brain isn't really working right now.").queue();
+                    }
 
-                            @Override
-                            public void failed(UnirestException e) {
-                                logger.error("Error getting ChatEngine response", e);
-                                channel.sendMessage(":x: My brain isn't really working right now.").queue();
-                            }
-
-                            @Override
-                            public void cancelled() {
-                                channel.sendMessage(":x: My brain isn't really working right now.").queue();
-                            }
-                        });
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        channel.sendMessage("\uD83D\uDCAC " + response.body().string()).queue();
+                    }
+                });
 
             }
         }

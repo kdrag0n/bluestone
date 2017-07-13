@@ -17,11 +17,14 @@ import com.khronodragon.bluestone.util.IntegerZeroTypeAdapter;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import net.dv8tion.jda.core.EmbedBuilder;
+import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -45,8 +48,11 @@ public class PokemonCog extends Cog {
             .expireAfterAccess(24, TimeUnit.HOURS)
             .build(new CacheLoader<String, String>() {
                 @Override
-                public String load(String key) throws UnirestException {
-                    return Unirest.get(key).asJson().getBody().getObject().getString("description");
+                public String load(String key) throws IOException {
+                    return new JSONObject(bot.http.newCall(new Request.Builder()
+                            .get()
+                            .url(key)
+                            .build()).execute().body().string()).getString("description");
                 }
             });
     private final LoadingCache<String, Pokemon> pokeCache = CacheBuilder.newBuilder()
@@ -54,8 +60,11 @@ public class PokemonCog extends Cog {
             .expireAfterAccess(24, TimeUnit.HOURS)
             .build(new CacheLoader<String, Pokemon>() {
                 @Override
-                public Pokemon load(String key) throws UnirestException {
-                    return pokeGson.fromJson(Unirest.get(key).asString().getBody(), Pokemon.class);
+                public Pokemon load(String key) throws IOException {
+                    return pokeGson.fromJson(bot.http.newCall(new Request.Builder()
+                            .get()
+                            .url(key)
+                            .build()).execute().body().string(), Pokemon.class);
                 }
             });
 

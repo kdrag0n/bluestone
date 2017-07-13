@@ -7,7 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class EmoteProviderManager {
-    private List<EmoteProvider> providers = new LinkedList<>();
+    private final List<EmoteProvider> providers = new LinkedList<>();
 
     public boolean canProvideEmote(String emote) {
         for (EmoteProvider provider: providers) {

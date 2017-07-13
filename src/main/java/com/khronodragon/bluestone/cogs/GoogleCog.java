@@ -9,16 +9,16 @@ import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.MessageEmbed;
+import okhttp3.Request;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.concurrent.ExecutionException;
@@ -41,8 +41,11 @@ public class GoogleCog extends Cog {
             .expireAfterAccess(24, TimeUnit.HOURS)
             .build(new CacheLoader<String, MessageEmbed>() {
                 @Override
-                public MessageEmbed load(String key) throws UnirestException {
-                    JSONObject resp = Unirest.get(key).asJson().getBody().getObject();
+                public MessageEmbed load(String key) throws IOException {
+                    JSONObject resp = new JSONObject(bot.http.newCall(new Request.Builder()
+                            .get()
+                            .url(key)
+                            .build()).execute().body().string());
                     EmbedBuilder emb = new EmbedBuilder()
                             .setColor(randomColor())
                             .setTitle("Google Search")

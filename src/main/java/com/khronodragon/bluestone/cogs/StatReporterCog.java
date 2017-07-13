@@ -3,23 +3,23 @@ package com.khronodragon.bluestone.cogs;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.annotations.EventHandler;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.async.Callback;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
+import okhttp3.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 
-import java.io.InputStream;
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.logging.Level;
 
+import static com.khronodragon.bluestone.util.Strings.str;
+
 public class StatReporterCog extends Cog {
+    private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
     private static final Logger logger = LogManager.getLogger(StatReporterCog.class);
 
     private enum Endpoints {
@@ -100,55 +100,48 @@ public class StatReporterCog extends Cog {
             json.put("server_count", bot.getJda().getGuilds().size());
         }
 
-        Unirest.post(Endpoints.DISCORD_BOTS.format(bot.getJda().getSelfUser().getId()))
+        bot.http.newCall(new Request.Builder()
+                .post(RequestBody.create(JSON_MEDIA_TYPE, json.toString()))
+                .url(Endpoints.DISCORD_BOTS.format(bot.getJda().getSelfUser().getId()))
                 .header("Authorization", key)
-                .header("Content-Type", "application/json")
-                .body(json.toString())
-                .asStringAsync(new Callback<String>() {
-                    @Override
-                    public void completed(HttpResponse<String> response) {
-                        if (response.getStatus() == 200) {
-                            logger.info("[Discord Bots] Report sent.");
-                        } else {
-                            logger.warn("[Discord Bots] Bad response: {} {}", response.getStatus(), response.getStatusText());
-                        }
-                    }
+                .build()).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                logger.error("[Discord Bots] Report failed", e);
+            }
 
-                    @Override
-                    public void failed(UnirestException e) {
-                        logger.error("[Discord Bots] Report failed", e);
-                    }
-
-                    @Override
-                    public void cancelled() {
-                        logger.error("[Discord Bots] Request cancelled");
-                    }
-                });
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    logger.info("[Discord Bots] Report sent.");
+                } else {
+                    logger.warn("[Discord Bots] Bad response: {} {}", response.code(), response.message());
+                }
+            }
+        });
     }
 
     private void reportCarbonitex(String key) {
-        Unirest.post(Endpoints.CARBONITEX.getUrl())
-                .field("key", key)
-                .field("servercount", bot.getShardUtil().getGuildCount())
-                .asBinaryAsync(new Callback<InputStream>() {
-                    @Override
-                    public void completed(HttpResponse<InputStream> response) {
-                        if (response.getStatus() == 200) {
-                            logger.info("[Carbonitex] Report sent.");
-                        } else {
-                            logger.warn("[Carbonitex] Bad response: {} {}", response.getStatus(), response.getStatusText());
-                        }
-                    }
+        bot.http.newCall(new Request.Builder()
+                .post(new FormBody.Builder()
+                            .add("key", key)
+                            .add("servercount", str(bot.getShardUtil().getGuildCount()))
+                            .build())
+                .url(Endpoints.CARBONITEX.getUrl())
+                .build()).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                logger.error("[Carbonitex] Report failed", e);
+            }
 
-                    @Override
-                    public void failed(UnirestException e) {
-                        logger.error("[Carbonitex] Report failed", e);
-                    }
-
-                    @Override
-                    public void cancelled() {
-                        logger.error("[Carbonitex] Request cancelled");
-                    }
-                });
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    logger.info("[Carbonitex] Report sent.");
+                } else {
+                    logger.warn("[Carbonitex] Bad response: {} {}", response.code(), response.message());
+                }
+            }
+        });
     }
 }
