@@ -56,6 +56,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -255,7 +256,7 @@ public class UtilityCog extends Cog {
     @Command(name = "info", desc = "Get some info about me.", aliases = {"about", "stats", "statistics", "status"})
     public void cmdInfo(Context ctx) {
         ShardUtil shardUtil = bot.getShardUtil();
-        EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://khronodragon.com/")
+        EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://khronodragon.com/goldmine")
                 .setColor(randomColor())
                 .setDescription(Emotes.getCredits())
                 .addField("Guilds", str(shardUtil.getGuildCount()), true)
@@ -277,7 +278,8 @@ public class UtilityCog extends Cog {
                 .addField("Users", str(shardUtil.getUserCount()), true)
                 .addField("Channels", str(shardUtil.getChannelCount()), true)
                 .addField("Commands", str(new HashSet<>(bot.commands.values()).size()), true)
-                .addField("Invite Link", ctx.jda.asBot().getInviteUrl(PERMS_NEEDED), true);
+                .addField("Invite Link", ctx.jda.asBot().getInviteUrl(PERMS_NEEDED), true)
+                .addField("Patreon", "https://patreon.com/kdragon", true);
 
         ctx.send(emb.build()).queue();
     }
@@ -299,10 +301,12 @@ public class UtilityCog extends Cog {
 
     @Command(name = "home", desc = "Get my \"contact\" info.", aliases = {"website", "web"})
     public void cmdHome(Context ctx) {
-        ctx.send("**Author\\'s Website**: <https://khronodragon.com>\n" +
+        ctx.send("**Author's Website**: <https://khronodragon.com>\n" +
                 "**Forums**: <https://forums.khronodragon.com>\n" +
+                "**Wiki**: <https://khronodragon.com/goldmine>\n" +
                 "**Short Invite Link**: <https://tiny.cc/goldbot>\n" +
-                "**Support Guild**: <https://discord.gg/dwykTHc>").queue();
+                "**Support Guild**: <https://discord.gg/dwykTHc>\n" +
+                "**Patreon**: <https://patreon.com/kdragon>").queue();
     }
 
     private Runnable pollTask(final EqualitySet<ReactionEmote> validEmotes, long messageId, final Map<ReactionEmote, Set<User>> pollTable) {
@@ -336,7 +340,7 @@ public class UtilityCog extends Cog {
 
         String preQuestion = String.join(" ", ctx.args);
         Set<String> unicodeEmotes = RegexUtil.matchStream(UNICODE_EMOTE_PATTERN, preQuestion)
-                                        .map(match -> match.group()).collect(Collectors.toSet());
+                                        .map(MatchResult::group).collect(Collectors.toSet());
         Set<Emote> customEmotes = RegexUtil.matchStream(CUSTOM_EMOTE_PATTERN, preQuestion)
                                            .map(m -> ctx.guild.getEmoteById(m.group(1)))
                                            .collect(Collectors.toSet());
@@ -362,7 +366,7 @@ public class UtilityCog extends Cog {
         EqualitySet<ReactionEmote> validEmotes = new EqualitySet<>();
 
         for (ReactionEmote rEmote: Stream.concat(unicodeEmotes.stream().map(s -> new ReactionEmote(s, null, ctx.jda)),
-                customEmotes.stream().map(e -> new ReactionEmote(e))).collect(Collectors.toSet())) {
+                customEmotes.stream().map(ReactionEmote::new)).collect(Collectors.toSet())) {
             pollTable.put(rEmote, new HashSet<>());
             validEmotes.add(rEmote);
         }
@@ -394,7 +398,7 @@ public class UtilityCog extends Cog {
                             Map<ReactionEmote, Integer> resultTable = pollTable.entrySet().stream()
                                     .sorted(Collections.reverseOrder(Comparator.comparing(e -> e.getValue().size()))) // reversed() errors
                                     .collect(Collectors.toMap(
-                                            entry -> entry.getKey(),
+                                            Map.Entry::getKey,
                                             entry -> entry.getValue().size(),
                                             (u, v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); },
                                             LinkedHashMap::new
@@ -497,7 +501,7 @@ public class UtilityCog extends Cog {
     }
 
     @Command(name = "urban", desc = "Define something with Urban Dictionary.", aliases = {"define"})
-    public void cmdUrban(Context ctx) {
+    public void cmdUrban(Context ctx) throws UnsupportedEncodingException {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need a term!").queue();
             return;
@@ -506,12 +510,7 @@ public class UtilityCog extends Cog {
 
         bot.http.newCall(new Request.Builder()
                 .get()
-                .url(new HttpUrl.Builder()
-                            .scheme("http")
-                            .host("api.urbandictionary.com")
-                            .addPathSegments("v0/define")
-                            .addQueryParameter("term", ctx.rawArgs)
-                            .build())
+                .url("https://api.urbandictionary.com/v0/define?term=" + URLEncoder.encode(ctx.rawArgs, "UTF-8"))
                 .build()).enqueue(new okhttp3.Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -569,18 +568,16 @@ public class UtilityCog extends Cog {
 
         EmbedBuilder embed = new EmbedBuilder()
                 .setColor(color)
-                .setTitle(new StringBuilder()
-                        .append("Hex: #")
-                        .append(String.format("%02x%02x%02x", r, g, b))
-                        .append(" | RGB: ")
-                        .append(r)
-                        .append(", ")
-                        .append(g)
-                        .append(", ")
-                        .append(b)
-                        .append(" | Integer: ")
-                        .append(Math.abs(color.getRGB()))
-                        .toString());
+                .setTitle("Hex: #" +
+                        String.format("%02x%02x%02x", r, g, b) +
+                        " | RGB: " +
+                        r +
+                        ", " +
+                        g +
+                        ", " +
+                        b +
+                        " | Integer: " +
+                        Math.abs(color.getRGB()));
 
         ctx.send(embed.build()).queue();
     }
@@ -1070,5 +1067,35 @@ public class UtilityCog extends Cog {
                 .setAuthor(name + "'s head", null, "https://mcapi.ca/avatar/" + name + "/150/true")
                 .setImage("https://mcapi.ca/avatar/" + name + "/150/true")
                 .build()).queue();
+    }
+
+    @Command(name = "supporters", desc = "Get a list of Patreon supporters.", aliases = {"patrons", "patreon"})
+    public void cmdSupporters(Context ctx) {
+        if (!(Bot.patreonData.has("rand") && Bot.patreonData.has("always"))) {
+            ctx.send(Emotes.getFailure() + " The Patreon data loaded is invalid!").queue();
+            return;
+        }
+        EmbedBuilder emb = newEmbedWithAuthor(ctx)
+                .setColor(randomColor())
+                .setDescription("Support me at <https://patreon.com/kdragon>!")
+                .setFooter("❤", null);
+        StringBuilder randBuilder = new StringBuilder();
+        StringBuilder alwaysBuilder = new StringBuilder();
+        List<Object> randList = Bot.patreonData.getJSONArray("rand").toList();
+        Collections.shuffle(randList);
+
+        for (int i = 0; i < randList.size() && i < 10; i++) {
+            randBuilder.append("\u2022 ")
+                    .append((String) randList.get(i))
+                    .append('\n');
+        }
+        emb.addField("Some Supporters", randBuilder.toString(), false);
+
+        for (Object name: Bot.patreonData.getJSONArray("always")) {
+            alwaysBuilder.append("\u2022 ")
+                    .append((String) name)
+                    .append('\n');
+        }
+        emb.addField("More Supporters", alwaysBuilder.toString(), false);
     }
 }

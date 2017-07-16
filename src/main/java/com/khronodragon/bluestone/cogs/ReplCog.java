@@ -21,7 +21,7 @@ import static java.text.MessageFormat.format;
 
 public class ReplCog extends Cog {
     private static final Logger logger = LogManager.getLogger(ReplCog.class);
-    private static final String[] NASHORN_ARGS = {"--language=es6", "-scripting", "-strict"};
+    private static final String[] NASHORN_ARGS = {"--language=es6", "-scripting"};
     static final String GROOVY_PRE_INJECT = "import net.dv8tion.jda.core.entities.*\n" +
             "import net.dv8tion.jda.core.*\n" +
             "import net.dv8tion.jda.core.entities.impl.*\n" +
@@ -181,8 +181,6 @@ public class ReplCog extends Cog {
             try {
                 if (language.equalsIgnoreCase("groovy"))
                     result = engine.eval(GROOVY_PRE_INJECT + cleaned);
-                else if (isJavascript)
-                    result = engine.eval("with(imports){" + cleaned + "}");
                 else
                     result = engine.eval(cleaned);
             } catch (ScriptException e) {

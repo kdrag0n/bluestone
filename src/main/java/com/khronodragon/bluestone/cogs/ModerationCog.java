@@ -277,10 +277,8 @@ public class ModerationCog extends Cog {
                     continue;
 
                 PermissionOverride override = channel.getPermissionOverride(user);
-                if (override == null)
-                    continue;
-                else
-                    override.getManager().grant(MUTED_PERMS).reason(reason).queue();
+                if (override != null)
+                    override.getManager().clear(MUTED_PERMS).reason(reason).queue();
             }
 
             status.editMessage(Emotes.getSuccess() + " Unmuted **" +

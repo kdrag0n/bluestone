@@ -42,6 +42,8 @@ import java.awt.*;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.List;
@@ -74,6 +76,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     private final EventWaiter eventWaiter = new EventWaiter();
     private JDA jda;
     private ShardUtil shardUtil;
+    public static JSONObject patreonData = new JSONObject();
     private final HashSet<ScheduledFuture> tasks = new HashSet<>();
     public final Map<String, Command> commands = new HashMap<>();
     public final Map<String, Cog> cogs = new HashMap<>();
@@ -505,7 +508,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     jda.getSelfUser().getName() : message.getGuild().getSelfMember().getEffectiveName();
 
             if (content.startsWith(mention)) {
-                String request = message.getContent().substring(name.length() + 2).trim();
+                String request = message.getContent().substring(name.length() + 1).trim();
 
                 if (request.equalsIgnoreCase("prefix")) {
                     channel.sendMessage("My prefix here is `" + prefix + "`.").queue();
@@ -717,6 +720,19 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         });
     }
 
+    public static boolean loadPatreonData() {
+        String jsonCode;
+        try {
+            jsonCode = new String(Files.readAllBytes(Paths.get("patreon.json")));
+        } catch (IOException e) {
+            LogManager.getLogger(Bot.class).error("Failed to load Patreon data", e);
+            return false;
+        }
+
+        patreonData = new JSONObject(jsonCode);
+        return true;
+    }
+
     public static int start(String token, int shardCount, AccountType accountType, JSONObject config) throws LoginException, RateLimitedException {
         System.out.println("Starting...");
 
@@ -747,6 +763,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             builder.setAudioSendFactory(new NativeAudioSendFactory());
 
         setupJdaLogging();
+        loadPatreonData();
 
         for (int i = 0; i < shardCount; i++) {
             final int shardId = i;

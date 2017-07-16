@@ -266,4 +266,15 @@ public class OwnerCog extends Cog {
         bot.getShardUtil().getShards().forEach(b -> b.getJda().getPresence().setGame(Game.of(ctx.rawArgs)));
         ctx.send(Emotes.getSuccess() + " Game set.").queue();
     }
+
+    @Command(name = "patreload", desc = "Reload Patreon supporter list.",
+            perms = {"owner"}, hidden = true, aliases = {"preload"}, thread = true)
+    public void cmdPatReload(Context ctx) {
+        boolean success = Bot.loadPatreonData();
+        if (success) {
+            ctx.send(Emotes.getSuccess() + " List reloaded.");
+        } else {
+            ctx.send(Emotes.getFailure() + " Failed to load list.");
+        }
+    }
 }

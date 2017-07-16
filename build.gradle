@@ -1,3 +1,9 @@
+buildscript {
+    dependencies {
+        classpath 'de.sebastianboegl.gradle.plugins:shadow-log4j-transformer:1.0.1'
+    }
+}
+
 plugins {
     id 'java'
     id 'idea'
@@ -19,19 +25,13 @@ repositories {
     jcenter()
 }
 
-task fatJar(type: Jar) {
-    manifest {
-        attributes 'Implementation-Title': 'Bluestone',
-                'Implementation-Version': version,
-                'Main-Class': 'com.khronodragon.bluestone.Start'
-    }
-    baseName = project.name + '-all'
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-    with jar
+shadowJar {
+    transform(de.sebastianboegl.gradle.plugins.shadow.transformers.Log4j2PluginsFileTransformer)
+    mergeServiceFiles()
 }
 
 dependencies {
-    compile 'net.dv8tion:JDA:3.1.1_222'
+    compile 'net.dv8tion:JDA:3.2.0_226'
     compile 'com.sedmelluq:lavaplayer:1.2.42'
     compile 'com.squareup.okhttp3:okhttp:3.8.1'
     compile 'com.google.guava:guava:22.0'
