@@ -1097,5 +1097,7 @@ public class UtilityCog extends Cog {
                     .append('\n');
         }
         emb.addField("More Supporters", alwaysBuilder.toString(), false);
+
+        ctx.send(emb.build()).queue();
     }
 }

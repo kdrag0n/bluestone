@@ -272,9 +272,9 @@ public class OwnerCog extends Cog {
     public void cmdPatReload(Context ctx) {
         boolean success = Bot.loadPatreonData();
         if (success) {
-            ctx.send(Emotes.getSuccess() + " List reloaded.");
+            ctx.send(Emotes.getSuccess() + " List reloaded.").queue();
         } else {
-            ctx.send(Emotes.getFailure() + " Failed to load list.");
+            ctx.send(Emotes.getFailure() + " Failed to load list.").queue();
         }
     }
 }
