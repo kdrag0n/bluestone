@@ -197,6 +197,7 @@ public class CoreCog extends Cog {
 
     @Command(name = "uptime", desc = "Get my uptime and memory usage.", aliases = {"memory", "ram"})
     public void cmdUptime(Context ctx) {
-        ctx.send(format("I've been up for **{0}**, and am using **{} MB** of memory.", bot.formatUptime(), bot.formatMemory())).queue();
+        ctx.send("I've been up for **" + bot.formatUptime() +
+                "**, and am using **" + Bot.formatMemory() + "** of memory.").queue();
     }
 }
