@@ -24,7 +24,8 @@ public class StatReporterCog extends Cog {
 
     private enum Endpoints {
         DISCORD_BOTS("https://bots.discord.pw/api/bots/{0}/stats"),
-        CARBONITEX("https://www.carbonitex.net/discord/data/botdata.php");
+        CARBONITEX("https://www.carbonitex.net/discord/data/botdata.php"),
+        DISCORD_BOTS_ORG("https://discordbots.org/api/bots/{0}/stats");
 
         private String endpoint;
 
@@ -76,6 +77,7 @@ public class StatReporterCog extends Cog {
     private void report() {
         String dbotsKey = bot.getKeys().optString("discord_bots", null);
         String carbonitexKey = bot.getKeys().optString("carbonitex", null);
+        String dBotListKey = bot.getKeys().optString("discord_bots_org", null);
 
         if (dbotsKey != null || carbonitexKey != null)
             java.util.logging.Logger.getLogger("org.apache.http.client.protocol.ResponseProcessCookies")
@@ -86,6 +88,9 @@ public class StatReporterCog extends Cog {
 
         if (carbonitexKey != null)
             reportCarbonitex(carbonitexKey);
+
+        if (dBotListKey != null)
+            reportDiscordBotsOrg(dBotListKey);
     }
 
     private void reportDiscordBots(String key) {
@@ -140,6 +145,39 @@ public class StatReporterCog extends Cog {
                     logger.info("[Carbonitex] Report sent.");
                 } else {
                     logger.warn("[Carbonitex] Bad response: {} {}", response.code(), response.message());
+                }
+            }
+        });
+    }
+
+    private void reportDiscordBotsOrg(String key) {
+        JSONObject json = new JSONObject();
+        if (bot.getJda().getShardInfo() != null) {
+            JDA.ShardInfo sInfo = bot.getJda().getShardInfo();
+
+            json.put("shard_id", sInfo.getShardId())
+                    .put("shard_count", sInfo.getShardTotal())
+                    .put("server_count", bot.getJda().getGuilds().size());
+        } else {
+            json.put("server_count", bot.getJda().getGuilds().size());
+        }
+
+        bot.http.newCall(new Request.Builder()
+                .post(RequestBody.create(JSON_MEDIA_TYPE, json.toString()))
+                .url(Endpoints.DISCORD_BOTS_ORG.format(bot.getJda().getSelfUser().getId()))
+                .header("Authorization", key)
+                .build()).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                logger.error("[Discord Bot List] Report failed", e);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    logger.info("[Discord Bot List] Report sent.");
+                } else {
+                    logger.warn("[Discord Bot List] Bad response: {} {}", response.code(), response.message());
                 }
             }
         });

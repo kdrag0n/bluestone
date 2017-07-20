@@ -10,7 +10,6 @@ import gnu.trove.list.linked.TLongLinkedList;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
-import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.requests.RestAction;
 import net.dv8tion.jda.core.utils.MiscUtil;
 
@@ -73,7 +72,7 @@ public class ModerationCog extends Cog {
     }
 
     @Command(name = "purge", desc = "Purge messages from a channel.", guildOnly = true,
-            aliases = {"clean", "nuke", "prune"}, perms = {"messageManage", "messageHistory"},
+            aliases = {"clean", "nuke", "prune", "clear"}, perms = {"messageManage", "messageHistory"},
             usage = "[parameters]", thread = true)
     public void cmdPurge(Context ctx) {
         if (bot.isSelfbot()) {

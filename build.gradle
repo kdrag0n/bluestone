@@ -31,7 +31,7 @@ shadowJar {
 }
 
 dependencies {
-    compile 'net.dv8tion:JDA:3.2.0_226'
+    compile 'net.dv8tion:JDA:3.2.0_228'
     compile 'com.sedmelluq:lavaplayer:1.2.42'
     compile 'com.squareup.okhttp3:okhttp:3.8.1'
     compile 'com.google.guava:guava:22.0'
@@ -56,6 +56,7 @@ dependencies {
     compile 'mysql:mysql-connector-java:6.0.6'
     compile 'net.sf.trove4j:trove4j:3.0.3'
     compile 'com.jagrosh:JDA-Utilities:1.2'
+    compile 'org.ocpsoft.prettytime:prettytime:3.2.7.Final'
 }
 
 compileJava.options.encoding = 'UTF-8'

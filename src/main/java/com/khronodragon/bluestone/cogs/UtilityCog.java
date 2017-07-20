@@ -5,6 +5,8 @@ import ch.jamiete.mcping.MinecraftPingOptions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.Multiset;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
@@ -39,6 +41,7 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.ocpsoft.prettytime.PrettyTime;
 
 import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 import static com.khronodragon.bluestone.util.Strings.smartJoin;
@@ -55,8 +58,10 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -68,6 +73,9 @@ public class UtilityCog extends Cog {
     private static final Collection<Permission> PERMS_NEEDED = Permission.getPermissions(473295957L);
     private static final Pattern UNICODE_EMOTE_PATTERN = Pattern.compile("([\\u20a0-\\u32ff\\x{1f000}-\\x{1ffff}\\x{fe4e5}-\\x{fe4ee}])");
     private static final Pattern CUSTOM_EMOTE_PATTERN = Pattern.compile("<:[a-z_]+:([0-9]{17,19})>", Pattern.CASE_INSENSITIVE);
+    private static final Pattern INVITE_PATTERN = Pattern
+            .compile("^(?:https?://discord(?:app\\.com/invite|\\.gg)/([a-zA-Z0-9]{7}|[a-zA-Z0-9]{16})|([a-zA-Z0-9]{7}|[a-zA-Z0-9]{16}))$");
+    private static final PrettyTime prettyTime = new PrettyTime();
 
     private static final int[] CHAR_NO_PREVIEW = {65279};
     private static final byte[] DIRECTIONALITY_NO_PREVIEW = {Character.DIRECTIONALITY_WHITESPACE, Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE,
@@ -131,6 +139,7 @@ public class UtilityCog extends Cog {
     public String getName() {
         return "Utility";
     }
+
     public String getDescription() {
         return "Essential utility commands, as well as playful ones.";
     }
@@ -299,7 +308,7 @@ public class UtilityCog extends Cog {
         }
     }
 
-    @Command(name = "home", desc = "Get my \"contact\" info.", aliases = {"website", "web"})
+    @Command(name = "home", desc = "Get my \"contact\" info.", aliases = {"website", "web", "support"})
     public void cmdHome(Context ctx) {
         ctx.send("**Author's Website**: <https://khronodragon.com>\n" +
                 "**Forums**: <https://forums.khronodragon.com>\n" +
@@ -348,7 +357,7 @@ public class UtilityCog extends Cog {
         if (customEmotes.contains(null)) {
             customEmotes.remove(null);
         } else if (unicodeEmotes.size() + customEmotes.size() < 2) {
-            ctx.send(Emotes.getFailure() + " You need at least 2 emotes to poll!").queue();
+            ctx.send(Emotes.getFailure() + " You need at least 2 emotes to start a poll!").queue();
             return;
         }
 
@@ -356,20 +365,13 @@ public class UtilityCog extends Cog {
                                            .replaceAll("<:[a-zA-Z_]+:[0-9]{17,19}>", "")
                                            .replaceAll("\\s+", " ").trim();
 
-        Map<ReactionEmote, Set<User>> pollTable = new HashMap<>();
         EmbedBuilder embed = new EmbedBuilder()
-                                .setAuthor(ctx.member.getEffectiveName() + " is polling...", null, ctx.author.getEffectiveAvatarUrl())
+                                .setAuthor(ctx.member.getEffectiveName() + " is polling...",
+                                        null, ctx.author.getEffectiveAvatarUrl())
                                 .setColor(ctx.member.getColor())
                                 .setDescription(question)
                                 .appendDescription("\n\n")
                                 .appendDescription("**⌛ Reactions are being added...**");
-        EqualitySet<ReactionEmote> validEmotes = new EqualitySet<>();
-
-        for (ReactionEmote rEmote: Stream.concat(unicodeEmotes.stream().map(s -> new ReactionEmote(s, null, ctx.jda)),
-                customEmotes.stream().map(ReactionEmote::new)).collect(Collectors.toSet())) {
-            pollTable.put(rEmote, new HashSet<>());
-            validEmotes.add(rEmote);
-        }
 
         ctx.send(embed.build()).queue(msg -> {
             for (String emote: unicodeEmotes) {
@@ -379,58 +381,52 @@ public class UtilityCog extends Cog {
                 msg.addReaction(emote).queue();
             }
 
-            Thread pollThread = new Thread(pollTask(validEmotes, msg.getIdLong(), pollTable));
-            pollThread.setDaemon(true);
-            pollThread.setName("Reaction Poll Counter Thread");
-
             embed.setDescription(question)
                     .appendDescription("\n\n")
                     .appendDescription("**✅ Go ahead and vote!**");
 
-            bot.getScheduledExecutor().schedule(() -> {
-                msg.editMessage(embed.build()).queue(newMsg -> {
-                    pollThread.start();
+            bot.getScheduledExecutor().schedule(() ->
+                    msg.editMessage(embed.build()).queue(newMsg ->
+                            bot.getScheduledExecutor().schedule(() -> {
+                try {
+                    ImmutableMultiset<MessageReaction> multiset = ImmutableMultiset.copyOf(newMsg.getReactions());
 
-                    bot.getScheduledExecutor().schedule(() -> {
-                        try {
-                            pollThread.interrupt();
+                    Map<ReactionEmote, Integer> resultTable = multiset.entrySet().stream()
+                            .sorted(Collections.reverseOrder(Comparator.comparing(Multiset.Entry::getCount)))
+                            .collect(Collectors.toMap(
+                                    e -> e.getElement().getEmote(),
+                                    Multiset.Entry::getCount,
+                                    (u, v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); },
+                                    LinkedHashMap::new
+                            ));
 
-                            Map<ReactionEmote, Integer> resultTable = pollTable.entrySet().stream()
-                                    .sorted(Collections.reverseOrder(Comparator.comparing(e -> e.getValue().size()))) // reversed() errors
-                                    .collect(Collectors.toMap(
-                                            Map.Entry::getKey,
-                                            entry -> entry.getValue().size(),
-                                            (u, v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); },
-                                            LinkedHashMap::new
-                                    ));
+                    ReactionEmote winnerKey = Collections.max(resultTable.entrySet(), Map.Entry.comparingByValue()).getKey();
+                    String winner = winnerKey.getEmote() == null ? winnerKey.getName() : winnerKey.getEmote().getAsMention();
 
-                            ReactionEmote winnerKey = Collections.max(resultTable.entrySet(), Map.Entry.comparingByValue()).getKey();
-                            String winner = winnerKey.getEmote() == null ? winnerKey.getName() : winnerKey.getEmote().getAsMention();
+                    List<String> orderedResultList = resultTable.entrySet().stream()
+                            .map(e -> {
+                                final ReactionEmote key = e.getKey();
+                                final Integer value = e.getValue();
+                                final String userKey = key.getEmote() == null ? key.getName() : key.getEmote().getAsMention();
+                                return userKey + ": " + value + " vote" + (value == 1 ? "" : "s");
+                            })
+                            .collect(Collectors.toList());
 
-                            List<String> orderedResultList = resultTable.entrySet().stream()
-                                    .map(e -> {
-                                        final ReactionEmote key = e.getKey();
-                                        final Integer value = e.getValue();
-                                        final String userKey = key.getEmote() == null ? key.getName() : key.getEmote().getAsMention();
-                                        return userKey + ": " + value + " vote" + (value == 1 ? "" : "s");
-                                    })
-                                    .collect(Collectors.toList());
+                    embed.setDescription(question)
+                            .appendDescription("\n\n")
+                            .appendDescription("**❌ Poll ended.**")
+                            .addField("Winner", winner, false);
+                    newMsg.editMessage(embed.build()).queue();
 
-                            embed.setDescription(question)
-                                    .appendDescription("\n\n")
-                                    .appendDescription("**❌ Poll ended.**")
-                                    .addField("Winner", winner, false);
-                            newMsg.editMessage(embed.build()).queue();
-
-                            ctx.send("**Poll** `" + question + "` **ended!\n" +
-                                    "Winner: " + winner + "\n\n" +
-                                    "Full Results:**\n" + String.join("\n", orderedResultList)).queue();
-                        } catch (Throwable e) {
-                            logger.error("Poll stage 2: error", e);
-                        }
-                    }, pollTime, TimeUnit.MINUTES);
-                });
-            }, (unicodeEmotes.size() + customEmotes.size()) * (int) (ctx.jda.getPing() * 1.8), TimeUnit.MILLISECONDS);
+                    ctx.send("**Poll** `" + question + "` **ended!\n" +
+                            "Winner: " + winner + "\n\n" +
+                            "Full Results:**\n" + String.join("\n", orderedResultList)).queue();
+                } catch (Throwable e) {
+                    logger.error("Poll stage 2: error", e);
+                }
+            }, pollTime, TimeUnit.MINUTES)),
+                    (unicodeEmotes.size() + customEmotes.size()) * (int) (ctx.jda.getPing() * 1.92),
+                    TimeUnit.MILLISECONDS);
         });
     }
 
@@ -851,6 +847,7 @@ public class UtilityCog extends Cog {
     public void cmdQrcode(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need some text!").queue();
+            return;
         }
 
         byte[] data;
@@ -1012,7 +1009,11 @@ public class UtilityCog extends Cog {
             return;
         }
 
-        ctx.send("```" + new String(Base64.getDecoder().decode(ctx.rawArgs)) + "```").queue();
+        try {
+            ctx.send("```" + new String(Base64.getDecoder().decode(ctx.rawArgs)) + "```").queue();
+        } catch (IllegalArgumentException e) {
+            ctx.send(Emotes.getFailure() + " An error occurred: `" + e.getMessage() + "`").queue();
+        }
     }
 
     @Command(name = "ipinfo", desc = "Get information about an IP or domain.", aliases = {"ip"}, thread = true)
@@ -1099,5 +1100,70 @@ public class UtilityCog extends Cog {
         emb.addField("More Supporters", alwaysBuilder.toString(), false);
 
         ctx.send(emb.build()).queue();
+    }
+
+    @Command(name = "inviteinfo", desc = "Get information about an invite.", usage = "[invite link/code]", aliases = {"iinfo", "invinfo"})
+    public void cmdInviteInfo(Context ctx) {
+        Matcher matcher = INVITE_PATTERN.matcher(ctx.rawArgs);
+        if (!matcher.find()) {
+            ctx.send(Emotes.getFailure() + " Invalid invite link or code!").queue();
+            return;
+        }
+        String code = matcher.group(1);
+        if (code == null)
+            code = matcher.group(2);
+        ctx.channel.sendTyping().queue();
+
+        Consumer<Invite> processor = invite -> {
+            final Invite.Channel channel = invite.getChannel();
+            final Invite.Guild guild = invite.getGuild();
+
+            String iconUrl = ctx.jda.getSelfUser().getEffectiveAvatarUrl();
+            if (guild.getIconUrl() != null)
+                iconUrl = guild.getIconUrl();
+            EmbedBuilder emb = new EmbedBuilder()
+                    .setColor(randomColor())
+                    .setAuthor("Invite to " + guild.getName(), null, iconUrl)
+                    .addField("Code", invite.getCode(), true)
+                    .addField("Guild ID", guild.getId(), true)
+                    .addField("Guild Creation Time", Date.from(guild.getCreationTime().toInstant()).toString(), true)
+                    .addField("Channel", (channel.getType() == ChannelType.TEXT ? '#' : '\00') + channel.getName(), true)
+                    .addField("Channel Creation Time", Date.from(channel.getCreationTime().toInstant()).toString(), true)
+                    .addField("Channel ID", channel.getId(), true);
+
+            if (invite.getInviter() != null) {
+                final User user = invite.getInviter();
+
+                emb.addField("Creator", getTag(user) +
+                        " (find out more with `" + ctx.prefix + "user " + user.getId() + "`)", true);
+            }
+
+            if (guild.getSplashUrl() != null)
+                emb.setImage(guild.getSplashUrl());
+
+            if (invite.isExpanded()) {
+                if (invite.getMaxUses() == 0)
+                    emb.addField("Uses", str(invite.getUses()), true);
+                else
+                    emb.addField("Uses", invite.getUses() + " of " + invite.getMaxUses(), true);
+
+                emb.addField("Created at", Date.from(invite.getCreationTime().toInstant()).toString(), true)
+                        .addField("Expires",
+                                prettyTime.format(Date.from(invite.getCreationTime()
+                                        .plusSeconds(invite.getMaxAge()).toInstant())) +
+                                " (", true);
+            }
+
+            ctx.send(emb.build()).queue();
+        };
+
+        Invite.resolve(ctx.jda, code).queue(inv -> {
+            inv.expand().queue(processor, ignored -> {
+                processor.accept(inv);
+            });
+        }, err -> {
+            logger.warn("Error fetching invite info", err);
+            ctx.send(Emotes.getFailure() + " Error fetching invite info!").queue();
+        });
     }
 }

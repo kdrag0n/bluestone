@@ -54,11 +54,11 @@ public class MonitorCog extends Cog {
     }
 
     public String getName() {
-        return "MonitorCog";
+        return "Monitor";
     }
 
     public String getDescription() {
-        return "A description.";
+        return "The cog that monitors parts of the bot and reports errors to the owner.";
     }
 
     public void unload() {
