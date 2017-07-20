@@ -13,7 +13,9 @@ import com.khronodragon.bluestone.sql.Quote;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.exceptions.PermissionException;
+import net.dv8tion.jda.core.utils.MiscUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -34,8 +36,9 @@ public class QuotesCog extends Cog {
             "    \u2022 `list` - list your quotes\n" +
             "    \u2022 `random` - view a random quote\n" +
             "    \u2022 `count` - see how many quotes there are\n" +
+            "    \u2022 `message [message id]` - quote a message by its ID\n" +
             "\n" +
-            "Aliases: [create, new, remove], [del, rm], [rand], [num]";
+            "Aliases: [create, new, remove], [del, rm], [rand], [num], [addmsg, madd]";
     private Dao<Quote, Integer> dao;
 
     public QuotesCog(Bot bot) {
@@ -82,6 +85,8 @@ public class QuotesCog extends Cog {
             quoteCmdRandom(ctx);
         else if (invoked.equals("count") || invoked.equals("num"))
             quoteCmdCount(ctx);
+        else if (invoked.equals("message") || invoked.equals("addmsg") || invoked.equals("madd"))
+            quoteCmdAddMessage(ctx);
         else if (invoked.matches("^[0-9]{1,4}$"))
             quoteShowId(ctx, Integer.parseInt(invoked));
         else
@@ -93,7 +98,7 @@ public class QuotesCog extends Cog {
             ctx.send(Emotes.getFailure() + " I need text to quote!").queue();
             return;
         }
-        String text = quoteify(ctx, ctx.rawArgs.substring(ctx.args.get(0).length()).trim()
+        String text = quoteify(ctx.message, ctx.guild, ctx.rawArgs.substring(ctx.args.get(0).length()).trim()
                 .replace('\n', ' '));
 
         if (text.length() > 360) {
@@ -227,6 +232,44 @@ public class QuotesCog extends Cog {
         ctx.send("There are **" + dao.countOf() + "** quotes.").queue();
     }
 
+    private void quoteCmdAddMessage(Context ctx) throws SQLException {
+        if (!ctx.rawArgs.matches("^[0-9]{17,20}$")) {
+            ctx.send(Emotes.getFailure() + " I need the ID of a message to quote!").queue();
+            return;
+        }
+
+        Message msg;
+        try {
+            msg = ctx.channel.getMessageById(MiscUtil.parseSnowflake(ctx.rawArgs)).complete();
+        } catch (ErrorResponseException e) {
+            ctx.send(Emotes.getFailure() + " No such message!").queue();
+            return;
+        }
+
+        String text = quoteify(msg, msg.getGuild(), msg.getRawContent().replace('\n', ' '));
+
+        if (text.length() > 360) {
+            ctx.send(Emotes.getFailure() + " Text too long!").queue();
+            return;
+        }
+
+        long quotes = dao.queryBuilder()
+                .where()
+                .eq("authorId", msg.getAuthor().getIdLong())
+                .countOf();
+
+        if (quotes >= 25 && msg.getAuthor().getIdLong() != bot.owner.getIdLong()) {
+            ctx.send(Emotes.getFailure() + " The author of that message already has 25 quotes!").queue();
+            return;
+        }
+
+        Quote quote = new Quote(text,
+                ctx.author.getIdLong(), ctx.author.getName());
+        dao.create(quote);
+
+        ctx.send(Emotes.getSuccess() + " Quote added with ID `" + quote.getId() + "`.").queue();
+    }
+
     private void quoteShowId(Context ctx, int id) throws SQLException {
         Quote quote = dao.queryForId(id);
 
@@ -236,18 +279,18 @@ public class QuotesCog extends Cog {
             ctx.send(quote.render()).queue();
     }
 
-    public String quoteify(Context ctx, String msg) {
+    public String quoteify(Message message, Guild guild, String msg) {
         String tmp = msg;
 
-        for (User user : ctx.message.getMentionedUsers()) {
-            if (ctx.message.isFromType(ChannelType.PRIVATE) || ctx.message.isFromType(ChannelType.GROUP)) {
+        for (User user : message.getMentionedUsers()) {
+            if (message.isFromType(ChannelType.PRIVATE) || message.isFromType(ChannelType.GROUP)) {
                 tmp = tmp.replace("<@" + user.getId() + '>', '@' + user.getName())
                         .replace("<@!" + user.getId() + '>', '@' + user.getName());
             } else {
                 String name;
 
-                if (ctx.guild.isMember(user))
-                    name = ctx.guild.getMember(user).getEffectiveName();
+                if (guild.isMember(user))
+                    name = guild.getMember(user).getEffectiveName();
                 else name = user.getName();
 
                 tmp = tmp.replace("<@" + user.getId() + '>', '@' + name)
@@ -255,13 +298,13 @@ public class QuotesCog extends Cog {
             }
         }
 
-        for (Emote emote : ctx.message.getEmotes())
+        for (Emote emote : message.getEmotes())
             tmp = tmp.replace(emote.getAsMention(), ":" + emote.getName() + ":");
 
-        for (TextChannel mentionedChannel : ctx.message.getMentionedChannels())
+        for (TextChannel mentionedChannel : message.getMentionedChannels())
             tmp = tmp.replace("<#" + mentionedChannel.getId() + '>', '#' + mentionedChannel.getName());
 
-        for (Role mentionedRole : ctx.message.getMentionedRoles())
+        for (Role mentionedRole : message.getMentionedRoles())
             tmp = tmp.replace("<@&" + mentionedRole.getId() + '>', '@' + mentionedRole.getName());
 
         return tmp;

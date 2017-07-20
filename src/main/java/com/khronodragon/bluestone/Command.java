@@ -12,6 +12,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
+
 import static java.text.MessageFormat.format;
 
 public class Command {
@@ -25,7 +27,7 @@ public class Command {
     public final String cogName;
     public final boolean needThread;
     public final boolean reportErrors;
-    private List<Method> checks = new ArrayList<>();
+    private List<Predicate<Context>> checks = new ArrayList<>(1);
     private final Method func;
     public final Cog cog;
 
@@ -115,15 +117,15 @@ public class Command {
             checkPerms(ctx);
         }
 
-        for (Method method: this.checks) {
+        for (Predicate<Context> check: checks) {
             try {
-                if (!(boolean) method.invoke(null, ctx)) {
-                    throw new CheckFailure("Check " + method.getName() + "() failed");
+                if (!check.test(ctx)) {
+                    throw new CheckFailure("Check failed");
                 }
             } catch (CheckFailure e) {
                 throw e;
             } catch (Exception e) {
-                throw new CheckFailure("Check " + method.getName() + "() failed");
+                throw new CheckFailure("Check failed");
             }
         }
         return true;
