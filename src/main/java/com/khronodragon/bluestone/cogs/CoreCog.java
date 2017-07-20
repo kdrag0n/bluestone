@@ -10,7 +10,6 @@ import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 
 import java.util.*;
-import static java.text.MessageFormat.format;
 
 public class CoreCog extends Cog {
     public CoreCog(Bot bot) {

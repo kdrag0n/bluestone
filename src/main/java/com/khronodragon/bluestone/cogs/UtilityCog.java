@@ -75,7 +75,6 @@ public class UtilityCog extends Cog {
     private static final Pattern CUSTOM_EMOTE_PATTERN = Pattern.compile("<:[a-z_]+:([0-9]{17,19})>", Pattern.CASE_INSENSITIVE);
     private static final Pattern INVITE_PATTERN = Pattern
             .compile("^(?:https?://discord(?:app\\.com/invite|\\.gg)/([a-zA-Z0-9]{7}|[a-zA-Z0-9]{16})|([a-zA-Z0-9]{7}|[a-zA-Z0-9]{16}))$");
-    private static final PrettyTime prettyTime = new PrettyTime();
 
     private static final int[] CHAR_NO_PREVIEW = {65279};
     private static final byte[] DIRECTIONALITY_NO_PREVIEW = {Character.DIRECTIONALITY_WHITESPACE, Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE,
@@ -91,6 +90,7 @@ public class UtilityCog extends Cog {
         put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
         put(EncodeHintType.CHARACTER_SET, "UTF-8");
     }};
+    private final PrettyTime prettyTime = new PrettyTime();
 
     private static final String NO_USER = Emotes.getFailure() + " I need a valid @mention, user ID, or user#discriminator!";
     private static final String SHRUG = "¯\\_(ツ)_/¯";

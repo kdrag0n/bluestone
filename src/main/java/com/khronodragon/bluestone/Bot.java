@@ -261,11 +261,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         if (jda.getGuildById(110373943822540800L) != null)
             Emotes.setHasDbots(true);
 
-        if (jda.getGuildById(125227483518861312L) != null)
-            Emotes.setHasJda(true);
-
-        if (jda.getGuildById(239772188649979904L) != null)
-            Emotes.setHasHideout(true);
+        if (jda.getGuildById(250780048943087618L) != null)
+            Emotes.setHasParadise(true);
 
         Runnable task = () -> {
             String statusLine;

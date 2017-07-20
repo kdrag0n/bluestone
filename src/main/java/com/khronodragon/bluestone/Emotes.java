@@ -6,19 +6,14 @@ import org.apache.commons.lang3.text.WordUtils;
 
 public class Emotes {
     private static boolean hasDbots = false;
-    private static boolean hasJda = false;
-    private static boolean hasHideout = false;
-
-    public static void setHasHideout(boolean hasHideout) {
-        Emotes.hasHideout = hasHideout;
-    }
+    private static boolean hasParadise = false;
 
     static void setHasDbots(boolean hasDbots) {
         Emotes.hasDbots = hasDbots;
     }
 
-    static void setHasJda(boolean hasJda) {
-        Emotes.hasJda = hasJda;
+    static void setHasParadise(boolean hasParadise) {
+        Emotes.hasParadise = hasParadise;
     }
 
     public static String getFullMemberStatus(Member member) {
@@ -63,19 +58,15 @@ public class Emotes {
     }
 
     public static String getCredits() {
-        if (hasHideout && hasJda)
-            return "A <:discord:267900903833600000> bot by **Dragon5232#1841** made with <:jda:230988580904763393> by <:DV8:245233172189675520>, <:gradle:252555466498899969>, and <:idea:245257202305073152>";
-        else if (hasHideout)
-            return "A <:discord:267900903833600000> bot by **Dragon5232#1841** made with JDA by DV8FromTheWorld, and IntelliJ IDEA";
-        else if (hasJda)
-            return "A Discord bot by **Dragon5232#1841** made with <:jda:230988580904763393> by <:DV8:245233172189675520>, <:gradle:252555466498899969>, and <:idea:245257202305073152>";
+        if (hasParadise)
+            return "A <:discord:337404050737856522> bot by **Dragon5232#1841** made with <:jda:337404349514907648>, <:gradle:337404435128909825>, and <:intellij_idea:337404644835852288>";
         else
-            return "A Discord bot by **Dragon5232#1841** made with JDA by DV8FromTheWorld, and IntelliJ IDEA";
+            return "A Discord bot by **Dragon5232#1841** made with JDA, Gradle, and IntelliJ IDEA";
     }
 
     public static String getGrave() {
-        if (hasJda)
-            return "<:rip:230989718471442432>";
+        if (hasParadise)
+            return "<:rip:337405147347025930>";
         else
             return "⚰";
     }
