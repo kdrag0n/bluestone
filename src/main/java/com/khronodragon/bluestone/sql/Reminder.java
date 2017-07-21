@@ -5,7 +5,7 @@ import com.j256.ormlite.table.DatabaseTable;
 
 import java.util.Date;
 
-@DatabaseTable(tableName = "Reminder")
+@DatabaseTable(tableName = "reminders")
 public class Reminder {
     @DatabaseField(generatedId = true, canBeNull = false)
     private int id;

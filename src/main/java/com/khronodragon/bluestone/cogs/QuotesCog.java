@@ -233,16 +233,19 @@ public class QuotesCog extends Cog {
     }
 
     private void quoteCmdAddMessage(Context ctx) throws SQLException {
-        if (!ctx.rawArgs.matches("^[0-9]{17,20}$")) {
+        if (ctx.args.size() < 2 || !ctx.args.get(1).matches("^[0-9]{17,20}$")) {
             ctx.send(Emotes.getFailure() + " I need the ID of a message to quote!").queue();
             return;
         }
 
         Message msg;
         try {
-            msg = ctx.channel.getMessageById(MiscUtil.parseSnowflake(ctx.rawArgs)).complete();
-        } catch (ErrorResponseException e) {
-            ctx.send(Emotes.getFailure() + " No such message!").queue();
+            msg = ctx.channel.getMessageById(MiscUtil.parseSnowflake(ctx.args.get(1))).complete();
+        } catch (ErrorResponseException ignored) {
+            ctx.send(Emotes.getFailure() + " No such message! (must be in this channel)").queue();
+            return;
+        } catch (NumberFormatException ignored) {
+            ctx.send(Emotes.getFailure() + " Invalid message ID! Use Developer Mode to Copy ID.").queue();
             return;
         }
 
@@ -258,13 +261,13 @@ public class QuotesCog extends Cog {
                 .eq("authorId", msg.getAuthor().getIdLong())
                 .countOf();
 
-        if (quotes >= 25 && msg.getAuthor().getIdLong() != bot.owner.getIdLong()) {
+        if (quotes >= 25 && ctx.author.getIdLong() != bot.owner.getIdLong()) {
             ctx.send(Emotes.getFailure() + " The author of that message already has 25 quotes!").queue();
             return;
         }
 
         Quote quote = new Quote(text,
-                ctx.author.getIdLong(), ctx.author.getName());
+                msg.getAuthor().getIdLong(), msg.getAuthor().getName());
         dao.create(quote);
 
         ctx.send(Emotes.getSuccess() + " Quote added with ID `" + quote.getId() + "`.").queue();

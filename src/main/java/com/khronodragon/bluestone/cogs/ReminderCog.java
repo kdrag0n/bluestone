@@ -17,6 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -73,9 +74,10 @@ public class ReminderCog extends Cog {
                             .setAuthor("Reminder", null, bot.getJda().getSelfUser().getEffectiveAvatarUrl())
                             .setDescription(reminder.getMessage())
                             .setFooter("You asked me to remind you of this.", null)
+                            .setTimestamp(Instant.now())
                             .build()).queue()
             );
-        }, System.currentTimeMillis() - reminder.getRemindAt().getTime(), TimeUnit.MILLISECONDS);
+        }, reminder.getRemindAt().getTime() - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
     }
 
     @Command(name = "remindme", desc = "Schedule a reminder for you at a certain time, over DM.",

@@ -23,7 +23,7 @@ public class Quote {
     @DatabaseField(canBeNull = false, index = true)
     private long authorId;
 
-    @DatabaseField(canBeNull = false, width = 32)
+    @DatabaseField(canBeNull = false, width = 32, defaultValue = "Someone")
     private String authorName;
 
     public int getId() {

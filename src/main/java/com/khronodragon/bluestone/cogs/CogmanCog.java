@@ -6,6 +6,7 @@ import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.errors.PassException;
+import com.khronodragon.bluestone.util.DynamicClassLoader;
 import net.dv8tion.jda.core.EmbedBuilder;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -169,26 +170,22 @@ public class CogmanCog extends Cog {
         }
         String input = ctx.args.get(1);
 
-        Class clazz;
+        Class<?> clazz;
         if (input.matches("^[a-z]+://?(?:[a-zA-Z0-9\\-_:]+/)+[a-zA-Z0-9\\-_.]+\\.jar/(?:[a-z0-9\\-_]+\\.)*[a-zA-Z0-9]+$")) {
             String[] split = StringUtils.split(input, '/');
             String classPath = split[split.length - 1];
             String uriPath = StringUtils.join(ArrayUtils.remove(split, split.length - 1), '/');
 
-            /*
-            URLClassLoader cl = (URLClassLoader) ClassLoader.getSystemClassLoader();
-            Method addURL = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
-            addURL.setAccessible(true);
-            addURL.invoke(cl, new URL(uriPath));
-            */
-            ClassLoader cl = new URLClassLoader(new URL[] {new URL(uriPath)});
+            ClassLoader cl = new DynamicClassLoader(uriPath);
 
             clazz = cl.loadClass(classPath);
         } else if (input.matches("^(?:[a-z0-9\\-_]+\\.)*[a-zA-Z0-9]+$")) {
+            ClassLoader cl = new DynamicClassLoader("build/classes/main");
+
             if (input.indexOf('.') == -1)
-                clazz = Class.forName(DEFAULT_COGS_PATH + '.' + input);
+                clazz = cl.loadClass(DEFAULT_COGS_PATH + '.' + input);
             else
-                clazz = Class.forName(input);
+                clazz = cl.loadClass(input);
         } else if (input.matches("^/?(?:.+/)+[a-zA-Z0-9]+(?:\\.class)?$")) {
             File file = new File(input);
             URL url = file.getParentFile().toURI().toURL();
@@ -200,6 +197,7 @@ public class CogmanCog extends Cog {
             ctx.send(INVALID_LOAD).queue();
             return;
         }
+
         logger.info("new class url {}", clazz.getProtectionDomain().getCodeSource().getLocation());
 
         if (bot.cogs.values().stream()

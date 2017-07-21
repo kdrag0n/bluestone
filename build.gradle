@@ -58,7 +58,6 @@ dependencies {
     compile 'com.jagrosh:JDA-Utilities:1.2'
     compile 'org.ocpsoft.prettytime:prettytime:3.2.7.Final'
     compile 'com.joestelmach:natty:0.11'
-    compile 'com.zanox.lib.simplegraphiteclient:simplegraphiteclient:1.0.0'
 }
 
 compileJava.options.encoding = 'UTF-8'

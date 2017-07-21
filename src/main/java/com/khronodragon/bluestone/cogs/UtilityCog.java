@@ -54,6 +54,7 @@ import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
+import java.time.Instant;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -81,7 +82,7 @@ public class UtilityCog extends Cog {
                 Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE};
     private static final String MC_COLOR_PATTERN = "\\u00a7[4c6e2ab319d5f78lnokmr]";
     private static final JSONArray EMPTY_JSON_ARRAY = new JSONArray();
-    private static final OperatingSystemMXBean systemBean = (OperatingSystemMXBean)
+    static final OperatingSystemMXBean systemBean = (OperatingSystemMXBean)
             ManagementFactory.getOperatingSystemMXBean();
 
     private static final Fairy fairy = Fairy.create();
@@ -245,6 +246,7 @@ public class UtilityCog extends Cog {
                 .setAuthor(ctx.guild.getName(), null,
                         val(ctx.guild.getIconUrl()).or(ctx.jda.getSelfUser().getEffectiveAvatarUrl()))
                 .setFooter(ctx.guild.getSelfMember().getEffectiveName(), ctx.jda.getSelfUser().getEffectiveAvatarUrl())
+                .setTimestamp(Instant.now())
                 .addField("ID", ctx.guild.getId(), true)
                 .addField("Members", str(ctx.guild.getMembers().size()), true)
                 .addField("Channels", str(ctx.guild.getTextChannels().size() + ctx.guild.getVoiceChannels().size()), true)
@@ -288,7 +290,8 @@ public class UtilityCog extends Cog {
                 .addField("Channels", str(shardUtil.getChannelCount()), true)
                 .addField("Commands", str(new HashSet<>(bot.commands.values()).size()), true)
                 .addField("Invite Link", ctx.jda.asBot().getInviteUrl(PERMS_NEEDED), true)
-                .addField("Patreon", "https://patreon.com/kdragon", true);
+                .addField("Patreon", "https://patreon.com/kdragon", true)
+                .setTimestamp(Instant.now());
 
         ctx.send(emb.build()).queue();
     }
@@ -712,6 +715,7 @@ public class UtilityCog extends Cog {
                 .setDescription(desc)
                 .setColor(randomColor())
                 .setFooter(getEffectiveName(ctx), ctx.jda.getSelfUser().getEffectiveAvatarUrl())
+                .setTimestamp(Instant.now())
                 .addField("Players", dataPlayers.getInt("online") + "/" + dataPlayers.getInt("max"), true);
 
         if (val(dataPlayers.optJSONArray("sample")).or(EMPTY_JSON_ARRAY).length() > 0) {
@@ -828,7 +832,8 @@ public class UtilityCog extends Cog {
                 .addField("Username", person.getUsername(), true)
                 .addField("Gender", WordUtils.capitalizeFully(person.getSex().name()), true)
                 .addField("Passport Number", person.getPassportNumber(), true)
-                .setFooter("Fake profiles FTW!", null);
+                .setFooter("Fake profiles FTW!", null)
+                .setTimestamp(Instant.now());
 
         ctx.send(emb.build()).queue();
     }

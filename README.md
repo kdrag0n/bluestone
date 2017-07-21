@@ -12,6 +12,8 @@ This is the template:
   "db_url": "h2:./database",
   "db_user": "username",
   "db_pass": "password",
+  "graphite_host": "localhost",
+  "graphite_port": 2003,
   "keys": {
     "google": "",
     "discord_bots": "",

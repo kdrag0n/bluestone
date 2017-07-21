@@ -45,6 +45,7 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.NumberFormat;
+import java.time.Instant;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
@@ -313,7 +314,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
         Reflections reflector = new Reflections("com.khronodragon.bluestone.cogs");
         Set<Class<? extends Cog>> cogClasses = reflector.getSubTypesOf(Cog.class);
-        for (Class cogClass: cogClasses) {
+        for (Class<?> cogClass: cogClasses) {
             try {
                 Cog cog = (Cog) cogClass.getConstructor(Bot.class).newInstance(this);
                 registerCog(cog);
@@ -579,7 +580,6 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     }
 
     private static MessageEmbed errorEmbed(Throwable e, Message msg, Command cmd) {
-        Date date = new Date();
         String stack = renderStackTrace(e, "\u3000", "> ");
 
         EmbedBuilder emb = new EmbedBuilder()
@@ -589,7 +589,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 .appendDescription("```java\n")
                 .appendDescription(stack.substring(0, Math.min(stack.length(), 2037)))
                 .appendDescription("```")
-                .addField("Timestamp", date.getTime() + "ms", true)
+                .addField("Timestamp", System.currentTimeMillis() + "ms", true)
                 .addField("Author ID", msg.getAuthor().getId(), true)
                 .addField("Message ID", msg.getId(), true)
                 .addField("Attachments", str(msg.getAttachments().size()), true)
@@ -599,10 +599,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 .addField("Channel ID", msg.getChannel().getId(), true)
                 .addField("Content", '`' + msg.getContent() + '`', true)
                 .addField("Embeds", str(msg.getEmbeds().size()), true)
-                .setFooter(date.toString(), null);
+                .setTimestamp(Instant.now());
 
         if (msg.getGuild() != null)
-            emb.setFooter(date.toString(), msg.getGuild().getIconUrl());
+            emb.setFooter("Guild Icon", msg.getGuild().getIconUrl());
 
         return emb.build();
     }

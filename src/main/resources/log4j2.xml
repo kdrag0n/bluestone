@@ -15,5 +15,13 @@
             <AppenderRef ref="Console"/>
             <AppenderRef ref="RandomAccessFile"/>
         </Root>
+        <logger name="com.j256.ormlite.table.TableUtils" level="warn">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="RandomAccessFile"/>
+        </logger>
+        <logger name="com.joestelmach.natty.Parser" level="warn">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="RandomAccessFile"/>
+        </logger>
     </Loggers>
 </Configuration>

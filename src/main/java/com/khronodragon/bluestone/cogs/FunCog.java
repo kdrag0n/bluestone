@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -334,7 +335,8 @@ public class FunCog extends Cog {
         EmbedBuilder emb = new EmbedBuilder()
                 .setAuthor("Text Styles", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
                 .setColor(randomColor())
-                .setDescription("\u200b");
+                .setDescription("\u200b")
+                .setTimestamp(Instant.now());
 
         for (Map.Entry<String, UnisafeString> entry: charsets.entrySet()) {
             emb.appendDescription("    \u2022 " + applyStyle(entry.getKey(), entry.getValue()) + "\n");

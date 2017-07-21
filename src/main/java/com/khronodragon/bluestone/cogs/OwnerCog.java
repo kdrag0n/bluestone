@@ -20,6 +20,7 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -233,6 +234,7 @@ public class OwnerCog extends Cog {
                 .setColor(randomColor())
                 .setAuthor("Command Calls", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
                 .setDescription("Here are the top 25 command calls, sorted by amount.")
+                .setTimestamp(Instant.now())
                 .addField("Total", str(bot.getShardUtil().getRequestCount()), true);
 
         bot.getShardUtil().getCommandCalls().entrySet().stream()

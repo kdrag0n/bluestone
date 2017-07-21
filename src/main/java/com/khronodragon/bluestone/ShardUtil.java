@@ -155,11 +155,23 @@ public class ShardUtil {
         }).sum();
     }
 
+    public int getVoiceChannelCount() {
+        return shards.values().stream().mapToInt(b -> b.getJda().getVoiceChannels().size()).sum();
+    }
+
+    public int getTextChannelCount() {
+        return shards.values().stream().mapToInt(b -> b.getJda().getTextChannels().size()).sum();
+    }
+
     public int getUserCount() {
         return shards.values().stream().mapToInt(b -> b.getJda().getUsers().size()).sum();
     }
 
     public int getRequestCount() {
         return commandCalls.values().stream().mapToInt(AtomicInteger::get).sum();
+    }
+
+    public int getEmoteCount() {
+        return shards.values().stream().mapToInt(b -> b.getJda().getEmotes().size()).sum();
     }
 }

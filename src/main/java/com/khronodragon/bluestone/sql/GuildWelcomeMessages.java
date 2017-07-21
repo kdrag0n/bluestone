@@ -15,10 +15,10 @@ public class GuildWelcomeMessages {
     private String leave;
 
     @DatabaseField(canBeNull = false)
-    private boolean welcomeEnabled;
+    private boolean welcomeEnabled = true;
 
     @DatabaseField(canBeNull = false)
-    private boolean leaveEnabled;
+    private boolean leaveEnabled = true;
 
     public long getGuildId() {
         return guildId;

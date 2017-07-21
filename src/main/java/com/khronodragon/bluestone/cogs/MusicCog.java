@@ -35,6 +35,7 @@ import net.dv8tion.jda.core.managers.AudioManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -84,6 +85,29 @@ public class MusicCog extends Cog {
             audioStates.put(guildId, state);
             return state;
         }
+    }
+
+    public int getTracksLoaded() {
+        int num = 0;
+        for (AudioState state: audioStates.valueCollection()) {
+            num += state.scheduler.queue.size();
+
+            if (state.scheduler.current != null)
+                num++;
+        }
+
+        return num;
+    }
+
+    public int getActiveStreamCount() {
+        int num = 0;
+
+        for (AudioState state: audioStates.valueCollection()) {
+            if (state.scheduler.current != null && !state.scheduler.player.isPaused())
+                num++;
+        }
+
+        return num;
     }
 
     @EventHandler
@@ -300,7 +324,8 @@ public class MusicCog extends Cog {
         AudioState state = getAudioState(ctx.guild);
 
         EmbedBuilder builder = new EmbedBuilder()
-                .setAuthor("Voice Queue", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl());
+                .setAuthor("Voice Queue", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
+                .setTimestamp(Instant.now());
 
         if (state.scheduler.current == null)
             builder.setDescription("Nothing is playing.");

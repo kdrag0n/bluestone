@@ -1,8 +1,9 @@
 package com.khronodragon.bluestone.util;
 
 public class NullValueWrapper<T> {
-    private T origVal;
-    NullValueWrapper(T value) {
+    private final T origVal;
+
+    private NullValueWrapper(T value) {
         origVal = value;
     }
 
@@ -15,6 +16,6 @@ public class NullValueWrapper<T> {
     }
 
     public static<VT> NullValueWrapper<VT> val(VT val) {
-        return new NullValueWrapper(val);
+        return new NullValueWrapper<>(val);
     }
 }
