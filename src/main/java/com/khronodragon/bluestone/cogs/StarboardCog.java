@@ -18,6 +18,7 @@ import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.sql.Starboard;
 import com.khronodragon.bluestone.sql.StarboardEntry;
+import com.khronodragon.bluestone.sql.Starrer;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.Permission;
@@ -34,7 +35,6 @@ import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionRemov
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -85,6 +85,7 @@ public class StarboardCog extends Cog {
             });
     private Dao<Starboard, Long> dao;
     private Dao<StarboardEntry, Long> entryDao;
+    private Dao<Starrer, Integer> starrerDao;
 
     public StarboardCog(Bot bot) {
         super(bot);
@@ -111,6 +112,18 @@ public class StarboardCog extends Cog {
             entryDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), StarboardEntry.class);
         } catch (SQLException e) {
             logger.warn("Failed to create starboard entry DAO!", e);
+        }
+
+        try {
+            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), Starrer.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create starboard user table!", e);
+        }
+
+        try {
+            starrerDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), Starrer.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create starboard user DAO!", e);
         }
     }
 
@@ -225,10 +238,16 @@ public class StarboardCog extends Cog {
             entry = new StarboardEntry(event.getMessageIdLong(), event.getGuild().getIdLong(), botMessageId,
                     starboard.getChannelId(), origMessage.getAuthor().getIdLong(),
                     origMessage.getChannel().getIdLong(), stars);
+            Starrer starrer = new Starrer(event.getUser().getIdLong(), event.getMessageIdLong());
             entryDao.create(entry);
+            starrerDao.create(starrer);
         } else {
             entry.setStars(stars);
             entryDao.update(entry);
+            
+            Starrer starrer = new Starrer(event.getUser().getIdLong(), event.getMessageIdLong());
+            entryDao.create(entry);
+            starrerDao.create(starrer);
 
             Message message = messageCache.get(ImmutablePair.of(starboard.getChannelId(), entry.getBotMessageId()));
             message.editMessage(new MessageBuilder()
@@ -255,6 +274,12 @@ public class StarboardCog extends Cog {
         if (entry != null) {
             entry.setStars(stars);
             entryDao.update(entry);
+            starrerDao.deleteBuilder()
+                    .where()
+                    .eq("userId", event.getUser().getIdLong())
+                    .and()
+                    .eq("entryMessageId", entry.getMessageId())
+                    .query();
 
             String renderedText = renderText(stars, event.getChannel().getAsMention(), event.getMessageId());
             messageCache.get(ImmutablePair.of(starboard.getChannelId(), entry.getBotMessageId()))
@@ -278,29 +303,30 @@ public class StarboardCog extends Cog {
         Long[] longIdArray = new Long[strMessageIds.size()];
 
         for (int i = 0; i < longIdArray.length; i++)
-            longIdArray[i] = new Long(strMessageIds.get(i));
+            longIdArray[i] = Long.parseUnsignedLong(strMessageIds.get(i));
 
         for (StarboardEntry entry: entryDao.queryBuilder()
                 .where()
                 .eq("guildId", event.getGuild().getIdLong())
                 .in("messageId", new Object[] {longIdArray})
                 .query()) {
-            messageCache.get(ImmutablePair.of(entry.getBotChannelId(), entry.getBotMessageId()))
-                    .delete()
-                    .reason("Source message was bulk deleted (purged) by a bot")
-                    .queue();
-            entryDao.delete(entry);
+            messageDelete(entry.getMessageId());
         }
     }
 
     private void messageDelete(long messageId) throws SQLException, ExecutionException {
         StarboardEntry entry = entryDao.queryForId(messageId);
         if (entry != null) {
-            messageCache.get(ImmutablePair.of(entry.getBotChannelId(), entry.getBotMessageId()))
-                    .delete()
+            Message message = messageCache.get(ImmutablePair.of(entry.getBotChannelId(), entry.getBotMessageId()));
+            entryDao.delete(entry);
+            starrerDao.deleteBuilder()
+                    .where()
+                    .eq("entryMessageId", entry.getMessageId())
+                    .query();
+
+            message.delete()
                     .reason("All reactions were deleted on source message, or source message itself was deleted")
                     .queue();
-            entryDao.delete(entry);
         }
     }
 
@@ -323,26 +349,41 @@ public class StarboardCog extends Cog {
         }
         String invoked = ctx.args.get(0);
 
-        if (invoked.equals("create") || invoked.equals("new"))
-            cmdCreate(ctx);
-        else if (invoked.equals("age"))
-            cmdAge(ctx);
-        else if (invoked.equals("lock"))
-            cmdLock(ctx);
-        else if (invoked.equals("unlock"))
-            cmdUnlock(ctx);
-        else if (invoked.equals("limit") || invoked.equals("threshold") || invoked.equals("min"))
-            cmdThreshold(ctx);
-        else if (invoked.equals("clean"))
-            cmdClean(ctx);
-        else if (invoked.equals("random"))
-            cmdRandom(ctx);
-        else if (invoked.equals("show"))
-            cmdShow(ctx);
-        else if (invoked.equals("stats"))
-            cmdStats(ctx);
-        else
-            ctx.send(NO_COMMAND).queue();
+        switch (invoked) {
+            case "create":
+            case "new":
+                cmdCreate(ctx);
+                break;
+            case "age":
+                cmdAge(ctx);
+                break;
+            case "lock":
+                cmdLock(ctx);
+                break;
+            case "unlock":
+                cmdUnlock(ctx);
+                break;
+            case "limit":
+            case "threshold":
+            case "min":
+                cmdThreshold(ctx);
+                break;
+            case "clean":
+                cmdClean(ctx);
+                break;
+            case "random":
+                cmdRandom(ctx);
+                break;
+            case "show":
+                cmdShow(ctx);
+                break;
+            case "stats":
+                cmdStats(ctx);
+                break;
+            default:
+                ctx.send(NO_COMMAND).queue();
+                break;
+        }
     }
 
     private void cmdCreate(Context ctx) throws SQLException {
