@@ -82,7 +82,7 @@ public class ReminderCog extends Cog {
 
     @Command(name = "remindme", desc = "Schedule a reminder for you at a certain time, over DM.",
             usage = "[time/date] [message", aliases = {"remind", "remind_me"})
-    public void cmdRemindMe(Context ctx) {
+    public void cmdRemindMe(Context ctx) throws SQLException {
         if (ctx.rawArgs.length() < 2) {
             ctx.send(Emotes.getFailure() + " I need a time/date (in any form), and message to remind you with!").queue();
             return;
@@ -110,6 +110,7 @@ public class ReminderCog extends Cog {
         }
 
         Reminder reminder = new Reminder(ctx.author.getIdLong(), msg, date);
+        dao.createOrUpdate(reminder);
         schedule(reminder);
 
         ctx.send(Emotes.getSuccess() + " I will remind you at " + date + '.').queue();
