@@ -15,6 +15,9 @@ public class StarboardEntry {
     private long botMessageId;
 
     @DatabaseField(canBeNull = false)
+    private long botChannelId;
+
+    @DatabaseField(canBeNull = false)
     private long authorId;
 
     @DatabaseField(canBeNull = false)
@@ -23,10 +26,11 @@ public class StarboardEntry {
     public StarboardEntry() {
     }
 
-    public StarboardEntry(long messageId, long guildId, long botMessageId, long authorId, long channelId) {
+    public StarboardEntry(long messageId, long guildId, long botMessageId, long botChannelId, long authorId, long channelId) {
         this.messageId = messageId;
         this.guildId = guildId;
         this.botMessageId = botMessageId;
+        this.botChannelId = botChannelId;
         this.authorId = authorId;
         this.channelId = channelId;
     }
@@ -41,6 +45,10 @@ public class StarboardEntry {
 
     public long getBotMessageId() {
         return botMessageId;
+    }
+
+    public long getBotChannelId() {
+        return botChannelId;
     }
 
     public long getAuthorId() {

@@ -14,10 +14,16 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.dao.DaoManager;
+import com.j256.ormlite.table.TableUtils;
+import com.joestelmach.natty.DateGroup;
+import com.joestelmach.natty.Parser;
 import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.Cooldown;
 import com.khronodragon.bluestone.enums.BucketType;
+import com.khronodragon.bluestone.sql.ActivePoll;
 import com.khronodragon.bluestone.util.*;
 import com.sun.management.OperatingSystemMXBean;
 import io.codearte.jfairy.Fairy;
@@ -29,7 +35,6 @@ import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.entities.MessageReaction.ReactionEmote;
 import net.dv8tion.jda.core.entities.impl.UserImpl;
-import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import okhttp3.*;
 import org.apache.commons.codec.DecoderException;
@@ -54,6 +59,7 @@ import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
@@ -65,7 +71,6 @@ import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class UtilityCog extends Cog {
     private static final Logger logger = LogManager.getLogger(UtilityCog.class);
@@ -92,6 +97,7 @@ public class UtilityCog extends Cog {
         put(EncodeHintType.CHARACTER_SET, "UTF-8");
     }};
     private final PrettyTime prettyTime = new PrettyTime();
+    private final Parser timeParser = new Parser();
 
     private static final String NO_USER = Emotes.getFailure() + " I need a valid @mention, user ID, or user#discriminator!";
     private static final String SHRUG = "¯\\_(ツ)_/¯";
@@ -122,19 +128,38 @@ public class UtilityCog extends Cog {
                                     data.getString("country_name"),
                                     data.getString("country_code")), true)
                             .addField("Region", "WIP", true)
-                            .addField("City", val(data.optString("city")).or(SHRUG), true)
-                            .addField("ZIP Code", val(data.optString("zip_code")).or(SHRUG), true)
-                            .addField("Timezone", val(data.optString("time_zone")).or(SHRUG), true)
-                            .addField("Longitude", val(data.optString("longitude")).or(SHRUG), true)
-                            .addField("Latitude", val(data.optString("latitude")).or(SHRUG), true)
+                            .addField("City", data.optString("city", SHRUG), true)
+                            .addField("ZIP Code", data.optString("zip_code", SHRUG), true)
+                            .addField("Timezone", data.optString("time_zone", SHRUG), true)
+                            .addField("Longitude", data.optString("longitude", SHRUG), true)
+                            .addField("Latitude", data.optString("latitude", SHRUG), true)
                             .addField("Metro Code", data.optInt("metro_code") != 0 ?
                                     data.optString("metro_code") :
                                     SHRUG, true);
                 }
             });
+    private Dao<ActivePoll, Long> pollDao;
 
     public UtilityCog(Bot bot) {
         super(bot);
+
+        try {
+            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), ActivePoll.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create poll table!", e);
+        }
+
+        try {
+            pollDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), ActivePoll.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create poll DAO!", e);
+        }
+
+        try {
+            scheduleAllPolls();
+        } catch (SQLException e) {
+            logger.warn("Error rescheduling previous polls", e);
+        }
     }
 
     public String getName() {
@@ -143,6 +168,11 @@ public class UtilityCog extends Cog {
 
     public String getDescription() {
         return "Essential utility commands, as well as playful ones.";
+    }
+
+    private void scheduleAllPolls() throws SQLException {
+        for (ActivePoll poll: pollDao.queryForAll())
+            schedulePoll(poll);
     }
 
     @Command(name = "icon", desc = "Get the current guild's icon.", guildOnly = true)
@@ -197,6 +227,7 @@ public class UtilityCog extends Cog {
                 .setColor(randomColor())
                 .setAuthor(getTag(user), user.getEffectiveAvatarUrl(), user.getEffectiveAvatarUrl())
                 .setThumbnail(user.getEffectiveAvatarUrl())
+                .setTimestamp(Instant.now())
                 .addField("ID", user.getId(), true)
                 .addField("Creation Time", Date.from(user.getCreationTime().toInstant()).toString(), true);
 
@@ -226,7 +257,7 @@ public class UtilityCog extends Cog {
                     }
                 }
 
-                emb.setColor(member.getColor())
+                emb.setColor(val(member.getColor()).or(Color.WHITE))
                         .addField("Guild Join Time",
                                 Date.from(member.getJoinDate().toInstant()).toString(), true)
                         .addField("Status", status, true)
@@ -321,40 +352,40 @@ public class UtilityCog extends Cog {
                 "**Patreon**: <https://patreon.com/kdragon>").queue();
     }
 
-    private Runnable pollTask(final EqualitySet<ReactionEmote> validEmotes, long messageId, final Map<ReactionEmote, Set<User>> pollTable) {
-        return () -> {
-            while (true) {
-                final MessageReactionAddEvent event = bot.waitForReaction(0, ev -> ev.getMessageIdLong() == messageId &&
-                        ev.getUser().getIdLong() != bot.getJda().getSelfUser().getIdLong() &&
-                        validEmotes.contains(ev.getReactionEmote()));
-                if (event == null) break; // Interrupted, probably by poll time ending
-
-                pollTable.get(validEmotes.normalize(event.getReactionEmote())).add(event.getUser());
-            }
-        };
-    }
-
-    @Command(name = "poll", desc = "Start a poll, with reactions.", usage = "[emotes] [question] [time in minutes]", guildOnly = true)
+    @Command(name = "poll", desc = "Start a poll, with reactions.", usage = "[emotes] [question] [time]", guildOnly = true)
     public void cmdPoll(Context ctx) {
         if (ctx.args.size() < 1) {
-            ctx.send(Emotes.getFailure() + " Missing question, emotes, and time (in minutes)!").queue();
+            ctx.send(Emotes.getFailure() + " Missing question, emotes, and time (like `5 minutes`)!").queue();
             return;
         }
 
-        long pollTime;
-        try {
-            pollTime = Long.parseUnsignedLong(ctx.args.get(ctx.args.size() - 1));
-        } catch (NumberFormatException e) {
-            ctx.send(Emotes.getFailure() + " Invalid time! Time is given as integer minutes.").queue();
+        StringBuilder qBuilder = new StringBuilder(ctx.rawArgs);
+        List<DateGroup> groups = timeParser.parse(ctx.rawArgs);
+        Collections.reverse(groups);
+
+        Date date = null;
+        for (DateGroup group: groups) {
+            if (!group.getDates().isEmpty()) {
+                date = group.getDates().get(0);
+                int pos = qBuilder.lastIndexOf(group.getText());
+                qBuilder.replace(pos, pos + group.getText().length(), "");
+                break;
+            }
+        }
+
+        if (date == null || date.getTime() < System.currentTimeMillis()) {
+            ctx.send(Emotes.getFailure() +
+                    " Invalid time! I take formats like `1 week`, `5 minutes`, or `2 years`.").queue();
             return;
         }
-        ctx.args.remove(ctx.args.size() - 1);
 
-        String preQuestion = String.join(" ", ctx.args);
+        final Date finalDate = date;
+        String preQuestion = qBuilder.toString().trim();
+
         Set<String> unicodeEmotes = RegexUtil.matchStream(UNICODE_EMOTE_PATTERN, preQuestion)
                                         .map(MatchResult::group).collect(Collectors.toSet());
         Set<Emote> customEmotes = RegexUtil.matchStream(CUSTOM_EMOTE_PATTERN, preQuestion)
-                                           .map(m -> ctx.guild.getEmoteById(m.group(1)))
+                                           .map(m -> ctx.jda.getEmoteById(m.group(1)))
                                            .collect(Collectors.toSet());
 
         if (customEmotes.contains(null)) {
@@ -384,53 +415,81 @@ public class UtilityCog extends Cog {
                 msg.addReaction(emote).queue();
             }
 
+            ActivePoll poll = new ActivePoll(msg.getIdLong(), msg.getChannel().getIdLong(), finalDate);
+            bot.threadExecutor.execute(() -> {
+                try {
+                    pollDao.create(poll);
+                } catch (SQLException e) {
+                    logger.error("Error persisting poll", e);
+                }
+            });
+
             embed.setDescription(question)
                     .appendDescription("\n\n")
                     .appendDescription("**✅ Go ahead and vote!**");
 
             bot.getScheduledExecutor().schedule(() ->
-                    msg.editMessage(embed.build()).queue(newMsg ->
-                            bot.getScheduledExecutor().schedule(() -> {
-                try {
-                    ImmutableMultiset<MessageReaction> multiset = ImmutableMultiset.copyOf(newMsg.getReactions());
-
-                    Map<ReactionEmote, Integer> resultTable = multiset.entrySet().stream()
-                            .sorted(Collections.reverseOrder(Comparator.comparing(Multiset.Entry::getCount)))
-                            .collect(Collectors.toMap(
-                                    e -> e.getElement().getEmote(),
-                                    Multiset.Entry::getCount,
-                                    (u, v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); },
-                                    LinkedHashMap::new
-                            ));
-
-                    ReactionEmote winnerKey = Collections.max(resultTable.entrySet(), Map.Entry.comparingByValue()).getKey();
-                    String winner = winnerKey.getEmote() == null ? winnerKey.getName() : winnerKey.getEmote().getAsMention();
-
-                    List<String> orderedResultList = resultTable.entrySet().stream()
-                            .map(e -> {
-                                final ReactionEmote key = e.getKey();
-                                final Integer value = e.getValue();
-                                final String userKey = key.getEmote() == null ? key.getName() : key.getEmote().getAsMention();
-                                return userKey + ": " + value + " vote" + (value == 1 ? "" : "s");
-                            })
-                            .collect(Collectors.toList());
-
-                    embed.setDescription(question)
-                            .appendDescription("\n\n")
-                            .appendDescription("**❌ Poll ended.**")
-                            .addField("Winner", winner, false);
-                    newMsg.editMessage(embed.build()).queue();
-
-                    ctx.send("**Poll** `" + question + "` **ended!\n" +
-                            "Winner: " + winner + "\n\n" +
-                            "Full Results:**\n" + String.join("\n", orderedResultList)).queue();
-                } catch (Throwable e) {
-                    logger.error("Poll stage 2: error", e);
-                }
-            }, pollTime, TimeUnit.MINUTES)),
+                            msg.editMessage(embed.build()).queue(ignored -> schedulePoll(poll)),
                     (unicodeEmotes.size() + customEmotes.size()) * (int) (ctx.jda.getPing() * 1.92),
                     TimeUnit.MILLISECONDS);
         });
+    }
+
+    private void schedulePoll(final ActivePoll poll) {
+        long calculatedTime = poll.getEndTime().getTime() - System.currentTimeMillis();
+
+        bot.getScheduledExecutor().schedule(() -> {
+            TextChannel channel = bot.getJda().getTextChannelById(poll.getChannelId());
+
+            try {
+                if (channel == null)
+                    return;
+
+                Message message = channel.getMessageById(poll.getMessageId()).complete();
+                if (message == null)
+                    return;
+
+                ImmutableMultiset<MessageReaction> multiset = ImmutableMultiset.copyOf(message.getReactions());
+
+                Map<ReactionEmote, Integer> resultTable = multiset.entrySet().stream()
+                        .sorted(Collections.reverseOrder(Comparator.comparing(Multiset.Entry::getCount)))
+                        .collect(Collectors.toMap(
+                                e -> e.getElement().getEmote(),
+                                Multiset.Entry::getCount,
+                                (k, v) -> { throw new IllegalStateException("Duplicate key " + k); },
+                                LinkedHashMap::new
+                        ));
+
+                ReactionEmote winnerKey = Collections.max(resultTable.entrySet(), Map.Entry.comparingByValue()).getKey();
+                String winner = winnerKey.getEmote() == null ? winnerKey.getName() : winnerKey.getEmote().getAsMention();
+
+                List<String> orderedResultList = resultTable.entrySet().stream()
+                        .map(e -> {
+                            final ReactionEmote key = e.getKey();
+                            final Integer value = e.getValue();
+                            final String userKey = key.getEmote() == null ? key.getName() : key.getEmote().getAsMention();
+
+                            return userKey + ": " + value + " vote" + (value == 1 ? '\00' : 's');
+                        })
+                        .collect(Collectors.toList());
+
+                EmbedBuilder emb = new EmbedBuilder(message.getEmbeds().get(0))
+                        .addField("Winner", winner, false);
+                emb.getDescriptionBuilder().replace(emb.getDescriptionBuilder().indexOf("**✅ Go ahead and vote!**"),
+                        emb.getDescriptionBuilder().length(), "**❌ Poll ended.**");
+
+                message.editMessage(emb.build()).queue();
+                channel.sendMessage("**Poll ended!\n" +
+                        "Winner: " + winner + "\n\n" +
+                        "Full Results:**\n" + String.join("\n", orderedResultList)).queue();
+            } catch (Throwable e) {
+                logger.error("Poll: error", e);
+            } finally {
+                try {
+                    pollDao.delete(poll);
+                } catch (SQLException e) {}
+            }
+        }, calculatedTime, TimeUnit.MILLISECONDS);
     }
 
     @Command(name = "meme", desc = "Generate a custom meme.", usage = "[top text] | [bottom text]")
@@ -1033,8 +1092,9 @@ public class UtilityCog extends Cog {
 
         try {
             ctx.send(ipInfoCache.get(ctx.rawArgs)
-                .setAuthor("IP Data", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
-                .build()).queue();
+                    .setTimestamp(Instant.now())
+                    .setAuthor("IP Data", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
+                    .build()).queue();
         } catch (ExecutionException e) {
             if (e.getCause() instanceof IOException) {
                 logger.error("ipinfo API error", e.getCause());

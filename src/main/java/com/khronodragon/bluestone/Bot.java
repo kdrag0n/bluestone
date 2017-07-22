@@ -9,7 +9,6 @@ import com.khronodragon.bluestone.errors.GuildOnlyError;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.errors.PermissionError;
 import com.khronodragon.bluestone.handlers.MessageWaitEventListener;
-import com.khronodragon.bluestone.handlers.ReactionWaitEventListener;
 import com.khronodragon.bluestone.handlers.RejectedExecHandlerImpl;
 import com.khronodragon.bluestone.sql.BotAdmin;
 import com.khronodragon.bluestone.sql.GuildPrefix;
@@ -24,7 +23,6 @@ import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
@@ -610,22 +608,6 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public Message waitForMessage(long millis, Predicate<Message> check) {
         AtomicReference<Message> lock = new AtomicReference<>();
         MessageWaitEventListener listener = new MessageWaitEventListener(lock, check);
-        jda.addEventListener(listener);
-
-        synchronized (lock) {
-            try {
-                lock.wait(millis);
-            } catch (InterruptedException e) {
-                jda.removeEventListener(listener);
-                return null;
-            }
-            return lock.get();
-        }
-    }
-
-    public MessageReactionAddEvent waitForReaction(long millis, Predicate<MessageReactionAddEvent> check) {
-        AtomicReference<MessageReactionAddEvent> lock = new AtomicReference<>();
-        ReactionWaitEventListener listener = new ReactionWaitEventListener(lock, check);
         jda.addEventListener(listener);
 
         synchronized (lock) {

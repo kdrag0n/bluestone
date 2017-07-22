@@ -32,6 +32,8 @@ import net.dv8tion.jda.core.events.guild.voice.GuildVoiceJoinEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.managers.AudioManager;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -54,7 +56,16 @@ public class MusicCog extends Cog {
 
     public MusicCog(Bot bot) {
         super(bot);
-        playerManager.registerSourceManager(new YoutubeAudioSourceManager());
+
+        playerManager.setItemLoaderThreadPoolSize(16);
+
+        YoutubeAudioSourceManager ytManager = new YoutubeAudioSourceManager();
+        ytManager.configureRequests(config ->
+            RequestConfig.copy(config)
+                    .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
+                    .build());
+        playerManager.registerSourceManager(ytManager);
+
         playerManager.registerSourceManager(new SoundCloudAudioSourceManager());
         playerManager.registerSourceManager(new BandcampAudioSourceManager());
         playerManager.registerSourceManager(new VimeoAudioSourceManager());

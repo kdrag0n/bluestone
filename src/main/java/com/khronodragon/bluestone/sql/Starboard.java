@@ -56,4 +56,12 @@ public class Starboard {
     public Date getMaxAge() {
         return maxAge;
     }
+
+    public void setStarThreshold(int starThreshold) {
+        this.starThreshold = starThreshold;
+    }
+
+    public void setMaxAge(Date maxAge) {
+        this.maxAge = maxAge;
+    }
 }

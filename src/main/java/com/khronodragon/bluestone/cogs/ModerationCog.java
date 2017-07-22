@@ -83,10 +83,6 @@ public class ModerationCog extends Cog {
             ctx.send(PURGE_NO_PARAMS).queue();
             return;
         }
-        if (!ctx.guild.getSelfMember().hasPermission((Channel) ctx.channel, Permission.MESSAGE_MANAGE)) {
-            ctx.send(Emotes.getFailure() + " I need to be able to **manage messages**!").queue();
-            return;
-        }
         ctx.channel.sendTyping().queue();
 
         Matcher matcher;
@@ -211,12 +207,14 @@ public class ModerationCog extends Cog {
         } else if (!ctx.rawArgs.matches("^<@!?(\\d{17,20})>$") || ctx.message.getMentionedUsers().size() < 1) {
             ctx.send(Emotes.getFailure() + " Invalid mention!").queue();
             return;
-        } else if (!ctx.guild.getSelfMember().hasPermission(Permission.MANAGE_CHANNEL)) {
-            ctx.send(Emotes.getFailure() + " I don't have permission to **manage channels**!").queue();
-            return;
         }
 
         Member user = ctx.guild.getMember(ctx.message.getMentionedUsers().get(0));
+        if (!ctx.guild.getSelfMember().canInteract(user)) {
+            ctx.send(Emotes.getFailure() + " I need to be higher on the role ladder to mute that user!").queue();
+            return;
+        }
+
         ctx.send(":hourglass: Muting...").queue(status -> {
             String reason;
             String userReason = ctx.rawArgs.replaceAll(MENTION_PATTERN.pattern(), "").trim();
@@ -256,12 +254,14 @@ public class ModerationCog extends Cog {
         } else if (!ctx.rawArgs.matches("^<@!?(\\d{17,20})>$") || ctx.message.getMentionedUsers().size() < 1) {
             ctx.send(Emotes.getFailure() + " Invalid mention!").queue();
             return;
-        } else if (!ctx.guild.getSelfMember().hasPermission(Permission.MANAGE_CHANNEL)) {
-            ctx.send(Emotes.getFailure() + " I don't have permission to **manage channels**!").queue();
-            return;
         }
 
         Member user = ctx.guild.getMember(ctx.message.getMentionedUsers().get(0));
+        if (!ctx.guild.getSelfMember().canInteract(user)) {
+            ctx.send(Emotes.getFailure() + " I need to be higher on the role ladder to unmute that user!").queue();
+            return;
+        }
+
         ctx.send(":hourglass: Unmuting...").queue(status -> {
             String reason;
             String userReason = ctx.rawArgs.replaceAll(MENTION_PATTERN.pattern(), "").trim();
@@ -297,9 +297,6 @@ public class ModerationCog extends Cog {
         } else if (!MENTION_PATTERN.matcher(ctx.rawArgs).find() || ctx.message.getMentionedUsers().size() < 1) {
             ctx.send(Emotes.getFailure() + " Invalid mention!").queue();
             return;
-        } else if (!ctx.guild.getSelfMember().hasPermission(Permission.BAN_MEMBERS)) {
-            ctx.send(Emotes.getFailure() + " I don't have permission to **ban members**!").queue();
-            return;
         }
         String reason;
         String userReason = ctx.rawArgs.replaceAll(MENTION_PATTERN.pattern(), "").trim();
@@ -309,6 +306,11 @@ public class ModerationCog extends Cog {
             reason = getTag(ctx.author) + ": " + userReason;
 
         Member user = ctx.guild.getMember(ctx.message.getMentionedUsers().get(0));
+        if (!ctx.guild.getSelfMember().canInteract(user)) {
+            ctx.send(Emotes.getFailure() + " I need to be higher on the role ladder to ban that user!").queue();
+            return;
+        }
+
         ctx.guild.getController().ban(user, 0).reason(reason).queue();
 
         ctx.send(Emotes.getSuccess() + " Banned.").queue();
