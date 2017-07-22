@@ -9,24 +9,37 @@ public class Starrer {
     private long id;
 
     @DatabaseField(canBeNull = false, index = true)
+    private long guildId;
+
+    @DatabaseField(canBeNull = false, index = true)
     private long userId;
 
-    @DatabaseField(canBeNull = false)
-    private long entryMessageId;
+    @DatabaseField(canBeNull = false, index = true)
+    private long messageId;
 
     public Starrer() {
     }
 
-    public Starrer(long userId, long entryMessageId) {
+    public Starrer(long guildId, long userId, long messageId) {
+        this.guildId = guildId;
         this.userId = userId;
-        this.entryMessageId = entryMessageId;
+        this.messageId = messageId;
+    }
+
+    public long getGuildId() {
+        return guildId;
     }
 
     public long getUserId() {
         return userId;
     }
 
-    public long getEntryMessageId() {
-        return entryMessageId;
+    public long getMessageId() {
+        return messageId;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof Starrer && ((Starrer) other).getUserId() == userId;
     }
 }

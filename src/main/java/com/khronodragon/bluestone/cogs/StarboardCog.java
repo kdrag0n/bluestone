@@ -4,6 +4,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultiset;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.table.TableUtils;
@@ -34,6 +35,7 @@ import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionRemov
 import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionRemoveEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.utils.MiscUtil;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -238,14 +240,16 @@ public class StarboardCog extends Cog {
             entry = new StarboardEntry(event.getMessageIdLong(), event.getGuild().getIdLong(), botMessageId,
                     starboard.getChannelId(), origMessage.getAuthor().getIdLong(),
                     origMessage.getChannel().getIdLong(), stars);
-            Starrer starrer = new Starrer(event.getUser().getIdLong(), event.getMessageIdLong());
+            Starrer starrer = new Starrer(event.getGuild().getIdLong(),
+                    event.getUser().getIdLong(), event.getMessageIdLong());
             entryDao.create(entry);
             starrerDao.create(starrer);
         } else {
             entry.setStars(stars);
             entryDao.update(entry);
 
-            Starrer starrer = new Starrer(event.getUser().getIdLong(), event.getMessageIdLong());
+            Starrer starrer = new Starrer(event.getGuild().getIdLong(),
+                    event.getUser().getIdLong(), event.getMessageIdLong());
             entryDao.create(entry);
             starrerDao.create(starrer);
 
@@ -278,7 +282,7 @@ public class StarboardCog extends Cog {
                     .where()
                     .eq("userId", event.getUser().getIdLong())
                     .and()
-                    .eq("entryMessageId", entry.getMessageId())
+                    .eq("messageId", entry.getMessageId())
                     .query();
 
             String renderedText = renderText(stars, event.getChannel().getAsMention(), event.getMessageId());
@@ -321,7 +325,7 @@ public class StarboardCog extends Cog {
             entryDao.delete(entry);
             starrerDao.deleteBuilder()
                     .where()
-                    .eq("entryMessageId", entry.getMessageId())
+                    .eq("messageId", entry.getMessageId())
                     .query();
 
             message.delete()
@@ -635,7 +639,9 @@ public class StarboardCog extends Cog {
                     .append(' ')
                     .append('(')
                     .append(entry.getStars())
-                    .append(" stars)\n");
+                    .append(" star")
+                    .append(entry.getStars() == 1 ? '\00' : 's')
+                    .append(")\n");
         }
         emb.addField("Top Starred Messages", top3entriesBuilder.toString(), false);
 
@@ -663,9 +669,40 @@ public class StarboardCog extends Cog {
                     .append(entry.getLeft())
                     .append("> (")
                     .append(entry.getRight())
-                    .append(" stars)\n");
+                    .append(" star")
+                    .append(entry.getRight() == 1 ? '\00' : 's')
+                    .append(")\n");
         }
         emb.addField("Top Stargazers", top3recvBuilder.toString(), false);
+
+        StringBuilder top3sendBuilder = new StringBuilder();
+        List<Starrer> top3sendRaw = starrerDao.queryBuilder()
+                .selectColumns("userId")
+                .where()
+                .eq("guildId", starboard.getGuildId())
+                .query();
+        List<Pair<Long, Integer>> top3send = top3sendRaw.stream()
+                .map(Starrer::getUserId)
+                .distinct()
+                .map(id -> ImmutablePair.of(id, top3sendRaw.stream()
+                        .filter(s -> s.getUserId() == id)
+                        .mapToInt(ignored -> 1)
+                        .sum()))
+                .sorted(Collections.reverseOrder(Comparator.comparing(Pair::getRight)))
+                .limit(3)
+                .collect(Collectors.toList());
+        for (int i = 0; i < top3send.size(); i++) {
+            Pair<Long, Integer> entry = top3send.get(i);
+            top3sendBuilder.append(TOP_3_BADGES[i])
+                    .append(" <@")
+                    .append(entry.getLeft())
+                    .append("> (")
+                    .append(entry.getRight())
+                    .append(" star")
+                    .append(entry.getRight() == 1 ? '\00' : 's')
+                    .append(")\n");
+        }
+        emb.addField("Top Star Givers", top3sendBuilder.toString(), false);
 
         ctx.send(emb.build()).queue();
     }
