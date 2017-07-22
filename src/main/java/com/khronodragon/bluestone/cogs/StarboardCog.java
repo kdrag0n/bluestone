@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultiset;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
+import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.table.TableUtils;
 import com.joestelmach.natty.DateGroup;
 import com.joestelmach.natty.Parser;
@@ -171,10 +172,10 @@ public class StarboardCog extends Cog {
         if (dao.idExists(event.getGuild().getIdLong())) {
             dao.deleteById(event.getGuild().getIdLong());
 
-            entryDao.deleteBuilder()
-                    .where()
-                    .eq("guildId", event.getGuild().getIdLong())
-                    .query();
+            DeleteBuilder builder = entryDao.deleteBuilder();
+            builder.where()
+                    .eq("guildId", event.getGuild().getIdLong());
+            builder.delete();
         }
     }
 
@@ -278,12 +279,13 @@ public class StarboardCog extends Cog {
         if (entry != null) {
             entry.setStars(stars);
             entryDao.update(entry);
-            starrerDao.deleteBuilder()
-                    .where()
+
+            DeleteBuilder builder = starrerDao.deleteBuilder();
+            builder.where()
                     .eq("userId", event.getUser().getIdLong())
                     .and()
-                    .eq("messageId", entry.getMessageId())
-                    .query();
+                    .eq("messageId", entry.getMessageId());
+            builder.delete();
 
             String renderedText = renderText(stars, event.getChannel().getAsMention(), event.getMessageId());
             messageCache.get(ImmutablePair.of(starboard.getChannelId(), entry.getBotMessageId()))
@@ -323,10 +325,11 @@ public class StarboardCog extends Cog {
         if (entry != null) {
             Message message = messageCache.get(ImmutablePair.of(entry.getBotChannelId(), entry.getBotMessageId()));
             entryDao.delete(entry);
-            starrerDao.deleteBuilder()
-                    .where()
-                    .eq("messageId", entry.getMessageId())
-                    .query();
+
+            DeleteBuilder builder = starrerDao.deleteBuilder();
+            builder.where()
+                    .eq("messageId", entry.getMessageId());
+            builder.delete();
 
             message.delete()
                     .reason("All reactions were deleted on source message, or source message itself was deleted")
