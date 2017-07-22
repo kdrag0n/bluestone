@@ -35,7 +35,7 @@ public class CoreCog extends Cog {
 
     @Command(name = "test", desc = "Make sure I work.")
     public void cmdTest(Context ctx) {
-        ctx.send(ctx.mention + " Everything is asdsdasadsaddf good! :smile:").queue();
+        ctx.send(ctx.mention + " Everything is looking good! :smile:").queue();
     }
 
     @Command(name = "ping", desc = "Ping, pong!")
