@@ -269,7 +269,7 @@ public class OwnerCog extends Cog {
         ctx.send(Emotes.getSuccess() + " Game set.").queue();
     }
 
-    @Command(name = "patreload", desc = "Reload Patreon supporter list.",
+    @Command(name = "patreload", desc = "Reload the Patreon supporter list.",
             perms = {"owner"}, hidden = true, aliases = {"preload"}, thread = true)
     public void cmdPatReload(Context ctx) {
         boolean success = Bot.loadPatreonData();

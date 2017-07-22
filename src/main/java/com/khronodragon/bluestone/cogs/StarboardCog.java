@@ -34,6 +34,7 @@ import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionRemov
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,9 +43,10 @@ import java.awt.*;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
+import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.khronodragon.bluestone.util.NullValueWrapper.val;
@@ -52,6 +54,7 @@ import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 public class StarboardCog extends Cog {
     private static final Logger logger = LogManager.getLogger(StarboardCog.class);
     private static final String[] MOD_PERMS = {"manageServer", "manageChannel"};
+    private static final String[] TOP_3_BADGES = {"🥇", "🥈", "🥉"};
     private static final String NO_COMMAND = ":thinking: **I need an action!**\n" +
             "The following are valid:\n" +
             "    \u2022 `create/new {channel name='starboard'}` - create a new starboard here (you may pass a different name)\n" +
@@ -70,9 +73,10 @@ public class StarboardCog extends Cog {
             "To delete the starboard, just delete the channel.";
     private final Parser timeParser = new Parser();
     private final LoadingCache<Pair<Long, Long>, Message> messageCache = CacheBuilder.newBuilder()
-            .maximumSize(96)
+            .maximumSize(84)
             .concurrencyLevel(4)
             .initialCapacity(4)
+            .expireAfterWrite(5, TimeUnit.MINUTES)
             .build(new CacheLoader<Pair<Long, Long>, Message>() {
                 @Override
                 public Message load(Pair<Long, Long> ids) {
@@ -162,7 +166,7 @@ public class StarboardCog extends Cog {
     @EventHandler(threaded = true)
     public void onReactionAdd(GuildMessageReactionAddEvent event) throws SQLException, ExecutionException {
         if (!event.getReactionEmote().getName().equals("⭐")) return;
-        if (event.getUser().getIdLong() == event.getMessageIdLong()) return;
+        if (event.getUser().isBot()) return;
 
         Starboard starboard = dao.queryForId(event.getGuild().getIdLong());
         if (starboard.isLocked()) return;
@@ -176,6 +180,8 @@ public class StarboardCog extends Cog {
         if (entry == null) {
             Message origMessage = messageCache.get(ImmutablePair.of(event.getChannel().getIdLong(),
                     event.getMessageIdLong()));
+            if (event.getUser().getIdLong() == origMessage.getAuthor().getIdLong())
+                return;
             if (origMessage.getCreationTime().isBefore(OffsetDateTime.now()
                     .minus(starboard.getMaxAge().getTime(), ChronoUnit.MILLIS))) {
                 return;
@@ -183,8 +189,8 @@ public class StarboardCog extends Cog {
 
             EmbedBuilder emb = new EmbedBuilder()
                     .setTimestamp(origMessage.getCreationTime())
-                    .setAuthor(event.getMember().getEffectiveName(),
-                            null, event.getUser().getEffectiveAvatarUrl())
+                    .setAuthor(origMessage.getMember().getEffectiveName(),
+                            null, origMessage.getAuthor().getEffectiveAvatarUrl())
                     .setDescription(origMessage.getRawContent())
                     .setColor(starGradientColor(stars));
 
@@ -217,9 +223,13 @@ public class StarboardCog extends Cog {
                             .build()).complete().getIdLong();
 
             entry = new StarboardEntry(event.getMessageIdLong(), event.getGuild().getIdLong(), botMessageId,
-                    starboard.getChannelId(), event.getUser().getIdLong(), event.getChannel().getIdLong());
+                    starboard.getChannelId(), origMessage.getAuthor().getIdLong(),
+                    origMessage.getChannel().getIdLong(), stars);
             entryDao.create(entry);
         } else {
+            entry.setStars(stars);
+            entryDao.update(entry);
+
             Message message = messageCache.get(ImmutablePair.of(starboard.getChannelId(), entry.getBotMessageId()));
             message.editMessage(new MessageBuilder()
                     .append(renderedText)
@@ -243,6 +253,9 @@ public class StarboardCog extends Cog {
 
         StarboardEntry entry = entryDao.queryForId(event.getMessageIdLong());
         if (entry != null) {
+            entry.setStars(stars);
+            entryDao.update(entry);
+
             String renderedText = renderText(stars, event.getChannel().getAsMention(), event.getMessageId());
             messageCache.get(ImmutablePair.of(starboard.getChannelId(), entry.getBotMessageId()))
                     .editMessage(renderedText).queue();
@@ -473,7 +486,7 @@ public class StarboardCog extends Cog {
                 .lt("stars", required + 1)
                 .query()
                 .stream()
-                .map(e -> Long.toString(e.getBotMessageId()))
+                .map(e -> Long.toUnsignedString(e.getBotMessageId()))
                 .collect(Collectors.toList())).complete();
 
         ctx.send(Emotes.getSuccess() + " Starboard cleaned.").queue();
@@ -507,7 +520,7 @@ public class StarboardCog extends Cog {
     }
 
     private void cmdShow(Context ctx) throws SQLException, ExecutionException {
-        Starboard starboard = requireStarboard(ctx);=
+        Starboard starboard = requireStarboard(ctx);
 
         long messageId;
         try {
@@ -536,15 +549,82 @@ public class StarboardCog extends Cog {
     }
 
     private void cmdStats(Context ctx) throws SQLException {
-        requireStarboard(ctx);
-        Starboard starboard = dao.queryForId(ctx.guild.getIdLong());
+        Starboard starboard = requireStarboard(ctx);
+        List<StarboardEntry> starCountEntries = entryDao.queryBuilder()
+                .selectColumns("stars")
+                .where()
+                .eq("guildId", starboard.getGuildId())
+                .query();
+
+        if (starCountEntries.size() < 1) {
+            ctx.send(Emotes.getFailure() + " There needs to be at least 1 starred message here!").queue();
+            return;
+        }
 
         EmbedBuilder emb = new EmbedBuilder()
                 .setColor(val(ctx.member.getColor()).or(Color.WHITE))
-                .setFooter("Tracking stars and stargazers since", null)
+                .setFooter("Tracking stars and stargazers since", ctx.jda.getSelfUser().getEffectiveAvatarUrl())
                 .setTimestamp(MiscUtil.getCreationTime(starboard.getChannelId()))
-                .setTitle("Starboard Stats")
-                .setDescription("WIP!");
+                .setTitle("Starboard Stats");
+        StringBuilder desc = emb.getDescriptionBuilder();
+        desc.append("There are ")
+                .append(starCountEntries.size())
+                .append(" starred messages, with a total of ");
+
+        int totalStars = 0;
+        for (StarboardEntry entry: starCountEntries)
+            totalStars += entry.getStars();
+
+        desc.append(totalStars)
+                .append(" stars across all messages.");
+
+        StringBuilder top3entriesBuilder = new StringBuilder();
+        List<StarboardEntry> top3entries = entryDao.queryBuilder()
+                .selectColumns("messageId", "stars")
+                .orderBy("stars", false)
+                .limit(3L)
+                .where()
+                .eq("guildId", starboard.getGuildId())
+                .query();
+        for (int i = 0; i < top3entries.size(); i++) {
+            StarboardEntry entry = top3entries.get(i);
+            top3entriesBuilder.append(TOP_3_BADGES[i])
+                    .append(' ')
+                    .append(entry.getMessageId())
+                    .append(' ')
+                    .append('(')
+                    .append(entry.getStars())
+                    .append(" stars)\n");
+        }
+        emb.addField("Top Starred Messages", top3entriesBuilder.toString(), false);
+
+        StringBuilder top3recvBuilder = new StringBuilder();
+        List<StarboardEntry> top3recvRaw = entryDao.queryBuilder()
+                .orderBy("stars", false)
+                .selectColumns("authorId", "stars")
+                .where()
+                .eq("guildId", starboard.getGuildId())
+                .query();
+        List<Pair<Long, Integer>> top3recv = top3recvRaw.stream()
+                .map(StarboardEntry::getAuthorId)
+                .distinct()
+                .map(id -> ImmutablePair.of(id, top3recvRaw.stream()
+                        .filter(e -> e.getAuthorId() == id)
+                        .mapToInt(StarboardEntry::getStars)
+                        .sum()))
+                .sorted(Collections.reverseOrder(Comparator.comparing(Pair::getRight)))
+                .limit(3)
+                .collect(Collectors.toList());
+        for (int i = 0; i < top3recv.size(); i++) {
+            Pair<Long, Integer> entry = top3recv.get(i);
+            top3recvBuilder.append(TOP_3_BADGES[i])
+                    .append(" <@")
+                    .append(entry.getLeft())
+                    .append("> (")
+                    .append(entry.getRight())
+                    .append(" stars)\n");
+        }
+        emb.addField("Top Stargazers", top3recvBuilder.toString(), false);
 
         ctx.send(emb.build()).queue();
     }

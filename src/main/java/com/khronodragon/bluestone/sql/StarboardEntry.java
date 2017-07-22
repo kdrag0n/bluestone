@@ -5,13 +5,13 @@ import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable(tableName = "starboard_entries")
 public class StarboardEntry {
-    @DatabaseField(id = true, canBeNull = false)
+    @DatabaseField(id = true, canBeNull = false, unique = true)
     private long messageId;
 
     @DatabaseField(canBeNull = false, index = true)
     private long guildId;
 
-    @DatabaseField(canBeNull = false)
+    @DatabaseField(canBeNull = false, index = true)
     private long botMessageId;
 
     @DatabaseField(canBeNull = false)
@@ -23,16 +23,29 @@ public class StarboardEntry {
     @DatabaseField(canBeNull = false)
     private long channelId;
 
+    @DatabaseField(canBeNull = false)
+    private int stars = 0;
+
     public StarboardEntry() {
     }
 
-    public StarboardEntry(long messageId, long guildId, long botMessageId, long botChannelId, long authorId, long channelId) {
+    public StarboardEntry(long messageId, long guildId, long botMessageId, long botChannelId,
+                          long authorId, long channelId, int stars) {
         this.messageId = messageId;
         this.guildId = guildId;
         this.botMessageId = botMessageId;
         this.botChannelId = botChannelId;
         this.authorId = authorId;
         this.channelId = channelId;
+        this.stars = stars;
+    }
+
+    public void setStars(int stars) {
+        this.stars = stars;
+    }
+
+    public int getStars() {
+        return stars;
     }
 
     public long getMessageId() {

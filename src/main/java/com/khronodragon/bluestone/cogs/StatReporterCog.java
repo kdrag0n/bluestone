@@ -121,7 +121,8 @@ public class StatReporterCog extends Cog {
 
     @EventHandler
     public void onMessageReceived(MessageReceivedEvent event) {
-        messagesSinceLastReport.incrementAndGet();
+        if (messagesSinceLastReport != null)
+            messagesSinceLastReport.incrementAndGet();
     }
 
     @EventHandler
@@ -131,13 +132,17 @@ public class StatReporterCog extends Cog {
 
     @EventHandler
     public void onGuildJoin(GuildJoinEvent event) {
-        newGuildsSinceLastReport.incrementAndGet();
+        if (newGuildsSinceLastReport != null)
+            newGuildsSinceLastReport.incrementAndGet();
+
         report();
     }
 
     @EventHandler
     public void onGuildLeave(GuildLeaveEvent event) {
-        newGuildsSinceLastReport.decrementAndGet();
+        if (newGuildsSinceLastReport != null)
+            newGuildsSinceLastReport.decrementAndGet();
+
         report();
     }
 
