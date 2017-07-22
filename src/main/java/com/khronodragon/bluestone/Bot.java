@@ -180,7 +180,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         if (stack.indexOf("> bot.cogs") == -1) {
             for (StackTraceElement elem: elements) {
                 if (elem.getClassName().startsWith("com.khronodragon.bluestone.cogs.")) {
-                    stack.append('\n');
+                    stack.append("\n\n\u2007\u2007");
                     addVagueElement(stack, elem);
                     break;
                 }
@@ -694,7 +694,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             public void onError(SimpleLog log, Throwable err) {
                 Logger logger = LogManager.getLogger(log.name);
 
-                logger.warn("JDA threw an error", err);
+                logger.error(err);
             }
         });
     }
