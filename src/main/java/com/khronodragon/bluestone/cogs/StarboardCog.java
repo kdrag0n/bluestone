@@ -244,7 +244,7 @@ public class StarboardCog extends Cog {
         } else {
             entry.setStars(stars);
             entryDao.update(entry);
-            
+
             Starrer starrer = new Starrer(event.getUser().getIdLong(), event.getMessageIdLong());
             entryDao.create(entry);
             starrerDao.create(starrer);
