@@ -4,7 +4,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultiset;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.stmt.DeleteBuilder;
@@ -36,7 +36,6 @@ import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionRemov
 import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionRemoveEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.utils.MiscUtil;
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -83,7 +82,11 @@ public class StarboardCog extends Cog {
             .build(new CacheLoader<Pair<Long, Long>, Message>() {
                 @Override
                 public Message load(Pair<Long, Long> ids) {
-                    return bot.getJda().getTextChannelById(ids.getLeft()).getMessageById(ids.getRight()).complete();
+                    try {
+                        return bot.getJda().getTextChannelById(ids.getLeft()).getMessageById(ids.getRight()).complete();
+                    } catch (ErrorResponseException ignored) {
+                        return null;
+                    }
                 }
             });
     private Dao<Starboard, Long> dao;
@@ -244,15 +247,14 @@ public class StarboardCog extends Cog {
             Starrer starrer = new Starrer(event.getGuild().getIdLong(),
                     event.getUser().getIdLong(), event.getMessageIdLong());
             entryDao.create(entry);
-            starrerDao.create(starrer);
+            starrerDao.createOrUpdate(starrer);
         } else {
             entry.setStars(stars);
             entryDao.update(entry);
 
             Starrer starrer = new Starrer(event.getGuild().getIdLong(),
                     event.getUser().getIdLong(), event.getMessageIdLong());
-            entryDao.create(entry);
-            starrerDao.create(starrer);
+            starrerDao.createOrUpdate(starrer);
 
             Message message = messageCache.get(ImmutablePair.of(starboard.getChannelId(), entry.getBotMessageId()));
             message.editMessage(new MessageBuilder()
@@ -305,36 +307,44 @@ public class StarboardCog extends Cog {
 
     @EventHandler(threaded = true)
     public void onMessageBulkDelete(MessageBulkDeleteEvent event) throws SQLException, ExecutionException {
-        List<String> strMessageIds = event.getMessageIds();
-        Long[] longIdArray = new Long[strMessageIds.size()];
+        for (String sid: event.getMessageIds()) {
+            long id = Long.parseUnsignedLong(sid);
+            StarboardEntry entry = entryDao.queryBuilder()
+                    .where()
+                    .eq("botMessageId", id)
+                    .or()
+                    .eq("messageId", id)
+                    .queryForFirst();
 
-        for (int i = 0; i < longIdArray.length; i++)
-            longIdArray[i] = Long.parseUnsignedLong(strMessageIds.get(i));
-
-        for (StarboardEntry entry: entryDao.queryBuilder()
-                .where()
-                .eq("guildId", event.getGuild().getIdLong())
-                .in("messageId", new Object[] {longIdArray})
-                .query()) {
-            messageDelete(entry.getMessageId());
+            if (entry != null)
+                messageDelete(entry);
         }
     }
 
     private void messageDelete(long messageId) throws SQLException, ExecutionException {
         StarboardEntry entry = entryDao.queryForId(messageId);
         if (entry != null) {
-            Message message = messageCache.get(ImmutablePair.of(entry.getBotChannelId(), entry.getBotMessageId()));
-            entryDao.delete(entry);
+            messageDelete(entry);
+        }
+    }
 
-            DeleteBuilder builder = starrerDao.deleteBuilder();
-            builder.where()
-                    .eq("messageId", entry.getMessageId());
-            builder.delete();
+    private void messageDelete(StarboardEntry entry) throws SQLException, ExecutionException {
+        Message message = null;
+        try {
+            message = messageCache.get(ImmutablePair.of(entry.getBotChannelId(), entry.getBotMessageId()));
+        } catch (UncheckedExecutionException ignored) {}
+        entryDao.delete(entry);
 
+        DeleteBuilder builder = starrerDao.deleteBuilder();
+        builder.where()
+                .eq("messageId", entry.getMessageId());
+        builder.delete();
+        logger.info(builder.prepare().getStatement());
+
+        if (message != null)
             message.delete()
                     .reason("All reactions were deleted on source message, or source message itself was deleted")
-                    .queue();
-        }
+                    .queue(null, e -> {});
     }
 
     private Starboard requireStarboard(Context ctx) throws PassException, SQLException {
