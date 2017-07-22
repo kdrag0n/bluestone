@@ -101,6 +101,12 @@ public class ReminderCog extends Cog {
         if (date == null) {
             ctx.send(Emotes.getFailure() + " Failed to parse time/date!").queue();
             return;
+        } else if (date.getTime() < System.currentTimeMillis()) {
+            ctx.send(Emotes.getFailure() + " That time is in the past!").queue();
+            return;
+        } else if (msg.length() < 1) {
+            ctx.send(Emotes.getFailure() + " I can't remind you of nothing!").queue();
+            return;
         }
 
         Reminder reminder = new Reminder(ctx.author.getIdLong(), msg, date);
