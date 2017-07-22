@@ -188,6 +188,7 @@ public class StarboardCog extends Cog {
         if (event.getUser().isBot()) return;
 
         Starboard starboard = dao.queryForId(event.getGuild().getIdLong());
+        if (starboard == null) return;
         if (starboard.isLocked()) return;
 
         int stars = event.getReaction().getUsers().complete().size();
@@ -274,6 +275,7 @@ public class StarboardCog extends Cog {
         int stars = event.getReaction().getUsers().complete().size();
 
         Starboard starboard = dao.queryForId(event.getGuild().getIdLong());
+        if (starboard == null) return;
         if (stars < starboard.getStarThreshold())
             messageDelete(event.getMessageIdLong());
 
