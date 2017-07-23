@@ -27,6 +27,7 @@ public class ShardUtil {
     private static final Logger logger = LogManager.getLogger(ShardUtil.class);
     private static final MySQLDatabaseType mysqlDbType = new MySQLDatabaseType();
     private final Map<Integer, Bot> shards = new LinkedHashMap<>();
+    public final Date startTime = new Date();
     private int shardCount;
     private Map<String, AtomicInteger> commandCalls = new HashMap<>();
     private Dao<BotAdmin, Long> adminDao;
@@ -140,8 +141,8 @@ public class ShardUtil {
         shards.put(shardId, bot);
     }
 
-    public Set<Bot> getShards() {
-        return new LinkedHashSet<>(shards.values());
+    public Collection<Bot> getShards() {
+        return shards.values();
     }
 
     public int getGuildCount() {

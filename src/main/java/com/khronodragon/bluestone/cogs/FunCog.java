@@ -56,13 +56,13 @@ public class FunCog extends Cog {
     private static final int[] normalChars = {97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 126, 32, 96, 33, 64, 35, 36, 37, 94, 38, 42, 40, 41, 45, 95, 61, 43, 91, 93, 123, 125, 124, 59, 58, 39, 34, 44, 60, 46, 62, 47, 63};
     private static final TCharObjectMap<String> alphabetToEmote = new TCharObjectHashMap<String>() {{
         put(' ', "    ");
-        put('#', ":hash:");
-        put('!', ":exclamation:");
-        put('?', ":question:");
-        put('$', ":heavy_dollar_sign:");
-        put('-', ":heavy_minus_sign:");
-        put('.', ":small_blue_diamond:");
-        put('~', ":wavy_dash:");
+        put('#', "#⃣");
+        put('!', "❗");
+        put('?', "❓");
+        put('$', "💲");
+        put('-', "➖");
+        put('.', "🔹");
+        put('~', "〰");
         put('0', ":zero:");
         put('1', ":one:");
         put('2', ":two:");
@@ -73,7 +73,7 @@ public class FunCog extends Cog {
         put('7', ":seven:");
         put('8', ":eight:");
         put('9', ":nine:");
-        put('^', ":arrow_up:");
+        put('^', "⬆");
         put('a', ":regional_indicator_a:");
         put('b', ":regional_indicator_b:");
         put('c', ":regional_indicator_c:");
@@ -200,12 +200,12 @@ public class FunCog extends Cog {
         }
 
         ctx.send(Strings.simpleJoin(ctx.rawArgs.chars().mapToObj(c -> {
-            final char character = (char) c;
+            final char character = Character.toLowerCase((char) c);
 
             if (alphabetToEmote.containsKey(character)) {
                 return alphabetToEmote.get(character);
             } else {
-                return new String(new char[] {character});
+                return String.valueOf(character);
             }
         }).collect(Collectors.toList()))).queue();
     }
@@ -251,6 +251,8 @@ public class FunCog extends Cog {
 
     @Command(name = "cat", desc = "Get a random cat!", thread = true, aliases = {"randcat"})
     public void cmdCat(Context ctx) {
+        ctx.channel.sendTyping().queue();
+
         try {
             String cat = new JSONObject(bot.http.newCall(new Request.Builder()
                     .get()
@@ -285,6 +287,8 @@ public class FunCog extends Cog {
 
     @Command(name = "dog", desc = "Get a random dog!", thread = true, aliases = {"randdog"})
     public void cmdDog(Context ctx) {
+        ctx.channel.sendTyping().queue();
+
         try {
             String cat = new JSONObject(bot.http.newCall(new Request.Builder()
                     .get()

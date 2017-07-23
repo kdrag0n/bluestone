@@ -322,6 +322,7 @@ public class UtilityCog extends Cog {
                 .addField("Commands", str(new HashSet<>(bot.commands.values()).size()), true)
                 .addField("Invite Link", ctx.jda.asBot().getInviteUrl(PERMS_NEEDED), true)
                 .addField("Patreon", "https://patreon.com/kdragon", true)
+                .setFooter("Serving you from shard " + bot.getShardNum(), null)
                 .setTimestamp(Instant.now());
 
         ctx.send(emb.build()).queue();
@@ -1217,11 +1218,12 @@ public class UtilityCog extends Cog {
                 else
                     emb.addField("Uses", invite.getUses() + " of " + invite.getMaxUses(), true);
 
-                emb.addField("Created at", Date.from(invite.getCreationTime().toInstant()).toString(), true)
+                emb.setFooter("Invite created at", null)
+                        .setTimestamp(invite.getCreationTime())
                         .addField("Expires",
-                                prettyTime.format(Date.from(invite.getCreationTime()
-                                        .plusSeconds(invite.getMaxAge()).toInstant())) +
-                                " (", true);
+                                invite.getMaxAge() == 0 ? "Never" :
+                                        prettyTime.format(Date.from(invite.getCreationTime()
+                                                .plusSeconds(invite.getMaxAge()).toInstant())), true);
             }
 
             ctx.send(emb.build()).queue();

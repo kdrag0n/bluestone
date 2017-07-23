@@ -71,7 +71,6 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             .setDaemon(true)
             .setNameFormat("Bot Command-Exec Pool Thread %d")
             .build(), new RejectedExecHandlerImpl("Command-Exec"));
-    public final Date startTime = new Date();
     private final EventWaiter eventWaiter = new EventWaiter();
     private JDA jda;
     private ShardUtil shardUtil;
@@ -630,7 +629,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     }
 
     private long getUptimeMillis() {
-        return new Date().getTime() - startTime.getTime();
+        return new Date().getTime() - shardUtil.startTime.getTime();
     }
 
     public String formatUptime() {
