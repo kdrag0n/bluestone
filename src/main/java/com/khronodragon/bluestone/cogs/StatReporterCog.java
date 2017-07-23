@@ -29,8 +29,8 @@ public class StatReporterCog extends Cog {
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
     private static final Logger logger = LogManager.getLogger(StatReporterCog.class);
     private SimpleGraphiteClient graphiteClient;
-    private AtomicInteger messagesSinceLastReport;
-    private AtomicInteger newGuildsSinceLastReport;
+    private static final AtomicInteger messagesSinceLastReport = new AtomicInteger();
+    private static final AtomicInteger newGuildsSinceLastReport = new AtomicInteger();
 
     private enum Endpoints {
         DISCORD_BOTS("https://bots.discord.pw/api/bots/{0}/stats"),
@@ -57,8 +57,6 @@ public class StatReporterCog extends Cog {
 
         if (bot.getShardNum() == 1 && bot.getConfig().has("graphite_host") &&
                 bot.getConfig().has("graphite_port")) {
-            messagesSinceLastReport = new AtomicInteger(0);
-            newGuildsSinceLastReport = new AtomicInteger(0);
             graphiteClient = new SimpleGraphiteClient(bot.getConfig().getString("graphite_host"),
                     bot.getConfig().getInt("graphite_port"));
             bot.getScheduledExecutor().scheduleAtFixedRate(this::graphiteReport, 0, 2, TimeUnit.SECONDS);
@@ -121,8 +119,7 @@ public class StatReporterCog extends Cog {
 
     @EventHandler
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (messagesSinceLastReport != null)
-            messagesSinceLastReport.incrementAndGet();
+        messagesSinceLastReport.incrementAndGet();
     }
 
     @EventHandler
@@ -132,16 +129,14 @@ public class StatReporterCog extends Cog {
 
     @EventHandler
     public void onGuildJoin(GuildJoinEvent event) {
-        if (newGuildsSinceLastReport != null)
-            newGuildsSinceLastReport.incrementAndGet();
+        newGuildsSinceLastReport.incrementAndGet();
 
         report();
     }
 
     @EventHandler
     public void onGuildLeave(GuildLeaveEvent event) {
-        if (newGuildsSinceLastReport != null)
-            newGuildsSinceLastReport.decrementAndGet();
+        newGuildsSinceLastReport.decrementAndGet();
 
         report();
     }
