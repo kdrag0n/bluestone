@@ -31,7 +31,7 @@ shadowJar {
 }
 
 dependencies {
-    compile 'net.dv8tion:JDA:3.2.0_231'
+    compile 'net.dv8tion:JDA:3.2.0_232'
     compile 'com.sedmelluq:lavaplayer:1.2.42'
     compile 'com.squareup.okhttp3:okhttp:3.8.1'
     compile 'com.google.guava:guava:22.0'

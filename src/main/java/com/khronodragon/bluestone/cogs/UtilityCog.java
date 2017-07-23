@@ -428,8 +428,10 @@ public class UtilityCog extends Cog {
                     .appendDescription("\n\n")
                     .appendDescription("**✅ Go ahead and vote!**");
 
+            schedulePoll(poll);
+
             bot.getScheduledExecutor().schedule(() ->
-                            msg.editMessage(embed.build()).queue(ignored -> schedulePoll(poll)),
+                            msg.editMessage(embed.build()).queue(),
                     (unicodeEmotes.size() + customEmotes.size()) * (int) (ctx.jda.getPing() * 1.92),
                     TimeUnit.MILLISECONDS);
         });
@@ -437,6 +439,9 @@ public class UtilityCog extends Cog {
 
     private void schedulePoll(final ActivePoll poll) {
         long calculatedTime = poll.getEndTime().getTime() - System.currentTimeMillis();
+
+        if (bot.getJda().getTextChannelById(poll.getChannelId()) == null)
+            return;
 
         bot.getScheduledExecutor().schedule(() -> {
             TextChannel channel = bot.getJda().getTextChannelById(poll.getChannelId());
@@ -482,7 +487,7 @@ public class UtilityCog extends Cog {
                 channel.sendMessage("**Poll ended!\n" +
                         "Winner: " + winner + "\n\n" +
                         "Full Results:**\n" + String.join("\n", orderedResultList)).queue();
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 logger.error("Poll: error", e);
             } finally {
                 try {

@@ -42,10 +42,12 @@ public class ReminderCog extends Cog {
             logger.warn("Failed to create quote DAO!", e);
         }
 
-        try {
-            scheduleAllFromDB();
-        } catch (SQLException e) {
-            logger.warn("Failed to re-schedule all reminders from DB", e);
+        if (bot.getShardNum() == 1) {
+            try {
+                scheduleAllFromDB();
+            } catch (SQLException e) {
+                logger.warn("Failed to re-schedule all reminders from DB", e);
+            }
         }
     }
 
@@ -73,7 +75,7 @@ public class ReminderCog extends Cog {
                     channel.sendMessage(new EmbedBuilder()
                             .setAuthor("Reminder", null, bot.getJda().getSelfUser().getEffectiveAvatarUrl())
                             .setDescription(reminder.getMessage())
-                            .setFooter("You asked me to remind you of this.", null)
+                            .setFooter("You asked me to remind you of this at", null)
                             .setTimestamp(Instant.now())
                             .build()).queue()
             );

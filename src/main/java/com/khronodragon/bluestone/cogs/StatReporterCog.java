@@ -61,7 +61,7 @@ public class StatReporterCog extends Cog {
             newGuildsSinceLastReport = new AtomicInteger(0);
             graphiteClient = new SimpleGraphiteClient(bot.getConfig().getString("graphite_host"),
                     bot.getConfig().getInt("graphite_port"));
-            bot.getScheduledExecutor().scheduleAtFixedRate(this::graphiteReport, 0, 1, TimeUnit.MINUTES);
+            bot.getScheduledExecutor().scheduleAtFixedRate(this::graphiteReport, 0, 2, TimeUnit.SECONDS);
         }
     }
 

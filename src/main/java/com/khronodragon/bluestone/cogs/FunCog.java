@@ -19,14 +19,17 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.awt.*;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 import static java.text.MessageFormat.format;
 
 public class FunCog extends Cog {
@@ -246,31 +249,73 @@ public class FunCog extends Cog {
                 .build()).queue();
     }
 
-    @Command(name = "cat", desc = "Get a random cat!")
+    @Command(name = "cat", desc = "Get a random cat!", thread = true, aliases = {"randcat"})
     public void cmdCat(Context ctx) {
-        bot.http.newCall(new Request.Builder()
-                .get()
-                .url("http://random.cat/meow")
-                .build()).enqueue(new okhttp3.Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                ctx.send(Emotes.getFailure() + " Failed to get a cat!").queue();
+        try {
+            String cat = new JSONObject(bot.http.newCall(new Request.Builder()
+                    .get()
+                    .url("https://random.cat/meow")
+                    .build()).execute().body().string()).optString("file", null);
+            String fact = new JSONObject(bot.http.newCall(new Request.Builder()
+                    .get()
+                    .url("https://catfact.ninja/fact")
+                    .build()).execute().body().string()).optString("fact", null);
+
+            if (cat == null || fact == null) {
+                ctx.send(Emotes.getFailure() + " Couldn't get a cat!").queue();
+                return;
             }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                String imageUrl = new JSONObject(response.body().string()).getString("file");
+            Color color;
+            if (ctx.guild == null)
+                color = randomColor();
+            else
+                color = val(ctx.member.getColor()).or(Color.WHITE);
 
-                if (imageUrl == null) {
-                    ctx.send(Emotes.getFailure() + " Couldn't get a cat!").queue();
-                } else {
-                    ctx.send(new EmbedBuilder()
-                            .setImage(imageUrl)
-                            .setColor(randomColor())
-                            .build()).queue();
-                }
+            ctx.send(new EmbedBuilder()
+                    .setImage(cat)
+                    .setColor(color)
+                    .setAuthor("Random Cat", null, "https://khronodragon.com/cat.png")
+                    .addField("Did You Know?", fact, false)
+                    .build()).queue();
+        } catch (IOException ignored) {
+            ctx.send(Emotes.getFailure() + " Failed to get a cat!").queue();
+        }
+    }
+
+    @Command(name = "dog", desc = "Get a random dog!", thread = true, aliases = {"randdog"})
+    public void cmdDog(Context ctx) {
+        try {
+            String cat = new JSONObject(bot.http.newCall(new Request.Builder()
+                    .get()
+                    .url("https://dog.ceo/api/breeds/image/random")
+                    .build()).execute().body().string()).optString("message", null);
+            String fact = val(new JSONObject(bot.http.newCall(new Request.Builder()
+                    .get()
+                    .url("https://dog-api.kinduff.com/api/facts?number=1")
+                    .build()).execute().body().string()).optJSONArray("facts")).or(new JSONArray())
+                            .optString(0, null);
+
+            if (cat == null || fact == null) {
+                ctx.send(Emotes.getFailure() + " Couldn't get a dog!").queue();
+                return;
             }
-        });
+
+            Color color;
+            if (ctx.guild == null)
+                color = randomColor();
+            else
+                color = val(ctx.member.getColor()).or(Color.WHITE);
+
+            ctx.send(new EmbedBuilder()
+                    .setImage(cat)
+                    .setColor(color)
+                    .setAuthor("Random Dog", null, "https://khronodragon.com/dog.png")
+                    .addField("Did You Know?", fact, false)
+                    .build()).queue();
+        } catch (IOException ignored) {
+            ctx.send(Emotes.getFailure() + " Failed to get a dog!").queue();
+        }
     }
 
     @Command(name = "emote", desc = "Get an emoticon, from many sources.", usage = "[emote name]")
