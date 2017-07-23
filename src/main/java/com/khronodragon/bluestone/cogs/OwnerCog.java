@@ -127,7 +127,7 @@ public class OwnerCog extends Cog {
             if (!ctx._flag) {
                 ctx._flag = true;
 
-                Set<Bot> shards = bot.getShardUtil().getShards();
+                Collection<Bot> shards = bot.getShardUtil().getShards();
                 shards.remove(ctx.bot);
 
                 for (Bot b: shards) {
