@@ -675,7 +675,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                         logger.debug(msg);
                         break;
                     case FATAL:
-                        logger.fatal(msg);
+                        if (!msg.toString().equals("RestAction queue returned failure: [ErrorResponseException] 10008: Unknown Message"))
+                            logger.fatal(msg);
                         break;
                     case WARNING:
                         logger.warn(msg);

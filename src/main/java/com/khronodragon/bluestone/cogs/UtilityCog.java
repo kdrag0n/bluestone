@@ -100,6 +100,10 @@ public class UtilityCog extends Cog {
     private final Parser timeParser = new Parser();
 
     private static final String NO_USER = Emotes.getFailure() + " I need a valid @mention, user ID, or user#discriminator!";
+    private static final String INFO_LINKS = "\u200b    \u2022 Use my [invite link]([invite]) to take me to another server!\n" +
+            "    \u2022 [Donate](https://patreon.com/kdragon) to help keep me alive!\n" +
+            "    \u2022 Go to [my website](https://khronodragon.com/goldmine/) for help!\n" +
+            "    \u2022 Join my [support guild](https://discord.gg/dwykTHc) for even more help.";
     private static final String SHRUG = "¯\\_(ツ)_/¯";
     private final LoadingCache<String, EmbedBuilder> ipInfoCache = CacheBuilder.newBuilder()
             .maximumSize(36)
@@ -320,8 +324,7 @@ public class UtilityCog extends Cog {
                 .addField("Users", str(shardUtil.getUserCount()), true)
                 .addField("Channels", str(shardUtil.getChannelCount()), true)
                 .addField("Commands", str(new HashSet<>(bot.commands.values()).size()), true)
-                .addField("Invite Link", ctx.jda.asBot().getInviteUrl(PERMS_NEEDED), true)
-                .addField("Patreon", "https://patreon.com/kdragon", true)
+                .addField("Links", INFO_LINKS.replace("[invite]", ctx.jda.asBot().getInviteUrl(PERMS_NEEDED)), false)
                 .setFooter("Serving you from shard " + bot.getShardNum(), null)
                 .setTimestamp(Instant.now());
 
@@ -513,7 +516,7 @@ public class UtilityCog extends Cog {
 
         String topText;
         String bottomText;
-        if (ctx.rawArgs.contains("|")) {
+        if (ctx.rawArgs.indexOf('|') != -1) {
             final int sepIndex = ctx.rawArgs.indexOf('|');
 
             topText = ctx.rawArgs.substring(0, sepIndex).trim();
@@ -535,7 +538,7 @@ public class UtilityCog extends Cog {
         }
         json.put("text0", topText);
         json.put("text1", bottomText);
-        logger.info("req {}", json);
+        //logger.info("req {}", json);
 
         bot.http.newCall(new Request.Builder()
                 .post(RequestBody.create(JSON_MEDIA_TYPE, json.toString()))
@@ -552,7 +555,7 @@ public class UtilityCog extends Cog {
                 JSONObject resp = new JSONObject(response.body().string());
 
                 logger.info(resp);
-                if (resp.getBoolean("success")) {
+                if (resp.optBoolean("success", false)) {
                     ctx.send(new EmbedBuilder()
                             .setColor(randomColor())
                             .setImage(resp.getJSONObject("data").getString("url"))
