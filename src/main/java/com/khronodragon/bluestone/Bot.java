@@ -734,6 +734,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 .setStatus(OnlineStatus.ONLINE)
                 .setCorePoolSize(5)
                 .setEnableShutdownHook(true)
+                .setHttpClientBuilder(new OkHttpClient.Builder()
+                        .retryOnConnectionFailure(true))
                 .setGame(Game.of("something"));
 
         if ((System.getProperty("os.arch").startsWith("x86") ||
