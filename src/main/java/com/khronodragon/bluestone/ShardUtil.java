@@ -9,6 +9,7 @@ import com.j256.ormlite.jdbc.DataSourceConnectionSource;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
+import com.khronodragon.bluestone.cogs.MusicCog;
 import com.khronodragon.bluestone.sql.BotAdmin;
 import com.khronodragon.bluestone.sql.GuildPrefix;
 import com.khronodragon.bluestone.sql.MySQLDatabaseType;
@@ -174,5 +175,25 @@ public class ShardUtil {
 
     public int getEmoteCount() {
         return shards.values().stream().mapToInt(b -> b.getJda().getEmotes().size()).sum();
+    }
+
+    public int getTrackCount() {
+        return shards.values().stream().mapToInt(b -> {
+            MusicCog cog = (MusicCog) b.cogs.get("Music");
+            if (cog == null)
+                return 0;
+
+            return cog.getTracksLoaded();
+        }).sum();
+    }
+
+    public int getStreamCount() {
+        return shards.values().stream().mapToInt(b -> {
+            MusicCog cog = (MusicCog) b.cogs.get("Music");
+            if (cog == null)
+                return 0;
+
+            return cog.getActiveStreamCount();
+        }).sum();
     }
 }

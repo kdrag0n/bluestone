@@ -231,9 +231,10 @@ public class UtilityCog extends Cog {
                 .setColor(randomColor())
                 .setAuthor(getTag(user), user.getEffectiveAvatarUrl(), user.getEffectiveAvatarUrl())
                 .setThumbnail(user.getEffectiveAvatarUrl())
-                .setTimestamp(Instant.now())
+                .setTimestamp(user.getCreationTime())
                 .addField("ID", user.getId(), true)
-                .addField("Creation Time", Date.from(user.getCreationTime().toInstant()).toString(), true);
+                .addField("Creation Time", Date.from(user.getCreationTime().toInstant()).toString(), true)
+                .setFooter("User created at", null);
 
         if (user.isBot())
             emb.setDescription("User is " + Emotes.getBotTag());
@@ -324,6 +325,8 @@ public class UtilityCog extends Cog {
                 .addField("Users", str(shardUtil.getUserCount()), true)
                 .addField("Channels", str(shardUtil.getChannelCount()), true)
                 .addField("Commands", str(new HashSet<>(bot.commands.values()).size()), true)
+                .addField("Music Tracks", str(shardUtil.getTrackCount()), true)
+                .addField("Playing Music in", shardUtil.getStreamCount() + " channels", true)
                 .addField("Links", INFO_LINKS.replace("[invite]", ctx.jda.asBot().getInviteUrl(PERMS_NEEDED)), false)
                 .setFooter("Serving you from shard " + bot.getShardNum(), null)
                 .setTimestamp(Instant.now());
@@ -1180,7 +1183,7 @@ public class UtilityCog extends Cog {
     public void cmdInviteInfo(Context ctx) {
         Matcher matcher = INVITE_PATTERN.matcher(ctx.rawArgs);
         if (!matcher.find()) {
-            ctx.send(Emotes.getFailure() + " Invalid invite link or code!").queue();
+            ctx.send(Emotes.getFailure() + " Invalid or **expired** invite link or code!").queue();
             return;
         }
         String code = matcher.group(1);

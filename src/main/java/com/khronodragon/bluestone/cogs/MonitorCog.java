@@ -167,6 +167,8 @@ public class MonitorCog extends Cog {
                     Thread.sleep(2500);
                 } catch (InterruptedException ignored) {
                     break;
+                } catch (Throwable e) {
+                    logger.error("Error sending log message", e);
                 }
             }
         }

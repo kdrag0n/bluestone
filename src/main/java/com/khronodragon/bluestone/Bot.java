@@ -57,7 +57,7 @@ import static java.text.MessageFormat.format;
 public class Bot extends ListenerAdapter implements ClassUtilities {
     private static final MediaType STRING_MEDIA_TYPE = MediaType.parse("text/plain; charset=utf-8");
     public Logger logger = LogManager.getLogger(Bot.class);
-    private final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(2, new ThreadFactoryBuilder()
+    private final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(4, new ThreadFactoryBuilder()
                                                             .setDaemon(true)
                                                             .setNameFormat("Bot BG-Task Thread %d")
                                                             .build());
@@ -731,7 +731,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 .setWebsocketFactory(new WebSocketFactory()
                         .setConnectionTimeout(120000))
                 .setBulkDeleteSplittingEnabled(false)
-                .setStatus(OnlineStatus.ONLINE)
+                .setStatus(OnlineStatus.IDLE)
                 .setCorePoolSize(5)
                 .setEnableShutdownHook(true)
                 .setHttpClientBuilder(new OkHttpClient.Builder()

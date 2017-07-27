@@ -91,20 +91,8 @@ public class StatReporterCog extends Cog {
                 put("bot.cpu_usage", UtilityCog.systemBean.getProcessCpuLoad());
                 put("bot.cpu_time", UtilityCog.systemBean.getProcessCpuTime());
                 put("bot.emotes", shardUtil.getEmoteCount());
-                put("bot.music_tracks", shardUtil.getShards().stream().mapToInt(b -> {
-                    MusicCog cog = (MusicCog) b.cogs.get("Music");
-                    if (cog == null)
-                        return 0;
-
-                    return cog.getTracksLoaded();
-                }).sum());
-                put("bot.music_streams", shardUtil.getShards().stream().mapToInt(b -> {
-                    MusicCog cog = (MusicCog) b.cogs.get("Music");
-                    if (cog == null)
-                        return 0;
-
-                    return cog.getActiveStreamCount();
-                }).sum());
+                put("bot.music_tracks", shardUtil.getTrackCount());
+                put("bot.music_streams", shardUtil.getStreamCount());
                 put("bot.messages_per_min", messagesSinceLastReport.getAndSet(0));
                 put("bot.guilds_per_min", newGuildsSinceLastReport.getAndSet(0));
 
