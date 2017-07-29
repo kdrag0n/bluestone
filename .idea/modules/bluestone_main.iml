@@ -12,7 +12,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Gradle: com.github.dv8fromtheworld:jda:experimental~etf-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.dv8fromtheworld:JDA:e130b67d259c81d6fc0243f127e2f99c0e9fbe76" level="project" />
     <orderEntry type="library" name="Gradle: com.sedmelluq:lavaplayer:1.2.42" level="project" />
     <orderEntry type="library" name="Gradle: com.squareup.okhttp3:okhttp:3.8.1" level="project" />
     <orderEntry type="library" name="Gradle: com.google.guava:guava:22.0" level="project" />
