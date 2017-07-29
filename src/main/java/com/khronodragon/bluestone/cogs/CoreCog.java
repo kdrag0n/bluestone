@@ -51,7 +51,8 @@ public class CoreCog extends Cog {
         });
     }
 
-    @Command(name = "help", desc = "Because we all need help.", usage = "{commands and/or cogs}", aliases = {"phelp", "halp"}, thread = true)
+    @Command(name = "help", desc = "Because we all need help.", usage = "{commands and/or cogs}",
+            aliases = {"phelp", "halp", "commands", "usage"}, thread = true)
     public void cmdHelp(Context ctx) {
         int charLimit = ctx.jda.getSelfUser().isBot() ? MessageEmbed.EMBED_MAX_LENGTH_BOT : MessageEmbed.EMBED_MAX_LENGTH_CLIENT;
         boolean sendPublic = false;

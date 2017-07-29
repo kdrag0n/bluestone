@@ -76,39 +76,44 @@ public class OwnerCog extends Cog {
         }
     }
 
-    @Command(name = "shardtree", desc = "Display a shard-guild tree.", perms = {"owner"})
+    @Command(name = "shardinfo", desc = "Display global shard information.", perms = {"owner"})
     public void cmdShardTree(Context ctx) {
-        StringBuilder result = new StringBuilder("```css\n");
+        MessageBuilder result = new MessageBuilder()
+                .append("```css\n");
 
-        if (bot.getShardUtil().getGuildCount() < 100) {
-            for (Bot shard: ctx.bot.getShardUtil().getShards()) {
-                result.append("Shard ")
-                        .append(shard.getShardNum() - 1)
-                        .append(':');
+        for (Bot shard: ctx.bot.getShardUtil().getShards()) {
+            result.append('[')
+                    .append(ctx.jda.getShardInfo().getShardId() == shard.getJda().getShardInfo().getShardId() ?
+                            '*' : ' ')
+                    .append("] Shard ")
+                    .append(shard.getShardNum() - 1)
+                    .append(" | ")
+                    .append(shard.getJda().getStatus().name())
+                    .append(" || Guilds: ")
+                    .append(shard.getJda().getGuilds().size())
+                    .append(" | Users: ")
+                    .append(shard.getJda().getUsers().size())
+                    .append(" | MStreams: ")
+                    .append(((MusicCog) shard.cogs.get("Music")).getActiveStreamCount())
+                    .append(" | MTracks: ")
+                    .append(((MusicCog) shard.cogs.get("Music")).getTracksLoaded())
+                    .append(" | WSPing: ")
+                    .append(shard.getJda().getPing())
+                    .append('\n');
+        }
+        result.append("\nTotal: ")
+                .append(bot.getShardTotal())
+                .append(" shards```");
 
-                for (Guild guild: shard.getJda().getGuilds()) {
-                    result.append('\n')
-                            .append("    - ")
-                            .append(guild.getName());
-                }
-
-                result.append('\n');
-            }
-        } else {
-            for (Bot shard: ctx.bot.getShardUtil().getShards()) {
-                result.append('[')
-                        .append(ctx.jda.getShardInfo().getShardId() == shard.getJda().getShardInfo().getShardId() ?
-                                    '*' : ' ')
-                        .append("] Shard ")
-                        .append(shard.getShardNum() - 1)
-                        .append(": ")
-                        .append(shard.getJda().getGuilds().size())
-                        .append(" guilds\n");
+        if (result.length() > 2000) {
+            for (int i = 0; i < result.length(); i += 1999) {
+                result.getStringBuilder().insert(i - 3, "``````css\n");
             }
         }
-        result.append("```");
 
-        ctx.send(result.toString()).queue();
+        for (Message msg: result.buildAll(MessageBuilder.SplitPolicy.ANYWHERE)) {
+            ctx.send(msg).queue();
+        }
     }
 
     @Cooldown(scope = BucketType.GLOBAL, delay = 10)

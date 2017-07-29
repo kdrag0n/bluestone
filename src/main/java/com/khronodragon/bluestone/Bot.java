@@ -481,7 +481,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                             author.getAsMention(), prefix, cmdName,
                             Strings.smartJoin(e.getFriendlyPerms(), "or"))).queue();
                 } catch (GuildOnlyError e) {
-                    channel.sendMessage("Sorry, that command only works in a guild.").queue();
+                    channel.sendMessage("Sorry, that command only works in a server.").queue();
                 } catch (CheckFailure e) {
                     channel.sendMessage(format("{0} A check for `{1}{2}` failed. Do you not have permissions?",
                             author.getAsMention(), prefix, cmdName)).queue();

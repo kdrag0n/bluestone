@@ -407,7 +407,7 @@ public class StarboardCog extends Cog {
 
         Starboard oldBoard = dao.queryForId(ctx.guild.getIdLong());
         if (oldBoard != null) {
-            ctx.send(Emotes.getFailure() + " This guild already has a starboard! <#" +
+            ctx.send(Emotes.getFailure() + " This server already has a starboard! <#" +
                     oldBoard.getChannelId() + '>').queue();
             return;
         }

@@ -12,12 +12,19 @@ import gnu.trove.map.TCharObjectMap;
 import gnu.trove.map.hash.TCharObjectHashMap;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
+import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.entities.Channel;
 import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -466,5 +473,262 @@ public class FunCog extends Cog {
     @Command(name = "soon", desc = "Feel the loading of 10000 years, aka Soon™.", aliases = {"soontm"})
     public void cmdSoon(Context ctx) {
         ctx.channel.sendFile(FunCog.class.getResourceAsStream("/assets/soon.gif"), "soon.gif", null).queue();
+    }
+
+    @Command(name = "akinator", desc = "Play a game of Akinator, where you answer questions for it to guess your character.",
+            aliases = "guess")
+    public void cmdAkinator(Context ctx) {
+        if (ctx.channel instanceof TextChannel &&
+                !ctx.member.hasPermission((Channel) ctx.channel,
+                        Permission.MESSAGE_ADD_REACTION, Permission.MESSAGE_EMBED_LINKS)) {
+            ctx.send(Emotes.getFailure() +
+                    " I need to be able to **add reactions** and **embed links** here!").queue();
+            return;
+        }
+
+        AkinatorGame game = new AkinatorGame(ctx);
+    }
+
+    private final class AkinatorGame {
+        private static final String NEW_SESSION_URL = "http://api-en4.akinator.com/ws/new_session?partner=1&player=";
+        private static final String ANSWER_URL = "http://api-en4.akinator.com/ws/answer";
+        private static final String GET_GUESS_URL = "http://api-en4.akinator.com/ws/list";
+        private static final String CHOICE_URL = "http://api-en4.akinator.com/ws/choice";
+        private static final String EXCLUSION_URL = "http://api-en4.akinator.com/ws/exclusion";
+
+        private final OkHttpClient client = new OkHttpClient();
+        private final EmbedBuilder emb = new EmbedBuilder();
+        private Message message;
+        private final JDA jda;
+        private final MessageChannel channel;
+        private final long userId;
+        private StepInfo stepInfo;
+
+        private final String signature;
+        private final String session;
+        private Guess guess;
+        private boolean lastQuestionWasGuess = false;
+
+        private AkinatorGame(Context ctx) throws IOException {
+            this.jda = ctx.jda;
+            this.channel = ctx.channel;
+            this.userId = ctx.author.getIdLong();
+
+            channel.sendTyping().queue();
+
+            // Start new session
+            JSONObject json = new JSONObject(client.newCall(new Request.Builder()
+                    .get()
+                    .url(NEW_SESSION_URL + RandomStringUtils.random(16))
+                    .build()).execute().body().string());
+            stepInfo = new StepInfo(json);
+
+            signature = stepInfo.getSignature();
+            session = stepInfo.getSession();
+
+            emb.setAuthor("Akinator Game", "http://akinator.com", ctx.jda.getSelfUser().getEffectiveAvatarUrl())
+                    .setDescription(":hourglass: **Please wait, game is starting...**") // TODO: use unicode emoji
+                    .setFooter("Game for " + getTag(ctx.author), ctx.author.getEffectiveAvatarUrl());
+
+            message = channel.sendMessage(emb.build()).complete();
+            sendNextQuestion();
+
+            bot.getEventWaiter().waitForEvent(MessageReactionAddEvent.class, ev -> {
+                return ev.getChannel().getIdLong() == channel.getIdLong() &&
+                        ev.getMessageIdLong() == message.getIdLong();
+            }, ev -> {
+
+            }, 1, TimeUnit.MINUTES);
+        }
+
+        private void sendNextQuestion() {
+            String out = "**" + name + ": Question " + (stepInfo.getStepNum() + 1) + "**\n"
+                    + stepInfo.getQuestion() + "\n [yes/no/idk/probably/probably not]";
+            jda.getTextChannelById(channelId).sendMessage(out).queue();
+            lastQuestionWasGuess = false;
+        }
+
+        private void sendGuess() throws IOException {
+            guess = new Guess();
+            String out = "Is this your character?\n" + guess + "\n[yes/no]";
+            jda.getTextChannelById(channelId).sendMessage(out).queue();
+            lastQuestionWasGuess = true;
+        }
+
+        private void answerQuestion(byte answer) {
+            try {
+                JSONObject json = Unirest.get(ANSWER_URL)
+                        .queryString("session", session)
+                        .queryString("signature", signature)
+                        .queryString("step", stepInfo.getStepNum())
+                        .queryString("answer", answer)
+                        .asJson().getBody().getObject();
+                stepInfo = new StepInfo(json);
+
+                if (stepInfo.getProgression() > 90) {
+                    sendGuess();
+                } else {
+                    sendNextQuestion();
+                }
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        private void answerGuess(byte answer) {
+            try {
+                if (answer == 0) {
+                    Unirest.get(CHOICE_URL)
+                            .queryString("session", session)
+                            .queryString("signature", signature)
+                            .queryString("step", stepInfo.getStepNum())
+                            .queryString("element", guess.getId())
+                            .asString();
+                    jda.getTextChannelById(channelId).sendMessage("Great ! Guessed right one more time.\n"
+                            + "I love playing with you!\n"
+                            + "<http://akinator.com>").queue();
+                    FredBoat.getListenerBot().removeListener(userId);
+                } else if (answer == 1) {
+                    Unirest.get(EXCLUSION_URL)
+                            .queryString("session", session)
+                            .queryString("signature", signature)
+                            .queryString("step", stepInfo.getStepNum())
+                            .queryString("forward_answer", answer)
+                            .asString();
+
+                    lastQuestionWasGuess = false;
+                    sendNextQuestion();
+                }
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
+            Channel channel = event.getChannel();
+
+
+
+            if (channel.getIdLong() != channelId) {
+                return;
+            }
+
+            byte answer;
+
+            if (lastQuestionWasGuess) {
+                if (answer != 0 && answer != 1)
+                    return;
+
+                answerGuess(answer);
+            } else {
+                answerQuestion(answer);
+            }
+        }
+
+        private class StepInfo {
+            private String signature = "";
+            private String session = "";
+            private final String question;
+            private final int stepNum;
+            private final double progression;
+
+            StepInfo(JSONObject json) {
+                JSONObject params = json.getJSONObject("parameters");
+                JSONObject info = params.has("step_information") ? params.getJSONObject("step_information") : params;
+                question = info.getString("question");
+                stepNum = info.getInt("step");
+                progression = info.getDouble("progression");
+
+                JSONObject identification = params.optJSONObject("identification");
+                if (identification != null) {
+                    signature = identification.getString("signature");
+                    session = identification.getString("session");
+                }
+            }
+
+            String getQuestion() {
+                return question;
+            }
+
+            int getStepNum() {
+                return stepNum;
+            }
+
+            String getSignature() {
+                return signature;
+            }
+
+            String getSession() {
+                return session;
+            }
+
+            double getProgression() {
+                return progression;
+            }
+
+        }
+
+        private class Guess {
+            private final String id;
+            private final String name;
+            private final String desc;
+            private final int ranking;
+            private final String pseudo;
+            private final String imgPath;
+
+            Guess() throws IOException {
+                JSONObject json = Unirest.get(GET_GUESS_URL)
+                        .queryString("session", session)
+                        .queryString("signature", signature)
+                        .queryString("step", stepInfo.getStepNum())
+                        .asJson()
+                        .getBody()
+                        .getObject();
+
+                JSONObject character = json.getJSONObject("parameters")
+                        .getJSONArray("elements")
+                        .getJSONObject(0)
+                        .getJSONObject("element");
+
+                id = character.getString("id");
+                name = character.getString("name");
+                desc = character.getString("description");
+                ranking = character.getInt("ranking");
+                pseudo = character.getString("pseudo");
+                imgPath = character.getString("absolute_picture_path");
+            }
+
+            public String getDesc() {
+                return desc;
+            }
+
+            public String getImgPath() {
+                return imgPath;
+            }
+
+            public String getName() {
+                return name;
+            }
+
+            public String getPseudo() {
+                return pseudo;
+            }
+
+            public int getRanking() {
+                return ranking;
+            }
+
+            public String getId() {
+                return id;
+            }
+
+            @Override
+            public String toString() {
+                return "**" + name + "**\n"
+                        + desc + "\n"
+                        + "Ranking as **#" + ranking + "**\n"
+                        + imgPath;
+            }
+        }
     }
 }

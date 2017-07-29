@@ -88,7 +88,7 @@ public class Command {
                             event.getAuthor().getAsMention(), prefix, invoker,
                             Strings.smartJoin(e.getFriendlyPerms(), "or"))).queue();
                 } catch (GuildOnlyError e) {
-                    event.getChannel().sendMessage("Sorry, that command only works in a guild.").queue();
+                    event.getChannel().sendMessage("Sorry, that command only works in a server.").queue();
                 } catch (CheckFailure e) {
                     event.getChannel().sendMessage(format("{0} A check for `{1}{2}` failed. Do you not have permissions?",
                             event.getAuthor().getAsMention(), prefix, invoker)).queue();

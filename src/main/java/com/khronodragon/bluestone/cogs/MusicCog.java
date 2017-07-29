@@ -399,7 +399,7 @@ public class MusicCog extends Cog {
         }
     }
 
-    @Command(name = "playing", desc = "Get the current track.", aliases = {"current"}, guildOnly = true)
+    @Command(name = "playing", desc = "Get the current track.", aliases = {"current", "np"}, guildOnly = true)
     public void cmdCurrent(Context ctx) {
         channelChecks(ctx);
         AudioState state = getAudioState(ctx.guild);
@@ -417,7 +417,7 @@ public class MusicCog extends Cog {
         channelChecks(ctx);
 
         if (!audioStates.containsKey(ctx.guild.getIdLong())) {
-            ctx.send(":bangbang: Failed to get the state for this guild. Something's terribly broken.").queue();
+            ctx.send(":bangbang: Failed to get the state for this server. Something's terribly broken.").queue();
             return;
         }
 

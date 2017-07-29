@@ -103,7 +103,7 @@ public class UtilityCog extends Cog {
     private static final String INFO_LINKS = "\u200b    \u2022 Use my [invite link]([invite]) to take me to another server!\n" +
             "    \u2022 [Donate](https://patreon.com/kdragon) to help keep me alive!\n" +
             "    \u2022 Go to [my website](https://khronodragon.com/goldmine/) for help!\n" +
-            "    \u2022 Join my [support guild](https://discord.gg/dwykTHc) for even more help.";
+            "    \u2022 Join my [support server](https://discord.gg/dwykTHc) for even more help.";
     private static final String SHRUG = "¯\\_(ツ)_/¯";
     private final LoadingCache<String, EmbedBuilder> ipInfoCache = CacheBuilder.newBuilder()
             .maximumSize(36)
@@ -179,7 +179,7 @@ public class UtilityCog extends Cog {
             schedulePoll(poll);
     }
 
-    @Command(name = "icon", desc = "Get the current guild's icon.", guildOnly = true)
+    @Command(name = "icon", desc = "Get the current server's icon.", guildOnly = true)
     public void cmdIcon(Context ctx) {
         ctx.send(val(ctx.guild.getIconUrl()).or("There's no icon here!")).queue();
     }
@@ -263,7 +263,7 @@ public class UtilityCog extends Cog {
                 }
 
                 emb.setColor(val(member.getColor()).or(Color.WHITE))
-                        .addField("Guild Join Time",
+                        .addField("Server Join Time",
                                 Date.from(member.getJoinDate().toInstant()).toString(), true)
                         .addField("Status", status, true)
                         .addField("Roles", member.getRoles().stream()
@@ -275,7 +275,7 @@ public class UtilityCog extends Cog {
         ctx.send(emb.build()).queue();
     }
 
-    @Command(name = "guildinfo", desc = "Get loads of info about this guild.", guildOnly = true, aliases = {"ginfo", "guild", "server", "serverinfo", "sinfo"})
+    @Command(name = "serverinfo", desc = "Get loads of info about this server.", guildOnly = true, aliases = {"sinfo", "server", "guild", "guildinfo", "ginfo"})
     public void cmdGuildInfo(Context ctx) {
         EmbedBuilder emb = new EmbedBuilder()
                 .setColor(randomColor())
@@ -305,8 +305,8 @@ public class UtilityCog extends Cog {
         ShardUtil shardUtil = bot.getShardUtil();
         EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://khronodragon.com/goldmine")
                 .setColor(randomColor())
-                .setDescription(Emotes.getCredits())
-                .addField("Guilds", str(shardUtil.getGuildCount()), true)
+                .setDescription(Emotes.getCredits() + "\nStat format is **minimum/average/maximum**.")
+                .addField("Servers", str(shardUtil.getGuildCount()), true)
                 .addField("Uptime", bot.formatUptime(), true)
                 .addField("Requests", str(shardUtil.getRequestCount()), true)
                 .addField("Threads", str(Thread.activeCount()), true)
@@ -351,11 +351,9 @@ public class UtilityCog extends Cog {
 
     @Command(name = "home", desc = "Get my \"contact\" info.", aliases = {"website", "web", "support"})
     public void cmdHome(Context ctx) {
-        ctx.send("**Author's Website**: <https://khronodragon.com>\n" +
+        ctx.send("**Website**: <https://khronodragon.com/goldmine>\n" +
                 "**Forums**: <https://forums.khronodragon.com>\n" +
-                "**Wiki**: <https://khronodragon.com/goldmine>\n" +
-                "**Short Invite Link**: <https://tiny.cc/goldbot>\n" +
-                "**Support Guild**: <https://discord.gg/dwykTHc>\n" +
+                "**Support Server**: <https://discord.gg/dwykTHc>\n" +
                 "**Patreon**: <https://patreon.com/kdragon>").queue();
     }
 
@@ -1202,8 +1200,8 @@ public class UtilityCog extends Cog {
                     .setColor(randomColor())
                     .setAuthor("Invite to " + guild.getName(), null, iconUrl)
                     .addField("Code", invite.getCode(), true)
-                    .addField("Guild ID", guild.getId(), true)
-                    .addField("Guild Creation Time", Date.from(guild.getCreationTime().toInstant()).toString(), true)
+                    .addField("Server ID", guild.getId(), true)
+                    .addField("Server Creation Time", Date.from(guild.getCreationTime().toInstant()).toString(), true)
                     .addField("Channel", (channel.getType() == ChannelType.TEXT ? '#' : '\00') + channel.getName(), true)
                     .addField("Channel Creation Time", Date.from(channel.getCreationTime().toInstant()).toString(), true)
                     .addField("Channel ID", channel.getId(), true);

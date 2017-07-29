@@ -31,13 +31,15 @@ shadowJar {
 }
 
 dependencies {
-    compile 'net.dv8tion:JDA:3.2.0_236'
+    compile 'net.dv8tion:JDA:3.2.0_239'
     compile 'com.sedmelluq:lavaplayer:1.2.42'
     compile 'com.squareup.okhttp3:okhttp:3.8.1'
     compile 'com.google.guava:guava:22.0'
+    compile 'org.json:json:20170516'
     compile 'org.reflections:reflections:0.9.11'
     compile 'org.python:jython-standalone:2.7.1b3'
     compile 'org.codehaus.groovy:groovy-jsr223:2.4.11'
+    compile 'org.apache.commons:commons-lang3:3.6'
     compile 'org.apache.logging.log4j:log4j-api:2.8.2'
     compile 'org.apache.logging.log4j:log4j-core:2.8.2'
     compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.8.2'

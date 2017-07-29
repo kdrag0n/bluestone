@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 
 public class WelcomeCog extends Cog {
     private static final Logger logger = LogManager.getLogger(WelcomeCog.class);
-    private static final String DEFAULT_WELCOME = "[mention] **Welcome to [guild]!**\n" +
+    private static final String DEFAULT_WELCOME = "[mention] **Welcome to [server]!**\n" +
             "Enjoy your time here, and find out more about me with `[prefix]help`.";
     private static final String DEFAULT_LEAVE = "[rip] **RIP [member_tag]...**";
 
@@ -44,17 +44,17 @@ public class WelcomeCog extends Cog {
             "    • `[member_tag]` - the tag (Username#XXXX) of the member\n" +
             "    • `[member_discrim]` - the member's discriminator\n" +
             "    • `[member_id]` - the member's user ID\n" +
-            "    • `[guild/guild_name]` - the name of this guild\n" +
-            "    • `[guild_icon]` - the link to this guild's icon\n" +
-            "    • `[guild_id]` - this guild's ID\n" +
-            "    • `[guild_owner]` - the nme of this guild's owner\n" +
+            "    • `[server/server_name]` - the name of this server\n" +
+            "    • `[server_icon]` - the link to this server's icon\n" +
+            "    • `[server_id]` - this server's ID\n" +
+            "    • `[server_owner]` - the name of this server's owner\n" +
             "    • `[time/date]` - the current date and time, like `Tue Jun 27 10:06:59 EDT 2017`\n" +
-            "    • `[prefix]` - my command prefix here\n" +
+            "    • `[prefix]` - my command prefix in this server\n" +
             "    • `[bot_owner]` - the tag of my owner\n" +
             "    • `[rip]` - a gravestone\n" +
             "\n" +
             "Example message:```\n" +
-            "[mention] Hey there, and welcome to [guild]! The owner here is [guild_owner]. You joined at [time]. " +
+            "[mention] Hey there, and welcome to [server]! The owner here is [server_owner]. You joined at [time]. " +
             "To use this bot, try [prefix]help. It was made by [bot_owner]. Have fun!```";
     private Dao<GuildWelcomeMessages, Long> messageDao;
 
@@ -249,15 +249,15 @@ public class WelcomeCog extends Cog {
                     .map("member_tag", () -> getTag(member.getUser()))
                     .map("member_discrim", member.getUser()::getDiscriminator)
                     .map("member_id", member.getUser()::getId)
-                    .map("guild", guild::getName)
-                    .map("guild_icon", guild::getIconUrl)
-                    .map("guild_id", guild::getId)
-                    .map("guild_owner", guild.getOwner()::getEffectiveName)
+                    .map("server", guild::getName)
+                    .map("server_icon", guild::getIconUrl)
+                    .map("server_id", guild::getId)
+                    .map("server_owner", guild.getOwner()::getEffectiveName)
                     .map("member", member::getAsMention)
                     .map("member_mention", member::getAsMention)
                     .map("time", () -> new Date().toString())
                     .map("date", () -> new Date().toString())
-                    .map("guild_name", guild::getName)
+                    .map("server_name", guild::getName)
                     .map("prefix", () -> bot.getShardUtil().getPrefixStore().getPrefix(guild.getIdLong()))
                     .map("bot_owner", "Dragon5232#1841")
                     .map("rip", Emotes::getGrave)
