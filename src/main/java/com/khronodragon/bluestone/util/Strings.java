@@ -2,14 +2,18 @@ package com.khronodragon.bluestone.util;
 
 import gnu.trove.list.TIntList;
 import gnu.trove.list.linked.TIntLinkedList;
+import net.dv8tion.jda.core.entities.*;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.IntSummaryStatistics;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 public class Strings {
     private static final int bmpThreshold = 1 << 16;
@@ -131,5 +135,42 @@ public class Strings {
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String renderMessage(Message message, Guild guild, String msg) {
+        String tmp = msg;
+
+        for (User user : message.getMentionedUsers()) {
+            if (message.isFromType(ChannelType.PRIVATE) || message.isFromType(ChannelType.GROUP)) {
+                tmp = tmp.replace("<@" + user.getId() + '>', '@' + user.getName())
+                        .replace("<@!" + user.getId() + '>', '@' + user.getName());
+            } else {
+                String name;
+
+                if (guild != null && guild.isMember(user))
+                    name = guild.getMember(user).getEffectiveName();
+                else name = user.getName();
+
+                tmp = tmp.replace("<@" + user.getId() + '>', '@' + name)
+                        .replace("<@!" + user.getId() + '>', '@' + name);
+            }
+        }
+
+        for (Emote emote : message.getEmotes())
+            tmp = tmp.replace(emote.getAsMention(), ":" + emote.getName() + ":");
+
+        for (TextChannel mentionedChannel : message.getMentionedChannels())
+            tmp = tmp.replace("<#" + mentionedChannel.getId() + '>', '#' + mentionedChannel.getName());
+
+        for (Role mentionedRole : message.getMentionedRoles())
+            tmp = tmp.replace("<@&" + mentionedRole.getId() + '>', '@' + mentionedRole.getName());
+
+        return tmp;
+    }
+
+    public static String statify(IntStream stream) {
+        IntSummaryStatistics stats = stream.summaryStatistics();
+
+        return "Min: " + stats.getMin() + "\nAvg: " + stats.getAverage() + "\nMax: " + stats.getMax();
     }
 }

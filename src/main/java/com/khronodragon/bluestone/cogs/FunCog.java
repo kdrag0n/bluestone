@@ -537,7 +537,7 @@ public class FunCog extends Cog {
             session = stepInfo.getSession();
 
             emb.setAuthor("Akinator Game", "http://akinator.com", ctx.jda.getSelfUser().getEffectiveAvatarUrl())
-                    .setDescription("⌛ **Please wait, game is starting...**") // TODO: use unicode emoji
+                    .setDescription("⌛ **Please wait, game is starting...**")
                     .setFooter("Game started at", ctx.author.getEffectiveAvatarUrl())
                     .setTimestamp(Instant.now());
 

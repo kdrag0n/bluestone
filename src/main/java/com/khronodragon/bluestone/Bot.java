@@ -497,14 +497,15 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     shardUtil.getCommandCalls().put(command.name, new AtomicInteger(1));
                 }
             }
-        } else {
+        } else if (message.isMentioned(jda.getSelfUser())) {
             String mention = message.getGuild() == null ?
                     jda.getSelfUser().getAsMention() : message.getGuild().getSelfMember().getAsMention();
             String name = message.getGuild() == null ?
                     jda.getSelfUser().getName() : message.getGuild().getSelfMember().getEffectiveName();
 
-            if (content.startsWith(mention)) {
-                String request = message.getContent().substring(name.length() + 1).trim();
+            if (content.startsWith(mention) || content.startsWith("<@&")) {
+                String request = Strings.renderMessage(message, message.getGuild(),
+                        message.getRawContent().replaceFirst("^<@&?[0-9]{17,20}>\\s*", ""));
 
                 if (request.equalsIgnoreCase("prefix")) {
                     channel.sendMessage("My prefix here is `" + prefix + "`.").queue();

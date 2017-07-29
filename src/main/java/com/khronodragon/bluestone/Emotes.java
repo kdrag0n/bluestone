@@ -1,5 +1,7 @@
 package com.khronodragon.bluestone;
 
+import com.khronodragon.bluestone.enums.MemberStatus;
+import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.Member;
 import org.apache.commons.lang3.text.WordUtils;
@@ -43,6 +45,22 @@ public class Emotes {
         }
     }
 
+    public static String getStatusWithText(MemberStatus status) {
+        if (hasDbots) {
+            switch (status) {
+                case STREAMING: return "<:streaming:313956277132853248> Streaming";
+                case ONLINE: return "<:online:313956277808005120> Online";
+                case IDLE: return "<:away:313956277220802560> Away";
+                case DO_NOT_DISTURB: return "<:dnd:313956276893646850> Do Not Disturb";
+                case OFFLINE: return "<:offline:313956277237710868> Offline";
+                case INVISIBLE: return "<:invisible:313956277107556352> Invisible";
+                default: return "¯\\_(ツ)_/¯";
+            }
+        } else {
+            return WordUtils.capitalizeFully(status.name().replace('_', ' '));
+        }
+    }
+
     public static String getSuccess() {
         if (hasDbots)
             return "<:check:314349398811475968>";
@@ -76,6 +94,13 @@ public class Emotes {
             return "<:botTag:230105988211015680>";
         else
             return "[BOT]";
+    }
+
+    public static String getPlus() {
+        if (hasParadise)
+            return "<:plus:331224997362139136>";
+        else
+            return "➕";
     }
 
     public static String getWarning() {

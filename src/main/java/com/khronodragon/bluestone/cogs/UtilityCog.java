@@ -23,14 +23,18 @@ import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.Cooldown;
 import com.khronodragon.bluestone.enums.BucketType;
+import com.khronodragon.bluestone.enums.MemberStatus;
 import com.khronodragon.bluestone.sql.ActivePoll;
 import com.khronodragon.bluestone.util.*;
 import com.sun.management.OperatingSystemMXBean;
+import gnu.trove.map.TObjectIntMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
 import io.codearte.jfairy.Fairy;
 import io.codearte.jfairy.producer.person.Person;
 import net.dv8tion.jda.client.entities.Group;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
+import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.entities.MessageReaction.ReactionEmote;
@@ -50,6 +54,7 @@ import org.ocpsoft.prettytime.PrettyTime;
 
 import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 import static com.khronodragon.bluestone.util.Strings.smartJoin;
+import static com.khronodragon.bluestone.util.Strings.statify;
 import static com.khronodragon.bluestone.util.Strings.str;
 import static java.text.MessageFormat.format;
 
@@ -71,6 +76,7 @@ import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class UtilityCog extends Cog {
     private static final Logger logger = LogManager.getLogger(UtilityCog.class);
@@ -262,13 +268,18 @@ public class UtilityCog extends Cog {
                     }
                 }
 
+                String roleText = member.getRoles().stream()
+                        .map(Role::getAsMention)
+                        .collect(Collectors.joining(", "));
+                if (roleText.length() > 1024) {
+                    roleText = roleText.replaceFirst("<@[0-9]{17,20}>$", "... (too many)");
+                }
+
                 emb.setColor(val(member.getColor()).or(Color.WHITE))
                         .addField("Server Join Time",
                                 Date.from(member.getJoinDate().toInstant()).toString(), true)
                         .addField("Status", status, true)
-                        .addField("Roles", member.getRoles().stream()
-                                .map(Role::getName)
-                                .collect(Collectors.joining(", ")), true);
+                        .addField("Roles", roleText, true);
             }
         }
 
@@ -277,16 +288,43 @@ public class UtilityCog extends Cog {
 
     @Command(name = "serverinfo", desc = "Get loads of info about this server.", guildOnly = true, aliases = {"sinfo", "server", "guild", "guildinfo", "ginfo"})
     public void cmdGuildInfo(Context ctx) {
+        String roleText = ctx.guild.getRoles().stream()
+                .filter(r -> !r.isPublicRole())
+                .map(Role::getAsMention)
+                .collect(Collectors.joining(", "));
+        if (roleText.length() > 1024) {
+            roleText = roleText.replaceFirst("<@[0-9]{17,20}>$", "... (too many)");
+        } else if (roleText.length() < 1) {
+            roleText = "None";
+        }
+
+        TObjectIntMap<MemberStatus> statusMap = new TObjectIntHashMap<>();
+        for (Member member: ctx.guild.getMembers()) {
+            MemberStatus status = MemberStatus.from(member);
+            statusMap.adjustOrPutValue(status, 1, 1);
+        }
+        StringBuilder membersText = new StringBuilder();
+        statusMap.forEachEntry((k, v) -> {
+            membersText.append(Emotes.getStatusWithText(k))
+                    .append(':').append(' ')
+                    .append(v)
+                    .append('\n');
+            return true;
+        });
+        membersText.append(Emotes.getPlus())
+                .append(" Total: ")
+                .append(ctx.guild.getMembers().size() - 1);
+
         EmbedBuilder emb = new EmbedBuilder()
-                .setColor(randomColor())
+                .setColor(val(ctx.guild.getSelfMember().getColor()).or(Color.WHITE))
                 .setAuthor(ctx.guild.getName(), null,
                         val(ctx.guild.getIconUrl()).or(ctx.jda.getSelfUser().getEffectiveAvatarUrl()))
                 .setFooter(ctx.guild.getSelfMember().getEffectiveName(), ctx.jda.getSelfUser().getEffectiveAvatarUrl())
                 .setTimestamp(Instant.now())
                 .addField("ID", ctx.guild.getId(), true)
-                .addField("Members", str(ctx.guild.getMembers().size()), true)
+                .addField("Members", membersText.toString(), true)
                 .addField("Channels", str(ctx.guild.getTextChannels().size() + ctx.guild.getVoiceChannels().size()), true)
-                .addField("Roles", str(ctx.guild.getRoles().size()) ,true)
+                .addField("Roles (" + ctx.guild.getRoles().size() + ')', roleText,true)
                 .addField("Emotes", str(ctx.guild.getEmotes().size()), true)
                 .addField("Region", ctx.guild.getRegion().getName(), true)
                 .addField("Owner", ctx.guild.getOwner().getAsMention(), true)
@@ -305,7 +343,7 @@ public class UtilityCog extends Cog {
         ShardUtil shardUtil = bot.getShardUtil();
         EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://khronodragon.com/goldmine")
                 .setColor(randomColor())
-                .setDescription(Emotes.getCredits() + "\nStat format is **minimum/average/maximum**.")
+                .setDescription("For more *statistical* information, use the `xstats` command.")
                 .addField("Servers", str(shardUtil.getGuildCount()), true)
                 .addField("Uptime", bot.formatUptime(), true)
                 .addField("Requests", str(shardUtil.getRequestCount()), true)
@@ -325,11 +363,63 @@ public class UtilityCog extends Cog {
                 .addField("Users", str(shardUtil.getUserCount()), true)
                 .addField("Channels", str(shardUtil.getChannelCount()), true)
                 .addField("Commands", str(new HashSet<>(bot.commands.values()).size()), true)
-                .addField("Music Tracks", str(shardUtil.getTrackCount()), true)
+                .addField("Music Tracks Loaded", str(shardUtil.getTrackCount()), true)
                 .addField("Playing Music in", shardUtil.getStreamCount() + " channels", true)
                 .addField("Links", INFO_LINKS.replace("[invite]", ctx.jda.asBot().getInviteUrl(PERMS_NEEDED)), false)
                 .setFooter("Serving you from shard " + bot.getShardNum(), null)
                 .setTimestamp(Instant.now());
+
+        ctx.send(emb.build()).queue();
+    }
+
+    @Command(name = "xstats", desc = "Get a lot of extended statistics about me.", aliases = {"xstatistics"})
+    public void cmdXInfo(Context ctx) {
+        ShardUtil shardUtil = bot.getShardUtil();
+
+        Map<String, IntStream> stats = new LinkedHashMap<String, IntStream>() {{
+            put("Members per Server", shardUtil.getGuildStream().mapToInt(g -> g.getMembers().size()));
+            put("Online Members per Server", shardUtil.getGuildStream()
+                    .mapToInt(g -> (int) g.getMembers()
+                            .stream()
+                            .filter(member -> member.getOnlineStatus() == OnlineStatus.ONLINE)
+                            .count()));
+            put("Text Channels per Server", shardUtil.getGuildStream().mapToInt(g -> g.getTextChannels().size()));
+            put("Voice Channels per Server", shardUtil.getGuildStream().mapToInt(g -> g.getVoiceChannels().size()));
+            put("Roles per Server", shardUtil.getGuildStream().mapToInt(g -> g.getRoles().size()));
+            put("Custom Emotes per Server", shardUtil.getGuildStream().mapToInt(g -> g.getEmotes().size()));
+        }};
+
+        EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://khronodragon.com/goldmine")
+                .setColor(randomColor())
+                .setDescription("¯\\_(ツ)_/¯")
+                .setFooter("Also try the info command!", null)
+                .setTimestamp(Instant.now());
+
+        for (Map.Entry<String, IntStream> stat: stats.entrySet()) {
+            emb.addField(stat.getKey(), statify(stat.getValue()), true);
+        }
+
+        int exclusive = (int) shardUtil.getGuildStream().filter(g -> g.getMembers()
+                .stream()
+                .filter(m -> m.getUser().isBot())
+                .count() < 2).count();
+        String excText = exclusive + " (" + Math.ceil(exclusive / shardUtil.getGuildCount() * 100d) + "%)";
+
+        int big = (int) shardUtil.getGuildStream()
+                .filter(g -> g.getMembers().size() >= 250)
+                .count();
+        String bigText = big + " (" + Math.ceil(big / shardUtil.getGuildCount() * 100d) + "%)";
+
+        int partnered = (int) shardUtil.getGuildStream()
+                .filter(g -> g.getSplashUrl() != null || g.getRegion().isVip())
+                .count();
+        String partneredText = partnered + " (" + Math.ceil(partnered / shardUtil.getGuildCount() * 100d) + "%)";
+
+        emb.addBlankField(false)
+                .addField("Total Queue Size", str(shardUtil.getTrackCount()), true)
+                .addField("Servers where I'm the only bot", excText, true)
+                .addField("Big Servers", bigText, true)
+                .addField("Partnered Servers", partneredText, true);
 
         ctx.send(emb.build()).queue();
     }

@@ -15,6 +15,8 @@ import com.khronodragon.bluestone.sql.GuildPrefix;
 import com.khronodragon.bluestone.sql.MySQLDatabaseType;
 import com.zaxxer.hikari.HikariDataSource;
 import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Member;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
@@ -23,6 +25,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 public class ShardUtil {
     private static final Logger logger = LogManager.getLogger(ShardUtil.class);
@@ -195,5 +198,9 @@ public class ShardUtil {
 
             return cog.getActiveStreamCount();
         }).sum();
+    }
+
+    public Stream<Guild> getGuildStream() {
+        return shards.values().stream().flatMap(b -> b.getJda().getGuilds().stream());
     }
 }

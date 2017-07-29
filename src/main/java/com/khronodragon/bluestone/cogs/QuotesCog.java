@@ -10,6 +10,7 @@ import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.sql.Quote;
+import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.*;
@@ -98,7 +99,7 @@ public class QuotesCog extends Cog {
             ctx.send(Emotes.getFailure() + " I need text to quote!").queue();
             return;
         }
-        String text = quoteify(ctx.message, ctx.guild, ctx.rawArgs.substring(ctx.args.get(0).length()).trim()
+        String text = Strings.renderMessage(ctx.message, ctx.guild, ctx.rawArgs.substring(ctx.args.get(0).length()).trim()
                 .replace('\n', ' '));
 
         if (text.length() > 360) {
@@ -249,7 +250,7 @@ public class QuotesCog extends Cog {
             return;
         }
 
-        String text = quoteify(msg, msg.getGuild(), msg.getRawContent().replace('\n', ' '));
+        String text = Strings.renderMessage(msg, msg.getGuild(), msg.getRawContent().replace('\n', ' '));
 
         if (text.length() > 360) {
             ctx.send(Emotes.getFailure() + " Text too long!").queue();
@@ -280,36 +281,5 @@ public class QuotesCog extends Cog {
             ctx.send(Emotes.getFailure() + " No such quote!").queue();
         else
             ctx.send(quote.render()).queue();
-    }
-
-    public String quoteify(Message message, Guild guild, String msg) {
-        String tmp = msg;
-
-        for (User user : message.getMentionedUsers()) {
-            if (message.isFromType(ChannelType.PRIVATE) || message.isFromType(ChannelType.GROUP)) {
-                tmp = tmp.replace("<@" + user.getId() + '>', '@' + user.getName())
-                        .replace("<@!" + user.getId() + '>', '@' + user.getName());
-            } else {
-                String name;
-
-                if (guild.isMember(user))
-                    name = guild.getMember(user).getEffectiveName();
-                else name = user.getName();
-
-                tmp = tmp.replace("<@" + user.getId() + '>', '@' + name)
-                        .replace("<@!" + user.getId() + '>', '@' + name);
-            }
-        }
-
-        for (Emote emote : message.getEmotes())
-            tmp = tmp.replace(emote.getAsMention(), ":" + emote.getName() + ":");
-
-        for (TextChannel mentionedChannel : message.getMentionedChannels())
-            tmp = tmp.replace("<#" + mentionedChannel.getId() + '>', '#' + mentionedChannel.getName());
-
-        for (Role mentionedRole : message.getMentionedRoles())
-            tmp = tmp.replace("<@&" + mentionedRole.getId() + '>', '@' + mentionedRole.getName());
-
-        return tmp;
     }
 }
