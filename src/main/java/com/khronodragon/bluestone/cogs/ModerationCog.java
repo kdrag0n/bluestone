@@ -289,29 +289,35 @@ public class ModerationCog extends Cog {
     }
 
     @Command(name = "ban", desc = "Swing the ban hammer on someone.", guildOnly = true,
-            perms = {"banMembers"}, usage = "[@user] {reason}")
+            perms = {"banMembers"}, usage = "[@user or user ID] {reason}")
     public void cmdBan(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need someone to ban!").queue();
             return;
-        } else if (!MENTION_PATTERN.matcher(ctx.rawArgs).find() || ctx.message.getMentionedUsers().size() < 1) {
-            ctx.send(Emotes.getFailure() + " Invalid mention!").queue();
+        } else if ((!MENTION_PATTERN.matcher(ctx.rawArgs).find() || ctx.message.getMentionedUsers().size() < 1) &&
+                !ctx.rawArgs.matches("^[0-9]{17,20}")) {
+            ctx.send(Emotes.getFailure() + " Invalid mention or user ID!").queue();
             return;
         }
         String reason;
-        String userReason = ctx.rawArgs.replaceAll(MENTION_PATTERN.pattern(), "").trim();
+        String userReason = ctx.rawArgs.replaceFirst(MENTION_PATTERN.pattern(), "")
+                .replaceFirst("^[0-9]{17,20}", "").trim();
         if (userReason.length() < 1 || userReason.length() > 450)
             reason = getTag(ctx.author) + " used the ban command (with sufficient permissions)";
         else
             reason = getTag(ctx.author) + ": " + userReason;
 
-        Member user = ctx.guild.getMember(ctx.message.getMentionedUsers().get(0));
-        if (!ctx.guild.getSelfMember().canInteract(user)) {
-            ctx.send(Emotes.getFailure() + " I need to be higher on the role ladder to ban that user!").queue();
-            return;
-        }
+        if (ctx.message.getMentionedUsers().size() > 0) {
+            Member user = ctx.guild.getMember(ctx.message.getMentionedUsers().get(0));
+            if (!ctx.guild.getSelfMember().canInteract(user)) {
+                ctx.send(Emotes.getFailure() + " I need to be higher on the role ladder to ban that user!").queue();
+                return;
+            }
 
-        ctx.guild.getController().ban(user, 0).reason(reason).queue();
+            ctx.guild.getController().ban(user, 0, reason).reason(reason).queue();
+        } else {
+            ctx.guild.getController().ban(ctx.args.get(0), 0, reason).reason(reason).queue();
+        }
 
         ctx.send(Emotes.getSuccess() + " Banned.").queue();
     }
