@@ -415,7 +415,7 @@ public class StarboardCog extends Cog {
         String channelName = "starboard";
         if (ctx.args.size() > 1) {
             String wantedName = ctx.args.get(1);
-            if (wantedName.length() < 2 || wantedName.length() > 100) {
+            if (!wantedName.matches("^[a-zA-Z0-9_-]{2,100}$")) {
                 ctx.send(Emotes.getFailure() + " Channel name must be between 2 and 100 characters long!").queue();
                 return;
             }
@@ -584,6 +584,11 @@ public class StarboardCog extends Cog {
             messageId = MiscUtil.parseSnowflake(ctx.args.get(1));
         } catch (NumberFormatException ignored) {
             ctx.send(Emotes.getFailure() + " Invalid message ID!").queue();
+            return;
+        } catch (IndexOutOfBoundsException ignored) {
+            ctx.send(Emotes.getFailure() +
+                    " I need the ID of either a starred message, or a bot message in <#" +
+                    starboard.getChannelId() + ">!").queue();
             return;
         }
 

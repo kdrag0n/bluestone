@@ -33,7 +33,7 @@ public class ModerationCog extends Cog {
             "    \u2022 `\"text\"` - include messages containing `text`\n" +
             "    \u2022 `[regex]` - include messages that match the regex";
     private static final Pattern PURGE_LINK_PATTERN = Pattern.compile("https?://.+");
-    private static final Pattern PURGE_QUOTE_PATTERN = Pattern.compile("\"(.*?)\"", Pattern.DOTALL);
+    private static final Pattern PURGE_QUOTE_PATTERN = Pattern.compile("[\"“](.*?)[\"”]", Pattern.DOTALL);
     private static final Pattern PURGE_REGEX_PATTERN = Pattern.compile("\\[(.*?)]", Pattern.DOTALL);
     private static final Pattern PURGE_MENTION_PATTERN = Pattern.compile("<@!?(\\d{17,20})>");
     private static final Pattern PURGE_NUM_PATTERN = Pattern.compile("(?:^|\\s)(\\d{1,3})(?:$|\\s)");

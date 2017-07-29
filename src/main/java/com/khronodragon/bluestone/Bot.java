@@ -246,6 +246,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     @Override
     public void onReady(ReadyEvent event) {
         JDA jda = event.getJDA();
+        jda.getPresence().setStatus(OnlineStatus.ONLINE);
         long uid = jda.getSelfUser().getIdLong();
 
         if (jda.getSelfUser().isBot()) {

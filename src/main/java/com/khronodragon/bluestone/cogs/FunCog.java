@@ -19,13 +19,14 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
-import okhttp3.Call;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import net.dv8tion.jda.core.exceptions.ErrorResponseException;
+import net.dv8tion.jda.core.exceptions.PermissionException;
+import okhttp3.*;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -34,12 +35,15 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.khronodragon.bluestone.util.NullValueWrapper.val;
+import static com.khronodragon.bluestone.util.Strings.str;
 import static java.text.MessageFormat.format;
 
 public class FunCog extends Cog {
+    private static final Logger logger = LogManager.getLogger(FunCog.class);
     private static final Map<String, UnisafeString> charsets = new HashMap<String, UnisafeString>() {{
         put("normal", uniString("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~ `!@#$%^&*()-_=+[]{}|;:'\",<.>/?"));
         put("fullwidth", uniString("ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ０１２３４５６７８９～ ｀！＠＃＄％＾＆＊（）－＿＝＋［］｛｝|；：＇＂,＜．＞/？"));
@@ -486,7 +490,14 @@ public class FunCog extends Cog {
             return;
         }
 
-        AkinatorGame game = new AkinatorGame(ctx);
+        AkinatorGame game;
+        try {
+            game = new AkinatorGame(ctx);
+        } catch (IOException e) {
+            logger.error("Error contacting Akinator", e);
+            ctx.send(Emotes.getFailure() + " An error occurred contacting Akinator.").queue();
+            return;
+        }
     }
 
     private final class AkinatorGame {
@@ -495,11 +506,12 @@ public class FunCog extends Cog {
         private static final String GET_GUESS_URL = "http://api-en4.akinator.com/ws/list";
         private static final String CHOICE_URL = "http://api-en4.akinator.com/ws/choice";
         private static final String EXCLUSION_URL = "http://api-en4.akinator.com/ws/exclusion";
+        private final Object[] REACTIONS = {"✅", "❌", "🤷", "👍", "👎", "⛔"};
 
         private final OkHttpClient client = new OkHttpClient();
         private final EmbedBuilder emb = new EmbedBuilder();
         private Message message;
-        private final JDA jda;
+        private final Runnable onFinish;
         private final MessageChannel channel;
         private final long userId;
         private StepInfo stepInfo;
@@ -508,13 +520,11 @@ public class FunCog extends Cog {
         private final String session;
         private Guess guess;
         private boolean lastQuestionWasGuess = false;
+        private boolean isActive = true;
 
         private AkinatorGame(Context ctx) throws IOException {
-            this.jda = ctx.jda;
             this.channel = ctx.channel;
             this.userId = ctx.author.getIdLong();
-
-            channel.sendTyping().queue();
 
             // Start new session
             JSONObject json = new JSONObject(client.newCall(new Request.Builder()
@@ -527,48 +537,113 @@ public class FunCog extends Cog {
             session = stepInfo.getSession();
 
             emb.setAuthor("Akinator Game", "http://akinator.com", ctx.jda.getSelfUser().getEffectiveAvatarUrl())
-                    .setDescription(":hourglass: **Please wait, game is starting...**") // TODO: use unicode emoji
-                    .setFooter("Game for " + getTag(ctx.author), ctx.author.getEffectiveAvatarUrl());
+                    .setDescription("⌛ **Please wait, game is starting...**") // TODO: use unicode emoji
+                    .setFooter("Game started at", ctx.author.getEffectiveAvatarUrl())
+                    .setTimestamp(Instant.now());
+
+            if (ctx.guild == null)
+                emb.setColor(randomColor());
+            else
+                emb.setColor(val(ctx.member.getColor()).or(Color.WHITE));
 
             message = channel.sendMessage(emb.build()).complete();
-            sendNextQuestion();
+            for (Object emoji: REACTIONS) {
+                message.addReaction((String) emoji).complete();
+            }
+            presentNextQuestion();
 
-            bot.getEventWaiter().waitForEvent(MessageReactionAddEvent.class, ev -> {
-                return ev.getChannel().getIdLong() == channel.getIdLong() &&
-                        ev.getMessageIdLong() == message.getIdLong();
-            }, ev -> {
+            onFinish = () -> {
+                emb.setDescription("❌ Game ended.\n\nThere w");
+                if (stepInfo.getStepNum() == 0)
+                    emb.appendDescription("as 1 question");
+                else
+                    emb.getDescriptionBuilder()
+                            .append("ere ")
+                            .append(stepInfo.getStepNum() + 1)
+                            .append(" questions");
+                emb.getDescriptionBuilder().append('.');
 
-            }, 1, TimeUnit.MINUTES);
+                message.editMessage(emb.build()).queue();
+                try {
+                    message.clearReactions().queue();
+                } catch (ErrorResponseException | PermissionException ignored) {}
+
+                isActive = false;
+            };
+
+            scheduleEventWait(ctx);
         }
 
-        private void sendNextQuestion() {
-            String out = "**" + name + ": Question " + (stepInfo.getStepNum() + 1) + "**\n"
-                    + stepInfo.getQuestion() + "\n [yes/no/idk/probably/probably not]";
-            jda.getTextChannelById(channelId).sendMessage(out).queue();
+        private void scheduleEventWait(Context ctx) {
+            bot.getEventWaiter().waitForEvent(MessageReactionAddEvent.class, ev -> {
+                return isActive && ev.getChannel().getIdLong() == channel.getIdLong() &&
+                        ev.getMessageIdLong() == message.getIdLong() && ev.getUser().getIdLong() == userId;
+            }, ev -> {
+                byte answer = (byte) ArrayUtils.indexOf(REACTIONS, ev.getReactionEmote().getName());
+
+                if (answer == (byte)5) {
+                    emb.setImage(null)
+                            .clearFields()
+                            .addField("Status", "Game was stopped before the end!", false);
+                    onFinish.run();
+                    return;
+                }
+
+                try {
+                    if (lastQuestionWasGuess) {
+                        if (answer != 0 && answer != 1)
+                            return;
+
+                        answerGuess(answer);
+                    } else {
+                        answerQuestion(answer);
+                    }
+                } finally {
+                    try {
+                        ev.getReaction().removeReaction(ctx.author).queue();
+                    } catch (Throwable ignored) {}
+
+                    scheduleEventWait(ctx);
+                }
+            }, 2, TimeUnit.MINUTES, onFinish);
+        }
+
+        private void presentNextQuestion() {
+            emb.setDescription(null)
+                    .clearFields()
+                    .setImage(null)
+                    .addField("Question #" + (stepInfo.getStepNum() + 1), stepInfo.getQuestion(), false);
+
+            message.editMessage(emb.build()).queue();
             lastQuestionWasGuess = false;
         }
 
-        private void sendGuess() throws IOException {
+        private void presentGuess() throws IOException {
             guess = new Guess();
-            String out = "Is this your character?\n" + guess + "\n[yes/no]";
-            jda.getTextChannelById(channelId).sendMessage(out).queue();
+            emb.clearFields()
+                    .addField("Is this your character?", guess.toString(), false)
+                    .setImage(guess.getImgPath());
+
+            message.editMessage(emb.build()).queue();
             lastQuestionWasGuess = true;
         }
 
         private void answerQuestion(byte answer) {
             try {
-                JSONObject json = Unirest.get(ANSWER_URL)
-                        .queryString("session", session)
-                        .queryString("signature", signature)
-                        .queryString("step", stepInfo.getStepNum())
-                        .queryString("answer", answer)
-                        .asJson().getBody().getObject();
+                JSONObject json = new JSONObject(client.newCall(new Request.Builder()
+                        .get()
+                        .url(Strings.buildQueryUrl(ANSWER_URL,
+                                "session", session,
+                                "signature", signature,
+                                "step", str(stepInfo.getStepNum()),
+                                "answer", Byte.toString(answer)))
+                        .build()).execute().body().string());
                 stepInfo = new StepInfo(json);
 
                 if (stepInfo.getProgression() > 90) {
-                    sendGuess();
+                    presentGuess();
                 } else {
-                    sendNextQuestion();
+                    presentNextQuestion();
                 }
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
@@ -578,50 +653,30 @@ public class FunCog extends Cog {
         private void answerGuess(byte answer) {
             try {
                 if (answer == 0) {
-                    Unirest.get(CHOICE_URL)
-                            .queryString("session", session)
-                            .queryString("signature", signature)
-                            .queryString("step", stepInfo.getStepNum())
-                            .queryString("element", guess.getId())
-                            .asString();
-                    jda.getTextChannelById(channelId).sendMessage("Great ! Guessed right one more time.\n"
-                            + "I love playing with you!\n"
-                            + "<http://akinator.com>").queue();
-                    FredBoat.getListenerBot().removeListener(userId);
+                    client.newCall(new Request.Builder()
+                            .get()
+                            .url(Strings.buildQueryUrl(CHOICE_URL,
+                                    "session", session,
+                                    "signature", signature,
+                                    "step", str(stepInfo.getStepNum()),
+                                    "element", guess.getId()))
+                            .build()).execute();
+                    onFinish.run();
                 } else if (answer == 1) {
-                    Unirest.get(EXCLUSION_URL)
-                            .queryString("session", session)
-                            .queryString("signature", signature)
-                            .queryString("step", stepInfo.getStepNum())
-                            .queryString("forward_answer", answer)
-                            .asString();
+                    client.newCall(new Request.Builder()
+                            .get()
+                            .url(Strings.buildQueryUrl(EXCLUSION_URL,
+                                    "session", session,
+                                    "signature", signature,
+                                    "step", str(stepInfo.getStepNum()),
+                                    "forward_answer", Byte.toString(answer)))
+                            .build()).execute();
 
                     lastQuestionWasGuess = false;
-                    sendNextQuestion();
+                    presentNextQuestion();
                 }
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
-            }
-        }
-
-        public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
-            Channel channel = event.getChannel();
-
-
-
-            if (channel.getIdLong() != channelId) {
-                return;
-            }
-
-            byte answer;
-
-            if (lastQuestionWasGuess) {
-                if (answer != 0 && answer != 1)
-                    return;
-
-                answerGuess(answer);
-            } else {
-                answerQuestion(answer);
             }
         }
 
@@ -665,7 +720,6 @@ public class FunCog extends Cog {
             double getProgression() {
                 return progression;
             }
-
         }
 
         private class Guess {
@@ -677,13 +731,13 @@ public class FunCog extends Cog {
             private final String imgPath;
 
             Guess() throws IOException {
-                JSONObject json = Unirest.get(GET_GUESS_URL)
-                        .queryString("session", session)
-                        .queryString("signature", signature)
-                        .queryString("step", stepInfo.getStepNum())
-                        .asJson()
-                        .getBody()
-                        .getObject();
+                JSONObject json = new JSONObject(client.newCall(new Request.Builder()
+                        .get()
+                        .url(Strings.buildQueryUrl(GET_GUESS_URL,
+                                "session", session,
+                                "signature", signature,
+                                "step", str(stepInfo.getStepNum())))
+                        .build()).execute().body().string());
 
                 JSONObject character = json.getJSONObject("parameters")
                         .getJSONArray("elements")
@@ -725,9 +779,8 @@ public class FunCog extends Cog {
             @Override
             public String toString() {
                 return "**" + name + "**\n"
-                        + desc + "\n"
-                        + "Ranking as **#" + ranking + "**\n"
-                        + imgPath;
+                        + desc + '\n'
+                        + "Ranking as **#" + ranking + "**";
             }
         }
     }

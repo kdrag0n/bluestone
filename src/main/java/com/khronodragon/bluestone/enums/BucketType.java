@@ -1,13 +1,13 @@
 package com.khronodragon.bluestone.enums;
 
 public enum BucketType {
-    USER((short)0),
-    CHANNEL((short)1),
-    GUILD((short)2),
-    GLOBAL((short)3);
+    USER((byte)0),
+    CHANNEL((byte)1),
+    GUILD((byte)2),
+    GLOBAL((byte)3);
 
-    private final short type;
-    BucketType(short type) {
+    private final byte type;
+    BucketType(byte type) {
         this.type = type;
     }
 }

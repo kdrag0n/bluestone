@@ -4,6 +4,8 @@ import gnu.trove.list.TIntList;
 import gnu.trove.list.linked.TIntLinkedList;
 import org.apache.commons.lang3.ArrayUtils;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -104,5 +106,30 @@ public class Strings {
 
     public static StringMapper createMap() {
         return StringMapper.match();
+    }
+
+    public static String buildQueryUrl(String base, String... args) {
+        if (args.length < 1)
+            return base;
+        if (args.length % 2 != 0)
+            throw new IllegalArgumentException("Query parameters must be key, value");
+
+        try {
+            StringBuilder builder = new StringBuilder(base)
+                    .append('?');
+
+            for (int i = 0; i < args.length - 1; i += 2) {
+                if (args.length > 2)
+                    builder.append('&');
+
+                builder.append(args[i])
+                        .append('=')
+                        .append(URLEncoder.encode(args[i + 1], "UTF-8"));
+            }
+
+            return builder.toString();
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
