@@ -322,7 +322,6 @@ public class UtilityCog extends Cog {
                 .setFooter(ctx.guild.getSelfMember().getEffectiveName(), ctx.jda.getSelfUser().getEffectiveAvatarUrl())
                 .setTimestamp(Instant.now())
                 .addField("ID", ctx.guild.getId(), true)
-                .addField("Members", membersText.toString(), true)
                 .addField("Channels", str(ctx.guild.getTextChannels().size() + ctx.guild.getVoiceChannels().size()), true)
                 .addField("Roles (" + ctx.guild.getRoles().size() + ')', roleText,true)
                 .addField("Emotes", str(ctx.guild.getEmotes().size()), true)
@@ -333,6 +332,7 @@ public class UtilityCog extends Cog {
                 .addField("Content Scan Level", ctx.guild.getExplicitContentLevel().getDescription(), true)
                 .addField("Verification Level", WordUtils.capitalize(ctx.guild.getVerificationLevel().name().toLowerCase()
                         .replace('_', ' ')), true)
+                .addField("Members", membersText.toString(), true)
                 .setThumbnail(ctx.guild.getIconUrl());
 
         ctx.send(emb.build()).queue();
@@ -374,6 +374,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "xstats", desc = "Get a lot of extended statistics about me.", aliases = {"xstatistics"})
     public void cmdXInfo(Context ctx) {
+        ctx.channel.sendTyping().queue();
         ShardUtil shardUtil = bot.getShardUtil();
 
         Map<String, IntStream> stats = new LinkedHashMap<String, IntStream>() {{
@@ -403,17 +404,17 @@ public class UtilityCog extends Cog {
                 .stream()
                 .filter(m -> m.getUser().isBot())
                 .count() < 2).count();
-        String excText = exclusive + " (" + Math.ceil(exclusive / shardUtil.getGuildCount() * 100d) + "%)";
+        String excText = exclusive + " (" + (int) Math.ceil(exclusive / shardUtil.getGuildCount() * 100d) + "%)";
 
         int big = (int) shardUtil.getGuildStream()
                 .filter(g -> g.getMembers().size() >= 250)
                 .count();
-        String bigText = big + " (" + Math.ceil(big / shardUtil.getGuildCount() * 100d) + "%)";
+        String bigText = big + " (" + (int) Math.ceil(big / shardUtil.getGuildCount() * 100d) + "%)";
 
         int partnered = (int) shardUtil.getGuildStream()
                 .filter(g -> g.getSplashUrl() != null || g.getRegion().isVip())
                 .count();
-        String partneredText = partnered + " (" + Math.ceil(partnered / shardUtil.getGuildCount() * 100d) + "%)";
+        String partneredText = partnered + " (" + (int) Math.ceil(partnered / shardUtil.getGuildCount() * 100d) + "%)";
 
         emb.addBlankField(false)
                 .addField("Total Queue Size", str(shardUtil.getTrackCount()), true)
