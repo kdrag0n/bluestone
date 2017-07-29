@@ -660,7 +660,7 @@ public class FunCog extends Cog {
                                     "signature", signature,
                                     "step", str(stepInfo.getStepNum()),
                                     "element", guess.getId()))
-                            .build()).execute();
+                            .build()).execute().body().close();
                     onFinish.run();
                 } else if (answer == 1) {
                     client.newCall(new Request.Builder()
@@ -670,7 +670,7 @@ public class FunCog extends Cog {
                                     "signature", signature,
                                     "step", str(stepInfo.getStepNum()),
                                     "forward_answer", Byte.toString(answer)))
-                            .build()).execute();
+                            .build()).execute().body().close();
 
                     lastQuestionWasGuess = false;
                     presentNextQuestion();
