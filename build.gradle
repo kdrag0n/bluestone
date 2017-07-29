@@ -23,6 +23,10 @@ mainClassName = 'com.khronodragon.bluestone.Start'
 repositories {
     mavenCentral()
     jcenter()
+    maven {
+        name 'jitpack'
+        url 'https://jitpack.io'
+    }
 }
 
 shadowJar {
@@ -31,7 +35,8 @@ shadowJar {
 }
 
 dependencies {
-    compile 'net.dv8tion:JDA:3.2.0_241'
+    //compile 'net.dv8tion:JDA:3.2.0_241'
+    compile 'com.github.dv8fromtheworld:jda:experimental~etf-SNAPSHOT'
     compile 'com.sedmelluq:lavaplayer:1.2.42'
     compile 'com.squareup.okhttp3:okhttp:3.8.1'
     compile 'com.google.guava:guava:22.0'
@@ -39,7 +44,7 @@ dependencies {
     compile 'org.reflections:reflections:0.9.11'
     compile 'org.python:jython-standalone:2.7.1b3'
     compile 'org.codehaus.groovy:groovy-jsr223:2.4.11'
-    compile 'org.apache.commons:commons-lang3:3.6'
+    compile 'org.apache.commons:commons-lang3:3.5'
     compile 'org.apache.logging.log4j:log4j-api:2.8.2'
     compile 'org.apache.logging.log4j:log4j-core:2.8.2'
     compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.8.2'
