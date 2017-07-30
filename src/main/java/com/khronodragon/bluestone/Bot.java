@@ -32,6 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.reflections.Reflections;
 
@@ -56,6 +57,8 @@ import static java.text.MessageFormat.format;
 
 public class Bot extends ListenerAdapter implements ClassUtilities {
     private static final MediaType STRING_MEDIA_TYPE = MediaType.parse("text/plain; charset=utf-8");
+    public static final JSONObject EMPTY_JSON_OBJECT = new JSONObject();
+    public static final JSONArray EMPTY_JSON_ARRAY = new JSONArray();
     public Logger logger = LogManager.getLogger(Bot.class);
     private final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(4, new ThreadFactoryBuilder()
                                                             .setDaemon(true)

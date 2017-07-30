@@ -186,7 +186,7 @@ public class ModerationCog extends Cog {
 
         ctx.send(Emotes.getSuccess() + " Deleted **" + toDelete.size() +
                 "** messages!" + twoWeekWarn).queue(msg -> {
-            msg.delete().queueAfter(2, TimeUnit.SECONDS, unused -> {}, exp -> {
+            msg.delete().queueAfter(2, TimeUnit.SECONDS, null, exp -> {
                 if (exp instanceof ErrorResponseException) {
                     if (((ErrorResponseException) exp).getErrorCode() != 10008) {
                         RestAction.DEFAULT_FAILURE.accept(exp);

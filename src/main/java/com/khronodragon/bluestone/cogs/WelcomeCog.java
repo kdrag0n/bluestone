@@ -37,6 +37,7 @@ public class WelcomeCog extends Cog {
             "    \u2022 `show` - show the current message\n" +
             "    \u2022 `set [message]` - set the current message\n" +
             "    \u2022 `toggle` - toggle the status of this message\n" +
+            "    \u2022 `preview` - preview the current message\n" +
             "    \u2022 `tags` - show the tags available for use in messages\n";
     private static final String TAG_HELP = "**Here are all the tags:**\n" +
             "    • `[mention/member_mention/member]` - @mention the member\n" +
@@ -101,6 +102,8 @@ public class WelcomeCog extends Cog {
                 welcomeCmdSet(ctx);
             else if (invoked.equals("toggle"))
                 welcomeCmdToggle(ctx);
+            else if (invoked.equals("preview"))
+                welcomeCmdPreview(ctx);
             else if (invoked.equals("tags"))
                 allCmdHelp(ctx);
             else
@@ -148,13 +151,18 @@ public class WelcomeCog extends Cog {
         ctx.send(Emotes.getSuccess() + " Welcome message set.").queue();
     }
 
-    public void welcomeCmdToggle(Context ctx) throws SQLException {
+    private void welcomeCmdToggle(Context ctx) throws SQLException {
         GuildWelcomeMessages query = messageDao.queryForId(ctx.guild.getIdLong());
         query.setWelcomeEnabled(!query.isWelcomeEnabled());
         String st = query.isWelcomeEnabled() ? "on" : "off";
 
         messageDao.update(query);
         ctx.send(Emotes.getSuccess() + " The welcome message is now **" + st + "**.").queue();
+    }
+
+    private void welcomeCmdPreview(Context ctx) {
+        onGuildMemberJoin(new GuildMemberJoinEvent(ctx.jda, ctx.event.getResponseNumber(),
+                ctx.guild, ctx.member));
     }
 
     @Command(name = "leave", desc = "Manage member leave messages.", guildOnly = true,
@@ -176,6 +184,8 @@ public class WelcomeCog extends Cog {
                 leaveCmdSet(ctx);
             else if (invoked.equals("toggle"))
                 leaveCmdToggle(ctx);
+            else if (invoked.equals("preview"))
+                leaveCmdPreview(ctx);
             else if (invoked.equals("tags"))
                 allCmdHelp(ctx);
             else
@@ -224,13 +234,18 @@ public class WelcomeCog extends Cog {
         ctx.send(Emotes.getSuccess() + " Leave message set.").queue();
     }
 
-    public void leaveCmdToggle(Context ctx) throws SQLException {
+    private void leaveCmdToggle(Context ctx) throws SQLException {
         GuildWelcomeMessages query = messageDao.queryForId(ctx.guild.getIdLong());
         query.setLeaveEnabled(!query.isLeaveEnabled());
         String st = query.isLeaveEnabled() ? "on" : "off";
 
         messageDao.update(query);
         ctx.send(Emotes.getSuccess() + " The leave message is now **" + st + "**.").queue();
+    }
+
+    private void leaveCmdPreview(Context ctx) {
+        onGuildMemberLeave(new GuildMemberLeaveEvent(ctx.jda, ctx.event.getResponseNumber(),
+                ctx.guild, ctx.member));
     }
 
     private GuildWelcomeMessages initGuild(Guild guild) throws SQLException {

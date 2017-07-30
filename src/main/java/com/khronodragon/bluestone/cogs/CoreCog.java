@@ -7,7 +7,9 @@ import com.khronodragon.bluestone.util.Paginator;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.MessageEmbed;
+import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.exceptions.PermissionException;
+import net.dv8tion.jda.core.requests.RestAction;
 
 import java.util.*;
 
@@ -175,7 +177,16 @@ public class CoreCog extends Cog {
         MessageChannel channel = destination.getChannel(ctx);
 
         for (MessageEmbed page: pages) {
-            channel.sendMessage(page).queue();
+            channel.sendMessage(page).queue(null, exp -> {
+                if (exp instanceof ErrorResponseException) {
+                    if (((ErrorResponseException) exp).getErrorCode() != 50007) {
+                        RestAction.DEFAULT_FAILURE.accept(exp);
+                    } else {
+                        ctx.send(Emotes.getFailure() +
+                                " I couldn't send you help! Make sure you haven't blocked me.").queue();
+                    }
+                }
+            });
         }
 
         if (destination == MessageDestination.AUTHOR && ctx.guild != null) {

@@ -1333,4 +1333,71 @@ public class UtilityCog extends Cog {
             ctx.send(Emotes.getFailure() + " Error fetching invite info!").queue();
         });
     }
+
+    @Command(name = "weather", desc = "Get the weather for a place.", usage = "[city]")
+    public void cmdWeather(Context ctx) {
+        if (ctx.rawArgs.length() < 1) {
+            ctx.send(Emotes.getFailure() + " I need a place to get the weather for!").queue();
+            return;
+        } else if (!bot.getKeys().has("openweathermap")) {
+            ctx.send(Emotes.getFailure() + " My owner hasn't set this feature up!").queue();
+            return;
+        }
+
+        bot.http.newCall(new Request.Builder()
+                .get()
+                .url(Strings.buildQueryUrl("http://api.openweathermap.org/data/2.5/find",
+                        "q", ctx.rawArgs,
+                        "type", "like",
+                        "units", "imperial"))
+                .header("X-API-Key", bot.getKeys().getString("openweathermap"))
+                .build()).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                ctx.send(Emotes.getFailure() + " Failed to get weather for that location!").queue();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    onFailure(call, null);
+                    return;
+                }
+
+                JSONObject root = new JSONObject(response.body().string());
+
+                if (root.optInt("count") > 0 && root.getJSONArray("list").length() > 0) {
+                    JSONObject data = root.getJSONArray("list").getJSONObject(0);
+                    JSONObject wind = val(data.optJSONObject("wind")).or(Bot.EMPTY_JSON_OBJECT);
+                    JSONObject main = val(data.optJSONObject("main")).or(Bot.EMPTY_JSON_OBJECT);
+                    JSONObject sys = val(data.optJSONObject("sys")).or(Bot.EMPTY_JSON_OBJECT);
+                    JSONObject clouds = val(data.optJSONObject("clouds")).or(Bot.EMPTY_JSON_OBJECT);
+                    JSONObject condition = val(data.optJSONArray("weather")).or(Bot.EMPTY_JSON_ARRAY).optJSONObject(0);
+
+                    EmbedBuilder emb = new EmbedBuilder()
+                            .setAuthor("Weather for " + data.getString("name"), null,
+                                    ctx.jda.getSelfUser().getEffectiveAvatarUrl())
+                            .addField("💨 Wind", wind.optDouble("speed") +
+                                    " mph (direction: " + wind.optInt("deg") + "°)", true)
+                            .addField("💧 Humidity",
+                                    str(main.optDouble("humidity")) + '%', true)
+                            .addField("🌅 Sunrise Time", new Date(sys.optLong("sunrise")).toString(), true)
+                            .addField("🌇 Sunset Time", new Date(sys.optLong("sunset")).toString(), true)
+                            .addField("☀ Today's High", str(main.optDouble("temp_max")) + "❄️❄️°F", true)
+                            .addField("❄ Today's Low", str(main.optDouble("temp_min")) + "❄️❄️°F", true)
+                            .addField("🌡 Temperature Now", str(main.optDouble("temp")) + "❄️❄️°F", true)
+                            .addField("☁ Cloudiness", clouds.optInt("all") + "%", true)
+                            .addField("⏬ Pressure", main.optInt("pressure") + " hPa", true)
+                            .addField("🏙 Condition", "**" + condition.optString("main", SHRUG) +
+                                    "** - " + condition.optString("description", SHRUG), true)
+                            .setFooter("Data updated at", null)
+                            .setTimestamp(Instant.ofEpochMilli(data.getLong("dt")));
+                    if (condition.has("icon"))
+                        emb.setThumbnail("https://openweathermap.org/img/w/" + condition.getString("icon") + ".png");
+
+                    ctx.send(emb.build()).queue();
+                }
+            }
+        });
+    }
 }
