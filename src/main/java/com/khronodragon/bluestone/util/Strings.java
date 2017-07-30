@@ -136,6 +136,30 @@ public class Strings {
             throw new RuntimeException(e);
         }
     }
+    public static String buildImmutableMap(String base, String... args) {
+        if (args.length < 1)
+            return base;
+        if (args.length % 2 != 0)
+            throw new IllegalArgumentException("Query parameters must be key, value");
+
+        try {
+            StringBuilder builder = new StringBuilder(base)
+                    .append('?');
+
+            for (int i = 0; i < args.length - 1; i += 2) {
+                if (args.length > 2)
+                    builder.append('&');
+
+                builder.append(args[i])
+                        .append('=')
+                        .append(URLEncoder.encode(args[i + 1], "UTF-8"));
+            }
+
+            return builder.toString();
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static String renderMessage(Message message, Guild guild, String msg) {
         String tmp = msg;

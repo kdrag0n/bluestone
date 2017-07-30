@@ -139,7 +139,7 @@ public class StarboardCog extends Cog {
     }
 
     private Color starGradientColor(int stars) {
-        double percent = Math.max(stars / 13, 1.0);
+        double percent = Math.min(stars / 13, 1.0);
 
         int red = 255;
         int green = (int) ((194 * percent) + (253 * (1 - percent)));

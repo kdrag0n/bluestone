@@ -5,6 +5,7 @@ import ch.jamiete.mcping.MinecraftPingOptions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.Multiset;
 import com.google.zxing.BarcodeFormat;
@@ -45,6 +46,7 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
@@ -62,6 +64,7 @@ import java.awt.*;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
@@ -149,6 +152,36 @@ public class UtilityCog extends Cog {
                 }
             });
     private Dao<ActivePoll, Long> pollDao;
+
+    private static final List<ImmutablePair<Pattern, Integer>> MEME_PATTERNS = ImmutableList.of(
+            pair("(one does not simply) (.*)", 61579),
+            pair("(i don'?t always .*) (but when i do,? .*)", 61532),
+            pair("aliens ()(.*)", 101470),
+            pair("grumpy cat ()(.*)", 405658),
+            pair("(.*),? (\\1 everywhere)", 347390),
+            pair("(not sure if .*) (or .*)", 61520),
+            pair("(y u no) (.+)", 61527),
+            pair("(brace yoursel[^\\s]+) (.*)", 61546),
+            pair("(.*) (all the .*)", 61533),
+            pair("(.*) (that would be great|that'?d be great)", 563423),
+            pair("(.*) (\\w+\\stoo damn .*)", 61580),
+            pair("(yo dawg .*) (so .*)", 101716),
+            pair("(.*) (.* gonna have a bad time)", 100951),
+            pair("(am i the only one around here) (.*)", 259680),
+            pair("(what if i told you) (.*)", 100947),
+            pair("(.*) (ain'?t nobody got time for? that)", 442575),
+            pair("(.*) (i guarantee it)", 10672255),
+            pair("(.*) (a+n+d+ it'?s gone)", 766986),
+            pair("(.* bats an eye) (.* loses their minds?)", 1790995),
+            pair("(back in my day) (.*)", 718432)
+    )
+            .stream()
+            .map(p -> ImmutablePair.of(Pattern.compile(p.getLeft(), Pattern.CASE_INSENSITIVE), p.getRight()))
+            .collect(Collectors.toList());
+
+    private static<L, R> ImmutablePair<L, R> pair(L l, R r) {
+        return ImmutablePair.of(l, r);
+    }
 
     public UtilityCog(Bot bot) {
         super(bot);
@@ -595,45 +628,68 @@ public class UtilityCog extends Cog {
 
     @Command(name = "meme", desc = "Generate a custom meme.", usage = "[top text] | [bottom text]")
     public void cmdMeme(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.rawArgs.length() < 2) {
             ctx.send(Emotes.getFailure() + " I need some text to use!").queue();
             return;
         }
         ctx.channel.sendTyping().queue();
 
-        JSONObject json = new JSONObject();
+        FormBody.Builder data = new FormBody.Builder();
 
-        int template = 61579;
-        // TODO: try matching the regex-id pairs against input
+        int template = -1024;
+        String topText = null;
+        String bottomText = null;
+        for (ImmutablePair<Pattern, Integer> pair: MEME_PATTERNS) {
+            Matcher matcher = pair.getLeft().matcher(ctx.rawArgs);
+            if (!matcher.find())
+                continue;
 
-        String topText;
-        String bottomText;
-        if (ctx.rawArgs.indexOf('|') != -1) {
-            final int sepIndex = ctx.rawArgs.indexOf('|');
+            try {
+                if (matcher.group(1) == null || matcher.group(2) == null)
+                    continue;
+            } catch (IndexOutOfBoundsException ignored) {
+                continue;
+            }
 
-            topText = ctx.rawArgs.substring(0, sepIndex).trim();
-            bottomText = ctx.rawArgs.substring(sepIndex + 1).trim();
-        } else {
-            String[] results = ArrayUtils.subarray(StringUtils.split(WordUtils.wrap(ctx.rawArgs.replace("\n", " "), ctx.rawArgs.length() / 2, "\n", true, "\\s+"), '\n'), 0, 2);
-
-            topText = results[0];
-            bottomText = results[1];
+            topText = matcher.group(1);
+            bottomText = matcher.group(2);
+            template = pair.getRight();
+            break;
         }
 
-        json.put("template_id", template);
+        if (template == -1024)
+            template = randomChoice(MEME_PATTERNS).getRight();
+
+        if (topText == null || bottomText == null) {
+            if (ctx.rawArgs.indexOf('|') != -1) {
+                final int sepIndex = ctx.rawArgs.indexOf('|');
+
+                topText = ctx.rawArgs.substring(0, sepIndex).trim();
+                bottomText = ctx.rawArgs.substring(sepIndex + 1).trim();
+            } else {
+                String[] results = ArrayUtils.subarray(StringUtils.split(WordUtils.wrap(ctx.rawArgs
+                        .replace("\n", " "), ctx.rawArgs.length() / 2,
+                        "\n", true, "\\s+"), '\n'),
+                        0, 2);
+
+                topText = results[0];
+                bottomText = results[1];
+            }
+        }
+
+        data.add("template_id", str(template));
         try {
-            json.put("username", bot.getKeys().getJSONObject("imgflip").getString("username"));
-            json.put("password", bot.getKeys().getJSONObject("imgflip").getString("password"));
+            data.add("username", bot.getKeys().getJSONObject("imgflip").getString("username"));
+            data.add("password", bot.getKeys().getJSONObject("imgflip").getString("password"));
         } catch (JSONException none) {
-            json.put("username", "imgflip_hubot");
-            json.put("password", "imgflip_hubot");
+            data.add("username", "imgflip_hubot");
+            data.add("password", "imgflip_hubot");
         }
-        json.put("text0", topText);
-        json.put("text1", bottomText);
-        //logger.info("req {}", json);
+        data.add("text0", topText);
+        data.add("text1", bottomText);
 
         bot.http.newCall(new Request.Builder()
-                .post(RequestBody.create(JSON_MEDIA_TYPE, json.toString()))
+                .post(data.build())
                 .url("https://api.imgflip.com/caption_image")
                 .build()).enqueue(new okhttp3.Callback() {
             @Override
@@ -646,12 +702,11 @@ public class UtilityCog extends Cog {
             public void onResponse(Call call, Response response) throws IOException {
                 JSONObject resp = new JSONObject(response.body().string());
 
-                logger.info(resp);
                 if (resp.optBoolean("success", false)) {
                     ctx.send(new EmbedBuilder()
-                            .setColor(randomColor())
-                            .setImage(resp.getJSONObject("data").getString("url"))
-                            .build()).queue();
+                        .setColor(randomColor())
+                        .setImage(resp.getJSONObject("data").getString("url"))
+                        .build()).queue();
                 } else {
                     ctx.send(Emotes.getFailure() + " Error: `" + resp.getString("error_message") + '`').queue();
                 }
@@ -1357,6 +1412,15 @@ public class UtilityCog extends Cog {
                 ctx.send(Emotes.getFailure() + " Failed to get weather for that location!").queue();
             }
 
+            private Color tempColor(int temp) {
+                double percent = Math.max(temp / 106, 1.0);
+
+                int red = (int) ((12 * percent) + (247 * (1 - percent)));
+                int green = (int) ((194 * percent) + (253 * (1 - percent)));
+                int blue = 255;
+                return new Color((red << 16) + (green << 8) + blue);
+            }
+
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (!response.isSuccessful()) {
@@ -1381,17 +1445,27 @@ public class UtilityCog extends Cog {
                                     " mph (direction: " + wind.optInt("deg") + "°)", true)
                             .addField("💧 Humidity",
                                     str(main.optDouble("humidity")) + '%', true)
-                            .addField("🌅 Sunrise Time", new Date(sys.optLong("sunrise")).toString(), true)
-                            .addField("🌇 Sunset Time", new Date(sys.optLong("sunset")).toString(), true)
-                            .addField("☀ Today's High", str(main.optDouble("temp_max")) + "❄️❄️°F", true)
-                            .addField("❄ Today's Low", str(main.optDouble("temp_min")) + "❄️❄️°F", true)
-                            .addField("🌡 Temperature Now", str(main.optDouble("temp")) + "❄️❄️°F", true)
+                            .addField("🌅 Sunrise Time", sys.optLong("sunrise") == 0L ? SHRUG :
+                                    new Date(sys.optLong("sunrise")).toString(), true)
+                            .addField("🌇 Sunset Time", sys.optLong("sunset") == 0L ? SHRUG :
+                                    new Date(sys.optLong("sunset")).toString(), true)
+                            .addField("☀ Today's High", str(main.optDouble("temp_max")) + "°F", true)
+                            .addField("❄ Today's Low", str(main.optDouble("temp_min")) + "°F", true)
+                            .addField("🌡 Temperature Now", str(main.optDouble("temp")) + "°F", true)
                             .addField("☁ Cloudiness", clouds.optInt("all") + "%", true)
                             .addField("⏬ Pressure", main.optInt("pressure") + " hPa", true)
                             .addField("🏙 Condition", "**" + condition.optString("main", SHRUG) +
                                     "** - " + condition.optString("description", SHRUG), true)
-                            .setFooter("Data updated at", null)
-                            .setTimestamp(Instant.ofEpochMilli(data.getLong("dt")));
+                            .setColor(ColorUtils.mixColors(Color.BLUE, Color.RED,
+                                    Math.max(Math.min(main.optDouble("temp") / 106, 1.0), 0.0)));
+
+                    if (data.getLong("dt") < System.currentTimeMillis() - 157784630000L)
+                        emb.setFooter("Data fetched at", null)
+                            .setTimestamp(Instant.now());
+                    else
+                        emb.setFooter("Data updated at", null)
+                                .setTimestamp(Instant.ofEpochMilli(data.getLong("dt")));
+
                     if (condition.has("icon"))
                         emb.setThumbnail("https://openweathermap.org/img/w/" + condition.getString("icon") + ".png");
 
