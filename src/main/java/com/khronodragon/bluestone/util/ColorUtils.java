@@ -14,7 +14,7 @@ public class ColorUtils {
         double inverse_percent = 1.0 - percent;
 
         int red = (int) (toColor.getRed() * percent + fromColor.getRed() * inverse_percent);
-        int green = (int) (toColor.getGreen()*  percent + fromColor.getGreen() * inverse_percent);
+        int green = (int) (toColor.getGreen() * percent + fromColor.getGreen() * inverse_percent);
         int blue = (int) (toColor.getBlue() * percent + fromColor.getBlue() * inverse_percent);
 
         return new Color(red, green, blue);

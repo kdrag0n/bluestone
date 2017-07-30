@@ -1412,15 +1412,6 @@ public class UtilityCog extends Cog {
                 ctx.send(Emotes.getFailure() + " Failed to get weather for that location!").queue();
             }
 
-            private Color tempColor(int temp) {
-                double percent = Math.max(temp / 106, 1.0);
-
-                int red = (int) ((12 * percent) + (247 * (1 - percent)));
-                int green = (int) ((194 * percent) + (253 * (1 - percent)));
-                int blue = 255;
-                return new Color((red << 16) + (green << 8) + blue);
-            }
-
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (!response.isSuccessful()) {

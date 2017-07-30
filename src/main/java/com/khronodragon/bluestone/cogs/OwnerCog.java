@@ -83,13 +83,12 @@ public class OwnerCog extends Cog {
 
         for (Bot shard: ctx.bot.getShardUtil().getShards()) {
             result.append('[')
-                    .append(ctx.jda.getShardInfo().getShardId() == shard.getJda().getShardInfo().getShardId() ?
-                            '*' : ' ')
+                    .append(bot.getShardNum() == shard.getShardNum() ? '*' : ' ')
                     .append("] Shard ")
                     .append(shard.getShardNum() - 1)
-                    .append(" | ")
+                    .append(" | [")
                     .append(shard.getJda().getStatus().name())
-                    .append(" || Guilds: ")
+                    .append("] | Guilds: ")
                     .append(shard.getJda().getGuilds().size())
                     .append(" | Users: ")
                     .append(shard.getJda().getUsers().size())
@@ -103,7 +102,7 @@ public class OwnerCog extends Cog {
         }
         result.append("\nTotal: ")
                 .append(bot.getShardTotal())
-                .append(" shards```");
+                .append(" shard(s)```");
 
         if (result.length() > 2000) {
             for (int i = 0; i < result.length(); i += 1999) {
