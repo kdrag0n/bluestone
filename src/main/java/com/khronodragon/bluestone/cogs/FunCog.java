@@ -10,14 +10,11 @@ import com.khronodragon.bluestone.util.Strings;
 import com.khronodragon.bluestone.util.UnisafeString;
 import gnu.trove.map.TCharObjectMap;
 import gnu.trove.map.hash.TCharObjectHashMap;
+import net.dv8tion.jda.client.entities.Group;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.entities.Channel;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.exceptions.PermissionException;
@@ -30,11 +27,15 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URL;
+import java.sql.SQLException;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -783,5 +784,145 @@ public class FunCog extends Cog {
                         + "Ranking as **#" + ranking + "**";
             }
         }
+    }
+
+    @Command(name = "profile", desc = "Display a user's profile.", usage = "[user]", thread = true)
+    public void cmdProfile(Context ctx) throws SQLException, IOException {
+        User user;
+        if (ctx.rawArgs.matches("^<@!?[0-9]{17,20}>$") && ctx.message.getMentionedUsers().size() > 0)
+            user = ctx.message.getMentionedUsers().get(0);
+        else if (ctx.rawArgs.matches("^[0-9]{17,20}$")) {
+            try {
+                user = ctx.jda.retrieveUserById(Long.parseUnsignedLong(ctx.rawArgs)).complete();
+            } catch (ErrorResponseException ignored) {
+                user = null;
+            }
+        } else if (ctx.rawArgs.matches("^.{2,32}#[0-9]{4}$")) {
+            Collection<User> users;
+            switch (ctx.channel.getType()) {
+                case TEXT:
+                    users = ctx.guild.getMembers().stream().map(Member::getUser).collect(Collectors.toList());
+                    break;
+                case PRIVATE:
+                    users = Arrays.asList(ctx.author, ctx.jda.getSelfUser());
+                    break;
+                case GROUP:
+                    users = ((Group) ctx.channel).getUsers();
+                    break;
+                default:
+                    users = Collections.singletonList(ctx.jda.getSelfUser());
+                    break;
+            }
+
+            user = users.stream()
+                    .filter(u -> getTag(u).contentEquals(ctx.rawArgs))
+                    .findFirst()
+                    .orElse(null);
+        } else if (ctx.rawArgs.length() < 1)
+            user = ctx.author;
+        else
+            user = null;
+
+        if (user == null) {
+            ctx.send(Emotes.getFailure() + " I need a valid @mention, user ID, or user#discriminator!").queue();
+            return;
+        }
+
+        BufferedImage avatar = ImageIO.read(bot.http.newCall(new Request.Builder().get().url(user.getEffectiveAvatarUrl()).build()).execute().body().byteStream());
+        BufferedImage bg = ImageIO.read(new URL("http://www.desktopimages.org/pictures/2015/0208/1/google-material-design-wallpaper-67337.jpg"));
+
+        // Card background
+        BufferedImage cardbg = new BufferedImage(800, 500, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = cardbg.createGraphics();
+
+        g2d.setColor(Color.WHITE);
+        // Everything here is layered
+        g2d.fillRect(0, 0, 800, 500);
+        g2d.drawImage(bg, 0, 0, 800, 500, null); // user background
+        g2d.dispose();
+
+        // Card foreground
+        BufferedImage cardfg = new BufferedImage(800, 500, BufferedImage.TYPE_INT_ARGB);
+        g2d = cardfg.createGraphics();
+
+        // Info box top
+        g2d.setColor(new Color(255, 255, 255, 224));
+        g2d.fillRoundRect(200, 60, 540, 131, 12, 12);
+
+        g2d.setColor(new Color(255, 255, 255, 255));
+        g2d.fillRoundRect(200, 50, 540, 84, 12, 12);
+
+        // Avatar box
+        g2d.setColor(new Color(80, 80, 80, 255));
+        g2d.fillRoundRect(59, 59, 134, 134, 4, 4);
+        g2d.drawImage(avatar, 62, 62, 128, 128, null);
+
+        // Font rendering hints
+        g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
+                RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+
+        // Profile info
+        g2d.setFont(new Font("Lato", Font.BOLD, 32));
+        g2d.setColor(new Color(74, 144, 226, 255));
+        g2d.drawString(user.getName(), 210, 96);
+        g2d.setFont(new Font("Lato", Font.PLAIN, 18));
+        g2d.drawString('@' + getTag(user), 210, 124);
+
+        // Info box bottom
+        g2d.setColor(new Color(255, 255, 255, 224));
+        g2d.fillRoundRect(60, 200, 680, 250, 16, 16);
+
+        // render text here
+
+        g2d.dispose();
+
+        BufferedImage card = new BufferedImage(800, 500, BufferedImage.TYPE_INT_ARGB);
+        g2d = card.createGraphics();
+
+        // Final card
+        g2d.drawImage(cardbg, 0, 0, 800, 500, null);
+        g2d.drawImage(cardfg, 0, 0, 800, 500, null);
+
+        g2d.dispose();
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        ImageIO.write(card, "png", stream);
+
+        ctx.channel.sendFile(stream.toByteArray(), "profile.png", null).queue();
+
+        /*
+        #Info Box Bottom
+            dd.rectangle([(60,200),(740,450)], fill=(255,255,255,224))
+
+            _answers = None
+            _questions = self.config["profile_questions"]
+
+            try:
+                with open('data/users/profiles/{0}.dat'.format(_id)) as f:
+                    _answers = json.load(f)
+
+                print(_answers)
+            except Exception as error:
+                print(error)
+                print('User doesn\'t have a profile.')
+
+            if (_answers != None):
+                for key, quest in zip(sorted(_answers),_questions):
+                    print('{0} {1}:{2}'.format(key,quest,_answers[key]))
+                    if(int(key) < 5):
+                        dd.text((80, 260 + ((int(key)-1) * 48)), textwrap.fill(quest,50) + "\n" + textwrap.fill(_answers[key],50), fill=(74, 144, 226, 255), font=desc_font)
+                    else:
+                        dd.text((410, 260 + ((int(key)-6) * 48)), textwrap.fill(quest,50) + "\n" + textwrap.fill(_answers[key],50), fill=(74, 144, 226, 255), font=desc_font)
+
+
+
+            #cardfg = Image.alpha_composite(cardfg,userAvatar)
+
+            card = Image.new('RGBA', (800, 500), (255,255,255,255))
+            card = Image.alpha_composite(card,cardbg)
+            card = Image.alpha_composite(card,cardfg)
+         */
     }
 }

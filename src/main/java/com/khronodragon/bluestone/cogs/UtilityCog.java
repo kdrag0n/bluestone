@@ -64,7 +64,6 @@ import java.awt.*;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
@@ -1447,7 +1446,7 @@ public class UtilityCog extends Cog {
                             .addField("⏬ Pressure", main.optInt("pressure") + " hPa", true)
                             .addField("🏙 Condition", "**" + condition.optString("main", SHRUG) +
                                     "** - " + condition.optString("description", SHRUG), true)
-                            .setColor(ColorUtils.mixColors(Color.BLUE, Color.RED,
+                            .setColor(GraphicsUtils.interpolateColors(Color.BLUE, Color.RED,
                                     Math.max(Math.min(main.optDouble("temp") / 106, 1.0), 0.0)));
 
                     if (data.getLong("dt") < System.currentTimeMillis() - 157784630000L)

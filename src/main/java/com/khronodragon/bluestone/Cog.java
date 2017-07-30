@@ -1,10 +1,7 @@
 package com.khronodragon.bluestone;
 
 import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageReaction;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.entities.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
@@ -92,6 +89,14 @@ public abstract class Cog {
             return ctx.jda.getSelfUser().getName();
         } else {
             return ctx.guild.getSelfMember().getEffectiveName();
+        }
+    }
+
+    protected static String getEffectiveName(User user, Guild guild) {
+        if (guild == null) {
+            return user.getName();
+        } else {
+            return guild.getMember(user).getEffectiveName();
         }
     }
 

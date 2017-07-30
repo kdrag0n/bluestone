@@ -78,7 +78,7 @@ public class GoogleCog extends Cog {
                                 } else if (meta.has("og:image")) {
                                     emb.setThumbnail(meta.getString("og:image"));
                                 }
-                            } catch (JSONException ignored) {}
+                            } catch (JSONException | IllegalArgumentException ignored) {}
                         } else {
                             emb.setDescription("No results.");
                         }

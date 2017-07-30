@@ -207,6 +207,9 @@ public class ModerationCog extends Cog {
         } else if (!ctx.rawArgs.matches("^<@!?(\\d{17,20})>$") || ctx.message.getMentionedUsers().size() < 1) {
             ctx.send(Emotes.getFailure() + " Invalid mention!").queue();
             return;
+        } else if (!ctx.guild.getSelfMember().hasPermission(Permission.MANAGE_PERMISSIONS)) {
+            ctx.send(Emotes.getFailure() + " I need the **Manage Channels** permission!").queue();
+            return;
         }
 
         Member user = ctx.guild.getMember(ctx.message.getMentionedUsers().get(0));
@@ -253,6 +256,9 @@ public class ModerationCog extends Cog {
             return;
         } else if (!ctx.rawArgs.matches("^<@!?(\\d{17,20})>$") || ctx.message.getMentionedUsers().size() < 1) {
             ctx.send(Emotes.getFailure() + " Invalid mention!").queue();
+            return;
+        } else if (!ctx.guild.getSelfMember().hasPermission(Permission.MANAGE_PERMISSIONS)) {
+            ctx.send(Emotes.getFailure() + " I need the **Manage Channels** permission!").queue();
             return;
         }
 

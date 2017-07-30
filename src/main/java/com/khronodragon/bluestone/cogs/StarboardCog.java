@@ -21,6 +21,7 @@ import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.sql.Starboard;
 import com.khronodragon.bluestone.sql.StarboardEntry;
 import com.khronodragon.bluestone.sql.Starrer;
+import com.khronodragon.bluestone.util.GraphicsUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.Permission;
@@ -141,10 +142,7 @@ public class StarboardCog extends Cog {
     private Color starGradientColor(int stars) {
         double percent = Math.min(stars / 13, 1.0);
 
-        int red = 255;
-        int green = (int) ((194 * percent) + (253 * (1 - percent)));
-        int blue = (int) ((12 * percent) + (247 * (1 - percent)));
-        return new Color((red << 16) + (green << 8) + blue);
+        return GraphicsUtils.interpolateColors(new Color(0xfffdf7), new Color(0xffc20c), percent);
     }
 
     private String getStarEmoji(int stars) {
