@@ -185,7 +185,7 @@ public class KewlCog extends Cog {
                                     160, 440);
                         }
                     } else {
-                        g2d.setFont(new Font(PROFILE_FONT, Font.BOLD, 82));
+                        g2d.setFont(new Font(PROFILE_FONT, Font.BOLD, 80));
                         drawMLString(g2d,
                                 "This user hasn't set up their\nprofile yet!\n(╯°□°）╯︵ ┻━─┬\uFEFF ノ( ゜-゜ノ)",
                                 160, 440);
@@ -440,7 +440,10 @@ public class KewlCog extends Cog {
             usage = "{\"reset\" or \"default\" to reset to default}", thread = true,
             aliases = {"profilebg", "profile_bg", "setprofilebg"})
     public void cmdSetProfileBg(Context ctx) {
-        if (ctx.rawArgs.equalsIgnoreCase("reset") || ctx.rawArgs.equalsIgnoreCase("default")) {
+        String a = ctx.invoker.equalsIgnoreCase("profile") ?
+                ctx.args.get(ctx.args.size() - 1) : ctx.rawArgs;
+
+        if (a.equalsIgnoreCase("reset") || a.equalsIgnoreCase("default")) {
             File path = new File("data/profiles/bg/" + ctx.author.getIdLong() + ".png");
 
             if (path.exists()) {

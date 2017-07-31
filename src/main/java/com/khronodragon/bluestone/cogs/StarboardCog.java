@@ -185,6 +185,7 @@ public class StarboardCog extends Cog {
         Starboard starboard = dao.queryForId(event.getGuild().getIdLong());
         if (starboard == null) return;
         if (starboard.isLocked()) return;
+        if (event.getChannel().getIdLong() == starboard.getChannelId()) return;
 
         int stars = event.getReaction().getUsers().complete().size();
         if (stars < starboard.getStarThreshold()) return;
@@ -231,8 +232,11 @@ public class StarboardCog extends Cog {
                 }
             }
 
-            long botMessageId = event.getGuild().getTextChannelById(starboard.getChannelId())
-                    .sendMessage(new MessageBuilder()
+            TextChannel channel = event.getGuild().getTextChannelById(starboard.getChannelId());
+            if (channel == null)
+                onChannelDelete(new TextChannelDeleteEvent(event.getJDA(), event.getResponseNumber(), channel));
+
+            long botMessageId = channel.sendMessage(new MessageBuilder()
                             .append(renderedText)
                             .setEmbed(emb.build())
                             .build()).complete().getIdLong();

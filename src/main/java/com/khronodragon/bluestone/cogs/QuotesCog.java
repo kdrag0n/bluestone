@@ -255,6 +255,9 @@ public class QuotesCog extends Cog {
         if (text.length() > 360) {
             ctx.send(Emotes.getFailure() + " Text too long!").queue();
             return;
+        } else if (text.length() < 1) {
+            ctx.send(Emotes.getFailure() + " That message needs to have text!").queue();
+            return;
         }
 
         long quotes = dao.queryBuilder()

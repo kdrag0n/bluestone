@@ -140,7 +140,7 @@ public class ModerationCog extends Cog {
                 continue;
 
             if (msg.getCreationTime().isBefore(maxAge)) {
-                twoWeekWarn = "\n:vertical_traffic_light: *Some messages weren't deleted, because they were more than 2 weeks old.*";
+                twoWeekWarn = "\n:vertical_traffic_light: *Some messages may not have been deleted, because they were more than 2 weeks old.*";
                 break;
             }
 

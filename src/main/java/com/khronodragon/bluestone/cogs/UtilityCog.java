@@ -665,9 +665,12 @@ public class UtilityCog extends Cog {
 
                 topText = ctx.rawArgs.substring(0, sepIndex).trim();
                 bottomText = ctx.rawArgs.substring(sepIndex + 1).trim();
+            } else if (ctx.args.size() == 1 && ctx.rawArgs.length() % 2 != 0) {
+                topText = ctx.args.get(0);
+                bottomText = " ";
             } else {
                 String[] results = ArrayUtils.subarray(StringUtils.split(WordUtils.wrap(ctx.rawArgs
-                        .replace("\n", " "), ctx.rawArgs.length() / 2,
+                                .replace("\n", " "), ctx.rawArgs.length() / 2,
                         "\n", true, "\\s+"), '\n'),
                         0, 2);
 
@@ -1145,7 +1148,8 @@ public class UtilityCog extends Cog {
                 ctx.send(Emotes.getFailure() + " An error occurred.").queue();
                 return;
             }
-        } else if ((first.equalsIgnoreCase("number") && second.matches("^[0-9]{1,4}$")) || first.matches("^[0-9]{1,4}$")) {
+        } else if (((first.equalsIgnoreCase("number") || first.equalsIgnoreCase("num")) &&
+                second.matches("^[0-9]{1,4}$")) || first.matches("^[0-9]{1,4}$")) {
             ctx.channel.sendTyping().queue();
 
             try {
@@ -1175,10 +1179,10 @@ public class UtilityCog extends Cog {
         } else {
             ctx.send(":thinking: **Invalid comic!**\n" +
                     "The following are valid:\n" +
-                    "    \\u2022 `latest`\n" +
-                    "    \\u2022 `random`\n" +
-                    "    \\u2022 `number [comic number]`\n" +
-                    "    \\u2022 `[comic number]`").queue();
+                    "    \u2022 `latest`\n" +
+                    "    \u2022 `random`\n" +
+                    "    \u2022 `number [comic number]`\n" +
+                    "    \u2022 `[comic number]`").queue();
             return;
         }
 
