@@ -183,7 +183,7 @@ public class CoreCog extends Cog {
                         RestAction.DEFAULT_FAILURE.accept(exp);
                     } else {
                         ctx.send(Emotes.getFailure() +
-                                " I couldn't send you help! Make sure you haven't blocked me.").queue();
+                                " I couldn't send you help! Make sure you haven't blocked me, and have direct messages from this server turned on.").queue();
                     }
                 }
             });

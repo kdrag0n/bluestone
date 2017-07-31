@@ -1,9 +1,27 @@
 package com.khronodragon.bluestone.util;
 
-import java.awt.*;
+import nu.pattern.OpenCV;
+import org.opencv.core.*;
+import org.opencv.imgproc.Imgproc;
+
+import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GraphicsUtils {
+    private static boolean opencvInitialized = false;
+
+    private static void ensureOpencvInit() {
+        if (!opencvInitialized) {
+            OpenCV.loadShared();
+            opencvInitialized = true;
+        }
+    }
+
     /**
      * Interpolate two colors, given a percentage.
      * @param fromColor the color that represents 0
@@ -29,12 +47,45 @@ public class GraphicsUtils {
      * @return the resized image
      */
     public static BufferedImage resizeImage(BufferedImage img, int newW, int newH) {
-        BufferedImage newImg = new BufferedImage(newW, newH, BufferedImage.TYPE_INT_ARGB);
+        ensureOpencvInit();
 
-        Graphics2D g2d = newImg.createGraphics();
-        g2d.drawImage(img, 0, 0, newW, newH, null);
-        g2d.dispose();
+        int curCVtype;
+        switch (img.getType()) {
+            case BufferedImage.TYPE_3BYTE_BGR:
+                curCVtype = CvType.CV_8UC3;
+                break;
+            case BufferedImage.TYPE_BYTE_GRAY:
+            case BufferedImage.TYPE_BYTE_BINARY:
+                curCVtype = CvType.CV_8UC1;
+                break;
+            case BufferedImage.TYPE_INT_BGR:
+            case BufferedImage.TYPE_INT_RGB:
+                curCVtype = CvType.CV_32SC3;
+                break;
+            case BufferedImage.TYPE_INT_ARGB:
+            case BufferedImage.TYPE_INT_ARGB_PRE:
+                curCVtype = CvType.CV_32SC4;
+                break;
+            case BufferedImage.TYPE_USHORT_GRAY:
+                curCVtype = CvType.CV_16UC1;
+                break;
+            case BufferedImage.TYPE_4BYTE_ABGR:
+            case BufferedImage.TYPE_4BYTE_ABGR_PRE:
+                curCVtype = CvType.CV_8UC4;
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported BufferedImage type: " + img.getType());
+        }
+        System.out.println("t" + img.getType());
 
-        return newImg;
+        Mat matImg = new Mat(img.getHeight(), img.getWidth(), curCVtype);
+        byte[] pixels = ((DataBufferByte) img.getRaster().getDataBuffer()).getData();
+        matImg.put(0, 0, pixels);
+
+        Mat newImg = new Mat(newH, newW, CvType.CV_8SC4);
+        Imgproc.resize(matImg, newImg, new Size(newW, newH));
+        newImg.get(0, 0, pixels);
+
+        return img;
     }
 }

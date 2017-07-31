@@ -203,3 +203,4 @@ store*.json
 store*.bson
 *.sql
 patreon.json
+/data/

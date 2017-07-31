@@ -5,11 +5,14 @@ import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import org.json.JSONObject;
 
 import javax.security.auth.login.LoginException;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class Start {
+    private static final String[] dirInit = {"data/profiles/bg"};
+
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         String jsonCode = new String(Files.readAllBytes(Paths.get("config.json")));
         JSONObject config = new JSONObject(jsonCode);
@@ -26,6 +29,10 @@ public class Start {
         } else {
             System.out.println("Warning: unrecognized account type! Use either 'client' (user) or 'bot' (bot). Assuming bot.");
             accountType = AccountType.BOT;
+        }
+
+        for (String path: dirInit) {
+            new File(path).mkdirs();
         }
 
         try {
