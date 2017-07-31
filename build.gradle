@@ -65,7 +65,7 @@ dependencies {
     compile 'com.jagrosh:JDA-Utilities:1.2'
     compile 'org.ocpsoft.prettytime:prettytime:3.2.7.Final'
     compile 'com.joestelmach:natty:0.11'
-    compile 'org.openpnp:opencv:3.2.0-1'
+    compile 'com.twelvemonkeys.imageio:imageio-core:3.3.2'
 }
 
 compileJava.options.encoding = 'UTF-8'

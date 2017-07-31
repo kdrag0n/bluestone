@@ -185,7 +185,7 @@ public class KewlCog extends Cog {
         ctx.channel.sendTyping().queue();
 
         BufferedImage avatar = ImageIO.read(bot.http.newCall(new Request.Builder().get()
-                .url(user.getEffectiveAvatarUrl()).build()).execute().body().byteStream());
+                .url(user.getEffectiveAvatarUrl() + "?size=128").build()).execute().body().byteStream());
         BufferedImage bg;
         File bgFile = new File("data/profiles/bg/" + user.getIdLong() + ".png");
         if (bgFile.exists())
@@ -200,8 +200,7 @@ public class KewlCog extends Cog {
         g2d.setColor(Color.BLACK);
         // Everything here is layered
         g2d.fillRect(0, 0, PROFILE_WIDTH, PROFILE_HEIGHT);
-        g2d.drawImage(GraphicsUtils.resizeImage(bg, PROFILE_WIDTH, PROFILE_HEIGHT),
-                0, 0, null); // user background
+        g2d.drawImage(bg, 0, 0, PROFILE_WIDTH, PROFILE_HEIGHT, null); // user background
 
         // Info box top
         g2d.setColor(new Color(255, 255, 255, 224));
@@ -213,7 +212,7 @@ public class KewlCog extends Cog {
         // Avatar box
         g2d.setColor(new Color(80, 80, 80, 255));
         g2d.fillRoundRect(59, 59, 134, 134, 4, 4);
-        g2d.drawImage(GraphicsUtils.resizeImage(avatar, 128, 128), 62, 62, null);
+        g2d.drawImage(avatar, 62, 62, 128, 128, null);
 
         // Font rendering hints
         g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
@@ -251,8 +250,8 @@ public class KewlCog extends Cog {
                     break;
             }
 
-            g2d.drawImage(GraphicsUtils.resizeImage(ImageIO.read(iconStream), 32 ,32),
-                    337 + startx + (30 * flagI), 146, null);
+            g2d.drawImage(ImageIO.read(iconStream), 337 + startx + (30 * flagI), 146,
+                    32, 32, null);
 
             flagI++;
         }
@@ -411,6 +410,8 @@ public class KewlCog extends Cog {
                         .get()
                         .url(ctx.message.getAttachments().get(0).getUrl())
                         .build()).execute().body().byteStream());
+
+                image = GraphicsUtils.resizeImage(image, PROFILE_WIDTH, PROFILE_HEIGHT);
 
                 ImageIO.write(image, "png", new File("data/profiles/bg/" +
                         ctx.author.getIdLong() + ".png"));
