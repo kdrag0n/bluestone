@@ -1,5 +1,9 @@
 package com.khronodragon.bluestone.cogs;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.table.TableUtils;
@@ -9,20 +13,26 @@ import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.Cooldown;
+import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.enums.BucketType;
 import com.khronodragon.bluestone.enums.ProfileFlags;
 import com.khronodragon.bluestone.sql.UserProfile;
 import com.khronodragon.bluestone.util.GraphicsUtils;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TIntList;
+import gnu.trove.set.TLongSet;
+import gnu.trove.set.hash.TLongHashSet;
 import net.dv8tion.jda.client.entities.Group;
+import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.events.user.UserAvatarUpdateEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
@@ -42,10 +52,9 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -56,14 +65,141 @@ public class KewlCog extends Cog {
     private static final Language language = new AmericanEnglish();
     private final JLanguageTool langTool = new JLanguageTool(language);
 
-    private static final int PROFILE_WIDTH = 800;
-    private static final int PROFILE_HEIGHT = 500;
+    private static final int PROFILE_WIDTH = 1600;
+    private static final int PROFILE_HEIGHT = 1000;
+    private static final String PROFILE_FONT = "Lato";
     private static final String[] PROFILE_QUESTIONS = {"What's your favorite color?",
             "What's your favorite food?",
             "What do you want people to know about you?",
             "What do you like to do?",
             "What are some neat things you've done?",
             "Tell me a little bit more about yourself."};
+    private final LoadingCache<User, byte[]> profileCache = CacheBuilder.newBuilder()
+            .concurrencyLevel(2)
+            .initialCapacity(8)
+            .maximumSize(36)
+            .build(new CacheLoader<User, byte[]>() {
+                @Override
+                public byte[] load(User user) throws Exception {
+                    BufferedImage avatar = ImageIO.read(bot.http.newCall(new Request.Builder().get()
+                            .url(user.getEffectiveAvatarUrl() + "?size=256").build()).execute().body().byteStream());
+
+                    BufferedImage bg;
+                    File bgFile = new File("data/profiles/bg/" + user.getIdLong() + ".png");
+                    if (bgFile.exists())
+                        bg = ImageIO.read(bgFile);
+                    else
+                        bg = ImageIO.read(FunCog.class.getResourceAsStream("/assets/default_profile_bg.png"));
+
+                    // Card image
+                    BufferedImage card = new BufferedImage(PROFILE_WIDTH, PROFILE_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+                    Graphics2D g2d = card.createGraphics();
+
+                    g2d.setColor(Color.BLACK);
+                    // Everything here is layered
+                    g2d.fillRect(0, 0, PROFILE_WIDTH, PROFILE_HEIGHT);
+                    g2d.drawImage(bg, 0, 0, null); // user background
+
+                    // Info box top
+                    g2d.setColor(new Color(255, 255, 255, 224));
+                    g2d.fillRoundRect(400, 120, 1080, 262, 24, 24);
+
+                    g2d.setColor(new Color(255, 255, 255, 255));
+                    g2d.fillRoundRect(400, 100, 1080, 168, 24, 24);
+
+                    // Avatar box
+                    g2d.setColor(new Color(80, 80, 80, 255));
+                    g2d.fillRoundRect(118, 118, 268, 268, 8, 8);
+                    g2d.drawImage(avatar, 124, 124, 256, 256, null);
+
+                    // Font rendering hints
+                    g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
+                            RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+                    g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                            RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+
+                    // Profile info
+                    g2d.setColor(new Color(74, 144, 226, 255));
+                    g2d.drawString(fstr(user.getName(), new Font(PROFILE_FONT, Font.BOLD, 64)), 420, 192);
+                    g2d.drawString(fstr('@' + getTag(user),
+                            new Font(PROFILE_FONT, Font.PLAIN, 36)), 420, 248);
+
+                    // Flags
+                    TIntList flags = ProfileFlags.getFlags(bot, user);
+                    TIntIterator iterator = flags.iterator();
+                    int flagI = 0;
+                    while (iterator.hasNext()) {
+                        int flag = iterator.next();
+                        Class<FunCog> cl = FunCog.class;
+                        int startx = (540 - (60 * flags.size())) / 2;
+                        InputStream iconStream;
+
+                        switch (flag) {
+                            case ProfileFlags.BOT_OWNER:
+                                iconStream = cl.getResourceAsStream("/assets/owner.png");
+                                break;
+                            case ProfileFlags.BOT_ADMIN:
+                                iconStream = cl.getResourceAsStream("/assets/key.png");
+                                break;
+                            case ProfileFlags.PATREON_SUPPORTER:
+                                iconStream = cl.getResourceAsStream("/assets/patreon.png");
+                                break;
+                            default:
+                                iconStream = cl.getResourceAsStream("/assets/unknown.png");
+                                break;
+                        }
+
+                        g2d.drawImage(ImageIO.read(iconStream), 674 + startx + (60 * flagI), 292, null);
+
+                        flagI++;
+                    }
+
+                    // Info box bottom
+                    g2d.setColor(new Color(255, 255, 255, 224));
+                    g2d.fillRoundRect(120, 400, 1360, 500, 32, 32);
+
+                    // render text here
+                    g2d.setColor(new Color(74, 144, 226, 255));
+                    UserProfile profile = profileDao.queryForId(user.getIdLong());
+                    if (profile != null) {
+                        try {
+                            JSONArray pairs = new JSONArray(profile.getQuestionValues());
+                            g2d.setFont(new Font(PROFILE_FONT, Font.PLAIN, 24));
+
+                            for (int i = 0; i < pairs.length(); i++) {
+                                JSONArray pairData = pairs.getJSONArray(i);
+                                int x = i < 5 ? 136 : 850;
+                                int iMinusN = i < 5 ? 1 : 6;
+
+                                drawMLString(g2d, "[B]" + WordUtils.wrap(pairData.getString(0),
+                                        50, "\n", true) + "[/B]\n" +
+                                                WordUtils.wrap(pairData.getString(1), 55,
+                                                        "\n", true),
+                                        x, 504 + ((i - iMinusN) * 96));
+                            }
+                        } catch (Throwable e) {
+                            logger.error("Error drawing user profile questions", e);
+                            g2d.setFont(new Font(PROFILE_FONT, Font.BOLD, 84));
+                            g2d.setColor(new Color(244, 10, 1, 255));
+                            drawMLString(g2d, "An error occurred rendering\nor loading this section!",
+                                    160, 440);
+                        }
+                    } else {
+                        g2d.setFont(new Font(PROFILE_FONT, Font.BOLD, 82));
+                        drawMLString(g2d,
+                                "This user hasn't set up their\nprofile yet!\n(╯°□°）╯︵ ┻━─┬\uFEFF ノ( ゜-゜ノ)",
+                                160, 440);
+                    }
+
+                    g2d.dispose();
+
+                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                    ImageIO.write(card, "png", stream);
+
+                    return stream.toByteArray();
+                }
+            });
+    private static final TLongSet profileSetupSessions = new TLongHashSet();
     private Dao<UserProfile, Long> profileDao;
 
     public KewlCog(Bot bot) {
@@ -184,117 +320,16 @@ public class KewlCog extends Cog {
         }
         ctx.channel.sendTyping().queue();
 
-        BufferedImage avatar = ImageIO.read(bot.http.newCall(new Request.Builder().get()
-                .url(user.getEffectiveAvatarUrl() + "?size=128").build()).execute().body().byteStream());
-        BufferedImage bg;
-        File bgFile = new File("data/profiles/bg/" + user.getIdLong() + ".png");
-        if (bgFile.exists())
-            bg = ImageIO.read(bgFile);
-        else
-            bg = ImageIO.read(FunCog.class.getResourceAsStream("/assets/default_profile_bg.png"));
-
-        // Card image
-        BufferedImage card = new BufferedImage(PROFILE_WIDTH, PROFILE_HEIGHT, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2d = card.createGraphics();
-
-        g2d.setColor(Color.BLACK);
-        // Everything here is layered
-        g2d.fillRect(0, 0, PROFILE_WIDTH, PROFILE_HEIGHT);
-        g2d.drawImage(bg, 0, 0, PROFILE_WIDTH, PROFILE_HEIGHT, null); // user background
-
-        // Info box top
-        g2d.setColor(new Color(255, 255, 255, 224));
-        g2d.fillRoundRect(200, 60, 540, 131, 12, 12);
-
-        g2d.setColor(new Color(255, 255, 255, 255));
-        g2d.fillRoundRect(200, 50, 540, 84, 12, 12);
-
-        // Avatar box
-        g2d.setColor(new Color(80, 80, 80, 255));
-        g2d.fillRoundRect(59, 59, 134, 134, 4, 4);
-        g2d.drawImage(avatar, 62, 62, 128, 128, null);
-
-        // Font rendering hints
-        g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
-                RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-                RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
-
-        // Profile info
-        g2d.setColor(new Color(74, 144, 226, 255));
-        g2d.drawString(fstr(getEffectiveName(user, ctx.guild), new Font("Lato", Font.BOLD, 32)), 210, 96);
-        g2d.drawString(fstr('@' + getTag(user), new Font("Lato", Font.PLAIN, 18)), 210, 124);
-
-        // Flags
-        TIntList flags = ProfileFlags.getFlags(bot, user);
-        TIntIterator iterator = flags.iterator();
-        int flagI = 0;
-        while (iterator.hasNext()) {
-            int flag = iterator.next();
-            Class<FunCog> cl = FunCog.class;
-            int startx = (270 - (30 * flags.size())) / 2;
-            InputStream iconStream;
-
-            switch (flag) {
-                case ProfileFlags.BOT_OWNER:
-                    iconStream = cl.getResourceAsStream("/assets/owner.png");
-                    break;
-                case ProfileFlags.BOT_ADMIN:
-                    iconStream = cl.getResourceAsStream("/assets/key.png");
-                    break;
-                case ProfileFlags.PATREON_SUPPORTER:
-                    iconStream = cl.getResourceAsStream("/assets/patreon.png");
-                    break;
-                default:
-                    iconStream = cl.getResourceAsStream("/assets/unknown.png");
-                    break;
-            }
-
-            g2d.drawImage(ImageIO.read(iconStream), 337 + startx + (30 * flagI), 146,
-                    32, 32, null);
-
-            flagI++;
+        byte[] data;
+        try {
+            data = profileCache.get(user);
+        } catch (ExecutionException | UncheckedExecutionException e) {
+            logger.warn("Error rendering profile", e);
+            ctx.send(Emotes.getFailure() + " Failed to render profile!").queue();
+            return;
         }
 
-        // Info box bottom
-        g2d.setColor(new Color(255, 255, 255, 224));
-        g2d.fillRoundRect(60, 200, 680, 250, 16, 16);
-
-        // render text here
-        g2d.setColor(new Color(74, 144, 226, 255));
-        UserProfile profile = profileDao.queryForId(user.getIdLong());
-        if (profile != null) {
-            try {
-                JSONArray pairs = new JSONArray(profile.getQuestionValues());
-                g2d.setFont(new Font("Lato", Font.PLAIN, 12));
-
-                for (int i = 0; i < pairs.length(); i++) {
-                    JSONArray pairData = pairs.getJSONArray(i);
-                    int x = i < 5 ? 68 : 425;
-                    int iMinusN = i < 5 ? 1 : 6;
-
-                    drawMLString(g2d, "[B]" + WordUtils.wrap(pairData.getString(0),
-                            50, "\n", true) + "[/B]\n" +
-                                    WordUtils.wrap(pairData.getString(1), 55, "\n", true),
-                            x, 252 + ((i - iMinusN) * 48));
-                }
-            } catch (Throwable e) {
-                logger.error("Error drawing user profile questions", e);
-                g2d.setFont(new Font("Lato", Font.BOLD, 43));
-                g2d.setColor(new Color(244, 10, 1, 255));
-                drawMLString(g2d, "An error occurred rendering\nor loading this section!", 80, 220);
-            }
-        } else {
-            g2d.setFont(new Font("Lato", Font.BOLD, 42));
-            drawMLString(g2d, "This user hasn't set up their\nprofile yet!\n(╯°□°）╯︵ ┻━─┬\uFEFF ノ( ゜-゜ノ)", 80, 220);
-        }
-
-        g2d.dispose();
-
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        ImageIO.write(card, "png", stream);
-
-        ctx.channel.sendFile(stream.toByteArray(), "profile.png", null).queue();
+        ctx.channel.sendFile(data, "profile.png", null).queue();
     }
 
     private static AttributedCharacterIterator fstr(String text, Font font) {
@@ -338,52 +373,67 @@ public class KewlCog extends Cog {
             g2d.drawString(fstr(line, g2d.getFont()), x, y += g2d.getFontMetrics().getHeight());
     }
 
+    @EventHandler
+    public void onUserAvatarUpdate(UserAvatarUpdateEvent event) {
+        profileCache.invalidate(event.getUser());
+    }
+
     @Command(name = "profilesetup", desc = "Set up your personal user profile.", thread = true)
     public void cmdProfileSetup(Context ctx) throws SQLException {
-        ctx.send("Welcome to Profile Setup. I will ask you a series of questions, and you can respond with your answer. If you don't want to answer a certain question, just answer `skip`. If you want to stop this setup, answer `stop`.\n**The questions will now begin.**\n\n\u200b").queue();
-
-        JSONArray answers = new JSONArray();
-
-        for (String question: PROFILE_QUESTIONS) {
-            boolean satisfied = false;
-
-            while (!satisfied) {
-                ctx.send(question).queue();
-                Message resp = bot.waitForMessage(120000, m -> m.getAuthor().getIdLong() == ctx.author.getIdLong() &&
-                        m.getChannel().getIdLong() == ctx.channel.getIdLong());
-                if (resp == null) continue;
-
-                String text = resp.getContent();
-                if (text.equalsIgnoreCase("skip"))
-                    text = "¯\\_(ツ)_/¯";
-                else if (text.equalsIgnoreCase("stop")) {
-                    ctx.send("Stopping. If you ever want to do it again, just invoke this command again.\n**Note**: No answers were saved.").queue();
-                    return;
-                }
-
-                if (text.length() > (question.equals("Tell me a little bit more about yourself.") ? 250 : 100)) {
-                    ctx.send(Emotes.getFailure() + " Answer too long! Try again.").queue();
-                    continue;
-                } else if (StringUtils.countMatches(text, '\n') >
-                        (question.equals("Tell me a little bit more about yourself.") ? 10 : 2)) {
-                    ctx.send(Emotes.getFailure() + " Too many new lines! Try again.").queue();
-                    continue;
-                }
-
-                answers.put(new JSONArray().put(question).put(text));
-                satisfied = true;
-            }
+        if (profileSetupSessions.contains(ctx.author.getIdLong())) {
+            ctx.send(Emotes.getFailure() + " You already have a profile setup session active!").queue();
+            return;
         }
+        profileSetupSessions.add(ctx.author.getIdLong());
 
-        UserProfile profile = profileDao.queryForId(ctx.author.getIdLong());
-        if (profile == null)
-            profile = new UserProfile(ctx.author.getIdLong(), 0, answers.toString());
-        else
-            profile.setQuestionValues(answers.toString());
+        try {
+            ctx.send("Welcome to Profile Setup. I will ask you a series of questions, and you can respond with your answer. If you don't want to answer a certain question, just answer `skip`. If you want to stop this setup, answer `stop`.\n**The questions will now begin.**\n\n\u200b").queue();
+            JSONArray answers = new JSONArray();
 
-        profileDao.createOrUpdate(profile);
+            for (String question : PROFILE_QUESTIONS) {
+                boolean satisfied = false;
 
-        ctx.send("**Thank you for completing the profile setup!**\nYou may now check your profile using the `profile` command.\n**Tip**: If you want to change your profile background, use `profile bg` or `set_profile_bg`.").queue();
+                while (!satisfied) {
+                    ctx.send(question).queue();
+                    Message resp = bot.waitForMessage(120000, m -> m.getAuthor().getIdLong() == ctx.author.getIdLong() &&
+                            m.getChannel().getIdLong() == ctx.channel.getIdLong());
+                    if (resp == null) continue;
+
+                    String text = resp.getContent();
+                    if (text.equalsIgnoreCase("skip"))
+                        text = "¯\\_(ツ)_/¯";
+                    else if (text.equalsIgnoreCase("stop")) {
+                        ctx.send("Stopping. If you ever want to do it again, just invoke this command again.\n**Note**: No answers were saved.").queue();
+                        return;
+                    }
+
+                    if (text.length() > (question.equals("Tell me a little bit more about yourself.") ? 250 : 100)) {
+                        ctx.send(Emotes.getFailure() + " Answer too long! Try again.").queue();
+                        continue;
+                    } else if (StringUtils.countMatches(text, '\n') >
+                            (question.equals("Tell me a little bit more about yourself.") ? 10 : 2)) {
+                        ctx.send(Emotes.getFailure() + " Too many new lines! Try again.").queue();
+                        continue;
+                    }
+
+                    answers.put(new JSONArray().put(question).put(text));
+                    satisfied = true;
+                }
+            }
+
+            UserProfile profile = profileDao.queryForId(ctx.author.getIdLong());
+            if (profile == null)
+                profile = new UserProfile(ctx.author.getIdLong(), 0, answers.toString());
+            else
+                profile.setQuestionValues(answers.toString());
+
+            profileDao.createOrUpdate(profile);
+            profileCache.invalidate(ctx.author);
+
+            ctx.send("**Thank you for completing the profile setup!**\nYou may now check your profile using the `profile` command.\n**Tip**: If you want to change your profile background, use `profile bg` or `set_profile_bg`.").queue();
+        } finally {
+            profileSetupSessions.remove(ctx.author.getIdLong());
+        }
     }
 
     @Command(name = "set_profile_bg", desc = "Set your profile background.",
@@ -411,10 +461,19 @@ public class KewlCog extends Cog {
                         .url(ctx.message.getAttachments().get(0).getUrl())
                         .build()).execute().body().byteStream());
 
+                if (image.getType() != BufferedImage.TYPE_INT_ARGB) {
+                    BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+                    Graphics2D g2d = newImage.createGraphics();
+                    g2d.drawImage(image, 0, 0, null);
+                    g2d.dispose();
+                    image = newImage;
+                }
+
                 image = GraphicsUtils.resizeImage(image, PROFILE_WIDTH, PROFILE_HEIGHT);
 
                 ImageIO.write(image, "png", new File("data/profiles/bg/" +
                         ctx.author.getIdLong() + ".png"));
+                profileCache.invalidate(ctx.author);
 
                 ctx.send(Emotes.getSuccess() + " Background set.").queue();
             } catch (IOException | NullPointerException | IllegalArgumentException ignored) {
