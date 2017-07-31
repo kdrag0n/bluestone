@@ -96,7 +96,11 @@ public abstract class Cog {
         if (guild == null) {
             return user.getName();
         } else {
-            return guild.getMember(user).getEffectiveName();
+            Member member = guild.getMember(user);
+            if (member == null)
+                return user.getName();
+
+            return member.getEffectiveName();
         }
     }
 

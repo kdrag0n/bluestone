@@ -202,3 +202,4 @@ config.json
 store*.json
 store*.bson
 *.sql
+patreon.json

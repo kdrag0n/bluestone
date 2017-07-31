@@ -523,7 +523,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     http.newCall(new Request.Builder()
                             .post(RequestBody.create(STRING_MEDIA_TYPE, request))
                             .url(reqDest)
-                            .header("Referer", getKeys().optString("chatengine"))
+                            .header("Authorization", getKeys().optString("chatengine"))
                             .build()).enqueue(new okhttp3.Callback() {
                         @Override
                         public void onFailure(Call call, IOException e) {
@@ -555,7 +555,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 http.newCall(new Request.Builder()
                         .post(RequestBody.create(STRING_MEDIA_TYPE, request))
                         .url(reqDest)
-                        .header("Referer", getKeys().optString("chatengine"))
+                        .header("Authorization", getKeys().optString("chatengine"))
                         .build()).enqueue(new okhttp3.Callback() {
                     @Override
                     public void onFailure(Call call, IOException e) {
