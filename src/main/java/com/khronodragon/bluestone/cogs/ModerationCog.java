@@ -1,30 +1,49 @@
 package com.khronodragon.bluestone.cogs;
 
+import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.dao.DaoManager;
+import com.j256.ormlite.stmt.DeleteBuilder;
+import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
+import com.khronodragon.bluestone.annotations.EventHandler;
+import com.khronodragon.bluestone.enums.AutoroleConditions;
+import com.khronodragon.bluestone.errors.PassException;
+import com.khronodragon.bluestone.sql.GuildAutorole;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.linked.TLongLinkedList;
+import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.requests.RestAction;
 import net.dv8tion.jda.core.utils.MiscUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.awt.*;
+import java.sql.SQLException;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import static com.khronodragon.bluestone.util.NullValueWrapper.val;
+
 public class ModerationCog extends Cog {
+    private static final Logger logger = LogManager.getLogger(ModerationCog.class);
     private static final String PURGE_NO_PARAMS = Emotes.getFailure() + " **No valid parameters included!**\n" +
             "Valid parameters:\n" +
-            "    \u2022 `<num 2-500>` - number of messages to include **(required)**\n" +
+            "    \u2022 `<num 1-800>` - number of messages to include **(required)**\n" +
             "    \u2022 `links` - include messages with links\n" +
             "    \u2022 `attach` - include messages with an attachment\n" +
             "    \u2022 `embeds` - include messages with embeds\n" +
@@ -32,6 +51,12 @@ public class ModerationCog extends Cog {
             "    \u2022 `bots` - include messages by bots\n" +
             "    \u2022 `\"text\"` - include messages containing `text`\n" +
             "    \u2022 `[regex]` - include messages that match the regex";
+    private static final String NO_COMMAND = ":thinking: **I need an action!**\n" +
+            "The following are valid:\n" +
+            "    \u2022 `list` - list autoroles\n" +
+            "    \u2022 `add [id/name/@role]` - add a role to autoroles\n" +
+            "    \u2022 `remove [id/name/@role]` - remove a role from autoroles\n" +
+            "    \u2022 `clear` - clear autoroles (remove all)";
     private static final Pattern PURGE_LINK_PATTERN = Pattern.compile("https?://.+");
     private static final Pattern PURGE_QUOTE_PATTERN = Pattern.compile("[\"“](.*?)[\"”]", Pattern.DOTALL);
     private static final Pattern PURGE_REGEX_PATTERN = Pattern.compile("\\[(.*?)]", Pattern.DOTALL);
@@ -40,9 +65,22 @@ public class ModerationCog extends Cog {
     private static final Collection<Permission> MUTED_PERMS = Arrays.asList(Permission.MESSAGE_WRITE,
             Permission.MESSAGE_ADD_REACTION);
     private static final Pattern MENTION_PATTERN = Pattern.compile("<@!?(\\d{17,20})>");
+    private Dao<GuildAutorole, Long> autoroleDao;
 
     public ModerationCog(Bot bot) {
         super(bot);
+
+        try {
+            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), GuildAutorole.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create autorole table!", e);
+        }
+
+        try {
+            autoroleDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), GuildAutorole.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create autorole DAO!", e);
+        }
     }
 
     public String getName() {
@@ -51,6 +89,40 @@ public class ModerationCog extends Cog {
 
     public String getDescription() {
         return "Some handy moderation tools.";
+    }
+
+    @EventHandler(threaded = true)
+    public void onMemberJoin(GuildMemberJoinEvent event) throws SQLException {
+        if (!event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_ROLES))
+            return;
+
+        List<Role> toAdd = null;
+        List<GuildAutorole> autoroles = autorolesFor(event.getGuild().getIdLong());
+        if (autoroles.size() > 0)
+            toAdd = new ArrayList<>(autoroles.size());
+        else
+            return;
+
+        for (GuildAutorole autorole: autoroles) {
+            Role role = event.getGuild().getRoleById(autorole.getRoleId());
+            if (role == null) continue;
+            if (!event.getGuild().getSelfMember().canInteract(role)) continue;
+
+            if (AutoroleConditions.test(autorole.getConditions()))
+                toAdd.add(role);
+        }
+
+        if (toAdd.size() > 0)
+            event.getGuild().getController().addRolesToMember(event.getMember(), toAdd)
+                    .reason("Autorole: new member matched specified conditions for role(s)")
+                    .queue();
+    }
+
+    private List<GuildAutorole> autorolesFor(long guildId) throws SQLException {
+        return autoroleDao.queryBuilder()
+                .where()
+                .eq("guildId", guildId)
+                .query();
     }
 
     private String match(Pattern pattern, String input, Consumer<Matcher> func) {
@@ -117,7 +189,7 @@ public class ModerationCog extends Cog {
         }
         args = args.replaceAll(PURGE_NUM_PATTERN.pattern(), " ");
 
-        if (limit > 500 || limit < 2) {
+        if (limit > 800) {
             ctx.send(Emotes.getFailure() + " Invalid message limit!").queue();
             return;
         }
@@ -326,5 +398,114 @@ public class ModerationCog extends Cog {
         }
 
         ctx.send(Emotes.getSuccess() + " Banned.").queue();
+    }
+
+    @Command(name = "autorole", desc = "Manage autoroles in this server.", guildOnly = true, perms = {"manageRoles"},
+            usage = "[action] {role}", aliases = {"autoroles"}, thread = true)
+    public void cmdAutorole(Context ctx) throws SQLException {
+        if (ctx.rawArgs.length() < 1) {
+            ctx.send(NO_COMMAND).queue();
+            return;
+        }
+        String invoked = ctx.args.get(0);
+
+        if (invoked.equals("list"))
+            autoroleList(ctx);
+        else if (invoked.equals("add"))
+            autoroleAdd(ctx);
+        else if (invoked.equals("remove"))
+            autoroleRemove(ctx);
+        else if (invoked.equals("clear"))
+            autoroleClear(ctx);
+        else
+            ctx.send(NO_COMMAND).queue();
+    }
+
+    private Role parseRole(Guild guild, String roleArg) {
+        if (roleArg.matches("^<@&[0-9]{17,20}>$")) {
+            return guild.getRoleById(roleArg.substring(3, roleArg.length() - 1));
+        } else if (roleArg.matches("^[0-9]{17,20}$")) {
+            return guild.getRoleById(roleArg);
+        } else {
+            List<Role> roles = guild.getRolesByName(roleArg, false);
+            if (roles.size() < 1)
+                return null;
+            else
+                return roles.get(0);
+        }
+    }
+
+    private Role requireRole(Context ctx) {
+        Role role = parseRole(ctx.guild, ctx.rawArgs.substring(ctx.args.get(0).length()).trim());
+
+        if (role == null) {
+            ctx.send(Emotes.getFailure() + " I need a role in the form of the name, @role, or ID!").queue();
+            throw new PassException();
+        }
+
+        return role;
+    }
+
+    private void autoroleList(Context ctx) throws SQLException {
+        Collection<GuildAutorole> autoroles = autorolesFor(ctx.guild.getIdLong());
+        if (autoroles.size() < 1) {
+            ctx.send(Emotes.getFailure() + " There are no autoroles in this server!").queue();
+            return;
+        }
+
+        EmbedBuilder emb = new EmbedBuilder()
+                .setAuthor("Autorole List", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
+                .setDescription("Here are the autoroles in this server:")
+                .setColor(val(ctx.guild.getSelfMember().getColor()).or(Color.WHITE))
+                .setTimestamp(Instant.now());
+
+        for (GuildAutorole autorole: autoroles)
+            emb.getDescriptionBuilder().append("\n    \u2022 <@&")
+                    .append(autorole.getRoleId())
+                    .append("> (ID: `")
+                    .append(autorole.getRoleId())
+                    .append("`)");
+
+        ctx.send(emb.build()).queue();
+    }
+
+    private void autoroleAdd(Context ctx) throws SQLException {
+        Role role = requireRole(ctx);
+        if (autoroleDao.idExists(role.getIdLong())) {
+            ctx.send(Emotes.getFailure() + " Role is already an autorole!").queue();
+            return;
+        } else if (role.isManaged()) {
+            ctx.send(Emotes.getFailure() + " That role is a special bot role, or is managed by an integration!").queue();
+            return;
+        } else if (!ctx.guild.getSelfMember().canInteract(role)) {
+            ctx.send(Emotes.getFailure() + " I need to be higher up on the role ladder to apply that role!").queue();
+            return;
+        }
+
+        GuildAutorole autorole = new GuildAutorole(role.getIdLong(), ctx.guild.getIdLong(), 0, "{}");
+        autoroleDao.create(autorole);
+
+        ctx.send(Emotes.getSuccess() + " Role added to autoroles.").queue();
+    }
+
+    private void autoroleRemove(Context ctx) throws SQLException {
+        Role role = requireRole(ctx);
+        if (!autoroleDao.idExists(role.getIdLong())) {
+            ctx.send(Emotes.getFailure() + " Role isn't an already autorole!").queue();
+            return;
+        }
+
+        autoroleDao.deleteById(role.getIdLong());
+
+        ctx.send(Emotes.getSuccess() + " Role removed from autoroles.").queue();
+    }
+
+    private void autoroleClear(Context ctx) throws SQLException {
+        DeleteBuilder builder = autoroleDao.deleteBuilder();
+        builder.where()
+                .eq("guildId", ctx.guild.getIdLong());
+        int deleted = builder.delete();
+
+        ctx.send(Emotes.getSuccess() + " Cleared " + deleted + " autoroles.").queue();
     }
 }

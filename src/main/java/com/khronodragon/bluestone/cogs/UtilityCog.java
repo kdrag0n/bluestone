@@ -625,7 +625,7 @@ public class UtilityCog extends Cog {
         }, calculatedTime, TimeUnit.MILLISECONDS);
     }
 
-    @Command(name = "meme", desc = "Generate a custom meme.", usage = "[top text] | [bottom text]")
+    @Command(name = "meme", desc = "Generate a custom meme.", usage = "[meme text / [top text] | [bottom text]]")
     public void cmdMeme(Context ctx) {
         if (ctx.rawArgs.length() < 2) {
             ctx.send(Emotes.getFailure() + " I need some text to use!").queue();

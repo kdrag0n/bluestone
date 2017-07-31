@@ -53,6 +53,9 @@ public class Strings {
     }
 
     public static String smartJoin(String[] array, String sep) {
+        if (array.length == 2)
+            return array[0] + ' ' + sep + ' ' + array[1];
+
         if (array.length > 1)
             array[array.length - 1] = sep + ' ' + array[array.length - 1];
 
@@ -60,6 +63,9 @@ public class Strings {
     }
 
     public static String smartJoin(List<String> list, String sep) {
+        if (list.size() == 2)
+            return list.get(0) + ' ' + sep + ' ' + list.get(1);
+
         if (list.size() > 1)
             list.set(list.size() - 1, sep + ' ' + list.get(list.size() - 1));
 

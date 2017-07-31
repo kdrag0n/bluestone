@@ -92,12 +92,10 @@ public class KewlCog extends Cog {
                         bg = ImageIO.read(FunCog.class.getResourceAsStream("/assets/default_profile_bg.png"));
 
                     // Card image
-                    BufferedImage card = new BufferedImage(PROFILE_WIDTH, PROFILE_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+                    BufferedImage card = new BufferedImage(PROFILE_WIDTH, PROFILE_HEIGHT, BufferedImage.TYPE_INT_RGB);
                     Graphics2D g2d = card.createGraphics();
 
-                    g2d.setColor(Color.BLACK);
                     // Everything here is layered
-                    g2d.fillRect(0, 0, PROFILE_WIDTH, PROFILE_HEIGHT);
                     g2d.drawImage(bg, 0, 0, null); // user background
 
                     // Info box top
@@ -110,7 +108,10 @@ public class KewlCog extends Cog {
                     // Avatar box
                     g2d.setColor(new Color(80, 80, 80, 255));
                     g2d.fillRoundRect(118, 118, 268, 268, 8, 8);
-                    g2d.drawImage(avatar, 124, 124, 256, 256, null);
+                    if (user.getAvatarId() == null)
+                        g2d.drawImage(avatar, 124, 124, 256, 256, null);
+                    else
+                        g2d.drawImage(avatar, 124, 124, null);
 
                     // Font rendering hints
                     g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
@@ -128,6 +129,7 @@ public class KewlCog extends Cog {
                     TIntList flags = ProfileFlags.getFlags(bot, user);
                     TIntIterator iterator = flags.iterator();
                     int flagI = 0;
+
                     while (iterator.hasNext()) {
                         int flag = iterator.next();
                         Class<FunCog> cl = FunCog.class;
@@ -158,7 +160,7 @@ public class KewlCog extends Cog {
                     g2d.setColor(new Color(255, 255, 255, 224));
                     g2d.fillRoundRect(120, 400, 1360, 500, 32, 32);
 
-                    // render text here
+                    // render text
                     g2d.setColor(new Color(74, 144, 226, 255));
                     UserProfile profile = profileDao.queryForId(user.getIdLong());
                     if (profile != null) {
@@ -190,6 +192,7 @@ public class KewlCog extends Cog {
                                 "This user hasn't set up their\nprofile yet!\n(╯°□°）╯︵ ┻━─┬\uFEFF ノ( ゜-゜ノ)",
                                 160, 440);
                     }
+
 
                     g2d.dispose();
 
@@ -464,8 +467,8 @@ public class KewlCog extends Cog {
                         .url(ctx.message.getAttachments().get(0).getUrl())
                         .build()).execute().body().byteStream());
 
-                if (image.getType() != BufferedImage.TYPE_INT_ARGB) {
-                    BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+                if (image.getType() != BufferedImage.TYPE_INT_RGB) {
+                    BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
                     Graphics2D g2d = newImage.createGraphics();
                     g2d.drawImage(image, 0, 0, null);
                     g2d.dispose();
