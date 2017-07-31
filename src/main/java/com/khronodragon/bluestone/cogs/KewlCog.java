@@ -108,10 +108,7 @@ public class KewlCog extends Cog {
                     // Avatar box
                     g2d.setColor(new Color(80, 80, 80, 255));
                     g2d.fillRoundRect(118, 118, 268, 268, 8, 8);
-                    if (user.getAvatarId() == null)
-                        g2d.drawImage(avatar, 124, 124, 256, 256, null);
-                    else
-                        g2d.drawImage(avatar, 124, 124, null);
+                    g2d.drawImage(avatar, 124, 124, 256, 256, null);
 
                     // Font rendering hints
                     g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
@@ -157,7 +154,7 @@ public class KewlCog extends Cog {
                     }
 
                     // Info box bottom
-                    g2d.setColor(new Color(255, 255, 255, 224));
+                    g2d.setColor(new Color(255, 255, 255, 218));
                     g2d.fillRoundRect(120, 400, 1360, 500, 32, 32);
 
                     // render text
