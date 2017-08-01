@@ -23,7 +23,6 @@ import gnu.trove.list.TIntList;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
 import net.dv8tion.jda.client.entities.Group;
-import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
@@ -32,7 +31,6 @@ import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
@@ -55,6 +53,7 @@ import java.text.AttributedString;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -78,6 +77,7 @@ public class KewlCog extends Cog {
             .concurrencyLevel(2)
             .initialCapacity(8)
             .maximumSize(36)
+            .expireAfterWrite(12, TimeUnit.HOURS)
             .build(new CacheLoader<User, byte[]>() {
                 @Override
                 public byte[] load(User user) throws Exception {
