@@ -73,6 +73,7 @@
     <orderEntry type="library" name="Gradle: edu.washington.cs.knowitall:opennlp-tokenize-models:1.5" level="project" />
     <orderEntry type="library" name="Gradle: edu.washington.cs.knowitall:opennlp-postag-models:1.5" level="project" />
     <orderEntry type="library" name="Gradle: edu.washington.cs.knowitall:opennlp-chunk-models:1.5" level="project" />
+    <orderEntry type="library" name="Gradle: net.dv8tion:JDA:3.1.1_210" level="project" />
     <orderEntry type="library" name="Gradle: com.mashape.unirest:unirest-java:1.4.9" level="project" />
     <orderEntry type="library" name="Gradle: org.antlr:antlr-runtime:3.5.2" level="project" />
     <orderEntry type="library" name="Gradle: org.mnode.ical4j:ical4j:1.0.2" level="project" />

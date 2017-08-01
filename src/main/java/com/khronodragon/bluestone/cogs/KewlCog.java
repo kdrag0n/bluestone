@@ -397,7 +397,7 @@ public class KewlCog extends Cog {
                     ctx.send(question).queue();
                     Message resp = bot.waitForMessage(300000, m -> m.getAuthor().getIdLong() == ctx.author.getIdLong() &&
                             m.getChannel().getIdLong() == ctx.channel.getIdLong());
-                    
+
                     if (resp == null) {
                         ctx.send(Emotes.getFailure() + " You took too long to respond. Stopping.\nIf you ever want to continue, just invoke this command again.\n**Note**: No answers were saved.").queue();
                         return;
