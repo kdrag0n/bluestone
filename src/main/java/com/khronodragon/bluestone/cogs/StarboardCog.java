@@ -308,7 +308,8 @@ public class StarboardCog extends Cog {
 
     @EventHandler(threaded = true)
     public void onMessageBulkDelete(MessageBulkDeleteEvent event) throws SQLException, ExecutionException {
-        for (long id: event.getMessageIdsLong()) {
+        for (String sid: event.getMessageIds()) {
+            long id = Long.parseUnsignedLong(sid);
             StarboardEntry entry = entryDao.queryBuilder()
                     .where()
                     .eq("botMessageId", id)
