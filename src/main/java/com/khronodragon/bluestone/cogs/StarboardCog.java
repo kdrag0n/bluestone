@@ -513,6 +513,10 @@ public class StarboardCog extends Cog {
             ctx.send(Emotes.getFailure() + " Invalid number!").queue();
             return;
         }
+        if (newThreshold < 1 || newThreshold > 25) {
+            ctx.send(Emotes.getFailure() + " Number must be between 1 and 25!").queue();
+            return;
+        }
 
         starboard.setStarThreshold(newThreshold);
         dao.update(starboard);
