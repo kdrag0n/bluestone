@@ -224,7 +224,7 @@ public class ModerationCog extends Cog {
             }
 
             if (substrings.stream()
-                    .anyMatch(ss -> msg.getRawContent().contains(ss))) {
+                    .anyMatch(ss -> msg.getRawContent().toLowerCase().contains(ss))) {
                 toDelete.add(msg);
                 continue;
             }
