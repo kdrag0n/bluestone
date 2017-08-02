@@ -304,7 +304,7 @@ public class UtilityCog extends Cog {
                         .map(Role::getAsMention)
                         .collect(Collectors.joining(", "));
                 if (roleText.length() > 1024) {
-                    roleText = roleText.substring(0, 1024).replaceFirst(", [<@0-9>]*$", "... (too many)");
+                    roleText = roleText.substring(0, 1024).replaceFirst(", [<@&0-9>]*$", "... (too many)");
                 } else if (roleText.length() < 1) {
                     roleText = "None";
                 }
@@ -327,7 +327,7 @@ public class UtilityCog extends Cog {
                 .map(Role::getAsMention)
                 .collect(Collectors.joining(", "));
         if (roleText.length() > 1024) {
-            roleText = roleText.substring(0, 1024).replaceFirst(", [<@0-9>]*$", "... (too many)");
+            roleText = roleText.substring(0, 1024).replaceFirst(", [<@&0-9>]*$", "... (too many)");
         } else if (roleText.length() < 1) {
             roleText = "None";
         }
