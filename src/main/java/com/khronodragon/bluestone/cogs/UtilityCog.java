@@ -438,17 +438,17 @@ public class UtilityCog extends Cog {
                 .stream()
                 .filter(m -> m.getUser().isBot())
                 .count() < 2).count();
-        String excText = String.format("%d (%.2f%%)", exclusive, ((double) exclusive / (double) shardUtil.getGuildCount()) * 100d);
+        String excText = String.format("%d (%.2f%%)", exclusive, ((float) exclusive / (float) shardUtil.getGuildCount()) * 100f);
 
         int big = (int) shardUtil.getGuildStream()
                 .filter(g -> g.getMembers().size() >= 250)
                 .count();
-        String bigText = String.format("%d (%.2f%%)", big, ((double) big / (double) shardUtil.getGuildCount()) * 100d);
+        String bigText = String.format("%d (%.2f%%)", big, ((float) big / (float) shardUtil.getGuildCount()) * 100f);
 
         int partnered = (int) shardUtil.getGuildStream()
                 .filter(g -> g.getSplashUrl() != null || g.getRegion().isVip())
                 .count();
-        String partneredText = String.format("%d (%.2f%%)", partnered, ((double) partnered / (double) shardUtil.getGuildCount()) * 100d);
+        String partneredText = String.format("%d (%.2f%%)", partnered, ((float) partnered / (float) shardUtil.getGuildCount()) * 100f);
 
         emb.addBlankField(false)
                 .addField("Total Queue Size", str(shardUtil.getTrackCount()), true)
