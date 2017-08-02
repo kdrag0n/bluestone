@@ -304,7 +304,7 @@ public class UtilityCog extends Cog {
                         .map(Role::getAsMention)
                         .collect(Collectors.joining(", "));
                 if (roleText.length() > 1024) {
-                    roleText = roleText.substring(0, 1024).replaceFirst(", [<@&0-9>]*$", "... (too many)");
+                    roleText = roleText.substring(0, 1024).replaceFirst(", [<@&0-9>]*$", ", **...too many**");
                 } else if (roleText.length() < 1) {
                     roleText = "None";
                 }
@@ -327,7 +327,7 @@ public class UtilityCog extends Cog {
                 .map(Role::getAsMention)
                 .collect(Collectors.joining(", "));
         if (roleText.length() > 1024) {
-            roleText = roleText.substring(0, 1024).replaceFirst(", [<@&0-9>]*$", "... (too many)");
+            roleText = roleText.substring(0, 1024).replaceFirst(", [<@&0-9>]*$", ", **...too many**");
         } else if (roleText.length() < 1) {
             roleText = "None";
         }
@@ -438,17 +438,17 @@ public class UtilityCog extends Cog {
                 .stream()
                 .filter(m -> m.getUser().isBot())
                 .count() < 2).count();
-        String excText = exclusive + " (" + (int) Math.ceil(exclusive / shardUtil.getGuildCount() * 100d) + "%)";
+        String excText = String.format("%d (%.2f%%)", exclusive, ((double) exclusive / (double) shardUtil.getGuildCount()) * 100d);
 
         int big = (int) shardUtil.getGuildStream()
                 .filter(g -> g.getMembers().size() >= 250)
                 .count();
-        String bigText = big + " (" + (int) Math.ceil(big / shardUtil.getGuildCount() * 100d) + "%)";
+        String bigText = String.format("%d (%.2f%%)", big, ((double) big / (double) shardUtil.getGuildCount()) * 100d);
 
         int partnered = (int) shardUtil.getGuildStream()
                 .filter(g -> g.getSplashUrl() != null || g.getRegion().isVip())
                 .count();
-        String partneredText = partnered + " (" + (int) Math.ceil(partnered / shardUtil.getGuildCount() * 100d) + "%)";
+        String partneredText = String.format("%d (%.2f%%)", partnered, ((double) partnered / (double) shardUtil.getGuildCount()) * 100d);
 
         emb.addBlankField(false)
                 .addField("Total Queue Size", str(shardUtil.getTrackCount()), true)
