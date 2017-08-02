@@ -112,8 +112,8 @@ public class QuotesCog extends Cog {
                 .eq("authorId", ctx.author.getIdLong())
                 .countOf();
 
-        if (quotes >= 25 && ctx.author.getIdLong() != bot.owner.getIdLong()) {
-            ctx.send(Emotes.getFailure() + " You already have 25 quotes!").queue();
+        if (quotes >= 35 && ctx.author.getIdLong() != bot.owner.getIdLong()) {
+            ctx.send(Emotes.getFailure() + " You already have 35 quotes!").queue();
             return;
         }
 
@@ -265,8 +265,8 @@ public class QuotesCog extends Cog {
                 .eq("authorId", msg.getAuthor().getIdLong())
                 .countOf();
 
-        if (quotes >= 25 && ctx.author.getIdLong() != bot.owner.getIdLong()) {
-            ctx.send(Emotes.getFailure() + " The author of that message already has 25 quotes!").queue();
+        if (quotes >= 35 && ctx.author.getIdLong() != bot.owner.getIdLong()) {
+            ctx.send(Emotes.getFailure() + " The author of that message already has 35 quotes!").queue();
             return;
         }
 
