@@ -181,6 +181,8 @@ public class StatReporterCog extends Cog {
                 } else {
                     logger.warn("[Discord Bots] Bad response: {} {}", response.code(), response.message());
                 }
+
+                response.body().close();
             }
         });
     }
@@ -205,6 +207,8 @@ public class StatReporterCog extends Cog {
                 } else {
                     logger.warn("[Carbonitex] Bad response: {} {}", response.code(), response.message());
                 }
+
+                response.body().close();
             }
         });
     }
@@ -238,6 +242,8 @@ public class StatReporterCog extends Cog {
                 } else {
                     logger.warn("[Discord Bot List] Bad response: {} {}", response.code(), response.message());
                 }
+
+                response.body().close();
             }
         });
     }

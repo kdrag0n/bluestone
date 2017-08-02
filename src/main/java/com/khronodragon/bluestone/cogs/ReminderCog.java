@@ -106,6 +106,9 @@ public class ReminderCog extends Cog {
         } else if (date.getTime() < System.currentTimeMillis()) {
             ctx.send(Emotes.getFailure() + " That time is in the past!").queue();
             return;
+        } else if (date.getTime() > System.currentTimeMillis() + 157680000000L) {
+            ctx.send(Emotes.getFailure() + " That time is too far into the future!").queue();
+            return;
         } else if (msg.length() < 1) {
             ctx.send(Emotes.getFailure() + " I can't remind you of nothing!").queue();
             return;

@@ -292,7 +292,7 @@ public class MusicCog extends Cog {
         ctx.send(":twisted_rightwards_arrows: Queue shuffled.\n    \u2022 " + String.join("\n    \u2022 ", items)).queue();
     }
 
-    @Command(name = "repeat", desc = "Toggle repeating of the current track.", guildOnly = true)
+    @Command(name = "repeat", desc = "Toggle repeating of the current track.", guildOnly = true, aliases = {"loop"})
     public void cmdRepeat(Context ctx) {
         channelChecks(ctx);
         AudioState state = getAudioState(ctx.guild);
