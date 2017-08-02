@@ -304,7 +304,9 @@ public class UtilityCog extends Cog {
                         .map(Role::getAsMention)
                         .collect(Collectors.joining(", "));
                 if (roleText.length() > 1024) {
-                    roleText = roleText.replaceFirst("<@[0-9]{17,20}>$", "... (too many)");
+                    roleText = roleText.substring(0, 1024).replaceFirst(", [<@0-9>]*$", "... (too many)");
+                } else if (roleText.length() < 1) {
+                    roleText = "None";
                 }
 
                 emb.setColor(val(member.getColor()).or(Color.WHITE))
@@ -325,7 +327,7 @@ public class UtilityCog extends Cog {
                 .map(Role::getAsMention)
                 .collect(Collectors.joining(", "));
         if (roleText.length() > 1024) {
-            roleText = roleText.replaceFirst("<@[0-9]{17,20}>$", "... (too many)");
+            roleText = roleText.substring(0, 1024).replaceFirst(", [<@0-9>]*$", "... (too many)");
         } else if (roleText.length() < 1) {
             roleText = "None";
         }
@@ -355,7 +357,7 @@ public class UtilityCog extends Cog {
                 .setTimestamp(Instant.now())
                 .addField("ID", ctx.guild.getId(), true)
                 .addField("Channels", str(ctx.guild.getTextChannels().size() + ctx.guild.getVoiceChannels().size()), true)
-                .addField("Roles (" + ctx.guild.getRoles().size() + ')', roleText,true)
+                .addField("Roles (" + ctx.guild.getRoles().size() + ')', roleText, true)
                 .addField("Emotes", str(ctx.guild.getEmotes().size()), true)
                 .addField("Region", ctx.guild.getRegion().getName(), true)
                 .addField("Owner", ctx.guild.getOwner().getAsMention(), true)
