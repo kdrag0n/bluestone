@@ -56,7 +56,7 @@ import static com.khronodragon.bluestone.util.Strings.str;
 import static java.text.MessageFormat.format;
 
 public class Bot extends ListenerAdapter implements ClassUtilities {
-    private static final MediaType STRING_MEDIA_TYPE = MediaType.parse("text/plain; charset=utf-8");
+    private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
     public static final JSONObject EMPTY_JSON_OBJECT = new JSONObject();
     public static final JSONArray EMPTY_JSON_ARRAY = new JSONArray();
     public Logger logger = LogManager.getLogger(Bot.class);
@@ -503,39 +503,15 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         } else if (message.isMentioned(jda.getSelfUser())) {
             String mention = message.getGuild() == null ?
                     jda.getSelfUser().getAsMention() : message.getGuild().getSelfMember().getAsMention();
-            String name = message.getGuild() == null ?
-                    jda.getSelfUser().getName() : message.getGuild().getSelfMember().getEffectiveName();
 
             if (content.startsWith(mention) || content.startsWith("<@&")) {
                 String request = Strings.renderMessage(message, message.getGuild(),
-                        message.getRawContent().replaceFirst("^<@&?[0-9]{17,20}>\\s*", ""));
+                        message.getRawContent().replaceFirst("^<@[!&]?[0-9]{17,20}>\\s*", ""));
 
                 if (request.equalsIgnoreCase("prefix")) {
                     channel.sendMessage("My prefix here is `" + prefix + "`.").queue();
                 } else if (request.length() > 0) {
-                    String reqDest = getConfig().optString("chatengine_url", null);
-                    if (reqDest == null) {
-                        channel.sendMessage("My owner hasn't set up ChatEngine yet.").queue();
-                        return;
-                    }
-                    channel.sendTyping().queue();
-
-                    http.newCall(new Request.Builder()
-                            .post(RequestBody.create(STRING_MEDIA_TYPE, request))
-                            .url(reqDest)
-                            .header("Authorization", getKeys().optString("chatengine"))
-                            .build()).enqueue(new okhttp3.Callback() {
-                        @Override
-                        public void onFailure(Call call, IOException e) {
-                            logger.error("Error getting ChatEngine response", e);
-                            channel.sendMessage(":x: My brain isn't really working right now.").queue();
-                        }
-
-                        @Override
-                        public void onResponse(Call call, Response response) throws IOException {
-                            channel.sendMessage(response.body().string()).queue();
-                        }
-                    });
+                    chatengineResponse(channel, author.getIdLong(), request, null);
                 } else {
                     String tag = Cog.getTag(jda.getSelfUser());
 
@@ -544,33 +520,51 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 }
             } else if (channel instanceof PrivateChannel) {
                 String request = message.getContent();
-
-                String reqDest = getConfig().optString("chatengine_url", null);
-                if (reqDest == null) {
-                    channel.sendMessage("My owner hasn't set up ChatEngine yet.").queue();
-                    return;
-                }
-                channel.sendTyping().queue();
-
-                http.newCall(new Request.Builder()
-                        .post(RequestBody.create(STRING_MEDIA_TYPE, request))
-                        .url(reqDest)
-                        .header("Authorization", getKeys().optString("chatengine"))
-                        .build()).enqueue(new okhttp3.Callback() {
-                    @Override
-                    public void onFailure(Call call, IOException e) {
-                        logger.error("Error getting ChatEngine response", e);
-                        channel.sendMessage(":x: My brain isn't really working right now.").queue();
-                    }
-
-                    @Override
-                    public void onResponse(Call call, Response response) throws IOException {
-                        channel.sendMessage("\uD83D\uDCAC " + response.body().string()).queue();
-                    }
-                });
-
+                chatengineResponse(channel, author.getIdLong(), request, "💬 ");
             }
         }
+    }
+
+    public void chatengineResponse(MessageChannel channel, long sessionID, String query, String respPrefix) {
+        String reqDest = getConfig().optString("chatengine_url", null);
+        if (reqDest == null) {
+            channel.sendMessage("My owner hasn't set up ChatEngine yet.").queue();
+            return;
+        }
+        channel.sendTyping().queue();
+
+        http.newCall(new Request.Builder()
+                .post(RequestBody.create(JSON_MEDIA_TYPE, new JSONObject()
+                        .put("session", sessionID)
+                        .put("query", query)
+                        .toString()))
+                .url(reqDest)
+                .header("Authorization", getKeys().optString("chatengine"))
+                .build()).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                logger.error("Error getting ChatEngine response", e);
+                channel.sendMessage(Emotes.getFailure() + " My brain isn't really working right now.").queue();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                JSONObject resp = new JSONObject(response.body().string());
+
+                if (resp.optBoolean("success", false)) {
+                    logger.error("ChatEngine returned error: {}", resp.optString("error", "Not specified"));
+                    channel.sendMessage(Emotes.getFailure() + " An error occurred getting a response!").queue();
+                }
+
+                String toSend;
+                if (respPrefix == null)
+                    toSend = resp.getString("response");
+                else
+                    toSend = respPrefix + resp.getString("response");
+
+                channel.sendMessage(toSend).queue();
+            }
+        });
     }
 
     public void reportErrorToOwner(Throwable e, Message msg, Command cmd) {

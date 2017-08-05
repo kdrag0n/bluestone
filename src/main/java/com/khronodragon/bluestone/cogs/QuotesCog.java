@@ -34,7 +34,7 @@ public class QuotesCog extends Cog {
             "    \u2022 `[id]` - show quote `id`\n" +
             "    \u2022 `add [quote]` - add a quote\n" +
             "    \u2022 `delete [id]` - delete a quote, if you own it\n" +
-            "    \u2022 `list` - list your quotes\n" +
+            "    \u2022 `list` - list all the quotes (paginated)\n" +
             "    \u2022 `random` - view a random quote\n" +
             "    \u2022 `count` - see how many quotes there are\n" +
             "    \u2022 `message [message id]` - quote a message by its ID\n" +
