@@ -28,6 +28,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.awt.*;
@@ -490,13 +491,13 @@ public class FunCog extends Cog {
             return;
         }
 
-        AkinatorGame game;
         try {
-            game = new AkinatorGame(ctx);
+            new AkinatorGame(ctx);
         } catch (IOException e) {
             logger.error("Error contacting Akinator", e);
             ctx.send(Emotes.getFailure() + " An error occurred contacting Akinator.").queue();
-            return;
+        } catch (JSONException ignored) {
+            ctx.send(Emotes.getFailure() + " Akinator seems to be having some issues right now.").queue();
         }
     }
 
@@ -638,7 +639,15 @@ public class FunCog extends Cog {
                                 "step", str(stepInfo.getStepNum()),
                                 "answer", Byte.toString(answer)))
                         .build()).execute().body().string());
-                stepInfo = new StepInfo(json);
+
+                try {
+                    stepInfo = new StepInfo(json);
+                } catch (JSONException ignored) {
+                    emb.setImage(null)
+                            .clearFields()
+                            .addField("Status", "Akinator ran out of questions.", false);
+                    onFinish.run();
+                }
 
                 if (stepInfo.getProgression() > 90) {
                     presentGuess();

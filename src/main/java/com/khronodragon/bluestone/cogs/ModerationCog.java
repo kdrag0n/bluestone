@@ -244,7 +244,7 @@ public class ModerationCog extends Cog {
         }
 
         if (toDelete.size() == 1) {
-            toDelete.get(0).delete().reason("Purge command").complete();
+            toDelete.get(0).delete().reason("Purge command - deleting a single message").complete();
         } else if (toDelete.size() <= 100) {
             channel.deleteMessages(toDelete).complete();
         } else {
@@ -252,7 +252,10 @@ public class ModerationCog extends Cog {
                 List<Message> list = toDelete.subList(i, Math.min(i + 99, toDelete.size()));
                 if (list.isEmpty()) break;
 
-                channel.deleteMessages(list).complete();
+                if (list.size() == 1)
+                    toDelete.get(0).delete().reason("Purge command - deleting a single message").complete();
+                else
+                    channel.deleteMessages(list).complete();
             }
         }
 

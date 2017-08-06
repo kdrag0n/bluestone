@@ -511,7 +511,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 if (request.equalsIgnoreCase("prefix")) {
                     channel.sendMessage("My prefix here is `" + prefix + "`.").queue();
                 } else if (request.length() > 0) {
-                    chatengineResponse(channel, author.getIdLong(), request, null);
+                    chatengineResponse(channel, "bs_GMdbot2-" + author.getId(), request, null);
                 } else {
                     String tag = Cog.getTag(jda.getSelfUser());
 
@@ -520,12 +520,12 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 }
             } else if (channel instanceof PrivateChannel) {
                 String request = message.getContent();
-                chatengineResponse(channel, author.getIdLong(), request, "💬 ");
+                chatengineResponse(channel, "bs_GMdbot2-" + author.getId(), request, "💬 ");
             }
         }
     }
 
-    public void chatengineResponse(MessageChannel channel, long sessionID, String query, String respPrefix) {
+    public void chatengineResponse(MessageChannel channel, String sessionID, String query, String respPrefix) {
         String reqDest = getConfig().optString("chatengine_url", null);
         if (reqDest == null) {
             channel.sendMessage("My owner hasn't set up ChatEngine yet.").queue();
@@ -551,9 +551,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             public void onResponse(Call call, Response response) throws IOException {
                 JSONObject resp = new JSONObject(response.body().string());
 
-                if (resp.optBoolean("success", false)) {
+                if (!resp.optBoolean("success", false)) {
                     logger.error("ChatEngine returned error: {}", resp.optString("error", "Not specified"));
                     channel.sendMessage(Emotes.getFailure() + " An error occurred getting a response!").queue();
+                    return;
                 }
 
                 String toSend;

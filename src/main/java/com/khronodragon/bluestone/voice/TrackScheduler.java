@@ -8,6 +8,7 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
+import net.dv8tion.jda.core.exceptions.PermissionException;
 
 import java.util.*;
 
@@ -69,13 +70,15 @@ public class TrackScheduler extends AudioEventAdapter {
 
     @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
-        current = track;
-        if (track.getUserData() != null) {
-            AudioTrackInfo info = track.getInfo();
-            track.getUserData(ExtraTrackInfo.class).textChannel
-                    .sendMessage(":arrow_forward: **" + mentionClean(info.title) + "**, length **" +
-                            Bot.formatDuration(info.length / 1000L) + "**").queue();
-        }
+        try {
+            current = track;
+            if (track.getUserData() != null) {
+                AudioTrackInfo info = track.getInfo();
+                track.getUserData(ExtraTrackInfo.class).textChannel
+                        .sendMessage(":arrow_forward: **" + mentionClean(info.title) + "**, length **" +
+                                Bot.formatDuration(info.length / 1000L) + "**").queue();
+            }
+        } catch (PermissionException ignored) {}
     }
 
     @Override
@@ -103,16 +106,20 @@ public class TrackScheduler extends AudioEventAdapter {
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
         if (track.getUserData() != null) {
-            track.getUserData(ExtraTrackInfo.class).textChannel
-                    .sendMessage(":bangbang: Error in audio player! " + exception.getMessage()).queue();
+            try {
+                track.getUserData(ExtraTrackInfo.class).textChannel
+                        .sendMessage(":bangbang: Error in audio player! " + exception.getMessage()).queue();
+            } catch (PermissionException ignored) {}
         }
     }
 
     @Override
     public void onTrackStuck(AudioPlayer player, AudioTrack track, long thresholdMs) {
         if (track.getUserData() != null) {
-            track.getUserData(ExtraTrackInfo.class).textChannel
-                    .sendMessage(Emotes.getFailure() + " Song appears to be frozen, skipping.").queue();
+            try {
+                track.getUserData(ExtraTrackInfo.class).textChannel
+                        .sendMessage(Emotes.getFailure() + " Song appears to be frozen, skipping.").queue();
+            } catch (PermissionException ignored) {}
         }
 
         track.stop();
