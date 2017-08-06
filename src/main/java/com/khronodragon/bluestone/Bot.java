@@ -518,10 +518,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     channel.sendMessage("Hey there! You can talk to me like `@" + tag +
                             " [message]`. And if you want my prefix, say `@" + tag + " prefix`!").queue();
                 }
-            } else if (channel instanceof PrivateChannel) {
-                String request = message.getContent();
-                chatengineResponse(channel, "bs_GMdbot2-" + author.getId(), request, "💬 ");
             }
+        } else if (channel instanceof PrivateChannel) {
+            String request = message.getContent();
+            chatengineResponse(channel, "bs_GMdbot2-" + author.getId(), request, "💬 ");
         }
     }
 
