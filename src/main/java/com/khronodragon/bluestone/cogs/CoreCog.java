@@ -2,11 +2,14 @@ package com.khronodragon.bluestone.cogs;
 
 import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
+import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.enums.MessageDestination;
 import com.khronodragon.bluestone.util.Paginator;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.MessageEmbed;
+import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.requests.RestAction;
@@ -210,5 +213,28 @@ public class CoreCog extends Cog {
     public void cmdUptime(Context ctx) {
         ctx.send("I've been up for **" + bot.formatUptime() +
                 "**, and am using **" + Bot.formatMemory() + "** of memory.").queue();
+    }
+
+    @EventHandler
+    public void onJoin(GuildJoinEvent event) {
+        final String msg =
+                "By adding this bot, you agree that the activity of all users in this server *may* be logged, depending on features used or enabled..\n" +
+                "Features that may log data: quotes, starboard, etc.\n\n" +
+                "**Enjoy this bot!**";
+
+        if (event.getGuild().getPublicChannel() == null || !event.getGuild().getPublicChannel().canTalk()) {
+            for (TextChannel channel: event.getGuild().getTextChannels()) {
+                if (channel.canTalk()) {
+                    channel.sendMessage(msg).queue();
+                    return;
+                }
+            }
+
+            event.getGuild().getOwner().getUser().openPrivateChannel().queue(ch -> {
+                ch.sendMessage(msg).queue();
+            });
+        } else {
+            event.getGuild().getPublicChannel().sendMessage(msg).queue();
+        }
     }
 }

@@ -353,15 +353,16 @@ public class UtilityCog extends Cog {
                 .setColor(val(ctx.guild.getSelfMember().getColor()).or(Color.WHITE))
                 .setAuthor(ctx.guild.getName(), null,
                         val(ctx.guild.getIconUrl()).or(ctx.jda.getSelfUser().getEffectiveAvatarUrl()))
-                .setFooter(ctx.guild.getSelfMember().getEffectiveName(), ctx.jda.getSelfUser().getEffectiveAvatarUrl())
-                .setTimestamp(Instant.now())
+                .setFooter("Server created at", ctx.guild.getIconUrl())
+                .setTimestamp(ctx.guild.getCreationTime())
                 .addField("ID", ctx.guild.getId(), true)
                 .addField("Channels", str(ctx.guild.getTextChannels().size() + ctx.guild.getVoiceChannels().size()), true)
                 .addField("Roles (" + ctx.guild.getRoles().size() + ')', roleText, true)
                 .addField("Emotes", str(ctx.guild.getEmotes().size()), true)
                 .addField("Region", ctx.guild.getRegion().getName(), true)
                 .addField("Owner", ctx.guild.getOwner().getAsMention(), true)
-                .addField("Default Channel", ctx.guild.getPublicChannel().getAsMention(), true)
+                .addField("Default Channel", ctx.guild.getPublicChannel() == null ?
+                        "None" : ctx.guild.getPublicChannel().getAsMention(), true)
                 .addField("Admins Need 2FA?", ctx.guild.getRequiredMFALevel().getKey() == 1 ? "Yes" : "No", true)
                 .addField("Content Scan Level", ctx.guild.getExplicitContentLevel().getDescription(), true)
                 .addField("Verification Level", WordUtils.capitalize(ctx.guild.getVerificationLevel().name().toLowerCase()
@@ -377,7 +378,8 @@ public class UtilityCog extends Cog {
         ShardUtil shardUtil = bot.getShardUtil();
         EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://khronodragon.com/goldmine")
                 .setColor(randomColor())
-                .setDescription("For more *statistical* information, use the `xstats` command.")
+                .setDescription(Emotes.getCredits() +
+                        "\nFor more *statistical* information, use the `xstats` command.")
                 .addField("Servers", str(shardUtil.getGuildCount()), true)
                 .addField("Uptime", bot.formatUptime(), true)
                 .addField("Requests", str(shardUtil.getRequestCount()), true)
