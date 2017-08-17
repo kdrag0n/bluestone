@@ -568,6 +568,12 @@ public class FunCog extends Cog {
                 try {
                     message.clearReactions().queue();
                 } catch (ErrorResponseException | PermissionException ignored) {}
+                catch (IllegalStateException ignored) { // DM
+                    for (MessageReaction reaction: message.getReactions()) {
+                        reaction.removeReaction().queue();
+                        reaction.removeReaction(ctx.author).queue();
+                    }
+                }
 
                 isActive = false;
             };
