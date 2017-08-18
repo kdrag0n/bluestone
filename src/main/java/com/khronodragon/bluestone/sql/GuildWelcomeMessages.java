@@ -9,7 +9,7 @@ public class GuildWelcomeMessages {
     private long guildId;
 
     @DatabaseField(canBeNull = false)
-    private long channelID;
+    private long channelId = 0L;
 
     @DatabaseField(defaultValue = "[default]", width = 2000, canBeNull = false)
     private String welcome;
@@ -27,8 +27,8 @@ public class GuildWelcomeMessages {
         return guildId;
     }
 
-    public long getChannelID() {
-        return channelID;
+    public long getChannelId() {
+        return channelId;
     }
 
     public String getWelcome() {
@@ -39,8 +39,8 @@ public class GuildWelcomeMessages {
         return leave;
     }
 
-    public void setChannelID(long channelID) {
-        this.channelID = channelID;
+    public void setChannelId(long channelId) {
+        this.channelId = channelId;
     }
 
     public void setWelcome(String welcome) {

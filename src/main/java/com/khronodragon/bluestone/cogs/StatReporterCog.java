@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
@@ -171,7 +172,10 @@ public class StatReporterCog extends Cog {
                 .build()).enqueue(new okhttp3.Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                logger.error("[Discord Bots] Report failed", e);
+                if (e instanceof SocketTimeoutException)
+                    logger.error("[Discord Bots] Report: timeout");
+                else
+                    logger.error("[Discord Bots] Report failed", e);
             }
 
             @Override
@@ -197,7 +201,10 @@ public class StatReporterCog extends Cog {
                 .build()).enqueue(new okhttp3.Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                logger.error("[Carbonitex] Report failed", e);
+                if (e instanceof SocketTimeoutException)
+                    logger.error("[Carbonitex] Report: timeout");
+                else
+                    logger.error("[Carbonitex] Report failed", e);
             }
 
             @Override
@@ -232,7 +239,10 @@ public class StatReporterCog extends Cog {
                 .build()).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                logger.error("[Discord Bot List] Report failed", e);
+                if (e instanceof SocketTimeoutException)
+                    logger.error("[Discord Bot List] Report: timeout");
+                else
+                    logger.error("[Discord Bot List] Report failed", e);
             }
 
             @Override

@@ -219,8 +219,10 @@ public class CoreCog extends Cog {
     public void onJoin(GuildJoinEvent event) {
         final String msg =
                 "By adding this bot, you agree that the activity of all users in this server *may* be logged, depending on features used or enabled..\n" +
-                "Features that may log data: quotes, starboard, etc.\n\n" +
-                "**Enjoy this bot!**";
+                "Features that may log data: quotes, starboard, etc. (this is to comply with the Discord ToS.)\n\n" +
+                "**Enjoy this bot!**\n" +
+                "*If you like Goldmine, please help keep it alive by donating here: <https://patreon.com/kdragon>.\n" +
+                "Any amount is appreciated.*";
 
         if (event.getGuild().getPublicChannel() == null || !event.getGuild().getPublicChannel().canTalk()) {
             for (TextChannel channel: event.getGuild().getTextChannels()) {
