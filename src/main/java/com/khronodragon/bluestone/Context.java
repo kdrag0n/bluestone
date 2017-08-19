@@ -59,7 +59,7 @@ public class Context {
 
     public RestAction<Message> send(String msg) {
         msg = truncate(msg.replace("@everyone", "@\u200beveryone")
-            .replace("@here", "@\u200bhere"));
+                .replace("@here", "@\u200bhere"));
 
         return channel.sendMessage(msg);
     }

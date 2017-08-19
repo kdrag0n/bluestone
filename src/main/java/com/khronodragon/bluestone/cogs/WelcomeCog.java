@@ -13,6 +13,7 @@ import com.khronodragon.bluestone.sql.GuildWelcomeMessages;
 import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
@@ -28,7 +29,7 @@ public class WelcomeCog extends Cog {
     private static final Logger logger = LogManager.getLogger(WelcomeCog.class);
     private static final String DEFAULT_WELCOME = "[mention] **Welcome to [server]!**\n" +
             "Enjoy your time here, and find out more about me with `[prefix]help`.";
-    private static final String DEFAULT_LEAVE = "[rip] **RIP [member_tag]...**";
+    private static final String DEFAULT_LEAVE = "[rip] **[member_tag] has left the server...**";
 
     private static final Pattern SUB_REGEX = Pattern.compile("\\[([a-z_]+)]");
     private static final String NO_COMMAND = ":thinking: **I need an action!**\n" +
@@ -38,6 +39,7 @@ public class WelcomeCog extends Cog {
             "    \u2022 `set [message]` - set the current message\n" +
             "    \u2022 `toggle` - toggle the status of this message\n" +
             "    \u2022 `preview` - preview the current message\n" +
+            "    \u2022 `channel [#channel]` - change the channel messages are sent in (default: default channel, or first available one)\n" +
             "    \u2022 `tags` - show the tags available for use in messages\n";
     private static final String TAG_HELP = "**Here are all the tags:**\n" +
             "    • `[mention/member_mention/member]` - @mention the member\n" +
@@ -104,6 +106,8 @@ public class WelcomeCog extends Cog {
                 welcomeCmdToggle(ctx);
             else if (invoked.equals("preview"))
                 welcomeCmdPreview(ctx);
+            else if (invoked.equals("channel"))
+                controlCmdChannel(ctx);
             else if (invoked.equals("tags"))
                 allCmdHelp(ctx);
             else
@@ -165,6 +169,20 @@ public class WelcomeCog extends Cog {
                 ctx.guild, ctx.member));
     }
 
+    private void controlCmdChannel(Context ctx) throws SQLException {
+        if (ctx.message.getMentionedChannels().size() < 1) {
+            ctx.send(Emotes.getFailure() + " I need a channel to use!").queue();
+            return;
+        }
+        TextChannel channel = ctx.message.getMentionedChannels().get(0);
+
+        GuildWelcomeMessages query = messageDao.queryForId(ctx.guild.getIdLong());
+        query.setChannelId(channel.getIdLong());
+        messageDao.update(query);
+
+        ctx.send(Emotes.getSuccess() + " Welcome and leave channel changed to " + channel.getAsMention() + '.').queue();
+    }
+
     @Command(name = "leave", desc = "Manage member leave messages.", guildOnly = true,
             aliases = {"leave_msgs", "leavemsg"}, thread = true,
             perms = {"manageServer", "createInstantInvite", "manageRoles"}, usage = "[action] {args...}")
@@ -186,6 +204,8 @@ public class WelcomeCog extends Cog {
                 leaveCmdToggle(ctx);
             else if (invoked.equals("preview"))
                 leaveCmdPreview(ctx);
+            else if (invoked.equals("channel"))
+                controlCmdChannel(ctx);
             else if (invoked.equals("tags"))
                 allCmdHelp(ctx);
             else
@@ -292,9 +312,6 @@ public class WelcomeCog extends Cog {
         if (!event.getGuild().isAvailable())
             return;
 
-        if (!event.getGuild().getPublicChannel().canTalk())
-            return;
-
         try {
             GuildWelcomeMessages queryResult = messageDao.queryForId(event.getGuild().getIdLong());
 
@@ -302,18 +319,38 @@ public class WelcomeCog extends Cog {
                 try {
                     queryResult = initGuild(event.getGuild());
                 } catch (SQLException ex) {
-                    logger.error("Failed to recover from NPE (join event)", ex);
+                    logger.error("Failed to init message object (join event)", ex);
                     return;
                 }
             }
             if (!queryResult.isWelcomeEnabled()) return;
 
+            TextChannel channel;
+            if (queryResult.getChannelId() == 0L) {
+                channel = event.getGuild().getPublicChannel();
+
+                if (channel == null) {
+                    for (TextChannel potential: event.getGuild().getTextChannels()) {
+                        if (potential.canTalk())
+                            channel = potential;
+                    }
+                }
+
+                if (channel == null)
+                    return;
+            } else {
+                channel = event.getGuild().getTextChannelById(queryResult.getChannelId());
+            }
+
+            if (!channel.canTalk())
+                return;
+
             String msg = formatMessage(queryResult.getWelcome(), event.getGuild(),
                     event.getMember(), DEFAULT_WELCOME);
 
-            event.getGuild().getPublicChannel().sendMessage(Context.truncate(msg)).queue();
+            channel.sendMessage(Context.truncate(msg)).queue();
         } catch (SQLException e) {
-            logger.warn("SQL error while handling member join", e);
+            logger.error("SQL error while handling member join", e);
         }
     }
 
@@ -325,9 +362,6 @@ public class WelcomeCog extends Cog {
         if (!event.getGuild().isAvailable())
             return;
 
-        if (!event.getGuild().getPublicChannel().canTalk())
-            return;
-
         try {
             GuildWelcomeMessages queryResult = messageDao.queryForId(event.getGuild().getIdLong());
 
@@ -335,18 +369,38 @@ public class WelcomeCog extends Cog {
                 try {
                     queryResult = initGuild(event.getGuild());
                 } catch (SQLException ex) {
-                    logger.error("Failed to recover from NPE (leave event)", ex);
+                    logger.error("Failed to init message object (leave event)", ex);
                     return;
                 }
             }
             if (!queryResult.isLeaveEnabled()) return;
 
+            TextChannel channel;
+            if (queryResult.getChannelId() == 0L) {
+                channel = event.getGuild().getPublicChannel();
+
+                if (channel == null) {
+                    for (TextChannel potential: event.getGuild().getTextChannels()) {
+                        if (potential.canTalk())
+                            channel = potential;
+                    }
+                }
+
+                if (channel == null)
+                    return;
+            } else {
+                channel = event.getGuild().getTextChannelById(queryResult.getChannelId());
+            }
+
+            if (!channel.canTalk())
+                return;
+
             String msg = formatMessage(queryResult.getLeave(), event.getGuild(),
                     event.getMember(), DEFAULT_LEAVE);
 
-            event.getGuild().getPublicChannel().sendMessage(Context.truncate(msg)).queue();
+            channel.sendMessage(Context.truncate(msg)).queue();
         } catch (SQLException e) {
-            logger.warn("SQL error while handling member leave", e);
+            logger.error("SQL error while handling member leave", e);
         }
     }
 
@@ -367,9 +421,7 @@ public class WelcomeCog extends Cog {
         if (!event.getGuild().isAvailable()) return;
 
         try {
-            if (messageDao.idExists(event.getGuild().getIdLong())) {
-                messageDao.deleteById(event.getGuild().getIdLong());
-            }
+            messageDao.deleteById(event.getGuild().getIdLong());
         } catch (SQLException e) {
             logger.warn("Failed to delete WelcomeMessages of guild {}", event.getGuild().getId(), e);
         }

@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.awt.*;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.Date;
@@ -76,6 +77,7 @@ public class ReminderCog extends Cog {
                             .setAuthor("Reminder", null, bot.getJda().getSelfUser().getEffectiveAvatarUrl())
                             .setDescription(reminder.getMessage())
                             .setFooter("You asked me to remind you of this at", null)
+                            .setColor(randomColor())
                             .setTimestamp(Instant.now())
                             .build()).queue()
             );

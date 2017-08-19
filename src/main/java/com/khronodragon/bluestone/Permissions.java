@@ -9,40 +9,39 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class Permissions {
-    public static boolean check(String[] permsRequired, Context ctx) {
+    public static boolean check(String[] permsAccepted, Context ctx) {
         if (ctx.author.getIdLong() == ctx.bot.owner.getIdLong())
             return true;
 
-        for (String perm: permsRequired) {
+        for (String perm: permsAccepted) {
             if (perm.equals("owner")) {
-                if (ctx.author.getIdLong() != ctx.bot.owner.getIdLong())
-                    return false;
+                if (ctx.author.getIdLong() == ctx.bot.owner.getIdLong())
+                    return true;
             } else if (perm.equals("admin")) {
                 try {
-                    if (!ctx.bot.getAdminDao().idExists(ctx.author.getIdLong()))
-                        return false;
+                    if (ctx.bot.getAdminDao().idExists(ctx.author.getIdLong()))
+                        return true;
                 } catch (SQLException e) {
                     ctx.bot.logger.warn("Bot admin perm check error", e);
-                    return false;
                 }
             } else {
                 if (ctx.guild != null) {
                     String jdaPermStr = String.join("_", Arrays.stream(StringUtils.splitByCharacterTypeCamelCase(perm))
-                    .map(String::toUpperCase)
-                    .collect(Collectors.toList()));
+                            .map(String::toUpperCase)
+                            .collect(Collectors.toList()));
 
                     Permission jdaPerm;
                     try {
                         jdaPerm = Permission.valueOf(jdaPermStr);
-                    } catch (IllegalArgumentException e) {
-                        return false;
+                    } catch (IllegalArgumentException ignored) {
+                        continue;
                     }
 
-                    if (!ctx.member.hasPermission((Channel) ctx.channel, jdaPerm))
-                        return false;
+                    if (ctx.member.hasPermission((Channel) ctx.channel, jdaPerm))
+                        return true;
                 }
             }
         }
-        return true;
+        return false;
     }
 }
