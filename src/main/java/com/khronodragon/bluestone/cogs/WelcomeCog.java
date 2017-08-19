@@ -171,7 +171,7 @@ public class WelcomeCog extends Cog {
 
     private void controlCmdChannel(Context ctx) throws SQLException {
         if (ctx.message.getMentionedChannels().size() < 1) {
-            ctx.send(Emotes.getFailure() + " I need a channel to use!");
+            ctx.send(Emotes.getFailure() + " I need a channel to use!").queue();
             return;
         }
         TextChannel channel = ctx.message.getMentionedChannels().get(0);
@@ -180,7 +180,7 @@ public class WelcomeCog extends Cog {
         query.setChannelId(channel.getIdLong());
         messageDao.update(query);
 
-        ctx.send(Emotes.getSuccess() + " Welcome and leave channel changed to " + channel.getAsMention() + '.');
+        ctx.send(Emotes.getSuccess() + " Welcome and leave channel changed to " + channel.getAsMention() + '.').queue();
     }
 
     @Command(name = "leave", desc = "Manage member leave messages.", guildOnly = true,
