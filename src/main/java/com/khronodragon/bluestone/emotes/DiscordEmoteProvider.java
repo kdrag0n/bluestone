@@ -4,7 +4,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DiscordEmoteProvider implements EmoteProvider {
-    private static final Pattern CUSTOM_EMOTE_PATTERN = Pattern.compile("^<:([a-z_]+):([0-9]{17,19})>$", Pattern.CASE_INSENSITIVE);
+    public static final Pattern CUSTOM_EMOTE_PATTERN = Pattern.compile("^<:([a-z_]+):([0-9]{17,19})>$", Pattern.CASE_INSENSITIVE);
 
     @Override
     public boolean hasEmote(String emote) {

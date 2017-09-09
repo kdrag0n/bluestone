@@ -142,7 +142,7 @@ public class ModerationCog extends Cog {
                 func.accept(matcher);
         }
 
-        return input.replaceAll(pattern.pattern(), " ");
+        return pattern.matcher(input).replaceAll(" ");
     }
 
     @Command(name = "purge", desc = "Purge messages from a channel.", guildOnly = true,
@@ -195,7 +195,7 @@ public class ModerationCog extends Cog {
                 return;
             }
         }
-        args = args.replaceAll(PURGE_NUM_PATTERN.pattern(), " ");
+        args = PURGE_NUM_PATTERN.matcher(args).replaceAll(" ").trim();
 
         if (limit > 800) {
             ctx.send(Emotes.getFailure() + " Invalid message limit!").queue();
@@ -298,7 +298,7 @@ public class ModerationCog extends Cog {
 
         ctx.send(":hourglass: Muting...").queue(status -> {
             String reason;
-            String userReason = ctx.rawArgs.replaceAll(MENTION_PATTERN.pattern(), "").trim();
+            String userReason = MENTION_PATTERN.matcher(ctx.rawArgs).replaceAll("").trim();
 
             if (userReason.length() < 1 || userReason.length() > 450)
                 reason = getTag(ctx.author) + " used the mute command (with sufficient permissions)";
@@ -348,7 +348,7 @@ public class ModerationCog extends Cog {
 
         ctx.send(":hourglass: Unmuting...").queue(status -> {
             String reason;
-            String userReason = ctx.rawArgs.replaceAll(MENTION_PATTERN.pattern(), "").trim();
+            String userReason = MENTION_PATTERN.matcher(ctx.rawArgs).replaceAll("").trim();
 
             if (userReason.length() < 1 || userReason.length() > 450)
                 reason = getTag(ctx.author) + " used the unmute command (with sufficient permissions)";
