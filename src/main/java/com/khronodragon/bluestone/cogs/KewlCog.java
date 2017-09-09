@@ -18,6 +18,7 @@ import com.khronodragon.bluestone.enums.BucketType;
 import com.khronodragon.bluestone.enums.ProfileFlags;
 import com.khronodragon.bluestone.sql.UserProfile;
 import com.khronodragon.bluestone.util.GraphicsUtils;
+import com.khronodragon.bluestone.util.Strings;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TIntList;
 import gnu.trove.set.TLongSet;
@@ -272,16 +273,16 @@ public class KewlCog extends Cog {
     @Command(name = "profile", desc = "Display a user's profile.", usage = "[user / \"setup\" / \"bg\"]", thread = true)
     public void cmdProfile(Context ctx) throws SQLException, IOException {
         User user;
-        if (ctx.rawArgs.matches("^<@!?[0-9]{17,20}>$") && ctx.message.getMentionedUsers().size() > 0)
+        if (Strings.isMention(ctx.rawArgs) && ctx.message.getMentionedUsers().size() > 0)
             user = ctx.message.getMentionedUsers().get(0);
-        else if (ctx.rawArgs.matches("^[0-9]{17,20}$")) {
+        else if (Strings.isID(ctx.rawArgs)) {
             try {
                 ctx.channel.sendTyping().queue();
                 user = ctx.jda.retrieveUserById(Long.parseUnsignedLong(ctx.rawArgs)).complete();
             } catch (ErrorResponseException ignored) {
                 user = null;
             }
-        } else if (ctx.rawArgs.matches("^.{2,32}#[0-9]{4}$")) {
+        } else if (Strings.isTag(ctx.rawArgs)) {
             Collection<User> users;
             switch (ctx.channel.getType()) {
                 case TEXT:
@@ -489,5 +490,11 @@ public class KewlCog extends Cog {
         } else {
             ctx.send(Emotes.getFailure() + " If you want to use the default background, specify `reset` or `default`. If you want to use a custom background, upload it as an attachment along with your command message. Only GIF, PNG, and JPEG image formats are supported.").queue();
         }
+    }
+
+    @Command(name = "profile_override_bg", desc = "Override an user's profile background. This just executes `profile bg` as them.",
+            perms = {"owner"}, usage = "[@user/user ID] {to: reset/default / attach image}")
+    public void cmdProfileOverrideBg(Context ctx) {
+
     }
 }

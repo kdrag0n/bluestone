@@ -22,6 +22,7 @@ import com.khronodragon.bluestone.sql.Starboard;
 import com.khronodragon.bluestone.sql.StarboardEntry;
 import com.khronodragon.bluestone.sql.Starrer;
 import com.khronodragon.bluestone.util.GraphicsUtils;
+import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.Permission;
@@ -417,7 +418,7 @@ public class StarboardCog extends Cog {
         String channelName = "starboard";
         if (ctx.args.size() > 1) {
             String wantedName = ctx.args.get(1);
-            if (!wantedName.matches("^[a-zA-Z0-9_-]{2,100}$")) {
+            if (!Strings.isChannelName(wantedName)) {
                 ctx.send(Emotes.getFailure() + " Channel name must be between 2 and 100 characters long!").queue();
                 return;
             }

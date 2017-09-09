@@ -5,6 +5,7 @@ import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.Emotes;
+import com.khronodragon.bluestone.sql.GuildMusicSettings;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
@@ -24,11 +25,13 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
     private int iteration;
     private final AudioPlayerManager manager;
     private final String term;
+    private final GuildMusicSettings settings;
 
-    public TrackLoadHandler(Context ctx, AudioState state, AudioPlayerManager man, String term) {
+    public TrackLoadHandler(Context ctx, AudioState state, AudioPlayerManager man, String term, GuildMusicSettings settings) {
         this.ctx = ctx;
         this.state = state;
         this.term = term;
+        this.settings = settings;
         manager = man;
         iteration = 0;
     }
@@ -109,8 +112,10 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
         if (playlist.isSearchResult()) {
             if (tracks.size() < 1)
                 noMatches();
+            else if (settings != null && settings.alwaysPlayFirstResult())
+                trackLoaded(tracks.get(0));
             else
-                searchResults(playlist.getTracks());
+                searchResults(tracks);
 
             return;
         }

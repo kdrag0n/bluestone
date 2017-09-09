@@ -19,7 +19,7 @@ public class Context {
     public JDA jda;
     public final String prefix;
     public final List<String> args;
-    public final String invoker;
+    public String invoker;
     public final String rawArgs;
     public final String mention;
     public boolean _flag = false;

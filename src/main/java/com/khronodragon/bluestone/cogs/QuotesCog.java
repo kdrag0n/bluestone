@@ -24,6 +24,7 @@ import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 
@@ -88,7 +89,7 @@ public class QuotesCog extends Cog {
             quoteCmdCount(ctx);
         else if (invoked.equals("message") || invoked.equals("addmsg") || invoked.equals("madd"))
             quoteCmdAddMessage(ctx);
-        else if (invoked.matches("^[0-9]{1,4}$"))
+        else if (Strings.is4Digits(invoked))
             quoteShowId(ctx, Integer.parseInt(invoked));
         else
             ctx.send(NO_COMMAND).queue();
@@ -167,7 +168,7 @@ public class QuotesCog extends Cog {
 
         int page = 1;
         if (ctx.args.size() > 1) {
-            if (ctx.args.get(1).matches("^[0-9]{1,3}$")) {
+            if (Strings.is4Digits(ctx.args.get(1))) {
                 int wantedPage = Integer.parseInt(ctx.args.get(1));
                 int max = (int) Math.ceil(renderedQuotes.length / 12);
 
@@ -234,7 +235,7 @@ public class QuotesCog extends Cog {
     }
 
     private void quoteCmdAddMessage(Context ctx) throws SQLException {
-        if (ctx.args.size() < 2 || !ctx.args.get(1).matches("^[0-9]{17,20}$")) {
+        if (ctx.args.size() < 2 || !Strings.isID(ctx.args.get(1))) {
             ctx.send(Emotes.getFailure() + " I need the ID of a message to quote!").queue();
             return;
         }

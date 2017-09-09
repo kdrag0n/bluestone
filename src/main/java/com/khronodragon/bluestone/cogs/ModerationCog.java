@@ -13,6 +13,7 @@ import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.enums.AutoroleConditions;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.sql.GuildAutorole;
+import com.khronodragon.bluestone.util.Strings;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.linked.TLongLinkedList;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -159,7 +160,7 @@ public class ModerationCog extends Cog {
 
         Matcher matcher;
         String args = ctx.rawArgs;
-        String regex = null;
+        Pattern pattern = null;
         List<String> substrings = new LinkedList<>();
         TLongList userIds = new TLongLinkedList();
         int limit = 0;
@@ -171,8 +172,14 @@ public class ModerationCog extends Cog {
         });
 
         matcher = PURGE_REGEX_PATTERN.matcher(args);
-        if (matcher.find())
-            regex = matcher.group(1);
+        if (matcher.find()) {
+            try {
+                pattern = Pattern.compile(matcher.group(1));
+            } catch (PatternSyntaxException e) {
+                ctx.send(Emotes.getFailure() + " Invalid regex given!").queue();
+                return;
+            }
+        }
 
         args = match(PURGE_MENTION_PATTERN, args, m -> {
             userIds.add(MiscUtil.parseSnowflake(m.group(1)));
@@ -198,7 +205,7 @@ public class ModerationCog extends Cog {
         boolean embeds = args.contains("embed");
         boolean links = args.contains("link");
         boolean attachments = args.contains("attach");
-        boolean none = substrings.isEmpty() && regex == null && userIds.isEmpty() && !bots && !embeds && !links && !attachments;
+        boolean none = substrings.isEmpty() && pattern == null && userIds.isEmpty() && !bots && !embeds && !links && !attachments;
 
         String twoWeekWarn = "";
         OffsetDateTime maxAge = ctx.message.getCreationTime().minusWeeks(2).plusMinutes(1);
@@ -229,13 +236,8 @@ public class ModerationCog extends Cog {
                 continue;
             }
 
-            try {
-                if (regex != null && msg.getRawContent().matches(regex))
-                    toDelete.add(msg);
-            } catch (PatternSyntaxException e) {
-                ctx.send(Emotes.getFailure() + " Invalid regex given!").queue();
-                return;
-            }
+            if (pattern != null && pattern.matcher(msg.getRawContent()).matches())
+                toDelete.add(msg);
         }
 
         if (toDelete.isEmpty()) {
@@ -279,7 +281,7 @@ public class ModerationCog extends Cog {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need someone to mute!").queue();
             return;
-        } else if (!ctx.rawArgs.matches("^<@!?(\\d{17,20})>$") || ctx.message.getMentionedUsers().size() < 1) {
+        } else if (!Strings.isMention(ctx.rawArgs) || ctx.message.getMentionedUsers().size() < 1) {
             ctx.send(Emotes.getFailure() + " Invalid mention!").queue();
             return;
         } else if (!ctx.guild.getSelfMember().hasPermission(Permission.MANAGE_PERMISSIONS)) {
@@ -329,7 +331,7 @@ public class ModerationCog extends Cog {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need someone to unmute!").queue();
             return;
-        } else if (!ctx.rawArgs.matches("^<@!?(\\d{17,20})>$") || ctx.message.getMentionedUsers().size() < 1) {
+        } else if (!Strings.isMention(ctx.rawArgs) || ctx.message.getMentionedUsers().size() < 1) {
             ctx.send(Emotes.getFailure() + " Invalid mention!").queue();
             return;
         } else if (!ctx.guild.getSelfMember().hasPermission(Permission.MANAGE_PERMISSIONS)) {
@@ -376,7 +378,7 @@ public class ModerationCog extends Cog {
             ctx.send(Emotes.getFailure() + " I need someone to ban!").queue();
             return;
         } else if ((!MENTION_PATTERN.matcher(ctx.rawArgs).find() || ctx.message.getMentionedUsers().size() < 1) &&
-                !ctx.rawArgs.matches("^[0-9]{17,20}")) {
+                !Strings.isID(ctx.args.get(0))) {
             ctx.send(Emotes.getFailure() + " Invalid mention or user ID!").queue();
             return;
         }
@@ -425,9 +427,9 @@ public class ModerationCog extends Cog {
     }
 
     private Role parseRole(Guild guild, String roleArg) {
-        if (roleArg.matches("^<@&[0-9]{17,20}>$")) {
+        if (Strings.isRoleMention(roleArg)) {
             return guild.getRoleById(roleArg.substring(3, roleArg.length() - 1));
-        } else if (roleArg.matches("^[0-9]{17,20}$")) {
+        } else if (Strings.isID(roleArg)) {
             return guild.getRoleById(roleArg);
         } else {
             List<Role> roles = guild.getRolesByName(roleArg, false);

@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.khronodragon.bluestone.util.Strings.str;
@@ -36,6 +37,8 @@ import static java.text.MessageFormat.format;
 public class PokemonCog extends Cog {
     private static final Logger logger = LogManager.getLogger(PokemonCog.class);
     private static final String BASE_URI = "https://pokeapi.co";
+    private static final Pattern D3_PATTERN = Pattern.compile("^[0-9]{1,3}$");
+    private static final Pattern PKNAME_PATTERN = Pattern.compile("^[a-zA-Z .]{1,16}$");
     private static final int ENTRY_COUNT = 709;
     private static final Gson pokeGson = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
@@ -91,7 +94,7 @@ public class PokemonCog extends Cog {
         if (ctx.rawArgs.length() < 1) {
             url.append(randint(1, ENTRY_COUNT));
         } else {
-            if (ctx.rawArgs.matches("^[0-9]{1,3}$")) {
+            if (D3_PATTERN.matcher(ctx.rawArgs).matches()) {
                 int requested = Integer.parseInt(ctx.rawArgs);
 
                 if (requested >= 1 && requested <= ENTRY_COUNT)
@@ -100,7 +103,7 @@ public class PokemonCog extends Cog {
                     ctx.send(Emotes.getFailure() + " Invalid national ID!").queue();
                     return;
                 }
-            } else if (ctx.rawArgs.matches("^[a-zA-Z .]{1,16}$")) {
+            } else if (PKNAME_PATTERN.matcher(ctx.rawArgs).matches()) {
                 String pokemonName = StringUtils.remove(ctx.rawArgs.toLowerCase()
                         .replace(' ', '-'), '.');
 

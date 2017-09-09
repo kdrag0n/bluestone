@@ -81,6 +81,7 @@ public class StatReporterCog extends Cog {
         try {
             graphiteClient.sendMetrics(new HashMap<String, Number>() {{
                 ShardUtil shardUtil = bot.getShardUtil();
+                Runtime runtime = Runtime.getRuntime();
 
                 put("bot.guilds", shardUtil.getGuildCount());
                 put("bot.channels", shardUtil.getChannelCount());
@@ -100,6 +101,7 @@ public class StatReporterCog extends Cog {
                 put("system.load_average", UtilityCog.systemBean.getSystemLoadAverage());
                 put("system.cpu_usage", UtilityCog.systemBean.getSystemCpuLoad());
                 put("system.memory_free", UtilityCog.systemBean.getFreePhysicalMemorySize());
+                put("system.memory_used", runtime.totalMemory() - runtime.freeMemory());
 
                 for (Map.Entry<String, AtomicInteger> entry: shardUtil.getCommandCalls().entrySet()) {
                     put("bot.command." + entry.getKey() + ".requests", entry.getValue().get());

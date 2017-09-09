@@ -6,8 +6,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultiset;
-import com.google.common.collect.Multiset;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
@@ -226,15 +224,15 @@ public class UtilityCog extends Cog {
             usage = "{user}", aliases = {"userinfo", "whois"}, thread = true)
     public void cmdUser(Context ctx) throws UnsupportedEncodingException {
         User user;
-        if (ctx.rawArgs.matches("^<@!?[0-9]{17,20}>$") && ctx.message.getMentionedUsers().size() > 0)
+        if (Strings.isMention(ctx.rawArgs) && ctx.message.getMentionedUsers().size() > 0)
             user = ctx.message.getMentionedUsers().get(0);
-        else if (ctx.rawArgs.matches("^[0-9]{17,20}$")) {
+        else if (Strings.isID(ctx.rawArgs)) {
             try {
                 user = ctx.jda.retrieveUserById(Long.parseUnsignedLong(ctx.rawArgs)).complete();
             } catch (ErrorResponseException ignored) {
                 user = null;
             }
-        } else if (ctx.rawArgs.matches("^.{2,32}#[0-9]{4}$")) {
+        } else if (Strings.isTag(ctx.rawArgs)) {
             Collection<User> users;
             switch (ctx.channel.getType()) {
                 case TEXT:
@@ -466,7 +464,7 @@ public class UtilityCog extends Cog {
         if (ctx.rawArgs.length() < 1) {
             ctx.send('<' + ctx.jda.asBot().getInviteUrl(PERMS_NEEDED) + '>').queue();
         } else {
-            if (!ctx.rawArgs.matches("^[0-9]{16,20}$")) {
+            if (!Strings.isID(ctx.rawArgs)) {
                 ctx.send(Emotes.getFailure() + " Invalid ID!").queue();
                 return;
             }
@@ -586,13 +584,12 @@ public class UtilityCog extends Cog {
                 if (message == null)
                     return;
 
-                ImmutableMultiset<MessageReaction> multiset = ImmutableMultiset.copyOf(message.getReactions());
-
-                Map<ReactionEmote, Integer> resultTable = multiset.entrySet().stream()
-                        .sorted(Collections.reverseOrder(Comparator.comparing(Multiset.Entry::getCount)))
+                Map<ReactionEmote, Integer> resultTable = message.getReactions().stream()
+                        .map(r -> ImmutablePair.of(r, r.getUsers().complete().size()))
+                        .sorted(Collections.reverseOrder(Comparator.comparing(ImmutablePair<MessageReaction, Integer>::getRight)))
                         .collect(Collectors.toMap(
-                                e -> e.getElement().getEmote(),
-                                Multiset.Entry::getCount,
+                                e -> e.getLeft().getEmote(),
+                                ImmutablePair::getRight,
                                 (k, v) -> { throw new IllegalStateException("Duplicate key " + k); },
                                 LinkedHashMap::new
                         ));
@@ -1153,7 +1150,7 @@ public class UtilityCog extends Cog {
                 return;
             }
         } else if (((first.equalsIgnoreCase("number") || first.equalsIgnoreCase("num")) &&
-                second.matches("^[0-9]{1,4}$")) || first.matches("^[0-9]{1,4}$")) {
+                Strings.is4Digits(second)) || Strings.is4Digits(first)) {
             ctx.channel.sendTyping().queue();
 
             try {
@@ -1248,7 +1245,7 @@ public class UtilityCog extends Cog {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need an IP or domain!").queue();
             return;
-        } else if (!ctx.rawArgs.matches("^(?:localhost|[a-zA-Z\\-.]+\\.[a-z]{2,15}|(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|[0-9a-f:]+)$")) {
+        } else if (!Strings.isIPorDomain(ctx.rawArgs)) {
             ctx.send(Emotes.getFailure() + " Invalid domain, IPV4, or IPV6 address!").queue();
             return;
         }
@@ -1270,7 +1267,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "mcskin", desc = "Get someone's Minecraft skin.", usage = "[username]")
     public void cmdMcskin(Context ctx) {
-        if (!ctx.rawArgs.matches("^[a-zA-Z0-9_]{1,32}$")) {
+        if (!Strings.isMinecraftName(ctx.rawArgs)) {
             ctx.send(Emotes.getFailure() + " I need a valid username!").queue();
             return;
         }
@@ -1285,7 +1282,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "mchead", desc = "Get someone's Minecraft head.", usage = "[username]")
     public void cmdMchead(Context ctx) {
-        if (!ctx.rawArgs.matches("^[a-zA-Z0-9_]{1,32}$")) {
+        if (!Strings.isMinecraftName(ctx.rawArgs)) {
             ctx.send(Emotes.getFailure() + " I need a valid username!").queue();
             return;
         }

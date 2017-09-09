@@ -16,12 +16,14 @@ import org.apache.logging.log4j.Logger;
 
 import javax.script.*;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import static java.text.MessageFormat.format;
 
 public class ReplCog extends Cog {
     private static final Logger logger = LogManager.getLogger(ReplCog.class);
     private static final String[] NASHORN_ARGS = {"--language=es6", "-scripting"};
+    private static final Pattern JS_OBJECT_PATTERN = Pattern.compile("^\\[object [A-Z][a-z0-9]*]$");
     static final String GROOVY_PRE_INJECT = "import net.dv8tion.jda.core.entities.*\n" +
             "import net.dv8tion.jda.core.*\n" +
             "import net.dv8tion.jda.core.entities.impl.*\n" +
@@ -201,7 +203,7 @@ public class ReplCog extends Cog {
             if (result != null) {
                 try {
                     String strResult = result.toString();
-                    if (isJavascript && strResult.matches("^\\[object [A-Z][a-z0-9]*]$")) {
+                    if (isJavascript && JS_OBJECT_PATTERN.matcher(strResult).matches()) {
                         try {
                             strResult = (String) engine.eval("JSON.stringify(last)");
                         } catch (ScriptException e) {

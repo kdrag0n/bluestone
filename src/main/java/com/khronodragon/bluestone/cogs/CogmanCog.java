@@ -6,6 +6,7 @@ import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.errors.PassException;
+import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.core.EmbedBuilder;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -14,17 +15,19 @@ import org.apache.logging.log4j.Logger;
 import org.reflections.Reflections;
 
 import java.io.File;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class CogmanCog extends Cog {
     private static final Logger logger = LogManager.getLogger(CogmanCog.class);
     private static final String DEFAULT_COGS_PATH = "com.khronodragon.bluestone.cogs";
     private final Reflections cogsReflector = new Reflections(DEFAULT_COGS_PATH);
+    private static final Pattern CLASS_PATH_PATTERN = Pattern.compile("^[a-z]+://?(?:[a-zA-Z0-9\\-_:]+/)+[a-zA-Z0-9\\-_.]+\\.jar/(?:[a-z0-9\\-_]+\\.)*[a-zA-Z0-9]+$");
+    private static final Pattern CLASS_FILE_PATTERN = Pattern.compile("^/?(?:.+/)+[a-zA-Z0-9]+(?:\\.class)?$");
     private static final String NO_COMMAND = ":thinking: **I need an action!**\n" +
             "The following are valid:\n" +
             "    \u2022 `list {package path}` - list cogs available (default path `com.khronodragon.bluestone.cogs`)\n" +
@@ -93,7 +96,7 @@ public class CogmanCog extends Cog {
         }
         String arg = ctx.args.get(1);
 
-        if (!arg.matches("^(?:[a-z0-9\\-_]+\\.)*[a-zA-Z0-9]+$")) {
+        if (!Strings.isPackage(arg)) {
             ctx.send(Emotes.getFailure() + " Invalid cog name or class path!").queue();
             throw new PassException();
         }
@@ -129,7 +132,7 @@ public class CogmanCog extends Cog {
     private void cmdList(Context ctx) {
         Reflections reflector = cogsReflector;
 
-        if (ctx.args.size() > 1 && ctx.args.get(1).matches("^(?:[a-z\\-_]+\\.)+[a-zA-Z0-9]+$"))
+        if (ctx.args.size() > 1 && Strings.isPackage(ctx.args.get(1)))
             reflector = new Reflections(ctx.args.get(0));
 
         Set<Class<? extends Cog>> classes = reflector.getSubTypesOf(Cog.class);
@@ -170,7 +173,7 @@ public class CogmanCog extends Cog {
         String input = ctx.args.get(1);
 
         Class clazz;
-        if (input.matches("^[a-z]+://?(?:[a-zA-Z0-9\\-_:]+/)+[a-zA-Z0-9\\-_.]+\\.jar/(?:[a-z0-9\\-_]+\\.)*[a-zA-Z0-9]+$")) {
+        if (CLASS_PATH_PATTERN.matcher(input).matches()) {
             String[] split = StringUtils.split(input, '/');
             String classPath = split[split.length - 1];
             String uriPath = StringUtils.join(ArrayUtils.remove(split, split.length - 1), '/');
@@ -184,12 +187,12 @@ public class CogmanCog extends Cog {
             ClassLoader cl = new URLClassLoader(new URL[] {new URL(uriPath)});
 
             clazz = cl.loadClass(classPath);
-        } else if (input.matches("^(?:[a-z0-9\\-_]+\\.)*[a-zA-Z0-9]+$")) {
+        } else if (Strings.isPackage(input)) {
             if (input.indexOf('.') == -1)
                 clazz = Class.forName(DEFAULT_COGS_PATH + '.' + input);
             else
                 clazz = Class.forName(input);
-        } else if (input.matches("^/?(?:.+/)+[a-zA-Z0-9]+(?:\\.class)?$")) {
+        } else if (CLASS_FILE_PATTERN.matcher(input).matches()) {
             File file = new File(input);
             URL url = file.getParentFile().toURI().toURL();
             String name = file.getName().replaceFirst("\\.class$", "");

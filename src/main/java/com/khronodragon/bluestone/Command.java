@@ -7,6 +7,7 @@ import com.khronodragon.bluestone.errors.PermissionError;
 import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.exceptions.PermissionException;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -27,6 +28,7 @@ public class Command {
     public final String cogName;
     public final boolean needThread;
     public final boolean reportErrors;
+    public final boolean requiresOwner;
     private List<Predicate<Context>> checks = new ArrayList<>(1);
     private final Method func;
     public final Cog cog;
@@ -46,6 +48,7 @@ public class Command {
         this.cogName = cogInstance.getName();
         this.needThread = needThread;
         this.reportErrors = reportErrors;
+        this.requiresOwner = ArrayUtils.contains(permsRequired, "owner");
     }
 
     public void invoke(Bot bot, MessageReceivedEvent event, List<String> args,

@@ -2,6 +2,9 @@ package com.khronodragon.bluestone.cogs;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.dao.DaoManager;
+import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
@@ -9,12 +12,14 @@ import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.errors.PassException;
+import com.khronodragon.bluestone.sql.GuildMusicSettings;
 import com.khronodragon.bluestone.voice.*;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.bandcamp.BandcampAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import gnu.trove.map.TLongObjectMap;
@@ -33,6 +38,7 @@ import net.dv8tion.jda.core.managers.AudioManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.sql.SQLException;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -46,6 +52,7 @@ public class MusicCog extends Cog {
             .setNameFormat("Music Cog Cleanup Thread %d")
             .build());
     private final DefaultAudioPlayerManager playerManager = new DefaultAudioPlayerManager();
+    private Dao<GuildMusicSettings, Long> settingsDao;
 
     @VisibleForTesting
     public TLongObjectMap<AudioState> audioStates = new TLongObjectHashMap<>();
@@ -55,12 +62,24 @@ public class MusicCog extends Cog {
 
         playerManager.setItemLoaderThreadPoolSize(16);
 
-        playerManager.registerSourceManager(new GoldYoutubeAudioSourceManager());
+        playerManager.registerSourceManager(new YoutubeAudioSourceManager());
         playerManager.registerSourceManager(new SoundCloudAudioSourceManager());
         playerManager.registerSourceManager(new BandcampAudioSourceManager());
         playerManager.registerSourceManager(new VimeoAudioSourceManager());
         playerManager.registerSourceManager(new TwitchStreamAudioSourceManager());
         bgExecutor.scheduleWithFixedDelay(this::doCleanup, 5, 5, TimeUnit.MINUTES);
+
+        try {
+            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), GuildMusicSettings.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create music settings table!", e);
+        }
+
+        try {
+            settingsDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), GuildMusicSettings.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create music settings DAO!", e);
+        }
     }
 
     public String getName() {
@@ -227,7 +246,7 @@ public class MusicCog extends Cog {
     }
 
     @Command(name = "play", desc = "Play something!", usage = "[search terms / link]", guildOnly = true)
-    public void cmdPlay(Context ctx) {
+    public void cmdPlay(Context ctx) throws SQLException {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need something to play!").queue();
             return;
@@ -253,7 +272,8 @@ public class MusicCog extends Cog {
         final String term = String.join(" ", ctx.args);
         ctx.message.addReaction("⌛").queue();
 
-        playerManager.loadItem(term, new TrackLoadHandler(ctx, state, playerManager, term));
+        GuildMusicSettings settings = settingsDao.queryForId(ctx.guild.getIdLong());
+        playerManager.loadItem(term, new TrackLoadHandler(ctx, state, playerManager, term, settings));
     }
 
     @Command(name = "pause", desc = "Pause the player.", guildOnly = true)
@@ -399,6 +419,28 @@ public class MusicCog extends Cog {
         }
     }
 
+    @Command(name = "force_skip", desc = "Force skip the current track.", aliases = {"forceskip"}, guildOnly = true,
+            perms = {"kickMembers", "voiceMuteOthers", "voiceDeafOthers", "voiceMoveOthers"})
+    public void cmdForceSkip(Context ctx) {
+        channelChecks(ctx);
+        AudioState state = getAudioState(ctx.guild);
+        if (state.scheduler.current == null) {
+            ctx.send("There's no current track.").queue();
+            return;
+        }
+
+        ExtraTrackInfo info = state.scheduler.current.getUserData(ExtraTrackInfo.class);
+        if (info == null) {
+            ctx.send(Emotes.getFailure() + " The current track is missing a state!").queue();
+            return;
+        }
+
+        if (state.scheduler.queue.isEmpty())
+            ctx.send("Skipped.").queue();
+
+        state.scheduler.skip();
+    }
+
     @Command(name = "playing", desc = "Get the current track.", aliases = {"current", "np"}, guildOnly = true)
     public void cmdCurrent(Context ctx) {
         channelChecks(ctx);
@@ -429,5 +471,23 @@ public class MusicCog extends Cog {
             ctx.send("Stopped.").queue();
         else
             ctx.send("Disconnected.").queue();
+    }
+
+    @Command(name = "play_first_result", desc = "Toggle the setting for always playing the first search result.",
+            aliases = {"first_result"}, guildOnly = true, perms = {"manageServer", "voiceMuteOthers", "voiceMoveOthers", "voiceDeafOthers", "managePermissions"})
+    public void cmdPlayFirstResult(Context ctx) throws SQLException {
+        GuildMusicSettings settings = settingsDao.queryForId(ctx.guild.getIdLong());
+        if (settings == null)
+            settings = new GuildMusicSettings(ctx.guild.getIdLong(), false);
+
+        if (settings.alwaysPlayFirstResult()) {
+            settings.setAlwaysPlayFirstResult(false);
+            ctx.send(Emotes.getSuccess() + " I will now give a selection of search results before playing.").queue();
+        } else {
+            settings.setAlwaysPlayFirstResult(true);
+            ctx.send(Emotes.getSuccess() + " I will now automatically play the first search result.").queue();
+        }
+
+        settingsDao.createOrUpdate(settings);
     }
 }

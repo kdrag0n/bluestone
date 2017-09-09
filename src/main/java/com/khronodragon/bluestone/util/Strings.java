@@ -3,12 +3,9 @@ package com.khronodragon.bluestone.util;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.linked.TIntLinkedList;
 import net.dv8tion.jda.core.entities.*;
-import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.IntSummaryStatistics;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -20,6 +17,15 @@ public class Strings {
     private static final int offset = 1 << 10;
     private static final int high = 0xd800;
     private static final int low = 0xdc00;
+    private static final Pattern mentionPattern = Pattern.compile("^<@!?(\\d{17,20})>$");
+    private static final Pattern roleMentionPattern = Pattern.compile("^<@&(\\d{17,20})>$");
+    private static final Pattern packagePattern = Pattern.compile("^(?:[a-z0-9\\-_]+\\.)+[a-zA-Z0-9]+$");
+    private static final Pattern idPattern = Pattern.compile("^\\d{17,20}$");
+    private static final Pattern tagPattern = Pattern.compile("^.{2,32}#\\d{4}$");
+    private static final Pattern d4Pattern = Pattern.compile("^\\d{1,4}$");
+    private static final Pattern channelNamePattern = Pattern.compile("^[a-z0-9_-]{2,100}$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern ipDomainPattern = Pattern.compile("^(?:localhost|[a-zA-Z\\-.]+\\.[a-z]{2,15}|(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|[0-9a-f:]+)$");
+    private static final Pattern mcNamePattern = Pattern.compile("^[a-zA-Z0-9_]{1,32}$");
 
     public static int[] spread(String str) {
         TIntList codePoints = new TIntLinkedList();
@@ -178,5 +184,41 @@ public class Strings {
         IntSummaryStatistics stats = stream.summaryStatistics();
 
         return String.format("Min: %d\nAvg: %.2f\nMax: %d", stats.getMin(), stats.getAverage(), stats.getMax());
+    }
+
+    public static boolean isMention(CharSequence str) {
+        return mentionPattern.matcher(str).matches();
+    }
+
+    public static boolean isRoleMention(CharSequence str) {
+        return roleMentionPattern.matcher(str).matches();
+    }
+
+    public static boolean isPackage(CharSequence str) {
+        return packagePattern.matcher(str).matches();
+    }
+
+    public static boolean isID(CharSequence str) {
+        return idPattern.matcher(str).matches();
+    }
+
+    public static boolean isTag(CharSequence str) {
+        return tagPattern.matcher(str).matches();
+    }
+
+    public static boolean is4Digits(CharSequence str) {
+        return d4Pattern.matcher(str).matches();
+    }
+
+    public static boolean isChannelName(CharSequence str) {
+        return channelNamePattern.matcher(str).matches();
+    }
+
+    public static boolean isIPorDomain(CharSequence str) {
+        return ipDomainPattern.matcher(str).matches();
+    }
+
+    public static boolean isMinecraftName(CharSequence str) {
+        return mcNamePattern.matcher(str).matches();
     }
 }

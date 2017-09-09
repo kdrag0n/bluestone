@@ -17,6 +17,7 @@ import net.dv8tion.jda.core.requests.RestAction;
 import java.util.*;
 
 public class CoreCog extends Cog {
+    private static final String[] phelpPerms = {"manageChannel", "managePermissions", "messageManage", "manageServer"};
     public CoreCog(Bot bot) {
         super(bot);
     }
@@ -61,7 +62,8 @@ public class CoreCog extends Cog {
     public void cmdHelp(Context ctx) {
         int charLimit = ctx.jda.getSelfUser().isBot() ? MessageEmbed.EMBED_MAX_LENGTH_BOT : MessageEmbed.EMBED_MAX_LENGTH_CLIENT;
         boolean sendPublic = false;
-        if (ctx.invoker.startsWith("p") && ctx.author.getIdLong() == bot.owner.getIdLong()) {
+        boolean isOwner = ctx.author.getIdLong() == bot.owner.getIdLong();
+        if (ctx.invoker.startsWith("p") && Permissions.check(phelpPerms, ctx)) {
             sendPublic = true;
         }
 
@@ -74,7 +76,7 @@ public class CoreCog extends Cog {
 
         if (ctx.args.size() < 1) {
             for (com.khronodragon.bluestone.Command cmd: new HashSet<>(bot.commands.values())) {
-                if (!cmd.hidden) {
+                if (!cmd.hidden && !(cmd.requiresOwner && !isOwner)) {
                     String cName = cmd.cog.getCosmeticName();
                     String entry = "\u2022 **" + cmd.name + "**: " + cmd.description;
 
@@ -97,7 +99,7 @@ public class CoreCog extends Cog {
                     Cog cog = bot.cogs.get(item);
 
                     for (com.khronodragon.bluestone.Command cmd: new HashSet<>(bot.commands.values())) {
-                        if (cmd.cog == cog && !cmd.hidden) {
+                        if (cmd.cog == cog && !cmd.hidden && !(cmd.requiresOwner && !isOwner)) {
                             String cName = cmd.cog.getCosmeticName();
                             String entry = "\u2022 **" + cmd.name + "**: " + cmd.description;
 

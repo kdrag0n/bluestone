@@ -8,7 +8,7 @@ public class DiscordEmoteProvider implements EmoteProvider {
 
     @Override
     public boolean hasEmote(String emote) {
-        return emote.matches("<:[a-zA-Z_]+:[0-9]{17,19}>");
+        return CUSTOM_EMOTE_PATTERN.matcher(emote).matches();
     }
 
     @Override
