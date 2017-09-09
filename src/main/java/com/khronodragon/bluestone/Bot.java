@@ -516,7 +516,9 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     String tag = Cog.getTag(jda.getSelfUser());
 
                     channel.sendMessage("Hey there! You can talk to me like `@" + tag +
-                            " [message]`. And if you want my prefix, say `@" + tag + " prefix`!").queue();
+                            " [message]`. And if you want my prefix, say `@" + tag +
+                            " prefix`!\nCurrent prefix: `" + prefix +
+                            "` \u2022 Help command: `" + prefix + "help`").queue();
                 }
             }
         } else if (channel instanceof PrivateChannel) {

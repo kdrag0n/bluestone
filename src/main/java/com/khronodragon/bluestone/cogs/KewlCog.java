@@ -29,6 +29,7 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.user.UserAvatarUpdateEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
+import net.dv8tion.jda.core.utils.MiscUtil;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
@@ -514,5 +515,29 @@ public class KewlCog extends Cog {
         ctx.author = target;
 
         cmdSetProfileBg(ctx);
+    }
+
+    @Command(name = "profile_invalidate", desc = "Invalidate someone's profile in the cache.")
+    public void cmdProfileInvalidate(Context ctx) {
+        long target;
+
+        if (ctx.args.size() < 1) {
+            ctx.send(Emotes.getFailure() + " I need a @mention or user ID as first argument!").queue();
+            return;
+        } else if (ctx.message.getMentionedUsers().size() > 0 && Strings.isMention(ctx.args.get(0))) {
+            target = ctx.message.getMentionedUsers().get(0).getIdLong();
+        } else if (Strings.isID(ctx.args.get(0))) {
+            target = MiscUtil.parseSnowflake(ctx.args.get(0));
+        } else {
+            ctx.send(Emotes.getFailure() + " I need a valid @mention or user ID as first argument!").queue();
+            return;
+        }
+
+        ctx.jda.retrieveUserById(target).queue(user -> {
+            profileCache.invalidate(user);
+            ctx.send(Emotes.getSuccess() + " Invalidated cached profile for user `" + target + "`.").queue();
+        }, e -> {
+            ctx.send(Emotes.getFailure() + " Error retrieving user.\n```java" + Bot.renderStackTrace(e) + "```").queue();
+        });
     }
 }
