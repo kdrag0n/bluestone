@@ -40,6 +40,7 @@ import org.languagetool.Language;
 import org.languagetool.language.AmericanEnglish;
 import org.languagetool.rules.RuleMatch;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.font.TextAttribute;
@@ -81,7 +82,7 @@ public class KewlCog extends Cog {
             .expireAfterWrite(12, TimeUnit.HOURS)
             .build(new CacheLoader<User, byte[]>() {
                 @Override
-                public byte[] load(User user) throws Exception {
+                public byte[] load(@ParametersAreNonnullByDefault User user) throws Exception {
                     BufferedImage avatar = ImageIO.read(bot.http.newCall(new Request.Builder().get()
                             .url(user.getEffectiveAvatarUrl() + "?size=256").build()).execute().body().byteStream());
 
@@ -493,8 +494,25 @@ public class KewlCog extends Cog {
     }
 
     @Command(name = "profile_override_bg", desc = "Override an user's profile background. This just executes `profile bg` as them.",
-            perms = {"owner"}, usage = "[@user/user ID] {to: reset/default / attach image}")
+            perms = {"owner"}, usage = "[@user/user ID] {to: reset/default / attach image}", thread = true)
     public void cmdProfileOverrideBg(Context ctx) {
+        User target;
 
+        if (ctx.args.size() < 1) {
+            ctx.send(Emotes.getFailure() + " I need a @mention or user ID as first argument!").queue();
+            return;
+        } else if (ctx.message.getMentionedUsers().size() > 0 && Strings.isMention(ctx.args.get(0))) {
+            target = ctx.message.getMentionedUsers().get(0);
+        } else if (Strings.isID(ctx.args.get(0))) {
+            target = ctx.jda.retrieveUserById(ctx.args.get(0)).complete();
+        } else {
+            ctx.send(Emotes.getFailure() + " I need a valid @mention or user ID as first argument!").queue();
+            return;
+        }
+
+        ctx.invoker = "profile";
+        ctx.author = target;
+
+        cmdSetProfileBg(ctx);
     }
 }

@@ -12,7 +12,7 @@ public class Context {
     public Bot bot;
     public final MessageReceivedEvent event;
     public final Message message;
-    public final User author;
+    public User author;
     public final Guild guild;
     public final MessageChannel channel;
     public final Member member;
