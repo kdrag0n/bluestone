@@ -87,6 +87,7 @@ public class UtilityCog extends Cog {
     private static final Pattern CUSTOM_EMOTE_PATTERN = Pattern.compile("<:[a-z_]+:([0-9]{17,19})>", Pattern.CASE_INSENSITIVE);
     private static final Pattern INVITE_PATTERN = Pattern
             .compile("^(?:https?://discord(?:app\\.com/invite|\\.gg)/([a-zA-Z0-9]{7}|[a-zA-Z0-9]{16})|([a-zA-Z0-9]{7}|[a-zA-Z0-9]{16}))$");
+    private static final Pattern END_RMENTION_PATTERN = Pattern.compile(", [<@&0-9>]*$");
 
     private static final int[] CHAR_NO_PREVIEW = {65279};
     private static final byte[] DIRECTIONALITY_NO_PREVIEW = {Character.DIRECTIONALITY_WHITESPACE, Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE,
@@ -302,7 +303,8 @@ public class UtilityCog extends Cog {
                         .map(Role::getAsMention)
                         .collect(Collectors.joining(", "));
                 if (roleText.length() > 1024) {
-                    roleText = roleText.substring(0, 1024).replaceFirst(", [<@&0-9>]*$", ", **...too many**");
+                    roleText = END_RMENTION_PATTERN.matcher(roleText.substring(0, 1024))
+                            .replaceFirst(", **...too many**");
                 } else if (roleText.length() < 1) {
                     roleText = "None";
                 }
@@ -325,7 +327,8 @@ public class UtilityCog extends Cog {
                 .map(Role::getAsMention)
                 .collect(Collectors.joining(", "));
         if (roleText.length() > 1024) {
-            roleText = roleText.substring(0, 1024).replaceFirst(", [<@&0-9>]*$", ", **...too many**");
+            roleText = END_RMENTION_PATTERN.matcher(roleText.substring(0, 1024))
+                    .replaceFirst(", **...too many**");
         } else if (roleText.length() < 1) {
             roleText = "None";
         }
@@ -399,7 +402,7 @@ public class UtilityCog extends Cog {
                 .addField("Commands", str(new HashSet<>(bot.commands.values()).size()), true)
                 .addField("Music Tracks Loaded", str(shardUtil.getTrackCount()), true)
                 .addField("Playing Music in", shardUtil.getStreamCount() + " channels", true)
-                .addField("Links", INFO_LINKS.replace("[invite]", ctx.jda.asBot().getInviteUrl(PERMS_NEEDED)), false)
+                .addField("Links", StringUtils.replace(INFO_LINKS, "[invite]", ctx.jda.asBot().getInviteUrl(PERMS_NEEDED)), false)
                 .setFooter("Serving you from shard " + bot.getShardNum(), null)
                 .setTimestamp(Instant.now());
 
@@ -670,8 +673,8 @@ public class UtilityCog extends Cog {
                 topText = ctx.args.get(0);
                 bottomText = " ";
             } else {
-                String[] results = ArrayUtils.subarray(StringUtils.split(WordUtils.wrap(ctx.rawArgs
-                                .replace("\n", " "), ctx.rawArgs.length() / 2,
+                String[] results = ArrayUtils.subarray(StringUtils.split(WordUtils.wrap(StringUtils.replaceChars(
+                        ctx.rawArgs, '\n', ' '), ctx.rawArgs.length() / 2,
                         "\n", true, "\\s+"), '\n'),
                         0, 2);
 
@@ -807,7 +810,7 @@ public class UtilityCog extends Cog {
         }
 
         Paginator pager = new Paginator();
-        PrimitiveIterator.OfInt iterator = new UnisafeString(ctx.rawArgs.replace("\n", "")).chars();
+        PrimitiveIterator.OfInt iterator = new UnisafeString(StringUtils.replace(ctx.rawArgs, "\n", "")).chars();
 
         while (iterator.hasNext()) {
             int codepoint = iterator.nextInt();
@@ -884,7 +887,7 @@ public class UtilityCog extends Cog {
 
         int port = 25565;
         String[] portSplit = StringUtils.split(ctx.rawArgs, ':');
-        String server = portSplit[0].replace("/", "");
+        String server = StringUtils.replace(portSplit[0], "/", "");
 
         if (portSplit.length > 1) {
             try {

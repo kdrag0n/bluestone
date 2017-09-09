@@ -66,6 +66,7 @@ dependencies {
     compile 'org.ocpsoft.prettytime:prettytime:3.2.7.Final'
     compile 'com.joestelmach:natty:0.11'
     compile 'com.twelvemonkeys.imageio:imageio-core:3.3.2'
+    compile 'com.google.re2j:re2j:1.1'
 }
 
 compileJava.options.encoding = 'UTF-8'

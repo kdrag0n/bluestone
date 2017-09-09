@@ -43,6 +43,7 @@
     <orderEntry type="library" name="Gradle: org.ocpsoft.prettytime:prettytime:3.2.7.Final" level="project" />
     <orderEntry type="library" name="Gradle: com.joestelmach:natty:0.11" level="project" />
     <orderEntry type="library" name="Gradle: com.twelvemonkeys.imageio:imageio-core:3.3.2" level="project" />
+    <orderEntry type="library" name="Gradle: com.google.re2j:re2j:1.1" level="project" />
     <orderEntry type="library" name="Gradle: com.google.code.findbugs:jsr305:3.0.2" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-collections4:4.1" level="project" />
     <orderEntry type="library" name="Gradle: net.java.dev.jna:jna:4.4.0" level="project" />

@@ -263,11 +263,11 @@ public class KewlCog extends Cog {
                 String correctWeekday = m.group(2);
 
                 result.replace(match.getFromPos(), match.getToPos(),
-                        result.substring(match.getFromPos(), match.getToPos())
-                                .replace(wrongWeekday, correctWeekday));
+                        StringUtils.replace(result.substring(match.getFromPos(), match.getToPos()),
+                               wrongWeekday, correctWeekday));
             }
         }
-        String finalResult = result.toString().replace(".M..", "M.");
+        String finalResult = StringUtils.replace(result.toString(), ".M..", "M.");
 
         ctx.send("Result: `" + finalResult + "`").queue();
     }

@@ -388,7 +388,7 @@ public class FunCog extends Cog {
             }
         }).forEach(newString::appendCodePoint);
 
-        return newString.toString().replace("_", "\\_");
+        return StringUtils.replace(newString.toString(), "_", "\\_");
     }
 
     @Command(name = "styles", desc = "List the available text styles.", aliases = {"fonts"})
@@ -437,7 +437,7 @@ public class FunCog extends Cog {
         }
 
         ctx.send("<http://lmgtfy.com/?q=" + ctx.args.stream()
-                .map(s -> s.replace("+", "%2B"))
+                .map(s -> StringUtils.replace(s, "+", "%2B"))
                 .collect(Collectors.joining("+")) + ">").queue();
     }
 

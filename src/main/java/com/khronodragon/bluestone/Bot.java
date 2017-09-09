@@ -1,6 +1,7 @@
 package com.khronodragon.bluestone;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.re2j.Pattern;
 import com.j256.ormlite.dao.Dao;
 import com.jagrosh.jdautilities.waiter.EventWaiter;
 import com.khronodragon.bluestone.annotations.*;
@@ -59,6 +60,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
     public static final JSONObject EMPTY_JSON_OBJECT = new JSONObject();
     public static final JSONArray EMPTY_JSON_ARRAY = new JSONArray();
+    private static final Pattern GENERAL_MENTION_PATTERN = Pattern.compile("^<@[!&]?[0-9]{17,20}>\\s*");
     public Logger logger = LogManager.getLogger(Bot.class);
     private final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(4, new ThreadFactoryBuilder()
                                                             .setDaemon(true)
@@ -506,7 +508,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
             if (content.startsWith(mention) || content.startsWith("<@&")) {
                 String request = Strings.renderMessage(message, message.getGuild(),
-                        message.getRawContent().replaceFirst("^<@[!&]?[0-9]{17,20}>\\s*", ""));
+                        GENERAL_MENTION_PATTERN.matcher(message.getRawContent()).replaceFirst(""));
 
                 if (request.equalsIgnoreCase("prefix")) {
                     channel.sendMessage("My prefix here is `" + prefix + "`.").queue();
