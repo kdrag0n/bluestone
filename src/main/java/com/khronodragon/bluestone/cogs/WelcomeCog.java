@@ -18,6 +18,7 @@ import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -277,7 +278,7 @@ public class WelcomeCog extends Cog {
     }
 
     private String formatMessage(String msg, Guild guild, Member member, String def) {
-        return Strings.replace(msg.replace("[default]", def), SUB_REGEX, m -> {
+        return Strings.replace(StringUtils.replace(msg, "[default]", def), SUB_REGEX, m -> {
             return Strings.createMap()
                     .map("mention", member::getAsMention)
                     .map("member_name", member::getEffectiveName)

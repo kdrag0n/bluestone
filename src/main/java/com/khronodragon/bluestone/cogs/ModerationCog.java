@@ -58,6 +58,7 @@ public class ModerationCog extends Cog {
             "    \u2022 `add [id/name/@role]` - add a role to autoroles\n" +
             "    \u2022 `remove [id/name/@role]` - remove a role from autoroles\n" +
             "    \u2022 `clear` - clear autoroles (remove all)";
+    private static final Pattern FIRST_ID_PATTERN = Pattern.compile("^[0-9]{17,20}");
     private static final Pattern PURGE_LINK_PATTERN = Pattern.compile("https?://.+");
     private static final Pattern PURGE_QUOTE_PATTERN = Pattern.compile("[\"“](.*?)[\"”]", Pattern.DOTALL);
     private static final Pattern PURGE_REGEX_PATTERN = Pattern.compile("\\[(.*?)]", Pattern.DOTALL);
@@ -141,7 +142,7 @@ public class ModerationCog extends Cog {
                 func.accept(matcher);
         }
 
-        return input.replaceAll(pattern.pattern(), " ");
+        return pattern.matcher(input).replaceAll(" ");
     }
 
     @Command(name = "purge", desc = "Purge messages from a channel.", guildOnly = true,
@@ -194,7 +195,7 @@ public class ModerationCog extends Cog {
                 return;
             }
         }
-        args = args.replaceAll(PURGE_NUM_PATTERN.pattern(), " ");
+        args = PURGE_NUM_PATTERN.matcher(args).replaceAll(" ").trim();
 
         if (limit > 800) {
             ctx.send(Emotes.getFailure() + " Invalid message limit!").queue();
@@ -297,7 +298,7 @@ public class ModerationCog extends Cog {
 
         ctx.send(":hourglass: Muting...").queue(status -> {
             String reason;
-            String userReason = ctx.rawArgs.replaceAll(MENTION_PATTERN.pattern(), "").trim();
+            String userReason = MENTION_PATTERN.matcher(ctx.rawArgs).replaceAll("").trim();
 
             if (userReason.length() < 1 || userReason.length() > 450)
                 reason = getTag(ctx.author) + " used the mute command (with sufficient permissions)";
@@ -347,7 +348,7 @@ public class ModerationCog extends Cog {
 
         ctx.send(":hourglass: Unmuting...").queue(status -> {
             String reason;
-            String userReason = ctx.rawArgs.replaceAll(MENTION_PATTERN.pattern(), "").trim();
+            String userReason = MENTION_PATTERN.matcher(ctx.rawArgs).replaceAll("").trim();
 
             if (userReason.length() < 1 || userReason.length() > 450)
                 reason = getTag(ctx.author) + " used the unmute command (with sufficient permissions)";
@@ -383,8 +384,10 @@ public class ModerationCog extends Cog {
             return;
         }
         String reason;
-        String userReason = ctx.rawArgs.replaceFirst(MENTION_PATTERN.pattern(), "")
-                .replaceFirst("^[0-9]{17,20}", "").trim();
+        Matcher _m = MENTION_PATTERN.matcher(ctx.rawArgs);
+        String userReason = _m.replaceFirst("");
+        userReason = _m.reset(userReason).usePattern(FIRST_ID_PATTERN)
+                .replaceFirst("").trim();
         if (userReason.length() < 1 || userReason.length() > 450)
             reason = getTag(ctx.author) + " used the ban command (with sufficient permissions)";
         else

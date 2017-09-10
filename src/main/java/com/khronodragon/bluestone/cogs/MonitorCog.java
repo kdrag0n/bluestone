@@ -250,7 +250,7 @@ public class MonitorCog extends Cog {
 
         private boolean isValid(String input) {
             return input != null &&
-                    !input.replace(" ", "").replace("\n", "").isEmpty();
+                    !StringUtils.isBlank(input);
         }
     }
 }

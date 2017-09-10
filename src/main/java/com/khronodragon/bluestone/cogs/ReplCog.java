@@ -24,6 +24,7 @@ public class ReplCog extends Cog {
     private static final Logger logger = LogManager.getLogger(ReplCog.class);
     private static final String[] NASHORN_ARGS = {"--language=es6", "-scripting"};
     private static final Pattern JS_OBJECT_PATTERN = Pattern.compile("^\\[object [A-Z][a-z0-9]*]$");
+    private static final Pattern CODE_TYPE_PATTERN = Pattern.compile("```(?:js|javascript|py|python|java|groovy|scala|kotlin|kt|lua|ruby|rb)\n?");
     static final String GROOVY_PRE_INJECT = "import net.dv8tion.jda.core.entities.*\n" +
             "import net.dv8tion.jda.core.*\n" +
             "import net.dv8tion.jda.core.entities.impl.*\n" +
@@ -84,7 +85,7 @@ public class ReplCog extends Cog {
     }
 
     public static String cleanupCode(String code) {
-        String stage1 = code.replaceFirst("```(?:js|javascript|py|python|java|groovy|scala|kotlin|kt|lua|ruby|rb)\n?", "");
+        String stage1 = CODE_TYPE_PATTERN.matcher(code).replaceFirst("");
         return StringUtils.stripEnd(StringUtils.stripStart(stage1, "`"), "`");
     }
 

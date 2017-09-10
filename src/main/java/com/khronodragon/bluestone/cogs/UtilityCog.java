@@ -21,6 +21,7 @@ import com.joestelmach.natty.Parser;
 import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.Cooldown;
+import com.khronodragon.bluestone.emotes.DiscordEmoteProvider;
 import com.khronodragon.bluestone.enums.BucketType;
 import com.khronodragon.bluestone.enums.MemberStatus;
 import com.khronodragon.bluestone.sql.ActivePoll;
@@ -87,11 +88,13 @@ public class UtilityCog extends Cog {
     private static final Pattern CUSTOM_EMOTE_PATTERN = Pattern.compile("<:[a-z_]+:([0-9]{17,19})>", Pattern.CASE_INSENSITIVE);
     private static final Pattern INVITE_PATTERN = Pattern
             .compile("^(?:https?://discord(?:app\\.com/invite|\\.gg)/([a-zA-Z0-9]{7}|[a-zA-Z0-9]{16})|([a-zA-Z0-9]{7}|[a-zA-Z0-9]{16}))$");
+    private static final Pattern END_RMENTION_PATTERN = Pattern.compile(", [<@&0-9>]*$");
+    private static final Pattern CONTIGUOUS_SPACE_PATTERN = Pattern.compile("\\s+");
 
     private static final int[] CHAR_NO_PREVIEW = {65279};
     private static final byte[] DIRECTIONALITY_NO_PREVIEW = {Character.DIRECTIONALITY_WHITESPACE, Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE,
                 Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE};
-    private static final String MC_COLOR_PATTERN = "\\u00a7[4c6e2ab319d5f78lnokmr]";
+    private static final Pattern MC_COLOR_PATTERN = Pattern.compile("\\u00a7[4c6e2ab319d5f78lnokmr]");
     private static final JSONArray EMPTY_JSON_ARRAY = new JSONArray();
     static final OperatingSystemMXBean systemBean = (OperatingSystemMXBean)
             ManagementFactory.getOperatingSystemMXBean();
@@ -302,7 +305,8 @@ public class UtilityCog extends Cog {
                         .map(Role::getAsMention)
                         .collect(Collectors.joining(", "));
                 if (roleText.length() > 1024) {
-                    roleText = roleText.substring(0, 1024).replaceFirst(", [<@&0-9>]*$", ", **...too many**");
+                    roleText = END_RMENTION_PATTERN.matcher(roleText.substring(0, 1024))
+                            .replaceFirst(", **...too many**");
                 } else if (roleText.length() < 1) {
                     roleText = "None";
                 }
@@ -325,7 +329,8 @@ public class UtilityCog extends Cog {
                 .map(Role::getAsMention)
                 .collect(Collectors.joining(", "));
         if (roleText.length() > 1024) {
-            roleText = roleText.substring(0, 1024).replaceFirst(", [<@&0-9>]*$", ", **...too many**");
+            roleText = END_RMENTION_PATTERN.matcher(roleText.substring(0, 1024))
+                    .replaceFirst(", **...too many**");
         } else if (roleText.length() < 1) {
             roleText = "None";
         }
@@ -399,7 +404,7 @@ public class UtilityCog extends Cog {
                 .addField("Commands", str(new HashSet<>(bot.commands.values()).size()), true)
                 .addField("Music Tracks Loaded", str(shardUtil.getTrackCount()), true)
                 .addField("Playing Music in", shardUtil.getStreamCount() + " channels", true)
-                .addField("Links", INFO_LINKS.replace("[invite]", ctx.jda.asBot().getInviteUrl(PERMS_NEEDED)), false)
+                .addField("Links", StringUtils.replace(INFO_LINKS, "[invite]", ctx.jda.asBot().getInviteUrl(PERMS_NEEDED)), false)
                 .setFooter("Serving you from shard " + bot.getShardNum(), null)
                 .setTimestamp(Instant.now());
 
@@ -525,9 +530,11 @@ public class UtilityCog extends Cog {
             return;
         }
 
-        final String question = preQuestion.replaceAll(UNICODE_EMOTE_PATTERN.pattern(), "")
-                                           .replaceAll("<:[a-zA-Z_]+:[0-9]{17,19}>", "")
-                                           .replaceAll("\\s+", " ").trim();
+        final Matcher _m = UNICODE_EMOTE_PATTERN.matcher(preQuestion);
+        preQuestion = _m.replaceAll("");
+        preQuestion = _m.usePattern(DiscordEmoteProvider.CUSTOM_EMOTE_PATTERN).replaceAll("");
+        preQuestion = _m.usePattern(CONTIGUOUS_SPACE_PATTERN).replaceAll(" ");
+        final String question = preQuestion.trim();
 
         EmbedBuilder embed = new EmbedBuilder()
                                 .setAuthor(ctx.member.getEffectiveName() + " is polling...",
@@ -670,8 +677,8 @@ public class UtilityCog extends Cog {
                 topText = ctx.args.get(0);
                 bottomText = " ";
             } else {
-                String[] results = ArrayUtils.subarray(StringUtils.split(WordUtils.wrap(ctx.rawArgs
-                                .replace("\n", " "), ctx.rawArgs.length() / 2,
+                String[] results = ArrayUtils.subarray(StringUtils.split(WordUtils.wrap(StringUtils.replaceChars(
+                        ctx.rawArgs, '\n', ' '), ctx.rawArgs.length() / 2,
                         "\n", true, "\\s+"), '\n'),
                         0, 2);
 
@@ -807,7 +814,7 @@ public class UtilityCog extends Cog {
         }
 
         Paginator pager = new Paginator();
-        PrimitiveIterator.OfInt iterator = new UnisafeString(ctx.rawArgs.replace("\n", "")).chars();
+        PrimitiveIterator.OfInt iterator = new UnisafeString(StringUtils.replace(ctx.rawArgs, "\n", "")).chars();
 
         while (iterator.hasNext()) {
             int codepoint = iterator.nextInt();
@@ -884,7 +891,7 @@ public class UtilityCog extends Cog {
 
         int port = 25565;
         String[] portSplit = StringUtils.split(ctx.rawArgs, ':');
-        String server = portSplit[0].replace("/", "");
+        String server = StringUtils.replace(portSplit[0], "/", "");
 
         if (portSplit.length > 1) {
             try {
@@ -926,7 +933,7 @@ public class UtilityCog extends Cog {
         } else {
             desc = dataDesc.toString();
         }
-        desc = desc.replaceAll(MC_COLOR_PATTERN, "");
+        desc = MC_COLOR_PATTERN.matcher(desc).replaceAll("");
 
         EmbedBuilder emb = new EmbedBuilder()
                 .setTitle(server + ':' + port)
@@ -937,11 +944,12 @@ public class UtilityCog extends Cog {
                 .addField("Players", dataPlayers.getInt("online") + "/" + dataPlayers.getInt("max"), true);
 
         if (val(dataPlayers.optJSONArray("sample")).or(EMPTY_JSON_ARRAY).length() > 0) {
-            String content = smartJoin(StreamUtils.asStream(dataPlayers.getJSONArray("sample").iterator())
-                                        .map(elem ->
-                                            ((JSONObject) elem).getString("name")
-                                        )
-                                        .collect(Collectors.toList())).replaceAll(MC_COLOR_PATTERN, "");
+            String content = MC_COLOR_PATTERN.matcher(
+                    smartJoin(StreamUtils.asStream(dataPlayers.getJSONArray("sample").iterator())
+                    .map(elem ->
+                            ((JSONObject) elem).getString("name")
+                    )
+                    .collect(Collectors.toList()))).replaceAll("");
 
             if (content.length() <= MessageEmbed.VALUE_MAX_LENGTH) {
                 emb.addField("Players Online", content, true);
@@ -952,7 +960,8 @@ public class UtilityCog extends Cog {
             }
         }
 
-        emb.addField("Version", data.getJSONObject("version").getString("name").replaceAll(MC_COLOR_PATTERN, ""), true);
+        emb.addField("Version", MC_COLOR_PATTERN.matcher(data.getJSONObject("version").getString("name"))
+                .replaceAll(""), true);
         emb.addField("Protocol Version", str(data.getJSONObject("version").getInt("protocol")), true);
 
         if (data.has("modinfo")) {

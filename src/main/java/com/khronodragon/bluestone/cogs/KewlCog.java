@@ -29,6 +29,7 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.user.UserAvatarUpdateEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
+import net.dv8tion.jda.core.utils.MiscUtil;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
@@ -40,6 +41,7 @@ import org.languagetool.Language;
 import org.languagetool.language.AmericanEnglish;
 import org.languagetool.rules.RuleMatch;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.font.TextAttribute;
@@ -81,7 +83,7 @@ public class KewlCog extends Cog {
             .expireAfterWrite(12, TimeUnit.HOURS)
             .build(new CacheLoader<User, byte[]>() {
                 @Override
-                public byte[] load(User user) throws Exception {
+                public byte[] load(@ParametersAreNonnullByDefault User user) throws Exception {
                     BufferedImage avatar = ImageIO.read(bot.http.newCall(new Request.Builder().get()
                             .url(user.getEffectiveAvatarUrl() + "?size=256").build()).execute().body().byteStream());
 
@@ -261,11 +263,11 @@ public class KewlCog extends Cog {
                 String correctWeekday = m.group(2);
 
                 result.replace(match.getFromPos(), match.getToPos(),
-                        result.substring(match.getFromPos(), match.getToPos())
-                                .replace(wrongWeekday, correctWeekday));
+                        StringUtils.replace(result.substring(match.getFromPos(), match.getToPos()),
+                               wrongWeekday, correctWeekday));
             }
         }
-        String finalResult = result.toString().replace(".M..", "M.");
+        String finalResult = StringUtils.replace(result.toString(), ".M..", "M.");
 
         ctx.send("Result: `" + finalResult + "`").queue();
     }
@@ -493,8 +495,49 @@ public class KewlCog extends Cog {
     }
 
     @Command(name = "profile_override_bg", desc = "Override an user's profile background. This just executes `profile bg` as them.",
-            perms = {"owner"}, usage = "[@user/user ID] {to: reset/default / attach image}")
+            perms = {"owner"}, usage = "[@user/user ID] {to: reset/default / attach image}", thread = true)
     public void cmdProfileOverrideBg(Context ctx) {
+        User target;
 
+        if (ctx.args.size() < 1) {
+            ctx.send(Emotes.getFailure() + " I need a @mention or user ID as first argument!").queue();
+            return;
+        } else if (ctx.message.getMentionedUsers().size() > 0 && Strings.isMention(ctx.args.get(0))) {
+            target = ctx.message.getMentionedUsers().get(0);
+        } else if (Strings.isID(ctx.args.get(0))) {
+            target = ctx.jda.retrieveUserById(ctx.args.get(0)).complete();
+        } else {
+            ctx.send(Emotes.getFailure() + " I need a valid @mention or user ID as first argument!").queue();
+            return;
+        }
+
+        ctx.invoker = "profile";
+        ctx.author = target;
+
+        cmdSetProfileBg(ctx);
+    }
+
+    @Command(name = "profile_invalidate", desc = "Invalidate someone's profile in the cache.")
+    public void cmdProfileInvalidate(Context ctx) {
+        long target;
+
+        if (ctx.args.size() < 1) {
+            ctx.send(Emotes.getFailure() + " I need a @mention or user ID as first argument!").queue();
+            return;
+        } else if (ctx.message.getMentionedUsers().size() > 0 && Strings.isMention(ctx.args.get(0))) {
+            target = ctx.message.getMentionedUsers().get(0).getIdLong();
+        } else if (Strings.isID(ctx.args.get(0))) {
+            target = MiscUtil.parseSnowflake(ctx.args.get(0));
+        } else {
+            ctx.send(Emotes.getFailure() + " I need a valid @mention or user ID as first argument!").queue();
+            return;
+        }
+
+        ctx.jda.retrieveUserById(target).queue(user -> {
+            profileCache.invalidate(user);
+            ctx.send(Emotes.getSuccess() + " Invalidated cached profile for user `" + target + "`.").queue();
+        }, e -> {
+            ctx.send(Emotes.getFailure() + " Error retrieving user.\n```java" + Bot.renderStackTrace(e) + "```").queue();
+        });
     }
 }

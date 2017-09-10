@@ -12,6 +12,7 @@ import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.requests.RestAction;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -156,7 +157,7 @@ public class OwnerCog extends Cog {
                 errors++;
                 continue;
             }
-            String message = ctx.rawArgs.replace("%prefix%",
+            String message = StringUtils.replace(ctx.rawArgs, "%prefix%",
                     bot.getShardUtil().getPrefixStore().getPrefix(guild.getIdLong()));
 
             if (guild.getPublicChannel().canTalk())

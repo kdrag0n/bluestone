@@ -3,6 +3,7 @@ package com.khronodragon.bluestone.util;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.linked.TIntLinkedList;
 import net.dv8tion.jda.core.entities.*;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -154,8 +155,8 @@ public class Strings {
 
         for (User user : message.getMentionedUsers()) {
             if (message.isFromType(ChannelType.PRIVATE) || message.isFromType(ChannelType.GROUP)) {
-                tmp = tmp.replace("<@" + user.getId() + '>', '@' + user.getName())
-                        .replace("<@!" + user.getId() + '>', '@' + user.getName());
+                tmp = StringUtils.replace(StringUtils.replace(tmp, "<@" + user.getId() + '>', '@' + user.getName())
+                        , "<@!" + user.getId() + '>', '@' + user.getName());
             } else {
                 String name;
 
@@ -163,19 +164,19 @@ public class Strings {
                     name = guild.getMember(user).getEffectiveName();
                 else name = user.getName();
 
-                tmp = tmp.replace("<@" + user.getId() + '>', '@' + name)
-                        .replace("<@!" + user.getId() + '>', '@' + name);
+                tmp = StringUtils.replace(StringUtils.replace(tmp, "<@" + user.getId() + '>', '@' + name)
+                        , "<@!" + user.getId() + '>', '@' + name);
             }
         }
 
         for (Emote emote : message.getEmotes())
-            tmp = tmp.replace(emote.getAsMention(), ":" + emote.getName() + ":");
+            tmp = StringUtils.replace(tmp, emote.getAsMention(), ":" + emote.getName() + ":");
 
         for (TextChannel mentionedChannel : message.getMentionedChannels())
-            tmp = tmp.replace("<#" + mentionedChannel.getId() + '>', '#' + mentionedChannel.getName());
+            tmp = StringUtils.replace(tmp, "<#" + mentionedChannel.getId() + '>', '#' + mentionedChannel.getName());
 
         for (Role mentionedRole : message.getMentionedRoles())
-            tmp = tmp.replace("<@&" + mentionedRole.getId() + '>', '@' + mentionedRole.getName());
+            tmp = StringUtils.replace(tmp, "<@&" + mentionedRole.getId() + '>', '@' + mentionedRole.getName());
 
         return tmp;
     }

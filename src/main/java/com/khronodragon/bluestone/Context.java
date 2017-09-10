@@ -12,7 +12,7 @@ public class Context {
     public Bot bot;
     public final MessageReceivedEvent event;
     public final Message message;
-    public final User author;
+    public User author;
     public final Guild guild;
     public final MessageChannel channel;
     public final Member member;
@@ -58,8 +58,8 @@ public class Context {
     }
 
     public RestAction<Message> send(String msg) {
-        msg = truncate(msg.replace("@everyone", "@\u200beveryone")
-                .replace("@here", "@\u200bhere"));
+        msg = truncate(StringUtils.replace(StringUtils.replace(msg, "@everyone", "@\u200beveryone")
+                , "@here", "@\u200bhere"));
 
         return channel.sendMessage(msg);
     }
