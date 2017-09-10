@@ -39,6 +39,7 @@ import org.reflections.Reflections;
 
 import javax.security.auth.login.LoginException;
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -84,7 +85,13 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public final Map<String, Command> commands = new HashMap<>();
     public final Map<String, Cog> cogs = new HashMap<>();
     private final Map<Class<? extends Event>, Set<ExtraEvent>> extraEvents = new HashMap<>();
-    public final OkHttpClient http = new OkHttpClient();
+    public final OkHttpClient http = new OkHttpClient.Builder()
+            .cache(new Cache(new File("data/http_cache"), 24000000000L))
+            .connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(8, TimeUnit.SECONDS)
+            .writeTimeout(6, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .build();
     private ApplicationInfo appInfo;
     public User owner;
 

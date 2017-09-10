@@ -70,6 +70,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -90,6 +91,9 @@ public class UtilityCog extends Cog {
             .compile("^(?:https?://discord(?:app\\.com/invite|\\.gg)/([a-zA-Z0-9]{7}|[a-zA-Z0-9]{16})|([a-zA-Z0-9]{7}|[a-zA-Z0-9]{16}))$");
     private static final Pattern END_RMENTION_PATTERN = Pattern.compile(", [<@&0-9>]*$");
     private static final Pattern CONTIGUOUS_SPACE_PATTERN = Pattern.compile("\\s+");
+
+    private static final Color MC_GREEN = new Color(89, 129, 53);
+    private static final Color MC_BROWN = new Color(133, 105, 77);
 
     private static final int[] CHAR_NO_PREVIEW = {65279};
     private static final byte[] DIRECTIONALITY_NO_PREVIEW = {Character.DIRECTIONALITY_WHITESPACE, Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE,
@@ -1284,8 +1288,8 @@ public class UtilityCog extends Cog {
 
         ctx.send(new EmbedBuilder()
                 .setColor(randomColor())
-                .setAuthor(name + "'s skin", null, "https://mcapi.ca/avatar/" + name + "/150/true")
-                .setImage("https://mcapi.ca/skin/" + name + "/150/true")
+                .setAuthor(name + "'s skin", null, "https://use.gameapis.net/mc/images/avatar/" + name + "/150/true")
+                .setImage("https://use.gameapis.net/mc/images/skin/" + name + "/150/true")
                 .build()).queue();
     }
 
@@ -1299,9 +1303,41 @@ public class UtilityCog extends Cog {
 
         ctx.send(new EmbedBuilder()
                 .setColor(randomColor())
-                .setAuthor(name + "'s head", null, "https://mcapi.ca/avatar/" + name + "/150/true")
-                .setImage("https://mcapi.ca/avatar/" + name + "/150/true")
+                .setAuthor(name + "'s head", null, "https://use.gameapis.net/mc/images/avatar/" + name + "/150/true")
+                .setImage("https://use.gameapis.net/mc/images/avatar/" + name + "/150/true")
                 .build()).queue();
+    }
+
+    @Command(name = "mcstatus", desc = "Check the status of all the official Minecraft services.",
+            aliases = {"mc_status", "minestatus", "mine_status", "minecraft_status"})
+    public void cmdMcstatus(Context ctx) {
+
+        bot.http.newCall(new Request.Builder()
+                .get()
+                .url("https://use.gameapis.net/mc/extra/status")
+                .build()).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                logger.error("mcapi status API error", e);
+                ctx.send(Emotes.getFailure() + " Failed to check Minecraft services.").queue();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                EmbedBuilder emb = new EmbedBuilder()
+                        .setAuthor("Minecraft Status", null, "[icon]")
+                        .setColor(ThreadLocalRandom.current().nextInt(2) == 1 ? MC_GREEN : MC_BROWN)
+                        .setTimestamp(Instant.now());
+
+                JSONObject json = new JSONObject(response.body().string());
+                for (String key: json.keySet()) {
+                    String status = json.getJSONObject(key).getString("status");
+                    emb.addField(key, status.equals("Online") ? "✅" : "❌", false);
+                }
+
+                ctx.send(emb.build()).queue();
+            }
+        });
     }
 
     @Command(name = "supporters", desc = "Get a list of Patreon supporters.", aliases = {"patrons", "patreon"})
