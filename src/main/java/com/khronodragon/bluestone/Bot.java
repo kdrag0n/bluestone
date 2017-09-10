@@ -81,11 +81,11 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     private JDA jda;
     private ShardUtil shardUtil;
     public static JSONObject patreonData = new JSONObject();
-    private final HashSet<ScheduledFuture> tasks = new HashSet<>();
+    private final Set<ScheduledFuture> tasks = new HashSet<>();
     public final Map<String, Command> commands = new HashMap<>();
     public final Map<String, Cog> cogs = new HashMap<>();
     private final Map<Class<? extends Event>, Set<ExtraEvent>> extraEvents = new HashMap<>();
-    public final OkHttpClient http = new OkHttpClient.Builder()
+    public static final OkHttpClient http = new OkHttpClient.Builder()
             .cache(new Cache(new File("data/http_cache"), 24000000000L))
             .connectTimeout(5, TimeUnit.SECONDS)
             .readTimeout(8, TimeUnit.SECONDS)

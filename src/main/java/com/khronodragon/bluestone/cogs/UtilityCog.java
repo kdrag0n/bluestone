@@ -125,7 +125,7 @@ public class UtilityCog extends Cog {
                 @Override
                 public EmbedBuilder load(String key) throws IOException {
                     String uri = "https://freegeoip.net/json/" + key;
-                    JSONObject data = new JSONObject(bot.http.newCall(new Request.Builder()
+                    JSONObject data = new JSONObject(Bot.http.newCall(new Request.Builder()
                             .get()
                             .url(uri)
                             .build()).execute().body().string());
@@ -295,7 +295,7 @@ public class UtilityCog extends Cog {
                 else {
                     Game game = member.getGame();
 
-                    if (game.getType() == Game.GameType.TWITCH) {
+                    if (game.getType() == Game.GameType.STREAMING) {
                         status = Emotes.getMemberStatus(member) + "Streaming [**" + game.getName() +
                                 "**](" + game.getUrl() + ")";
                     } else {
@@ -368,8 +368,7 @@ public class UtilityCog extends Cog {
                 .addField("Emotes", str(ctx.guild.getEmotes().size()), true)
                 .addField("Region", ctx.guild.getRegion().getName(), true)
                 .addField("Owner", ctx.guild.getOwner().getAsMention(), true)
-                .addField("Default Channel", ctx.guild.getPublicChannel() == null ?
-                        "None" : ctx.guild.getPublicChannel().getAsMention(), true)
+                .addField("Default Channel (for you)", ctx.member.getDefaultChannel().getAsMention(), true)
                 .addField("Admins Need 2FA?", ctx.guild.getRequiredMFALevel().getKey() == 1 ? "Yes" : "No", true)
                 .addField("Content Scan Level", ctx.guild.getExplicitContentLevel().getDescription(), true)
                 .addField("Verification Level", WordUtils.capitalize(ctx.guild.getVerificationLevel().name().toLowerCase()
@@ -702,7 +701,7 @@ public class UtilityCog extends Cog {
         data.add("text0", topText);
         data.add("text1", bottomText);
 
-        bot.http.newCall(new Request.Builder()
+        Bot.http.newCall(new Request.Builder()
                 .post(data.build())
                 .url("https://api.imgflip.com/caption_image")
                 .build()).enqueue(new okhttp3.Callback() {
@@ -736,7 +735,7 @@ public class UtilityCog extends Cog {
         }
         ctx.channel.sendTyping().queue();
 
-        bot.http.newCall(new Request.Builder()
+        Bot.http.newCall(new Request.Builder()
                 .get()
                 .url("https://api.urbandictionary.com/v0/define?term=" + URLEncoder.encode(ctx.rawArgs, "UTF-8"))
                 .build()).enqueue(new okhttp3.Callback() {
@@ -1138,7 +1137,7 @@ public class UtilityCog extends Cog {
             ctx.channel.sendTyping().queue();
 
             try {
-                comicNum = new JSONObject(bot.http.newCall(new Request.Builder()
+                comicNum = new JSONObject(Bot.http.newCall(new Request.Builder()
                         .get()
                         .url("https://xkcd.com/info.0.json")
                         .build()).execute().body().string())
@@ -1152,7 +1151,7 @@ public class UtilityCog extends Cog {
             ctx.channel.sendTyping().queue();
 
             try {
-                comicNum = randint(1, new JSONObject(bot.http.newCall(new Request.Builder()
+                comicNum = randint(1, new JSONObject(Bot.http.newCall(new Request.Builder()
                         .get()
                         .url("https://xkcd.com/info.0.json")
                         .build()).execute().body().string())
@@ -1167,7 +1166,7 @@ public class UtilityCog extends Cog {
             ctx.channel.sendTyping().queue();
 
             try {
-                int max = new JSONObject(bot.http.newCall(new Request.Builder()
+                int max = new JSONObject(Bot.http.newCall(new Request.Builder()
                         .get()
                         .url("https://xkcd.com/info.0.json")
                         .build()).execute().body().string())
@@ -1201,7 +1200,7 @@ public class UtilityCog extends Cog {
         }
 
         try {
-            JSONObject resp = new JSONObject(bot.http.newCall(new Request.Builder()
+            JSONObject resp = new JSONObject(Bot.http.newCall(new Request.Builder()
                     .get()
                     .url("http://www.xkcd.com/" + comicNum + "/info.0.json")
                     .build()).execute().body().string());
@@ -1312,7 +1311,7 @@ public class UtilityCog extends Cog {
             aliases = {"mc_status", "minestatus", "mine_status", "minecraft_status"})
     public void cmdMcstatus(Context ctx) {
 
-        bot.http.newCall(new Request.Builder()
+        Bot.http.newCall(new Request.Builder()
                 .get()
                 .url("https://use.gameapis.net/mc/extra/status")
                 .build()).enqueue(new Callback() {
@@ -1448,7 +1447,7 @@ public class UtilityCog extends Cog {
             return;
         }
 
-        bot.http.newCall(new Request.Builder()
+        Bot.http.newCall(new Request.Builder()
                 .get()
                 .url(Strings.buildQueryUrl("http://api.openweathermap.org/data/2.5/find",
                         "q", ctx.rawArgs,

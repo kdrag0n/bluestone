@@ -42,7 +42,7 @@ public class GoogleCog extends Cog {
             .build(new CacheLoader<String, MessageEmbed>() {
                 @Override
                 public MessageEmbed load(String key) throws IOException {
-                    JSONObject resp = new JSONObject(bot.http.newCall(new Request.Builder()
+                    JSONObject resp = new JSONObject(Bot.http.newCall(new Request.Builder()
                             .get()
                             .url(key)
                             .build()).execute().body().string());

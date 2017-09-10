@@ -67,6 +67,8 @@ dependencies {
     compile 'com.joestelmach:natty:0.11'
     compile 'com.twelvemonkeys.imageio:imageio-core:3.3.2'
     compile 'com.google.re2j:re2j:1.1'
+    compile 'org.jsoup:jsoup:1.10.3'
+    compile 'com.kotcrab.remark:remark:1.0.0'
 }
 
 compileJava.options.encoding = 'UTF-8'

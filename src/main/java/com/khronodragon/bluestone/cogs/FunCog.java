@@ -266,11 +266,11 @@ public class FunCog extends Cog {
         ctx.channel.sendTyping().queue();
 
         try {
-            String cat = new JSONObject(bot.http.newCall(new Request.Builder()
+            String cat = new JSONObject(Bot.http.newCall(new Request.Builder()
                     .get()
                     .url("https://random.cat/meow")
                     .build()).execute().body().string()).optString("file", null);
-            String fact = new JSONObject(bot.http.newCall(new Request.Builder()
+            String fact = new JSONObject(Bot.http.newCall(new Request.Builder()
                     .get()
                     .url("https://catfact.ninja/fact")
                     .build()).execute().body().string()).optString("fact", null);
@@ -302,11 +302,11 @@ public class FunCog extends Cog {
         ctx.channel.sendTyping().queue();
 
         try {
-            String cat = new JSONObject(bot.http.newCall(new Request.Builder()
+            String cat = new JSONObject(Bot.http.newCall(new Request.Builder()
                     .get()
                     .url("https://dog.ceo/api/breeds/image/random")
                     .build()).execute().body().string()).optString("message", null);
-            String fact = val(new JSONObject(bot.http.newCall(new Request.Builder()
+            String fact = val(new JSONObject(Bot.http.newCall(new Request.Builder()
                     .get()
                     .url("https://dog-api.kinduff.com/api/facts?number=1")
                     .build()).execute().body().string()).optJSONArray("facts")).or(new JSONArray())
@@ -352,7 +352,7 @@ public class FunCog extends Cog {
         }
         EmoteInfo info = emoteProviderManager.getFirstInfo(ctx.rawArgs);
 
-        bot.http.newCall(new Request.Builder()
+        Bot.http.newCall(new Request.Builder()
                 .get()
                 .url(url)
                 .build()).enqueue(new okhttp3.Callback() {

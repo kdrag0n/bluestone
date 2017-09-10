@@ -167,7 +167,7 @@ public class StatReporterCog extends Cog {
             json.put("server_count", bot.getJda().getGuilds().size());
         }
 
-        bot.http.newCall(new Request.Builder()
+        Bot.http.newCall(new Request.Builder()
                 .post(RequestBody.create(JSON_MEDIA_TYPE, json.toString()))
                 .url(Endpoints.DISCORD_BOTS.format(bot.getJda().getSelfUser().getId()))
                 .header("Authorization", key)
@@ -194,7 +194,7 @@ public class StatReporterCog extends Cog {
     }
 
     private void reportCarbonitex(String key) {
-        bot.http.newCall(new Request.Builder()
+        Bot.http.newCall(new Request.Builder()
                 .post(new FormBody.Builder()
                             .add("key", key)
                             .add("servercount", str(bot.getShardUtil().getGuildCount()))
@@ -234,7 +234,7 @@ public class StatReporterCog extends Cog {
             json.put("server_count", bot.getJda().getGuilds().size());
         }
 
-        bot.http.newCall(new Request.Builder()
+        Bot.http.newCall(new Request.Builder()
                 .post(RequestBody.create(JSON_MEDIA_TYPE, json.toString()))
                 .url(Endpoints.DISCORD_BOTS_ORG.format(bot.getJda().getSelfUser().getId()))
                 .header("Authorization", key)

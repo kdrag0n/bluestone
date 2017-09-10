@@ -50,7 +50,7 @@ public class PokemonCog extends Cog {
             .build(new CacheLoader<String, String>() {
                 @Override
                 public String load(String key) throws IOException {
-                    return new JSONObject(bot.http.newCall(new Request.Builder()
+                    return new JSONObject(Bot.http.newCall(new Request.Builder()
                             .get()
                             .url(key)
                             .build()).execute().body().string()).getString("description");
@@ -62,7 +62,7 @@ public class PokemonCog extends Cog {
             .build(new CacheLoader<String, Pokemon>() {
                 @Override
                 public Pokemon load(String key) throws IOException {
-                    return pokeGson.fromJson(bot.http.newCall(new Request.Builder()
+                    return pokeGson.fromJson(Bot.http.newCall(new Request.Builder()
                             .get()
                             .url(key)
                             .build()).execute().body().string(), Pokemon.class);

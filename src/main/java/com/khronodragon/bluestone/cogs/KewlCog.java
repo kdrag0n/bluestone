@@ -31,6 +31,7 @@ import net.dv8tion.jda.core.events.user.UserAvatarUpdateEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import okhttp3.Request;
+import okhttp3.ResponseBody;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
@@ -84,8 +85,10 @@ public class KewlCog extends Cog {
             .build(new CacheLoader<User, byte[]>() {
                 @Override
                 public byte[] load(@ParametersAreNonnullByDefault User user) throws Exception {
-                    BufferedImage avatar = ImageIO.read(bot.http.newCall(new Request.Builder().get()
-                            .url(user.getEffectiveAvatarUrl() + "?size=256").build()).execute().body().byteStream());
+                    ResponseBody imgBody = Bot.http.newCall(new Request.Builder().get()
+                            .url(user.getEffectiveAvatarUrl() + "?size=256").build()).execute().body();
+                    BufferedImage avatar = ImageIO.read(imgBody.byteStream());
+                    imgBody.close();
 
                     BufferedImage bg;
                     File bgFile = new File("data/profiles/bg/" + user.getIdLong() + ".png");
@@ -466,7 +469,7 @@ public class KewlCog extends Cog {
             ctx.channel.sendTyping().queue();
 
             try {
-                BufferedImage image = ImageIO.read(bot.http.newCall(new Request.Builder()
+                BufferedImage image = ImageIO.read(Bot.http.newCall(new Request.Builder()
                         .get()
                         .url(ctx.message.getAttachments().get(0).getUrl())
                         .build()).execute().body().byteStream());
