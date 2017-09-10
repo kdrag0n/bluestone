@@ -1324,7 +1324,8 @@ public class UtilityCog extends Cog {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 EmbedBuilder emb = new EmbedBuilder()
-                        .setAuthor("Minecraft Status", null, "[icon]")
+                        .setAuthor("Minecraft Status", null,
+                                "https://minecraft.gamepedia.com/media/minecraft.gamepedia.com/c/c5/Grass.png")
                         .setColor(ThreadLocalRandom.current().nextInt(2) == 1 ? MC_GREEN : MC_BROWN)
                         .setTimestamp(Instant.now());
 
