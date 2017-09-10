@@ -428,6 +428,7 @@ public class UtilityCog extends Cog {
                             .count()));
             put("Text Channels per Server", shardUtil.getGuildStream().mapToInt(g -> g.getTextChannels().size()));
             put("Voice Channels per Server", shardUtil.getGuildStream().mapToInt(g -> g.getVoiceChannels().size()));
+            put("Categories per Server", shardUtil.getGuildStream().mapToInt(g -> g.getCategories().size()));
             put("Roles per Server", shardUtil.getGuildStream().mapToInt(g -> g.getRoles().size()));
             put("Custom Emotes per Server", shardUtil.getGuildStream().mapToInt(g -> g.getEmotes().size()));
         }};
