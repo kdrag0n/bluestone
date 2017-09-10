@@ -1298,13 +1298,13 @@ public class UtilityCog extends Cog {
     @Command(name = "supporters", desc = "Get a list of Patreon supporters.", aliases = {"patrons", "patreon"})
     public void cmdSupporters(Context ctx) {
         if (!(Bot.patreonData.has("rand") && Bot.patreonData.has("always"))) {
-            ctx.send(Emotes.getFailure() + " The Patreon data loaded is invalid!").queue();
+            ctx.send(Emotes.getFailure() + " The Patreon data loaded is invalid. Contact the owner.").queue();
             return;
         }
         EmbedBuilder emb = newEmbedWithAuthor(ctx)
                 .setColor(randomColor())
                 .setDescription("Support me at <https://patreon.com/kdragon>!")
-                .setFooter("❤", null);
+                .setFooter("If you ❤ Goldmine, please become a Patron.", null);
         StringBuilder randBuilder = new StringBuilder();
         StringBuilder alwaysBuilder = new StringBuilder();
         List<Object> randList = Bot.patreonData.getJSONArray("rand").toList();
