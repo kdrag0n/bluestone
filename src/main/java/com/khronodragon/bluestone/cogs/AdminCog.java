@@ -20,7 +20,7 @@ import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 public class AdminCog extends Cog {
     private static final String[] ADMIN_PERM = {"admin"};
     private static final String[] PREFIX_MOD_PERMS = {"manageServer", "manageChannel", "messageManage"};
-    private static final String ADMIN_NO_COMMAND = ":thinking: **I need an action!**\n" +
+    private static final String ADMIN_NO_COMMAND = "🤔 **I need an action!**\n" +
             "The following are valid:\n" +
             "    \u2022 `test` - test if you're an admin\n" +
             "    \u2022 `list` - list current admins\n" +

@@ -30,7 +30,7 @@ import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 
 public class QuotesCog extends Cog {
     private static final Logger logger = LogManager.getLogger(QuotesCog.class);
-    private static final String NO_COMMAND = ":thinking: **I need an action!**\n" +
+    private static final String NO_COMMAND = "🤔 **I need an action!**\n" +
             "The following are valid:\n" +
             "    \u2022 `[id]` - show quote `id`\n" +
             "    \u2022 `add [quote]` - add a quote\n" +

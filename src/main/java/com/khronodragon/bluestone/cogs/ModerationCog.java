@@ -52,7 +52,7 @@ public class ModerationCog extends Cog {
             "    \u2022 `bots` - include messages by bots\n" +
             "    \u2022 `\"text\"` - include messages containing `text`\n" +
             "    \u2022 `[regex]` - include messages that match the regex";
-    private static final String NO_COMMAND = ":thinking: **I need an action!**\n" +
+    private static final String NO_COMMAND = "🤔 **I need an action!**\n" +
             "The following are valid:\n" +
             "    \u2022 `list` - list autoroles\n" +
             "    \u2022 `add [id/name/@role]` - add a role to autoroles\n" +

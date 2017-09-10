@@ -33,7 +33,7 @@ public class WelcomeCog extends Cog {
     private static final String DEFAULT_LEAVE = "[rip] **[member_tag] has left the server...**";
 
     private static final Pattern SUB_REGEX = Pattern.compile("\\[([a-z_]+)]");
-    private static final String NO_COMMAND = ":thinking: **I need an action!**\n" +
+    private static final String NO_COMMAND = "🤔 **I need an action!**\n" +
             "The following are valid:\n" +
             "    \u2022 `status` - view the status of this message\n" +
             "    \u2022 `show` - show the current message\n" +

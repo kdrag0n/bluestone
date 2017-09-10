@@ -29,7 +29,7 @@ public class CogmanCog extends Cog {
     private static final Pattern CLASS_PATH_PATTERN = Pattern.compile("^[a-z]+://?(?:[a-zA-Z0-9\\-_:]+/)+[a-zA-Z0-9\\-_.]+\\.jar/(?:[a-z0-9\\-_]+\\.)*[a-zA-Z0-9]+$");
     private static final Pattern CLASS_FILE_PATTERN = Pattern.compile("^/?(?:.+/)+[a-zA-Z0-9]+(?:\\.class)?$");
     private static final Pattern END_CLASS_PATTERN = Pattern.compile("\\.class$");
-    private static final String NO_COMMAND = ":thinking: **I need an action!**\n" +
+    private static final String NO_COMMAND = "🤔 **I need an action!**\n" +
             "The following are valid:\n" +
             "    \u2022 `list {package path}` - list cogs available (default path `com.khronodragon.bluestone.cogs`)\n" +
             "    \u2022 `reload [cog]` - reload a cog, if loaded\n" +

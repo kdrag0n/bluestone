@@ -56,7 +56,7 @@ public class StarboardCog extends Cog {
     private static final Logger logger = LogManager.getLogger(StarboardCog.class);
     private static final String[] MOD_PERMS = {"manageServer", "manageChannel"};
     private static final String[] TOP_3_BADGES = {"🥇", "🥈", "🥉"};
-    private static final String NO_COMMAND = ":thinking: **I need an action!**\n" +
+    private static final String NO_COMMAND = "🤔 **I need an action!**\n" +
             "The following are valid:\n" +
             "    \u2022 `create/new {channel name='starboard'}` - create a new starboard here (you may pass a different name)\n" +
             "    \u2022 `age [age]` - set the maximum age for messages to be starred, like `2 weeks`\n" +

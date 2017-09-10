@@ -224,7 +224,7 @@ public class OwnerCog extends Cog {
             usage = "[file path]", reportErrors = false)
     public void cmdSendfile(Context ctx) throws IOException {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":thinking: I need a file path!").queue();
+            ctx.send("🤔 I need a file path!").queue();
             return;
         }
 
@@ -255,7 +255,7 @@ public class OwnerCog extends Cog {
     @Command(name = "setavatar", desc = "Change my avatar.", perms = {"owner"}, aliases = {"set_avatar"})
     public void cmdSetAvatar(Context ctx) throws IOException {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":thinking: I need a file path!").queue();
+            ctx.send("🤔 I need a file path!").queue();
             return;
         }
 
@@ -266,7 +266,7 @@ public class OwnerCog extends Cog {
     @Command(name = "setgame", desc = "Set my game.", perms = {"owner"}, aliases = {"set_game"})
     public void cmdSetGame(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":thinking: I need a game to set!").queue();
+            ctx.send("🤔 I need a game to set!").queue();
             return;
         }
 

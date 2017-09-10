@@ -27,6 +27,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.core.requests.SessionReconnectQueue;
 import net.dv8tion.jda.core.utils.SimpleLog;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
@@ -747,7 +748,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 .setEnableShutdownHook(true)
                 .setHttpClientBuilder(new OkHttpClient.Builder()
                         .retryOnConnectionFailure(true))
-                .setGame(Game.of("something"));
+                .setGame(Game.of("something"))
+                .setReconnectQueue(new SessionReconnectQueue());
 
         if ((System.getProperty("os.arch").startsWith("x86") ||
                 System.getProperty("os.arch").equals("amd64")) &&
@@ -811,17 +813,13 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     if (shardCount == 1) {
                         System.exit(0);
                     }
-
-                    try {
-                        Thread.sleep(3000);
-                    } catch (InterruptedException e) {}
                 }
             };
 
             Thread monThread = new Thread(monitor, "Bot Shard-" + shardId + " Monitor Thread");
             monThread.start();
             try {
-                Thread.sleep(5100);
+                Thread.sleep(5000);
             } catch (InterruptedException e) {}
         }
 

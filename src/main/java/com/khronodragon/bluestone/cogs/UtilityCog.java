@@ -1113,7 +1113,7 @@ public class UtilityCog extends Cog {
     @Command(name = "xkcd", desc = "All that xkcd goodness!", thread = true)
     public void cmdXkcd(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(":thinking: **You need to specify what to get!**\n" +
+            ctx.send("🤔 **You need to specify what to get!**\n" +
                     "The following are valid:\n" +
                     "    \u2022 `latest`\n" +
                     "    \u2022 `random`\n" +
@@ -1190,7 +1190,7 @@ public class UtilityCog extends Cog {
                 return;
             }
         } else {
-            ctx.send(":thinking: **Invalid comic!**\n" +
+            ctx.send("🤔 **Invalid comic!**\n" +
                     "The following are valid:\n" +
                     "    \u2022 `latest`\n" +
                     "    \u2022 `random`\n" +
