@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public class RegexUtil {
+public class RegexUtils {
     public static Iterable<MatchResult> iterMatches(final Pattern p, final CharSequence input) {
         return () -> new Iterator<MatchResult>() {
             // Use a matcher internally.

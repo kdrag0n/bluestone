@@ -221,7 +221,7 @@ public class MusicCog extends Cog {
             ctx.send(Emotes.getFailure() + " You're not in a voice channel!").queue();
             throw new PassException();
         } else if (ctx.guild.getSelfMember().getVoiceState().getChannel().getIdLong() != ch.getIdLong()) {
-            ctx.send(":octagonal_sign: You need to be in the same voice channel as me to do that!").queue();
+            ctx.send("🛑 You need to be in the same voice channel as me to do that!").queue();
             throw new PassException();
         }
     }
@@ -256,7 +256,7 @@ public class MusicCog extends Cog {
             if (ctx.guild.getSelfMember().getVoiceState().getChannel() == null) {
                 summon(ctx);
             } else if (ctx.guild.getSelfMember().getVoiceState().getChannel().getIdLong() != ctx.member.getVoiceState().getChannel().getIdLong()) {
-                ctx.send(":octagonal_sign: You need to be in the same voice channel as me to do that!").queue();
+                ctx.send("🛑 You need to be in the same voice channel as me to do that!").queue();
                 return;
             }
         } catch (NullPointerException ignored) {
@@ -282,10 +282,10 @@ public class MusicCog extends Cog {
         AudioState state = getAudioState(ctx.guild);
 
         if (state.player.isPaused()) {
-            ctx.send(":shrug: Already paused.").queue();
+            ctx.send("🤷 Already paused.").queue();
         } else {
             state.player.setPaused(true);
-            ctx.send(":pause_button: Paused.").queue();
+            ctx.send("⏸ Paused.").queue();
         }
     }
 
@@ -296,9 +296,9 @@ public class MusicCog extends Cog {
 
         if (state.player.isPaused()) {
             state.player.setPaused(false);
-            ctx.send(":arrow_forward: Resumed.").queue();
+            ctx.send("➡ Resumed.").queue();
         } else {
-            ctx.send(":shrug: Not paused.").queue();
+            ctx.send("🤷 Not paused.").queue();
         }
     }
 
@@ -309,7 +309,7 @@ public class MusicCog extends Cog {
 
         state.scheduler.shuffleQueue();
         List<String> items = state.scheduler.queue.stream().map(t -> "**" + t.getInfo().title + "**").collect(Collectors.toList());
-        ctx.send(":twisted_rightwards_arrows: Queue shuffled.\n    \u2022 " + String.join("\n    \u2022 ", items)).queue();
+        ctx.send("🔀 Queue shuffled.\n    \u2022 " + String.join("\n    \u2022 ", items)).queue();
     }
 
     @Command(name = "repeat", desc = "Toggle repeating of the current track.", guildOnly = true, aliases = {"loop"})
@@ -319,10 +319,10 @@ public class MusicCog extends Cog {
 
         if (state.scheduler.isRepeating()) {
             state.scheduler.setRepeating(false);
-            ctx.send(":arrow_right: No longer repeating.").queue();
+            ctx.send("➡ No longer repeating.").queue();
         } else {
             state.scheduler.setRepeating(true);
-            ctx.send(":repeat: Now repeating.").queue();
+            ctx.send("🔁 Now repeating.").queue();
         }
     }
 
@@ -375,7 +375,7 @@ public class MusicCog extends Cog {
 
         try {
             ctx.send(new MessageBuilder()
-                    .append(":notes::musical_note:")
+                    .append("🎶🎵")
                     .setEmbed(builder.build())
                     .build()).queue();
         } catch (IllegalArgumentException e) {
@@ -450,7 +450,7 @@ public class MusicCog extends Cog {
             ctx.send("There's no current track.").queue();
         else {
             AudioTrackInfo info = state.scheduler.current.getInfo();
-            ctx.send(":arrow_forward: **" + info.title + "**, length **" + Bot.formatDuration(info.length / 1000) + "**").queue();
+            ctx.send("▶ **" + info.title + "**, length **" + Bot.formatDuration(info.length / 1000) + "**").queue();
         }
     }
 
@@ -459,7 +459,7 @@ public class MusicCog extends Cog {
         channelChecks(ctx);
 
         if (!audioStates.containsKey(ctx.guild.getIdLong())) {
-            ctx.send(":bangbang: Failed to get the state for this server. Something's terribly broken.").queue();
+            ctx.send("‼ Failed to get the state for this server. Something's terribly broken.").queue();
             return;
         }
 

@@ -61,6 +61,6 @@ public class LuckCog extends Cog {
         if (ctx.rawArgs.length() < 1)
             ctx.send(Emotes.getFailure() + " I need a question!").queue();
         else
-            ctx.send(":crystal_ball: " + randomChoice(EIGHT_BALL_CHOICES)).queue();
+            ctx.send("🔮 " + randomChoice(EIGHT_BALL_CHOICES)).queue();
     }
 }

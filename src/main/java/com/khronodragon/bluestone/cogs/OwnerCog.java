@@ -228,7 +228,7 @@ public class OwnerCog extends Cog {
             return;
         }
 
-        ctx.channel.sendFile(new File(ctx.rawArgs), new MessageBuilder().append(":e_mail: File incoming!")
+        ctx.channel.sendFile(new File(ctx.rawArgs), new MessageBuilder().append("📧 File incoming!")
                 .build()).queue();
     }
 

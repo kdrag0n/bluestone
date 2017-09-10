@@ -39,7 +39,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
     @Override
     public void trackLoaded(AudioTrack track) {
         if (!track.getInfo().isStream && track.getDuration() > TimeUnit.MINUTES.toMillis(2 * 60 + 32)) {
-            ctx.send(":no_entry: Track longer than **2 h 30 min**!").queue();
+            ctx.send("⛔ Track longer than **2 h 30 min**!").queue();
             Cog.removeReactionIfExists(ctx.message, "⌛");
             ctx.message.addReaction("❌").queue();
             return;
@@ -71,7 +71,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
     }
 
     private void searchResults(List<AudioTrack> tracks) {
-        ctx.send(":hourglass: Pick a search result.").queue(msg -> {
+        ctx.send("⌛ Pick a search result.").queue(msg -> {
             OrderedMenuBuilder builder = new OrderedMenuBuilder()
                     .allowTextInput(true)
                     .useCancelButton(true)
@@ -87,7 +87,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
 
                         trackLoaded(track);
                     })
-                    .setText(":hourglass: Pick a search result.")
+                    .setText("⌛ Pick a search result.")
                     .setCancel(() -> msg.delete().queue())
                     .setUsers(ctx.author) // from MessageReceivedEvent#getAuthor
                     .setEventWaiter(ctx.bot.getEventWaiter())
@@ -127,7 +127,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
 
         for (AudioTrack track: tracks) {
             if (!track.getInfo().isStream && track.getDuration() > TimeUnit.HOURS.toMillis(3)) {
-                ctx.send(":no_entry: Track **" + track.getInfo().title + "** longer than **3 hours**!").queue();
+                ctx.send("⛔ Track **" + track.getInfo().title + "** longer than **3 hours**!").queue();
                 return;
             }
             state.scheduler.queue(track, new ExtraTrackInfo(ctx.channel, ctx.member));
@@ -152,7 +152,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
 
     @Override
     public void loadFailed(FriendlyException exception) {
-        ctx.send(":bangbang: Error loading track: " + exception.getMessage()).queue();
+        ctx.send("‼ Error loading track: " + exception.getMessage()).queue();
         Cog.removeReactionIfExists(ctx.message, "⌛");
         ctx.message.addReaction("❌").queue();
     }

@@ -41,12 +41,12 @@ public class CoreCog extends Cog {
 
     @Command(name = "test", desc = "Make sure I work.")
     public void cmdTest(Context ctx) {
-        ctx.send(ctx.mention + " Everything is looking good! :smile:").queue();
+        ctx.send(ctx.mention + " Everything is looking good! 😄").queue();
     }
 
     @Command(name = "ping", desc = "Ping, pong!")
     public void cmdPing(Context ctx) {
-        String msg = ":ping_pong: WebSockets: " + ctx.jda.getPing() + "ms";
+        String msg = "🏓 WebSockets: " + ctx.jda.getPing() + "ms";
         long beforeTime = System.currentTimeMillis();
 
         ctx.send(msg).queue(message1 -> {

@@ -1,5 +1,8 @@
 package com.khronodragon.bluestone.cogs;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
@@ -13,17 +16,12 @@ import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.sql.GameDealDestination;
+import com.khronodragon.bluestone.util.GraphicsUtils;
 import com.khronodragon.bluestone.util.Strings;
 import com.overzealous.remark.Options;
 import com.overzealous.remark.Remark;
-import gnu.trove.list.TIntList;
-import gnu.trove.list.linked.TIntLinkedList;
 import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.MessageEmbed;
-import net.dv8tion.jda.core.entities.PrivateChannel;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.utils.MiscUtil;
+import net.dv8tion.jda.core.entities.*;
 import okhttp3.Request;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,10 +32,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.awt.*;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -54,12 +54,31 @@ public class GameDealCog extends Cog {
     private static final Pattern IMAGE_PATTERN = Pattern.compile("!\\[Image]\\([a-zA-Z/0-9?=]+\\)");
     private static final Pattern MULTI_NEWLINE_PATTERN = Pattern.compile("\n{3,}");
     private static final Pattern HEADER_PATTERN = Pattern.compile("^(#+)\\s*([^#]+)\\s*\\1?", Pattern.MULTILINE);
+    private static final Color ECOLOR_FROM = new Color(218, 79, 66);
+    private static final Color ECOLOR_TO = new Color(241, 167, 52);
     private static final Remark remark;
+    private static volatile List<Deal> lastCheckResult = new ArrayList<>(0);
     private static volatile int scheduledShardNum = -1;
     private static final ScheduledExecutorService scheduledExec = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder()
             .setDaemon(true)
             .setNameFormat("GameDeal Checker Thread %d")
             .build());
+    private static final LoadingCache<Integer, String> gameDescriptionCache = CacheBuilder.newBuilder()
+            .expireAfterAccess(5, TimeUnit.HOURS)
+            .initialCapacity(24)
+            .maximumSize(64)
+            .build(new CacheLoader<Integer, String>() {
+                @Override
+                public String load(Integer appID) throws Exception {
+                    String url = "http://store.steampowered.com/api/appdetails/?appids=" + appID;
+                    return new JSONObject(Bot.http.newCall(new Request.Builder()
+                            .get()
+                            .url(url)
+                            .build()).execute().body().string())
+                            .getJSONObject(appID.toString())
+                            .getJSONObject("data").getString("about_the_game");
+                }
+            });
     private static AtomicBoolean hasScheduled = new AtomicBoolean(false);
     private static final String NO_COMMAND = "🤔 **I need an action!**\n" +
             "The following are valid:\n" +
@@ -91,11 +110,6 @@ public class GameDealCog extends Cog {
     public GameDealCog(Bot bot) {
         super(bot);
 
-        if (!hasScheduled.getAndSet(true)) {
-            schedule();
-            scheduledShardNum = bot.getShardNum();
-        }
-
         try {
             TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), GameDealDestination.class);
         } catch (SQLException e) {
@@ -119,6 +133,11 @@ public class GameDealCog extends Cog {
         } catch (SQLException e) {
             logger.warn("Failed to create broadcasted game deal DAO!", e);
         }
+
+        if (!hasScheduled.getAndSet(true)) {
+            schedule();
+            scheduledShardNum = bot.getShardNum();
+        }
     }
 
     private void schedule() {
@@ -137,11 +156,16 @@ public class GameDealCog extends Cog {
                     int dHash = deal.hashCode();
 
                     if (!dealDao.idExists(dHash)) {
-                        broadcastDeal(deal);
+                        try {
+                            broadcastDeal(deal);
+                        } catch (Exception e) {
+                            logger.error("Failed to broadcast deal", e);
+                        }
                         dealDao.create(new BroadcastedDeal(dHash));
                     }
                 }
 
+                lastCheckResult = dealsNow;
             } catch (Exception e) {
                 logger.error("Error in scheduled GameDeal checker", e);
             }
@@ -190,14 +214,8 @@ public class GameDealCog extends Cog {
                     int appID = app.optInt("id", 0);
                     String desc = "¯\\_(ツ)_/¯";
                     try {
-                        String url = "http://store.steampowered.com/api/appdetails/?appids=" + appID;
-                        desc = new JSONObject(Bot.http.newCall(new Request.Builder()
-                                .get()
-                                .url(url)
-                                .build()).execute().body().string())
-                                .getJSONObject(Integer.toUnsignedString(appID))
-                                .getJSONObject("data").getString("about_the_game");
-                        Document descDoc = Jsoup.parse(desc, url);
+                        desc = gameDescriptionCache.get(appID);
+                        Document descDoc = Jsoup.parse(desc);
                         desc = remark.convert(descDoc);
                     } catch (Exception e) {
                         logger.error("Error fetching Steam app description", e);
@@ -292,30 +310,53 @@ public class GameDealCog extends Cog {
                 .setDescription(filterDescription(deal.description))
                 .setImage(deal.imageURL)
                 .setTimestamp(Instant.now())
-                .setColor(randomColor())
+                .setColor(GraphicsUtils.interpolateColors(ECOLOR_FROM, ECOLOR_TO, (double)deal.discountPercent / 100.d))
                 .build();
     }
 
+    private static boolean shouldSend(GameDealDestination dest, Deal deal) {
+        switch (deal.source) {
+            case STEAM:
+                if (!dest.isSteam()) return false;
+                break;
+            case HUMBLE_BUNDLE:
+                if (!dest.isHumbleBundle()) return false;
+                break;
+            case ORIGIN:
+                if (!dest.isOrigin()) return false;
+                break;
+        }
+
+        return deal.discountPercent >= dest.getPercentThreshold();
+    }
+
     private void broadcastDeal(Deal deal) throws SQLException {
-        MessageEmbed embed = renderDeal(deal);
-
         for (GameDealDestination dest: dao.queryForAll()) {
-            if (deal.discountPercent < dest.getPercentThreshold())
-                continue;
-            if (deal.source == DealSource.STEAM && !dest.isSteam())
-                continue;
-            if (deal.source == DealSource.HUMBLE_BUNDLE && !dest.isHumbleBundle())
-                continue;
-            if (deal.source == DealSource.ORIGIN && !dest.isOrigin())
-                continue;
+            try {
+                if (!shouldSend(dest, deal))
+                    continue;
 
-            MessageChannel channel;
-            if (dest.getGuildId() == 0L)
-                channel = bot.getJda().getPrivateChannelById(dest.getChannelId());
-            else
-                channel = bot.getJda().getTextChannelById(dest.getChannelId());
+                MessageChannel channel;
+                if (dest.getGuildId() == 0L) {
+                    User user = bot.getJda().getUserById(dest.getChannelId());
+                    if (user == null) {
+                        dao.delete(dest);
+                        continue;
+                    }
 
-            channel.sendMessage(embed).queue();
+                    channel = user.openPrivateChannel().complete();
+                } else {
+                    channel = bot.getJda().getTextChannelById(dest.getChannelId());
+                    if (channel == null) {
+                        dao.delete(dest);
+                        continue;
+                    }
+                }
+
+                channel.sendMessage(deal.rendered).queue();
+            } catch (Exception e) {
+                logger.error("Failed broadcasting deal to destination {}", e, dest.getChannelId());
+            }
         }
     }
 
@@ -327,20 +368,21 @@ public class GameDealCog extends Cog {
         return desc;
     }
 
-    @Command(name = "gdtest", desc = "Test GameDeal providers by sending all deals found.", thread = true)
+    @Command(name = "gdtest", desc = "Test GameDeal providers by sending all deals found.", thread = true,
+            perms = {"owner"})
     public void cmdGdTest(Context ctx) {
         ctx.send("Checking...").queue();
 
         for (Deal deal: checkSteam())
-            ctx.send(renderDeal(deal)).queue();
+            ctx.send(deal.rendered).queue();
         for (Deal deal: checkHumbleBundle())
-            ctx.send(renderDeal(deal)).queue();
+            ctx.send(deal.rendered).queue();
 
         ctx.send("Done.").queue();
     }
 
     @Command(name = "gamedeal", desc = "Manage your GameDeal settings.", thread = true,
-            usage = "[action] {args...}", aliases = {"game_deal"})
+            usage = "[action] {args...}", aliases = {"game_deal", "gd"})
     public void cmdGameDeal(Context ctx) throws SQLException {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(NO_COMMAND).queue();
@@ -348,7 +390,7 @@ public class GameDealCog extends Cog {
         }
         String invoked = ctx.args.get(0);
 
-        if (invoked.equals("set"))
+        if (invoked.equals("set") || invoked.equals("subscribe"))
             cmdSet(ctx);
         else if (invoked.equals("min"))
             cmdMin(ctx);
@@ -364,7 +406,7 @@ public class GameDealCog extends Cog {
 
     private GameDealDestination getSettings(Context ctx) throws SQLException, PassException {
         if (ctx.channel instanceof PrivateChannel) {
-            GameDealDestination settings = dao.queryForId(ctx.channel.getIdLong());
+            GameDealDestination settings = dao.queryForId(ctx.author.getIdLong());
 
             if (settings == null) {
                 ctx.send(Emotes.getFailure() + " You aren't subscribed to GameDeal in this DM!").queue();
@@ -391,10 +433,10 @@ public class GameDealCog extends Cog {
         GameDealDestination settings;
 
         if (ctx.channel instanceof PrivateChannel) {
-            settings = dao.queryForId(ctx.channel.getIdLong());
+            settings = dao.queryForId(ctx.author.getIdLong());
 
             if (settings == null) {
-                settings = new GameDealDestination(ctx.channel.getIdLong(), ctx.guild.getIdLong(),
+                settings = new GameDealDestination(ctx.author.getIdLong(), 0L,
                         true, true, true, (short)50);
 
                 dao.createOrUpdate(settings);
@@ -402,12 +444,21 @@ public class GameDealCog extends Cog {
             } else {
                 ctx.send(Emotes.getFailure() + " Already subscribed in this DM!").queue();
             }
+
+            for (Deal deal: lastCheckResult) {
+                if (shouldSend(settings, deal))
+                    ctx.channel.sendMessage(deal.rendered).queue();
+            }
         } else {
             TextChannel channel;
             if (ctx.message.getMentionedChannels().size() > 0) {
                 channel = ctx.message.getMentionedChannels().get(0);
             } else {
                 ctx.send(Emotes.getFailure() + " You must specify a #channel!").queue();
+                return;
+            }
+            if (!channel.canTalk()) {
+                ctx.send(Emotes.getFailure() + " I can't talk in that channel!").queue();
                 return;
             }
 
@@ -425,12 +476,19 @@ public class GameDealCog extends Cog {
             dao.createOrUpdate(settings);
             ctx.send(Emotes.getSuccess() + " This server is now subscribed to GameDeal in " +
                     channel.getAsMention() + '.').queue();
+
+            for (Deal deal: lastCheckResult) {
+                if (shouldSend(settings, deal))
+                    channel.sendMessage(deal.rendered).queue();
+            }
         }
     }
 
     private void cmdMin(Context ctx) throws SQLException {
         short percent;
-        if (!Strings.is4Digits(ctx.rawArgs) || (percent = Short.parseShort(ctx.rawArgs)) > 100 ||
+        String arg2;
+        if (ctx.args.size() < 2 || (arg2 = ctx.args.get(1)).isEmpty() ||
+                !Strings.is4Digits(arg2) || (percent = Short.parseShort(arg2)) > 100 ||
                 percent < 1) {
             ctx.send(Emotes.getFailure() + " You must specify a valid percentage!").queue();
             return;
@@ -480,6 +538,7 @@ public class GameDealCog extends Cog {
         private String imageURL;
         private float price;
         private short discountPercent;
+        private MessageEmbed rendered;
 
         private Deal(DealSource source, boolean free, String title, String description, String link, String imageURL, float price, short discountPercent) {
             this.source = source;
@@ -490,6 +549,7 @@ public class GameDealCog extends Cog {
             this.imageURL = imageURL;
             this.price = price;
             this.discountPercent = discountPercent;
+            this.rendered = renderDeal(this);
         }
 
         public int hashCode() {
@@ -502,6 +562,8 @@ public class GameDealCog extends Cog {
     private static class BroadcastedDeal {
         @DatabaseField(id = true, canBeNull = false)
         private int hashCode;
+
+        public BroadcastedDeal() {}
 
         private BroadcastedDeal(int h) {
             hashCode = h;

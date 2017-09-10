@@ -75,7 +75,7 @@ public class TrackScheduler extends AudioEventAdapter {
             if (track.getUserData() != null) {
                 AudioTrackInfo info = track.getInfo();
                 track.getUserData(ExtraTrackInfo.class).textChannel
-                        .sendMessage(":arrow_forward: **" + mentionClean(info.title) + "**, length **" +
+                        .sendMessage("➡ **" + mentionClean(info.title) + "**, length **" +
                                 Bot.formatDuration(info.length / 1000L) + "**").queue();
             }
         } catch (PermissionException ignored) {}
@@ -108,7 +108,7 @@ public class TrackScheduler extends AudioEventAdapter {
         if (track.getUserData() != null) {
             try {
                 track.getUserData(ExtraTrackInfo.class).textChannel
-                        .sendMessage(":bangbang: Error in audio player! " + exception.getMessage()).queue();
+                        .sendMessage("‼ Error in audio player! " + exception.getMessage()).queue();
             } catch (PermissionException ignored) {}
         }
     }

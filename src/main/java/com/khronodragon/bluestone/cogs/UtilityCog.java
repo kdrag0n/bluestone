@@ -520,9 +520,9 @@ public class UtilityCog extends Cog {
         final Date finalDate = date;
         String preQuestion = qBuilder.toString().trim();
 
-        Set<String> unicodeEmotes = RegexUtil.matchStream(UNICODE_EMOTE_PATTERN, preQuestion)
+        Set<String> unicodeEmotes = RegexUtils.matchStream(UNICODE_EMOTE_PATTERN, preQuestion)
                                         .map(MatchResult::group).collect(Collectors.toSet());
-        Set<Emote> customEmotes = RegexUtil.matchStream(CUSTOM_EMOTE_PATTERN, preQuestion)
+        Set<Emote> customEmotes = RegexUtils.matchStream(CUSTOM_EMOTE_PATTERN, preQuestion)
                                            .map(m -> ctx.jda.getEmoteById(m.group(1)))
                                            .collect(Collectors.toSet());
 
@@ -1038,7 +1038,7 @@ public class UtilityCog extends Cog {
 
         PrivateChannel ownerChannel = bot.owner.openPrivateChannel().complete(); // one-time and fast enough
         ownerChannel.sendMessage(new MessageBuilder()
-                                    .append(":e_mail: New message.")
+                                    .append("📧 New message.")
                                     .setEmbed(emb.build())
                                     .build()).queue();
 

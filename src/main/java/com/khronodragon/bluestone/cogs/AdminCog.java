@@ -64,7 +64,7 @@ public class AdminCog extends Cog {
     }
 
     private void adminCmdTest(Context ctx) throws SQLException {
-        String admin = bot.getAdminDao().idExists(ctx.author.getIdLong()) ? " :wave: Hey there, admin!" : " :cry: You aren't an admin!";
+        String admin = bot.getAdminDao().idExists(ctx.author.getIdLong()) ? " 👋 Hey there, admin!" : " 😢 You aren't an admin!";
         ctx.send(ctx.mention + admin).queue();
     }
 
@@ -76,7 +76,7 @@ public class AdminCog extends Cog {
         if (adminList.size() > 0)
             ctx.send("**Current bot admins:**\n    \u2022 " + String.join("\n    \u2022 ", adminList)).queue();
         else
-            ctx.send("There are no admins! :open_mouth:").queue();
+            ctx.send(Emotes.getFailure() + " There are no admins!").queue();
     }
 
     private void adminCmdAdd(Context ctx) throws SQLException, PermissionError {
