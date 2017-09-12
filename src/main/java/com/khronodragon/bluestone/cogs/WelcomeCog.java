@@ -328,15 +328,7 @@ public class WelcomeCog extends Cog {
 
             TextChannel channel;
             if (queryResult.getChannelId() == 0L) {
-                channel = event.getGuild().getPublicChannel();
-
-                if (channel == null) {
-                    for (TextChannel potential: event.getGuild().getTextChannels()) {
-                        if (potential.canTalk())
-                            channel = potential;
-                    }
-                }
-
+                channel = event.getGuild().getSelfMember().getDefaultChannel();
                 if (channel == null)
                     return;
             } else {
@@ -378,15 +370,7 @@ public class WelcomeCog extends Cog {
 
             TextChannel channel;
             if (queryResult.getChannelId() == 0L) {
-                channel = event.getGuild().getPublicChannel();
-
-                if (channel == null) {
-                    for (TextChannel potential: event.getGuild().getTextChannels()) {
-                        if (potential.canTalk())
-                            channel = potential;
-                    }
-                }
-
+                channel = event.getGuild().getSelfMember().getDefaultChannel();
                 if (channel == null)
                     return;
             } else {

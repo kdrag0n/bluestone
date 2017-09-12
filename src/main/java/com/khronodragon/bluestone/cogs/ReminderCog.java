@@ -16,7 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.awt.*;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.Date;
@@ -34,13 +33,13 @@ public class ReminderCog extends Cog {
         try {
             TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), Reminder.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create quote table!", e);
+            logger.warn("Failed to create reminder table!", e);
         }
 
         try {
             dao = DaoManager.createDao(bot.getShardUtil().getDatabase(), Reminder.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create quote DAO!", e);
+            logger.warn("Failed to create reminder DAO!", e);
         }
 
         if (bot.getShardNum() == 1) {
@@ -101,6 +100,11 @@ public class ReminderCog extends Cog {
                 msg = StringUtils.replaceOnce(ctx.rawArgs, group.getText(), "");
             }
         }
+
+        if (msg.startsWith("to") && msg.length() > 2) {
+            msg = msg.substring(2);
+        }
+        msg = msg.trim();
 
         if (date == null) {
             ctx.send(Emotes.getFailure() + " Failed to parse time/date!").queue();

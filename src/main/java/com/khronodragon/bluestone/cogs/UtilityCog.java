@@ -476,6 +476,8 @@ public class UtilityCog extends Cog {
             if (!Strings.isID(ctx.rawArgs)) {
                 ctx.send(Emotes.getFailure() + " Invalid ID!").queue();
                 return;
+            } else if (ctx.rawArgs.equals(ctx.jda.getSelfUser().getId())) {
+                ctx.send('<' + ctx.jda.asBot().getInviteUrl(PERMS_NEEDED) + '>').queue();
             }
 
             ctx.send(format("<https://discordapp.com/api/oauth2/authorize?client_id={0}&scope=bot&permissions=3072>",

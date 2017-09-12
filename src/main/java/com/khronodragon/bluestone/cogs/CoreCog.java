@@ -17,6 +17,16 @@ import net.dv8tion.jda.core.requests.RestAction;
 import java.util.*;
 
 public class CoreCog extends Cog {
+    private static final String JOIN_MESSAGE =
+            "By adding this bot, you agree that the activity of all users in this server *may* be logged, depending on features used or enabled..\n" +
+                    "Features that may log data: quotes, starboard, etc. (this is to comply with the Discord ToS.)\n\n" +
+                    "**Enjoy this bot!**\n" +
+                    "\n" +
+                    "If you ever have questions, *please* read the **FAQ** first: <https://khronodragon.com/goldmine/faq>\n" +
+                    "It saves everyone a lot of time.\n" +
+                    "\n" +
+                    "*If you like Goldmine, please help keep it alive by donating here: <https://patreon.com/kdragon>.\n" +
+                    "Any amount is appreciated.*";
     private static final String[] phelpPerms = {"manageChannel", "managePermissions", "messageManage", "manageServer"};
     public CoreCog(Bot bot) {
         super(bot);
@@ -219,26 +229,21 @@ public class CoreCog extends Cog {
 
     @EventHandler
     public void onJoin(GuildJoinEvent event) {
-        final String msg =
-                "By adding this bot, you agree that the activity of all users in this server *may* be logged, depending on features used or enabled..\n" +
-                "Features that may log data: quotes, starboard, etc. (this is to comply with the Discord ToS.)\n\n" +
-                "**Enjoy this bot!**\n" +
-                "*If you like Goldmine, please help keep it alive by donating here: <https://patreon.com/kdragon>.\n" +
-                "Any amount is appreciated.*";
+        TextChannel defChan = event.getGuild().getDefaultChannel();
 
-        if (event.getGuild().getPublicChannel() == null || !event.getGuild().getPublicChannel().canTalk()) {
+        if (defChan == null || !defChan.canTalk()) {
             for (TextChannel channel: event.getGuild().getTextChannels()) {
                 if (channel.canTalk()) {
-                    channel.sendMessage(msg).queue();
+                    channel.sendMessage(JOIN_MESSAGE).queue();
                     return;
                 }
             }
 
             event.getGuild().getOwner().getUser().openPrivateChannel().queue(ch -> {
-                ch.sendMessage(msg).queue();
+                ch.sendMessage(JOIN_MESSAGE).queue();
             });
         } else {
-            event.getGuild().getPublicChannel().sendMessage(msg).queue();
+            defChan.sendMessage(JOIN_MESSAGE).queue();
         }
     }
 }

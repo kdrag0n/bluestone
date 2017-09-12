@@ -491,6 +491,8 @@ public class KewlCog extends Cog {
                 ctx.send(Emotes.getSuccess() + " Background set.").queue();
             } catch (IOException | NullPointerException | IllegalArgumentException ignored) {
                 ctx.send(Emotes.getFailure() + " Invalid image! Only GIF, PNG, and JPEG images are supported.").queue();
+            } catch (ArrayIndexOutOfBoundsException ignored) {
+                ctx.send(Emotes.getFailure() + " Your image seems to be in a weird format, or corrupted...").queue();
             }
         } else {
             ctx.send(Emotes.getFailure() + " If you want to use the default background, specify `reset` or `default`. If you want to use a custom background, upload it as an attachment along with your command message. Only GIF, PNG, and JPEG image formats are supported.").queue();
