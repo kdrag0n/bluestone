@@ -161,7 +161,7 @@ public class OwnerCog extends Cog {
                     bot.getShardUtil().getPrefixStore().getPrefix(guild.getIdLong()));
             TextChannel channel = guild.getSelfMember().getDefaultChannel();
 
-            if (channel != null)
+            if (channel != null && channel.canTalk())
                 channel.sendMessage(message).queue();
             else {
                 ctx.send(Emotes.getFailure() + " Guild **" + guild.getName() +
