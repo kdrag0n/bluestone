@@ -161,24 +161,12 @@ public class OwnerCog extends Cog {
                     bot.getShardUtil().getPrefixStore().getPrefix(guild.getIdLong()));
             TextChannel channel = guild.getSelfMember().getDefaultChannel();
 
-            if (channel != null && channel.canTalk())
+            if (channel != null)
                 channel.sendMessage(message).queue();
             else {
-                long publicId = guild.getPublicChannel().getIdLong();
-
-                Optional<TextChannel> opt = guild.getTextChannels()
-                        .stream()
-                        .filter(c -> c.getIdLong() != publicId)
-                        .filter(TextChannel::canTalk)
-                        .findFirst();
-
-                if (opt.isPresent())
-                    opt.get().sendMessage(message).queue();
-                else {
-                    ctx.send(Emotes.getFailure() + " Guild **" + guild.getName() +
-                            "** (`" + guild.getIdLong() + "`) muted us in all channels...").queue();
-                    errors++;
-                }
+                ctx.send(Emotes.getFailure() + " Guild **" + guild.getName() +
+                        "** (`" + guild.getIdLong() + "`) muted us in all channels...").queue();
+                errors++;
             }
         }
 
