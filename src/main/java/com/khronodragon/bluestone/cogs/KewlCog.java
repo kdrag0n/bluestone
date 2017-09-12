@@ -27,6 +27,7 @@ import net.dv8tion.jda.client.entities.Group;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.entities.impl.GuildImpl;
 import net.dv8tion.jda.core.entities.impl.JDAImpl;
 import net.dv8tion.jda.core.entities.impl.UserImpl;
 import net.dv8tion.jda.core.events.user.UserAvatarUpdateEvent;
@@ -313,7 +314,8 @@ public class KewlCog extends Cog {
             Collection<User> users;
             switch (ctx.channel.getType()) {
                 case TEXT:
-                    users = ctx.guild.getMembers().stream().map(Member::getUser).collect(Collectors.toList());
+                    users = ((GuildImpl) ctx.guild).getMembersMap().valueCollection()
+                            .stream().map(Member::getUser).collect(Collectors.toList());
                     break;
                 case PRIVATE:
                     users = Arrays.asList(ctx.author, ctx.jda.getSelfUser());

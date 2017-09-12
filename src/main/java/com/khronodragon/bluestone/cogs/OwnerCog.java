@@ -159,18 +159,16 @@ public class OwnerCog extends Cog {
             }
             String message = StringUtils.replace(ctx.rawArgs, "%prefix%",
                     bot.getShardUtil().getPrefixStore().getPrefix(guild.getIdLong()));
-            TextChannel channel = guild.getSelfMember().getDefaultChannel();
+            TextChannel channel = defaultWritableChannel(guild.getSelfMember());
 
             if (channel != null && channel.canTalk())
                 channel.sendMessage(message).queue();
             else {
-                ctx.send(Emotes.getFailure() + " Guild **" + guild.getName() +
-                        "** (`" + guild.getIdLong() + "`) muted us in all channels...").queue();
                 errors++;
             }
         }
 
-        ctx.send(Emotes.getSuccess() + " Broadcast finished, with **" + errors + "** errored guilds.").queue();
+        ctx.send(Emotes.getSuccess() + " Broadcast finished, with **" + errors + "** guilds all muted.").queue();
     }
 
     @Command(name = "eval", desc = "Evaluate some Groovy code.", usage = "[code]",

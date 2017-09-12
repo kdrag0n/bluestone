@@ -229,16 +229,9 @@ public class CoreCog extends Cog {
 
     @EventHandler
     public void onJoin(GuildJoinEvent event) {
-        TextChannel defChan = event.getGuild().getDefaultChannel();
+        TextChannel defChan = defaultWritableChannel(event.getGuild().getSelfMember());
 
         if (defChan == null || !defChan.canTalk()) {
-            for (TextChannel channel: event.getGuild().getTextChannels()) {
-                if (channel.canTalk()) {
-                    channel.sendMessage(JOIN_MESSAGE).queue();
-                    return;
-                }
-            }
-
             event.getGuild().getOwner().getUser().openPrivateChannel().queue(ch -> {
                 ch.sendMessage(JOIN_MESSAGE).queue();
             });

@@ -30,6 +30,7 @@ import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.GuildVoiceState;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.VoiceChannel;
+import net.dv8tion.jda.core.entities.impl.VoiceChannelImpl;
 import net.dv8tion.jda.core.events.guild.voice.GenericGuildVoiceEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceJoinEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
@@ -136,7 +137,9 @@ public class MusicCog extends Cog {
             AudioState state = getAudioState(event.getGuild());
             if (state == null) return;
 
-            if (event.getChannelLeft().getMembers().stream().filter(m -> !m.getVoiceState().isDeafened()).count() < 2) {
+            if (((VoiceChannelImpl) event.getChannelLeft())
+                    .getConnectedMembersMap().valueCollection().stream()
+                    .filter(m -> !m.getVoiceState().isDeafened()).count() < 2) {
                 state.scheduler.player.setPaused(true);
                 state.scheduler.setEmptyPauseTime(new Date());
                 state.scheduler.setEmptyPaused(true);
@@ -161,7 +164,9 @@ public class MusicCog extends Cog {
             AudioState state = getAudioState(event.getGuild());
             if (state == null) return;
 
-            if (event.getChannelJoined().getMembers().stream().filter(m -> !m.getVoiceState().isDeafened()).count() == 2) {
+            if (((VoiceChannelImpl) event.getChannelJoined())
+                    .getConnectedMembersMap().valueCollection().stream()
+                    .filter(m -> !m.getVoiceState().isDeafened()).count() == 2) {
                 state.scheduler.player.setPaused(false);
                 state.scheduler.setEmptyPaused(false);
             }
@@ -404,7 +409,8 @@ public class MusicCog extends Cog {
 
             state.scheduler.skip();
         } else {
-            int targetVotes = (int) Math.ceil(ctx.guild.getSelfMember().getVoiceState().getChannel().getMembers().size() / 2.0f);
+            int targetVotes = (int) Math.ceil(((VoiceChannelImpl)ctx.guild.getSelfMember().getVoiceState().getChannel())
+                    .getConnectedMembersMap().size() / 2.0f);
             if (info.hasVotedToSkip(ctx.member)) {
                 ctx.send("You've already voted to skip this track. Votes: **[" + info.getSkipVotes() + '/' + targetVotes + "]**").queue();
             } else {

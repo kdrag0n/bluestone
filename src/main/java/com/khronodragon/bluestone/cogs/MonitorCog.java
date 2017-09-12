@@ -6,6 +6,7 @@ import com.khronodragon.bluestone.annotations.EventHandler;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.impl.GuildImpl;
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
 import org.apache.commons.lang3.StringUtils;
@@ -69,32 +70,32 @@ public class MonitorCog extends Cog {
     @EventHandler
     public void onGuildJoin(GuildJoinEvent event) {
         TextChannel channel = findChannel(guildEventChannelId);
+        GuildImpl guild = (GuildImpl) event.getGuild();
 
-        if (!event.getGuild().isAvailable()) {
-            channel.sendMessage("<:plus:331224997362139136> __**Guild Unavailable**__ | ? members, ? emotes | `" +
-                    event.getGuild().getIdLong() + "` | Current Total: " + bot.getShardUtil().getGuildCount()).queue();
+        if (!guild.isAvailable()) {
+            channel.sendMessage("<:plus:331224997362139136> __**Guild Unavailable**__ | ? members | `" +
+                    guild.getId() + "` | Current Total: " + bot.getShardUtil().getGuildCount()).queue();
             return;
         }
 
-        channel.sendMessage("<:plus:331224997362139136> __**" + event.getGuild().getName() + "**__ - " +
-                event.getGuild().getMembers().size() + " members, " + event.getGuild().getEmotes().size() +
-                " emotes | `" + event.getGuild().getId() + "` | Current Total: " +
+        channel.sendMessage("<:plus:331224997362139136> __**" + guild.getName() + "**__ - " +
+                guild.getMembersMap().size() + " members | `" + guild.getId() + "` | Current Total: " +
                 bot.getShardUtil().getGuildCount()).queue();
     }
 
     @EventHandler
     public void onGuildLeave(GuildLeaveEvent event) {
         TextChannel channel = findChannel(guildEventChannelId);
+        GuildImpl guild = (GuildImpl) event.getGuild();
 
-        if (!event.getGuild().isAvailable()) {
-            channel.sendMessage("<:minus:331225043445088258> __**Guild Unavailable**__ | ? members, ? emotes | `" +
-                    event.getGuild().getIdLong() + "` | Current Total: " + bot.getShardUtil().getGuildCount()).queue();
+        if (!guild.isAvailable()) {
+            channel.sendMessage("<:minus:331225043445088258> __**Guild Unavailable**__ | ? members | `" +
+                    guild.getId() + "` | Current Total: " + bot.getShardUtil().getGuildCount()).queue();
             return;
         }
 
-        channel.sendMessage("<:minus:331225043445088258> __**" + event.getGuild().getName() + "**__ - " +
-                event.getGuild().getMembers().size() + " members, " + event.getGuild().getEmotes().size() +
-                " emotes | `" + event.getGuild().getId() + "` | Current Total: " +
+        channel.sendMessage("<:minus:331225043445088258> __**" + guild.getName() + "**__ - " +
+                guild.getMembersMap().size() + " members | `" + guild.getId() + "` | Current Total: " +
                 bot.getShardUtil().getGuildCount()).queue();
     }
 

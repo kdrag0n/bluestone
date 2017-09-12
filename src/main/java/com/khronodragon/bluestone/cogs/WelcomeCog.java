@@ -328,7 +328,7 @@ public class WelcomeCog extends Cog {
 
             TextChannel channel;
             if (queryResult.getChannelId() == 0L) {
-                channel = event.getGuild().getSelfMember().getDefaultChannel();
+                channel = defaultWritableChannel(event.getGuild().getSelfMember());
                 if (channel == null)
                     return;
             } else {
@@ -370,7 +370,7 @@ public class WelcomeCog extends Cog {
 
             TextChannel channel;
             if (queryResult.getChannelId() == 0L) {
-                channel = event.getGuild().getSelfMember().getDefaultChannel();
+                channel = defaultWritableChannel(event.getGuild().getSelfMember());
                 if (channel == null)
                     return;
             } else {
@@ -391,8 +391,6 @@ public class WelcomeCog extends Cog {
 
     @EventHandler(threaded = true)
     public void onGuildJoin(GuildJoinEvent event) {
-        if (!event.getGuild().isAvailable()) return;
-
         try {
             messageDao.createOrUpdate(new GuildWelcomeMessages(event.getGuild().getIdLong(),
                     "[default]", "[default]", true, true));
@@ -403,8 +401,6 @@ public class WelcomeCog extends Cog {
 
     @EventHandler(threaded = true)
     public void onGuildLeave(GuildLeaveEvent event) {
-        if (!event.getGuild().isAvailable()) return;
-
         try {
             messageDao.deleteById(event.getGuild().getIdLong());
         } catch (SQLException e) {

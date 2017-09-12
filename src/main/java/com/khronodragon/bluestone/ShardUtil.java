@@ -17,6 +17,8 @@ import com.zaxxer.hikari.HikariDataSource;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.impl.GuildImpl;
+import net.dv8tion.jda.core.entities.impl.JDAImpl;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
@@ -150,26 +152,26 @@ public class ShardUtil {
     }
 
     public int getGuildCount() {
-        return shards.values().stream().mapToInt(b -> b.getJda().getGuilds().size()).sum();
+        return shards.values().stream().mapToInt(b -> ((JDAImpl) b.getJda()).getGuildMap().size()).sum();
     }
 
     public int getChannelCount() {
         return shards.values().stream().mapToInt(b -> {
-            JDA jda = b.getJda();
-            return jda.getTextChannels().size() + jda.getVoiceChannels().size();
+            JDAImpl jda = (JDAImpl) b.getJda();
+            return jda.getTextChannelMap().size() + jda.getVoiceChannelMap().size();
         }).sum();
     }
 
     public int getVoiceChannelCount() {
-        return shards.values().stream().mapToInt(b -> b.getJda().getVoiceChannels().size()).sum();
+        return shards.values().stream().mapToInt(b -> ((JDAImpl) b.getJda()).getVoiceChannelMap().size()).sum();
     }
 
     public int getTextChannelCount() {
-        return shards.values().stream().mapToInt(b -> b.getJda().getTextChannels().size()).sum();
+        return shards.values().stream().mapToInt(b -> ((JDAImpl) b.getJda()).getTextChannelMap().size()).sum();
     }
 
     public int getUserCount() {
-        return shards.values().stream().mapToInt(b -> b.getJda().getUsers().size()).sum();
+        return shards.values().stream().mapToInt(b -> ((JDAImpl) b.getJda()).getUserMap().size()).sum();
     }
 
     public int getRequestCount() {
@@ -177,7 +179,9 @@ public class ShardUtil {
     }
 
     public int getEmoteCount() {
-        return shards.values().stream().mapToInt(b -> b.getJda().getEmotes().size()).sum();
+        return shards.values().stream().mapToInt(b -> ((JDAImpl) b.getJda()).getGuildMap().valueCollection().stream()
+                .mapToInt(g -> ((GuildImpl) g).getEmoteMap().size())
+                .sum()).sum();
     }
 
     public int getTrackCount() {
@@ -201,6 +205,6 @@ public class ShardUtil {
     }
 
     public Stream<Guild> getGuildStream() {
-        return shards.values().stream().flatMap(b -> b.getJda().getGuilds().stream());
+        return shards.values().stream().flatMap(b -> ((JDAImpl) b.getJda()).getGuildMap().valueCollection().stream());
     }
 }

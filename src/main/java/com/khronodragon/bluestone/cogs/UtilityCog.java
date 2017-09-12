@@ -38,6 +38,7 @@ import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.entities.MessageReaction.ReactionEmote;
+import net.dv8tion.jda.core.entities.impl.GuildImpl;
 import net.dv8tion.jda.core.entities.impl.UserImpl;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import okhttp3.*;
@@ -328,7 +329,9 @@ public class UtilityCog extends Cog {
 
     @Command(name = "serverinfo", desc = "Get loads of info about this server.", guildOnly = true, aliases = {"sinfo", "server", "guild", "guildinfo", "ginfo"})
     public void cmdGuildInfo(Context ctx) {
-        String roleText = ctx.guild.getRoles().stream()
+        GuildImpl guild = (GuildImpl) ctx.guild;
+
+        String roleText = guild.getRoles().stream()
                 .filter(r -> !r.isPublicRole())
                 .map(Role::getAsMention)
                 .collect(Collectors.joining(", "));
@@ -357,24 +360,24 @@ public class UtilityCog extends Cog {
                 .append(ctx.guild.getMembers().size() - 1);
 
         EmbedBuilder emb = new EmbedBuilder()
-                .setColor(val(ctx.guild.getSelfMember().getColor()).or(Color.WHITE))
-                .setAuthor(ctx.guild.getName(), null,
-                        val(ctx.guild.getIconUrl()).or(ctx.jda.getSelfUser().getEffectiveAvatarUrl()))
-                .setFooter("Server created at", ctx.guild.getIconUrl())
-                .setTimestamp(ctx.guild.getCreationTime())
-                .addField("ID", ctx.guild.getId(), true)
-                .addField("Channels", str(ctx.guild.getTextChannels().size() + ctx.guild.getVoiceChannels().size()), true)
-                .addField("Roles (" + ctx.guild.getRoles().size() + ')', roleText, true)
-                .addField("Emotes", str(ctx.guild.getEmotes().size()), true)
-                .addField("Region", ctx.guild.getRegion().getName(), true)
-                .addField("Owner", ctx.guild.getOwner().getAsMention(), true)
-                .addField("Default Channel (for you)", ctx.member.getDefaultChannel().getAsMention(), true)
-                .addField("Admins Need 2FA?", ctx.guild.getRequiredMFALevel().getKey() == 1 ? "Yes" : "No", true)
-                .addField("Content Scan Level", ctx.guild.getExplicitContentLevel().getDescription(), true)
-                .addField("Verification Level", WordUtils.capitalize(ctx.guild.getVerificationLevel().name().toLowerCase()
+                .setColor(val(guild.getSelfMember().getColor()).or(Color.WHITE))
+                .setAuthor(guild.getName(), null,
+                        val(guild.getIconUrl()).or(ctx.jda.getSelfUser().getEffectiveAvatarUrl()))
+                .setFooter("Server created at", guild.getIconUrl())
+                .setTimestamp(guild.getCreationTime())
+                .addField("ID", guild.getId(), true)
+                .addField("Channels", str(guild.getTextChannelsMap().size() + guild.getVoiceChannelsMap().size()), true)
+                .addField("Roles (" + guild.getRolesMap().size() + ')', roleText, true)
+                .addField("Emotes", str(guild.getEmoteMap().size()), true)
+                .addField("Region", guild.getRegion().getName(), true)
+                .addField("Owner", guild.getOwner().getAsMention(), true)
+                .addField("Default Channel (for you)", defaultReadableChannel(ctx.member).getAsMention(), true)
+                .addField("Admins Need 2FA?", guild.getRequiredMFALevel().getKey() == 1 ? "Yes" : "No", true)
+                .addField("Content Scan Level", guild.getExplicitContentLevel().getDescription(), true)
+                .addField("Verification Level", WordUtils.capitalize(guild.getVerificationLevel().name().toLowerCase()
                         .replace('_', ' ')), true)
                 .addField("Members", membersText.toString(), true)
-                .setThumbnail(ctx.guild.getIconUrl());
+                .setThumbnail(guild.getIconUrl());
 
         ctx.send(emb.build()).queue();
     }
@@ -382,6 +385,13 @@ public class UtilityCog extends Cog {
     @Command(name = "info", desc = "Get some info about me.", aliases = {"about", "stats", "statistics", "status"})
     public void cmdInfo(Context ctx) {
         ShardUtil shardUtil = bot.getShardUtil();
+        double load = systemBean.getSystemLoadAverage();
+        String loadAvg;
+        if (load == -1.0d)
+            loadAvg = "¯\\_(ツ)_/¯";
+        else
+            loadAvg = str(load);
+
         EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://khronodragon.com/goldmine")
                 .setColor(randomColor())
                 .setDescription(Emotes.getCredits() +
@@ -394,14 +404,7 @@ public class UtilityCog extends Cog {
                 .addField("CPU Usage", format("{0}% - system {1}%",
                         (int) Math.ceil(systemBean.getProcessCpuLoad() * 100),
                         (int) Math.ceil(systemBean.getSystemCpuLoad() * 100)), true)
-                .addField("Load Average", ((Supplier<String>) () -> {
-                    double load = systemBean.getSystemLoadAverage();
-
-                    if (load == -1.0d)
-                        return "¯\\_(ツ)_/¯";
-                    else
-                        return str(load);
-                }).get(), true)
+                .addField("Load Average", loadAvg, true)
                 .addField("Users", str(shardUtil.getUserCount()), true)
                 .addField("Channels", str(shardUtil.getChannelCount()), true)
                 .addField("Commands", str(new HashSet<>(bot.commands.values()).size()), true)
@@ -414,23 +417,23 @@ public class UtilityCog extends Cog {
         ctx.send(emb.build()).queue();
     }
 
-    @Command(name = "xstats", desc = "Get a lot of extended statistics about me.", aliases = {"xstatistics"})
+    @Command(name = "xstats", desc = "Get a lot of extended statistics about me.", aliases = {"xstatistics", "xinfo"})
     public void cmdXInfo(Context ctx) {
         ctx.channel.sendTyping().queue();
         ShardUtil shardUtil = bot.getShardUtil();
 
         Map<String, IntStream> stats = new LinkedHashMap<String, IntStream>() {{
-            put("Members per Server", shardUtil.getGuildStream().mapToInt(g -> g.getMembers().size()));
+            put("Members per Server", shardUtil.getGuildStream().mapToInt(g -> ((GuildImpl) g).getMembersMap().size()));
             put("Online Members per Server", shardUtil.getGuildStream()
-                    .mapToInt(g -> (int) g.getMembers()
+                    .mapToInt(g -> (int) ((GuildImpl) g).getMembersMap().valueCollection()
                             .stream()
                             .filter(member -> member.getOnlineStatus() == OnlineStatus.ONLINE)
                             .count()));
-            put("Text Channels per Server", shardUtil.getGuildStream().mapToInt(g -> g.getTextChannels().size()));
-            put("Voice Channels per Server", shardUtil.getGuildStream().mapToInt(g -> g.getVoiceChannels().size()));
-            put("Categories per Server", shardUtil.getGuildStream().mapToInt(g -> g.getCategories().size()));
-            put("Roles per Server", shardUtil.getGuildStream().mapToInt(g -> g.getRoles().size()));
-            put("Custom Emotes per Server", shardUtil.getGuildStream().mapToInt(g -> g.getEmotes().size()));
+            put("Text Channels per Server", shardUtil.getGuildStream().mapToInt(g -> ((GuildImpl) g).getTextChannelsMap().size()));
+            put("Voice Channels per Server", shardUtil.getGuildStream().mapToInt(g -> ((GuildImpl) g).getVoiceChannelsMap().size()));
+            put("Categories per Server", shardUtil.getGuildStream().mapToInt(g -> ((GuildImpl) g).getCategoriesMap().size()));
+            put("Roles per Server", shardUtil.getGuildStream().mapToInt(g -> ((GuildImpl) g).getRolesMap().size()));
+            put("Custom Emotes per Server", shardUtil.getGuildStream().mapToInt(g -> ((GuildImpl) g).getEmoteMap().size()));
         }};
 
         EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://khronodragon.com/goldmine")
@@ -443,14 +446,14 @@ public class UtilityCog extends Cog {
             emb.addField(stat.getKey(), statify(stat.getValue()), true);
         }
 
-        int exclusive = (int) shardUtil.getGuildStream().filter(g -> g.getMembers()
+        int exclusive = (int) shardUtil.getGuildStream().filter(g -> ((GuildImpl) g).getMembersMap().valueCollection()
                 .stream()
                 .filter(m -> m.getUser().isBot())
                 .count() < 2).count();
         String excText = String.format("%d (%.2f%%)", exclusive, ((float) exclusive / (float) shardUtil.getGuildCount()) * 100f);
 
         int big = (int) shardUtil.getGuildStream()
-                .filter(g -> g.getMembers().size() >= 250)
+                .filter(g -> ((GuildImpl) g).getMembersMap().size() >= 250)
                 .count();
         String bigText = String.format("%d (%.2f%%)", big, ((float) big / (float) shardUtil.getGuildCount()) * 100f);
 
@@ -1030,12 +1033,13 @@ public class UtilityCog extends Cog {
                 .addField("Contains Mention?", ctx.message.getMentionedUsers().size() > 0 ? "Yes" : "No", true);
 
         if (ctx.guild != null) {
+            GuildImpl guild = (GuildImpl) ctx.guild;
             emb.addField("Guild", new StringBuilder("**")
-                                    .append(ctx.guild.getName())
+                                    .append(guild.getName())
                                     .append("**\nID: `")
-                                    .append(ctx.guild.getId())
+                                    .append(guild.getId())
                                     .append("`\nMembers: ")
-                                    .append(ctx.guild.getMembers().size())
+                                    .append(guild.getMembersMap().size())
                                     .toString(), true);
         }
 

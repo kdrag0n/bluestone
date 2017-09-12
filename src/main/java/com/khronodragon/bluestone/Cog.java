@@ -1,12 +1,17 @@
 package com.khronodragon.bluestone;
 
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.entities.impl.GuildImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
 import java.awt.Color;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -127,5 +132,23 @@ public abstract class Cog {
 
     protected static String[] embedFieldPages(String text) {
         return StringUtils.split(WordUtils.wrap(text, 1024, "||", true, "\\s+"), "||");
+    }
+
+    @Nullable
+    @CheckReturnValue
+    protected static TextChannel defaultWritableChannel(Member member) {
+        return ((GuildImpl) member.getGuild()).getTextChannelsMap().valueCollection().stream()
+                .sorted(Comparator.naturalOrder())
+                .filter(c -> member.hasPermission(c, Permission.MESSAGE_READ, Permission.MESSAGE_WRITE))
+                .findFirst().orElse(null);
+    }
+
+    @Nullable
+    @CheckReturnValue
+    protected static TextChannel defaultReadableChannel(Member member) {
+        return ((GuildImpl) member.getGuild()).getTextChannelsMap().valueCollection().stream()
+                .sorted(Comparator.naturalOrder())
+                .filter(c -> member.hasPermission(c, Permission.MESSAGE_READ))
+                .findFirst().orElse(null);
     }
 }
