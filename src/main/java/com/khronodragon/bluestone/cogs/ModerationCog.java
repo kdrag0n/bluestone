@@ -383,29 +383,107 @@ public class ModerationCog extends Cog {
             ctx.send(Emotes.getFailure() + " Invalid mention or user ID!").queue();
             return;
         }
+
         String reason;
         Matcher _m = MENTION_PATTERN.matcher(ctx.rawArgs);
-        String userReason = _m.replaceFirst("");
-        userReason = _m.reset(userReason).usePattern(FIRST_ID_PATTERN)
+        String _userReason = _m.replaceFirst("");
+        final String userReason = _m.reset(_userReason).usePattern(FIRST_ID_PATTERN)
                 .replaceFirst("").trim();
-        if (userReason.length() < 1 || userReason.length() > 450)
+        final boolean validUreason = userReason.length() < 1 || userReason.length() > 450;
+
+        if (validUreason)
             reason = getTag(ctx.author) + " used the ban command (with sufficient permissions)";
         else
             reason = getTag(ctx.author) + ": " + userReason;
 
+        Member user;
         if (ctx.message.getMentionedUsers().size() > 0) {
-            Member user = ctx.guild.getMember(ctx.message.getMentionedUsers().get(0));
-            if (!ctx.guild.getSelfMember().canInteract(user)) {
-                ctx.send(Emotes.getFailure() + " I need to be higher on the role ladder to ban that user!").queue();
+            user = ctx.guild.getMember(ctx.message.getMentionedUsers().get(0));
+        } else {
+            user = ctx.guild.getMemberById(ctx.args.get(0));
+            if (user == null) {
+                ctx.send(Emotes.getFailure() + " I can't find that member!\n*hackbanning / banning by ID before an user ever joins is coming Soon™*").queue();
                 return;
             }
-
-            ctx.guild.getController().ban(user, 0, reason).reason(reason).queue();
-        } else {
-            ctx.guild.getController().ban(ctx.args.get(0), 0, reason).reason(reason).queue();
         }
 
-        ctx.send(Emotes.getSuccess() + " Banned.").queue();
+        if (!ctx.guild.getSelfMember().canInteract(user)) {
+            ctx.send(Emotes.getFailure() + " I need to be higher on the role ladder to ban that user!").queue();
+            return;
+        } else if (!ctx.guild.getSelfMember().hasPermission(Permission.BAN_MEMBERS)) {
+            ctx.send(Emotes.getFailure() + " I need permission to **ban members**!").queue();
+            return;
+        }
+
+        user.getUser().openPrivateChannel().queue(ch -> {
+            if (validUreason)
+                ch.sendMessage("You've been banned from **" + ctx.guild.getName() + "** for `" + userReason + "`.").queue();
+            else
+                ch.sendMessage("You've been banned from **" + ctx.guild.getName() + "**. No reason was specified.").queue();
+
+            ctx.guild.getController().kick(user, reason).reason(reason).queue();
+            ctx.send("🔨 Banned.").queue();
+        }, ignored -> {
+            ctx.guild.getController().kick(user, reason).reason(reason).queue();
+            ctx.send("🔨 Banned.").queue();
+        });
+    }
+
+    @Command(name = "kick", desc = "Kick a member of the server.", guildOnly = true,
+            usage = "[@user or user ID] [reason]")
+    public void cmdKick(Context ctx) {
+        if (ctx.rawArgs.length() < 1) {
+            ctx.send(Emotes.getFailure() + " I need someone to kick!").queue();
+            return;
+        } else if ((!MENTION_PATTERN.matcher(ctx.rawArgs).find() || ctx.message.getMentionedUsers().size() < 1) &&
+                !Strings.isID(ctx.args.get(0))) {
+            ctx.send(Emotes.getFailure() + " Invalid mention or user ID!").queue();
+            return;
+        }
+
+        String reason;
+        Matcher _m = MENTION_PATTERN.matcher(ctx.rawArgs);
+        String _userReason = _m.replaceFirst("");
+        final String userReason = _m.reset(_userReason).usePattern(FIRST_ID_PATTERN)
+                .replaceFirst("").trim();
+        final boolean validUreason = userReason.length() < 1 || userReason.length() > 450;
+
+        if (validUreason)
+            reason = getTag(ctx.author) + " used the kick command (with sufficient permissions)";
+        else
+            reason = getTag(ctx.author) + ": " + userReason;
+
+        Member user;
+        if (ctx.message.getMentionedUsers().size() > 0) {
+            user = ctx.guild.getMember(ctx.message.getMentionedUsers().get(0));
+        } else {
+            user = ctx.guild.getMemberById(ctx.args.get(0));
+            if (user == null) {
+                ctx.send(Emotes.getFailure() + " No such member!").queue();
+                return;
+            }
+        }
+
+        if (!ctx.guild.getSelfMember().canInteract(user)) {
+            ctx.send(Emotes.getFailure() + " I need to be higher on the role ladder to kick that user!").queue();
+            return;
+        } else if (!ctx.guild.getSelfMember().hasPermission(Permission.KICK_MEMBERS)) {
+            ctx.send(Emotes.getFailure() + " I need permission to **kick members**!").queue();
+            return;
+        }
+
+        user.getUser().openPrivateChannel().queue(ch -> {
+            if (validUreason)
+                ch.sendMessage("You've been kicked from **" + ctx.guild.getName() + "** for `" + userReason + "`.").queue();
+            else
+                ch.sendMessage("You've been kicked from **" + ctx.guild.getName() + "**. No reason was specified.").queue();
+
+            ctx.guild.getController().kick(user, reason).reason(reason).queue();
+            ctx.send(Emotes.getSuccess() + " Kicked.").queue();
+        }, ignored -> {
+            ctx.guild.getController().kick(user, reason).reason(reason).queue();
+            ctx.send(Emotes.getSuccess() + " Kicked.").queue();
+        });
     }
 
     @Command(name = "autorole", desc = "Manage autoroles in this server.", guildOnly = true, perms = {"manageRoles"},

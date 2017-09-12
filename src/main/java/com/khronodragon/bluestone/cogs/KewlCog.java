@@ -27,6 +27,8 @@ import net.dv8tion.jda.client.entities.Group;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.entities.impl.JDAImpl;
+import net.dv8tion.jda.core.entities.impl.UserImpl;
 import net.dv8tion.jda.core.events.user.UserAvatarUpdateEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.utils.MiscUtil;
@@ -77,6 +79,7 @@ public class KewlCog extends Cog {
             "What do you like to do?",
             "What are some neat things you've done?",
             "Tell me a little bit more about yourself."};
+    private static volatile boolean hasWarmedUp = false;
     private final LoadingCache<User, byte[]> profileCache = CacheBuilder.newBuilder()
             .concurrencyLevel(2)
             .initialCapacity(8)
@@ -221,6 +224,25 @@ public class KewlCog extends Cog {
             profileDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), UserProfile.class);
         } catch (SQLException e) {
             logger.warn("Failed to create profile DAO!", e);
+        }
+
+        if (!hasWarmedUp) {
+            hasWarmedUp = true;
+            logger.info("Warming up JIT for profiles...");
+
+            new Thread(() -> {
+                User user = bot.getJda().getSelfUser();
+
+                for (short i = 0; i < 8; i++) {
+                    profileCache.invalidate(user);
+
+                    try {
+                        profileCache.get(user);
+                    } catch (Exception ignored) {}
+                }
+
+                logger.info("Finished warming up JIT for profile rendering.");
+            }).start();
         }
     }
 
