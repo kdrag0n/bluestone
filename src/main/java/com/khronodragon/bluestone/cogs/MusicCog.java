@@ -474,7 +474,7 @@ public class MusicCog extends Cog {
     }
 
     @Command(name = "play_first_result", desc = "Toggle the setting for always playing the first search result.",
-            aliases = {"first_result"}, guildOnly = true, thread = true,
+            aliases = {"first_result", "always_play_first", "play_first", "playfirst", "apfr"}, guildOnly = true, thread = true,
             perms = {"manageServer", "voiceMuteOthers", "voiceMoveOthers", "voiceDeafOthers", "managePermissions"})
     public void cmdPlayFirstResult(Context ctx) throws SQLException {
         GuildMusicSettings settings = settingsDao.queryForId(ctx.guild.getIdLong());

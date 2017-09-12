@@ -89,7 +89,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
                     })
                     .setText("⌛ Pick a search result.")
                     .setCancel(() -> msg.delete().queue())
-                    .setUsers(ctx.author) // from MessageReceivedEvent#getAuthor
+                    .setUsers(ctx.author)
                     .setEventWaiter(ctx.bot.getEventWaiter())
                     .setTimeout(20, TimeUnit.SECONDS);
 
