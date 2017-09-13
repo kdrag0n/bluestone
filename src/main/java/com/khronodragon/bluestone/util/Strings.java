@@ -1,5 +1,8 @@
 package com.khronodragon.bluestone.util;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.linked.TIntLinkedList;
 import net.dv8tion.jda.core.entities.*;
@@ -7,8 +10,12 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.IntSummaryStatistics;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
@@ -27,6 +34,16 @@ public class Strings {
     private static final Pattern channelNamePattern = Pattern.compile("^[a-z0-9_-]{2,100}$", Pattern.CASE_INSENSITIVE);
     private static final Pattern ipDomainPattern = Pattern.compile("^(?:localhost|[a-zA-Z\\-.]+\\.[a-z]{2,15}|(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|[0-9a-f:]+)$");
     private static final Pattern mcNamePattern = Pattern.compile("^[a-zA-Z0-9_]{1,32}$");
+    private static final LoadingCache<String, MessageFormat> formatCache = CacheBuilder.newBuilder()
+            .maximumSize(120)
+            .concurrencyLevel(6)
+            .expireAfterAccess(1, TimeUnit.HOURS)
+            .build(new CacheLoader<String, MessageFormat>() {
+                @Override
+                public MessageFormat load(String key) throws Exception {
+                    return new MessageFormat(key);
+                }
+            });
 
     public static int[] spread(String str) {
         TIntList codePoints = new TIntLinkedList();
@@ -221,5 +238,9 @@ public class Strings {
 
     public static boolean isMinecraftName(CharSequence str) {
         return mcNamePattern.matcher(str).matches();
+    }
+
+    public static String format(String pattern, Object... args) {
+        return formatCache.getUnchecked(pattern).format(args, new StringBuffer(), null).toString();
     }
 }

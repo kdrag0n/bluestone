@@ -58,7 +58,7 @@ import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 import static com.khronodragon.bluestone.util.Strings.smartJoin;
 import static com.khronodragon.bluestone.util.Strings.statify;
 import static com.khronodragon.bluestone.util.Strings.str;
-import static java.text.MessageFormat.format;
+import static com.khronodragon.bluestone.util.Strings.format;
 
 import java.awt.*;
 import java.io.*;

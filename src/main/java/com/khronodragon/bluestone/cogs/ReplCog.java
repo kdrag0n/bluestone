@@ -18,7 +18,7 @@ import javax.script.*;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import static java.text.MessageFormat.format;
+import static com.khronodragon.bluestone.util.Strings.format;
 
 public class ReplCog extends Cog {
     private static final Logger logger = LogManager.getLogger(ReplCog.class);

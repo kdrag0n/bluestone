@@ -16,7 +16,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static java.text.MessageFormat.format;
+import static com.khronodragon.bluestone.util.Strings.format;
 
 public class TrackLoadHandler implements AudioLoadResultHandler {
     private static final String[] PREFIXES = {"", "ytsearch:", "scsearch:"};

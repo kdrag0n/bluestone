@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
-import static java.text.MessageFormat.format;
+import static com.khronodragon.bluestone.util.Strings.format;
 
 public class Command {
     public final String name;

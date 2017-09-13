@@ -56,7 +56,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
 import static com.khronodragon.bluestone.util.Strings.str;
-import static java.text.MessageFormat.format;
+import static com.khronodragon.bluestone.util.Strings.format;
 
 public class Bot extends ListenerAdapter implements ClassUtilities {
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");

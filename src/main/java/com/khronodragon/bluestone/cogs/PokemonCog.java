@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.khronodragon.bluestone.util.Strings.str;
-import static java.text.MessageFormat.format;
+import static com.khronodragon.bluestone.util.Strings.format;
 
 public class PokemonCog extends Cog {
     private static final Logger logger = LogManager.getLogger(PokemonCog.class);

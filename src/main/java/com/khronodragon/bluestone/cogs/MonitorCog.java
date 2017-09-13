@@ -27,7 +27,7 @@ import java.time.temporal.ChronoField;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import static java.text.MessageFormat.format;
+import static com.khronodragon.bluestone.util.Strings.format;
 
 public class MonitorCog extends Cog {
     private static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(MonitorCog.class);

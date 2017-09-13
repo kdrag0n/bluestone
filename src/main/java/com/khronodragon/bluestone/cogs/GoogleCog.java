@@ -24,7 +24,7 @@ import java.net.URLEncoder;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import static java.text.MessageFormat.format;
+import static com.khronodragon.bluestone.util.Strings.format;
 
 public class GoogleCog extends Cog {
     private static final Logger logger = LogManager.getLogger(GoogleCog.class);
