@@ -25,6 +25,8 @@ public class CoreCog extends Cog {
                     "If you ever have questions, *please* read the **FAQ** first: <https://khronodragon.com/goldmine/faq>\n" +
                     "It saves everyone a lot of time.\n" +
                     "\n" +
+                    "Welcome and leave messages are on by default, but will not send if Goldmine cannot send messages in the default channel, or the default channel was deleted. In that case, simply use the `welcome` or `leave` commands to set the channel they send in.\n" +
+                    "\n" +
                     "*If you like Goldmine, please help keep it alive by donating here: <https://patreon.com/kdragon>.\n" +
                     "Any amount is appreciated.*";
     private static final String[] phelpPerms = {"manageChannel", "managePermissions", "messageManage", "manageServer"};

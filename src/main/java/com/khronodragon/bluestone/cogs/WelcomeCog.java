@@ -171,17 +171,22 @@ public class WelcomeCog extends Cog {
     }
 
     private void controlCmdChannel(Context ctx) throws SQLException {
-        if (ctx.message.getMentionedChannels().size() < 1) {
-            ctx.send(Emotes.getFailure() + " I need a channel to use!").queue();
-            return;
-        }
-        TextChannel channel = ctx.message.getMentionedChannels().get(0);
-
         GuildWelcomeMessages query = messageDao.queryForId(ctx.guild.getIdLong());
-        query.setChannelId(channel.getIdLong());
-        messageDao.update(query);
+        if (ctx.message.getMentionedChannels().size() > 0) {
+            TextChannel channel = ctx.message.getMentionedChannels().get(0);
+            query.setChannelId(channel.getIdLong());
+            messageDao.update(query);
 
-        ctx.send(Emotes.getSuccess() + " Welcome and leave channel changed to " + channel.getAsMention() + '.').queue();
+            ctx.send(Emotes.getSuccess() + " Welcome and leave channel changed to " + channel.getAsMention() + '.').queue();
+        } else {
+            long chid = query.getChannelId();
+            if (chid == 0L) {
+                chid = ctx.guild.getIdLong();
+            }
+
+            ctx.send("**Current welcome and leave channel**: <@" + chid +
+                    ">\n*To change it, use this command with a #channel argument.*").queue();
+        }
     }
 
     @Command(name = "leave", desc = "Manage member leave messages.", guildOnly = true,
@@ -328,7 +333,7 @@ public class WelcomeCog extends Cog {
 
             TextChannel channel;
             if (queryResult.getChannelId() == 0L) {
-                channel = defaultWritableChannel(event.getGuild().getSelfMember());
+                channel = event.getGuild().getTextChannelById(event.getGuild().getIdLong());
                 if (channel == null)
                     return;
             } else {

@@ -22,6 +22,7 @@ import com.overzealous.remark.Options;
 import com.overzealous.remark.Remark;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.exceptions.PermissionException;
 import okhttp3.Request;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -51,8 +52,8 @@ public class GameDealCog extends Cog {
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36";
     private static final String HUMBLE_HOME = "https://www.humblebundle.com/";
     private static final String STEAM_FEATURED = "http://store.steampowered.com/api/featured/";
-    private static final Pattern IMAGE_PATTERN = Pattern.compile("!\\[Image]\\([a-zA-Z/0-9?=]+\\)");
-    private static final Pattern MULTI_NEWLINE_PATTERN = Pattern.compile("\n{3,}");
+    private static final Pattern IMAGE_PATTERN = Pattern.compile("!\\[Image]\\([a-zA-Z/0-9?=:.]+\\)");
+    private static final Pattern MULTI_NEWLINE_PATTERN = Pattern.compile("\\R{3,}");
     private static final Pattern HEADER_PATTERN = Pattern.compile("^(#+)\\s*([^#]+)\\s*\\1?", Pattern.MULTILINE);
     private static final Color ECOLOR_FROM = new Color(218, 79, 66);
     private static final Color ECOLOR_TO = new Color(241, 167, 52);
@@ -353,7 +354,9 @@ public class GameDealCog extends Cog {
                     }
                 }
 
-                channel.sendMessage(deal.rendered).queue();
+                try {
+                    channel.sendMessage(deal.rendered).queue();
+                } catch (PermissionException ignored) {}
             } catch (Exception e) {
                 logger.error("Failed broadcasting deal to destination {}", e, dest.getChannelId());
             }
@@ -362,10 +365,14 @@ public class GameDealCog extends Cog {
 
     private static String filterDescription(String desc) { // TODO: fix this, not doing anything
         Matcher matcher = IMAGE_PATTERN.matcher(desc);
-        matcher.replaceAll("");
-        matcher.usePattern(HEADER_PATTERN).replaceAll("**__$2__**");
-        desc = matcher.usePattern(MULTI_NEWLINE_PATTERN).replaceAll("\n\n");
-        return desc;
+        desc = matcher.replaceAll("");
+        desc = matcher.usePattern(HEADER_PATTERN).reset(desc).replaceAll("**__$2__**");
+        desc = matcher.usePattern(MULTI_NEWLINE_PATTERN).reset(desc).replaceAll("\n\n");
+
+        if (desc.length() <= 2048)
+            return desc;
+        else
+            return desc.substring(0, 2045) + "...";
     }
 
     @Command(name = "gdtest", desc = "Test GameDeal providers by sending all deals found.", thread = true,
@@ -553,7 +560,7 @@ public class GameDealCog extends Cog {
         }
 
         public int hashCode() {
-            return (source.name + free + title + description + link + imageURL + price + discountPercent)
+            return (source.name + free + title + link + price + discountPercent)
                     .hashCode();
         }
     }

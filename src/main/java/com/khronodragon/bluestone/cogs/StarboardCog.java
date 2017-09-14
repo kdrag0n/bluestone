@@ -30,6 +30,7 @@ import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.channel.text.TextChannelDeleteEvent;
 import net.dv8tion.jda.core.events.message.MessageBulkDeleteEvent;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageDeleteEvent;
+import net.dv8tion.jda.core.events.message.guild.react.GenericGuildMessageReactionEvent;
 import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionAddEvent;
 import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionRemoveAllEvent;
 import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionRemoveEvent;
@@ -166,6 +167,18 @@ public class StarboardCog extends Cog {
                 channelMention + " | Message ID: " + messageId;
     }
 
+    private int getStarCount(GenericGuildMessageReactionEvent event) {
+        List<User> users = event.getReaction().getUsers().complete();
+        int c = 0;
+
+        for (int i = 0; i < users.size(); i++) {
+            if (users.get(i).getIdLong() != event.getUser().getIdLong())
+                c++;
+        }
+
+        return c;
+    }
+
     @EventHandler
     public void onChannelDelete(TextChannelDeleteEvent event) throws SQLException {
         if (dao.idExists(event.getGuild().getIdLong())) {
@@ -188,7 +201,7 @@ public class StarboardCog extends Cog {
         if (starboard.isLocked()) return;
         if (event.getChannel().getIdLong() == starboard.getChannelId()) return;
 
-        int stars = event.getReaction().getUsers().complete().size();
+        int stars = getStarCount(event);
         if (stars < starboard.getStarThreshold()) return;
 
         String renderedText = renderText(stars, event.getChannel().getAsMention(), event.getMessageId());
@@ -238,9 +251,9 @@ public class StarboardCog extends Cog {
                 onChannelDelete(new TextChannelDeleteEvent(event.getJDA(), event.getResponseNumber(), channel));
 
             long botMessageId = channel.sendMessage(new MessageBuilder()
-                            .append(renderedText)
-                            .setEmbed(emb.build())
-                            .build()).complete().getIdLong();
+                    .append(renderedText)
+                    .setEmbed(emb.build())
+                    .build()).complete().getIdLong();
 
             entry = new StarboardEntry(event.getMessageIdLong(), event.getGuild().getIdLong(), botMessageId,
                     starboard.getChannelId(), origMessage.getAuthor().getIdLong(),
@@ -272,7 +285,7 @@ public class StarboardCog extends Cog {
         if (!event.getReactionEmote().getName().equals("⭐"))
             return;
 
-        int stars = event.getReaction().getUsers().complete().size();
+        int stars = getStarCount(event);
 
         Starboard starboard = dao.queryForId(event.getGuild().getIdLong());
         if (starboard == null) return;
