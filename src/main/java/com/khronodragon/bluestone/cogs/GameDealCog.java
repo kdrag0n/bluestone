@@ -363,7 +363,7 @@ public class GameDealCog extends Cog {
         }
     }
 
-    private static String filterDescription(String desc) { // TODO: fix this, not doing anything
+    private static String filterDescription(String desc) {
         Matcher matcher = IMAGE_PATTERN.matcher(desc);
         desc = matcher.replaceAll("");
         desc = matcher.usePattern(HEADER_PATTERN).reset(desc).replaceAll("**__$2__**");
