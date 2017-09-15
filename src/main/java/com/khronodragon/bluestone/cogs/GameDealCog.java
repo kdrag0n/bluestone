@@ -83,14 +83,14 @@ public class GameDealCog extends Cog {
     private static AtomicBoolean hasScheduled = new AtomicBoolean(false);
     private static final String NO_COMMAND = "🤔 **I need an action!**\n" +
             "The following are valid:\n" +
-            "    \u2022 `set [#channel]` - set the GameDeal channel for this server\n" +
+            "    \u2022 `subscribe [#channel]` - set the GameDeal channel for this server\n" +
             "    \u2022 `min [1-100]` - set the minimum discount percent (default: 50%)\n" +
             "    \u2022 `steam` - toggle Steam deals\n" +
             "    \u2022 `humble` - toggle Humble Bundle deals\n" +
             "    \u2022 `disable` - disable GameDeal for this server or user (DM)\n" +
             "\n" +
             "You can also sign up for GameDeal in DMs, so the bot will DM you deals!\n" +
-            "Just do `!gamedeal set` without arguments, in a DM.\n" +
+            "Just do `!gamedeal subscribe` without arguments, in a DM.\n" +
             "You will only receive new deals, not deals started before your subscription.";
     private Dao<GameDealDestination, Long> dao;
     private Dao<BroadcastedDeal, Integer> dealDao;
@@ -397,8 +397,8 @@ public class GameDealCog extends Cog {
         }
         String invoked = ctx.args.get(0);
 
-        if (invoked.equals("set") || invoked.equals("subscribe"))
-            cmdSet(ctx);
+        if (invoked.equals("subscribe") || invoked.equals("set"))
+            cmdCSubSet(ctx);
         else if (invoked.equals("min"))
             cmdMin(ctx);
         else if (invoked.equals("steam"))
@@ -436,7 +436,7 @@ public class GameDealCog extends Cog {
         }
     }
 
-    private void cmdSet(Context ctx) throws SQLException {
+    private void cmdCSubSet(Context ctx) throws SQLException {
         GameDealDestination settings;
 
         if (ctx.channel instanceof PrivateChannel) {
