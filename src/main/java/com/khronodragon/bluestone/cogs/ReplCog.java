@@ -8,7 +8,9 @@ import com.khronodragon.bluestone.annotations.Command;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
+import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.requests.RestAction;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -102,7 +104,7 @@ public class ReplCog extends Cog {
 
         if (language.equalsIgnoreCase("list")) {
             List<ScriptEngineFactory> factories = man.getEngineFactories();
-            List<String> langs = new ArrayList<>();
+            List<String> langs = new ArrayList<>(factories.size());
 
             for (ScriptEngineFactory factory: factories) {
                 langs.add(format("{0} {1} ({2} {3})", factory.getEngineName(), factory.getEngineVersion(),
@@ -199,6 +201,12 @@ public class ReplCog extends Cog {
 
             if (result instanceof RestAction)
                 result = ((RestAction) result).complete();
+            else if (result instanceof Message)
+                ctx.channel.sendMessage((Message) result).queue();
+            else if (result instanceof EmbedBuilder)
+                ctx.channel.sendMessage(((EmbedBuilder) result).build()).queue();
+            else if (result instanceof MessageEmbed)
+                ctx.channel.sendMessage((MessageEmbed) result).queue();
             engine.put("last", result);
 
             if (result != null) {

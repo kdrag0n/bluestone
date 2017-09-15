@@ -41,6 +41,7 @@ import net.dv8tion.jda.core.entities.MessageReaction.ReactionEmote;
 import net.dv8tion.jda.core.entities.impl.GuildImpl;
 import net.dv8tion.jda.core.entities.impl.UserImpl;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
+import net.dv8tion.jda.core.utils.MiscUtil;
 import okhttp3.*;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.lang3.ArrayUtils;
@@ -98,7 +99,7 @@ public class UtilityCog extends Cog {
 
     private static final int[] CHAR_NO_PREVIEW = {65279};
     private static final byte[] DIRECTIONALITY_NO_PREVIEW = {Character.DIRECTIONALITY_WHITESPACE, Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE,
-                Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE};
+            Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE};
     private static final Pattern MC_COLOR_PATTERN = Pattern.compile("\\u00a7[4c6e2ab319d5f78lnokmr]");
     private static final JSONArray EMPTY_JSON_ARRAY = new JSONArray();
     static final OperatingSystemMXBean systemBean = (OperatingSystemMXBean)
@@ -527,10 +528,10 @@ public class UtilityCog extends Cog {
         String preQuestion = qBuilder.toString().trim();
 
         Set<String> unicodeEmotes = RegexUtils.matchStream(UNICODE_EMOTE_PATTERN, preQuestion)
-                                        .map(MatchResult::group).collect(Collectors.toSet());
+                .map(MatchResult::group).collect(Collectors.toSet());
         Set<Emote> customEmotes = RegexUtils.matchStream(CUSTOM_EMOTE_PATTERN, preQuestion)
-                                           .map(m -> ctx.jda.getEmoteById(m.group(1)))
-                                           .collect(Collectors.toSet());
+                .map(m -> ctx.jda.getEmoteById(m.group(1)))
+                .collect(Collectors.toSet());
 
         if (customEmotes.contains(null)) {
             customEmotes.remove(null);
@@ -546,12 +547,12 @@ public class UtilityCog extends Cog {
         final String question = preQuestion.trim();
 
         EmbedBuilder embed = new EmbedBuilder()
-                                .setAuthor(ctx.member.getEffectiveName() + " is polling...",
-                                        null, ctx.author.getEffectiveAvatarUrl())
-                                .setColor(ctx.member.getColor())
-                                .setDescription(question)
-                                .appendDescription("\n\n")
-                                .appendDescription("**⌛ Reactions are being added...**");
+                .setAuthor(ctx.member.getEffectiveName() + " is polling...",
+                        null, ctx.author.getEffectiveAvatarUrl())
+                .setColor(ctx.member.getColor())
+                .setDescription(question)
+                .appendDescription("\n\n")
+                .appendDescription("**⌛ Reactions are being added...**");
 
         ctx.send(embed.build()).queue(msg -> {
             for (String emote: unicodeEmotes) {
@@ -723,9 +724,9 @@ public class UtilityCog extends Cog {
 
                 if (resp.optBoolean("success", false)) {
                     ctx.send(new EmbedBuilder()
-                        .setColor(randomColor())
-                        .setImage(resp.getJSONObject("data").getString("url"))
-                        .build()).queue();
+                            .setColor(randomColor())
+                            .setImage(resp.getJSONObject("data").getString("url"))
+                            .build()).queue();
                 } else {
                     ctx.send(Emotes.getFailure() + " Error: `" + resp.getString("error_message") + '`').queue();
                 }
@@ -955,10 +956,10 @@ public class UtilityCog extends Cog {
         if (val(dataPlayers.optJSONArray("sample")).or(EMPTY_JSON_ARRAY).length() > 0) {
             String content = MC_COLOR_PATTERN.matcher(
                     smartJoin(StreamUtils.asStream(dataPlayers.getJSONArray("sample").iterator())
-                    .map(elem ->
-                            ((JSONObject) elem).getString("name")
-                    )
-                    .collect(Collectors.toList()))).replaceAll("");
+                            .map(elem ->
+                                    ((JSONObject) elem).getString("name")
+                            )
+                            .collect(Collectors.toList()))).replaceAll("");
 
             if (content.length() <= MessageEmbed.VALUE_MAX_LENGTH) {
                 emb.addField("Players Online", content, true);
@@ -1035,19 +1036,19 @@ public class UtilityCog extends Cog {
         if (ctx.guild != null) {
             GuildImpl guild = (GuildImpl) ctx.guild;
             emb.addField("Guild", new StringBuilder("**")
-                                    .append(guild.getName())
-                                    .append("**\nID: `")
-                                    .append(guild.getId())
-                                    .append("`\nMembers: ")
-                                    .append(guild.getMembersMap().size())
-                                    .toString(), true);
+                    .append(guild.getName())
+                    .append("**\nID: `")
+                    .append(guild.getId())
+                    .append("`\nMembers: ")
+                    .append(guild.getMembersMap().size())
+                    .toString(), true);
         }
 
         PrivateChannel ownerChannel = bot.owner.openPrivateChannel().complete(); // one-time and fast enough
         ownerChannel.sendMessage(new MessageBuilder()
-                                    .append("📧 New message.")
-                                    .setEmbed(emb.build())
-                                    .build()).queue();
+                .append("📧 New message.")
+                .setEmbed(emb.build())
+                .build()).queue();
 
         ctx.send(Emotes.getSuccess() + " Message sent.").queue();
     }
@@ -1508,7 +1509,7 @@ public class UtilityCog extends Cog {
 
                     if (data.getLong("dt") < System.currentTimeMillis() - 157784630000L)
                         emb.setFooter("Data fetched at", null)
-                            .setTimestamp(Instant.now());
+                                .setTimestamp(Instant.now());
                     else
                         emb.setFooter("Data updated at", null)
                                 .setTimestamp(Instant.ofEpochMilli(data.getLong("dt")));
@@ -1520,5 +1521,21 @@ public class UtilityCog extends Cog {
                 }
             }
         });
+    }
+
+    @Command(name = "snowtime", desc = "Get the time of a Snowflake ID.", aliases = {"snowflake"},
+            usage = "[snowflake]")
+    public void cmdSnowtime(Context ctx) {
+        long id;
+        if (ctx.args.size() < 1 || (id = MiscUtil.parseSnowflake(ctx.args.get(0))) < 0) {
+            ctx.send(Emotes.getFailure() + " Invalud Snowflake ID provided!").queue();
+            return;
+        }
+
+        ctx.send(new EmbedBuilder()
+                .setColor(randomColor())
+                .setAuthor("Snowflake Time:", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
+                .setTimestamp(MiscUtil.getCreationTime(id))
+                .build()).queue();
     }
 }

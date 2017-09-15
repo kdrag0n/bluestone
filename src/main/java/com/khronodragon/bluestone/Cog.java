@@ -4,6 +4,7 @@ import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.entities.impl.GuildImpl;
+import net.dv8tion.jda.core.utils.MiscUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
@@ -150,5 +151,15 @@ public abstract class Cog {
                 .sorted(Comparator.naturalOrder())
                 .filter(c -> member.hasPermission(c, Permission.MESSAGE_READ))
                 .findFirst().orElse(null);
+    }
+
+    @Nullable
+    @CheckReturnValue
+    protected static long parseSnowflake(String input) {
+        try {
+            return MiscUtil.parseSnowflake(input);
+        } catch (NumberFormatException ignored) {
+            return -1L;
+        }
     }
 }
