@@ -542,8 +542,8 @@ public class UtilityCog extends Cog {
 
         final Matcher _m = UNICODE_EMOTE_PATTERN.matcher(preQuestion);
         preQuestion = _m.replaceAll("");
-        preQuestion = _m.usePattern(DiscordEmoteProvider.CUSTOM_EMOTE_PATTERN).replaceAll("");
-        preQuestion = _m.usePattern(CONTIGUOUS_SPACE_PATTERN).replaceAll(" ");
+        preQuestion = _m.usePattern(DiscordEmoteProvider.CUSTOM_EMOTE_PATTERN).reset(preQuestion).replaceAll("");
+        preQuestion = _m.usePattern(CONTIGUOUS_SPACE_PATTERN).reset(preQuestion).replaceAll(" ");
         final String question = preQuestion.trim();
 
         EmbedBuilder embed = new EmbedBuilder()
@@ -601,8 +601,13 @@ public class UtilityCog extends Cog {
                 if (message == null)
                     return;
 
+                long ourId = bot.getJda().getSelfUser().getIdLong();
                 Map<ReactionEmote, Integer> resultTable = message.getReactions().stream()
-                        .map(r -> ImmutablePair.of(r, r.getUsers().complete().size()))
+                        .map(r -> ImmutablePair.of(r, (int) r.getUsers()
+                                .complete()
+                                .stream()
+                                .filter(u -> u.getIdLong() != ourId)
+                                .count()))
                         .sorted(Collections.reverseOrder(Comparator.comparing(ImmutablePair<MessageReaction, Integer>::getRight)))
                         .collect(Collectors.toMap(
                                 e -> e.getLeft().getEmote(),
