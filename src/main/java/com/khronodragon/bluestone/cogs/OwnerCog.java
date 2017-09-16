@@ -92,12 +92,16 @@ public class OwnerCog extends Cog {
                     .append("] | Guilds: ")
                     .append(shard.getJda().getGuilds().size())
                     .append(" | Users: ")
-                    .append(shard.getJda().getUsers().size())
-                    .append(" | MStreams: ")
-                    .append(((MusicCog) shard.cogs.get("Music")).getActiveStreamCount())
-                    .append(" | MTracks: ")
-                    .append(((MusicCog) shard.cogs.get("Music")).getTracksLoaded())
-                    .append(" | WSPing: ")
+                    .append(shard.getJda().getUsers().size());
+
+            MusicCog musicCog = (MusicCog) shard.cogs.get("Music");
+            if (musicCog != null)
+                result.append(" | MStreams: ")
+                        .append(musicCog.getActiveStreamCount())
+                        .append(" | MTracks: ")
+                        .append(musicCog.getTracksLoaded());
+            
+            result.append(" | WSPing: ")
                     .append(shard.getJda().getPing())
                     .append('\n');
         }
