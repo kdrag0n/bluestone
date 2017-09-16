@@ -415,16 +415,22 @@ public class ModerationCog extends Cog {
             return;
         }
 
+        if (user.getUser().isBot()) {
+            ctx.guild.getController().ban(user, 0, reason).reason(reason).queue();
+            ctx.send("🔨 Banned.").queue();
+            return;
+        }
+
         user.getUser().openPrivateChannel().queue(ch -> {
             if (validUreason)
                 ch.sendMessage("You've been banned from **" + ctx.guild.getName() + "** for `" + userReason + "`.").queue();
             else
                 ch.sendMessage("You've been banned from **" + ctx.guild.getName() + "**. No reason was specified.").queue();
 
-            ctx.guild.getController().kick(user, reason).reason(reason).queue();
+            ctx.guild.getController().ban(user, 0, reason).reason(reason).queue();
             ctx.send("🔨 Banned.").queue();
         }, ignored -> {
-            ctx.guild.getController().kick(user, reason).reason(reason).queue();
+            ctx.guild.getController().ban(user, 0, reason).reason(reason).queue();
             ctx.send("🔨 Banned.").queue();
         });
     }

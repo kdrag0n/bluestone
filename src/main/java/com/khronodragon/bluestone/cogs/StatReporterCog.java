@@ -182,9 +182,7 @@ public class StatReporterCog extends Cog {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    logger.info("[Discord Bots] Report sent.");
-                } else {
+                if (!response.isSuccessful()) {
                     logger.warn("[Discord Bots] Bad response: {} {}", response.code(), response.message());
                 }
 
@@ -196,9 +194,9 @@ public class StatReporterCog extends Cog {
     private void reportCarbonitex(String key) {
         Bot.http.newCall(new Request.Builder()
                 .post(new FormBody.Builder()
-                            .add("key", key)
-                            .add("servercount", str(bot.getShardUtil().getGuildCount()))
-                            .build())
+                        .add("key", key)
+                        .add("servercount", str(bot.getShardUtil().getGuildCount()))
+                        .build())
                 .url(Endpoints.CARBONITEX.getUrl())
                 .build()).enqueue(new okhttp3.Callback() {
             @Override
@@ -211,9 +209,7 @@ public class StatReporterCog extends Cog {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    logger.info("[Carbonitex] Report sent.");
-                } else {
+                if (!response.isSuccessful()) {
                     logger.warn("[Carbonitex] Bad response: {} {}", response.code(), response.message());
                 }
 
@@ -249,9 +245,7 @@ public class StatReporterCog extends Cog {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    logger.info("[Discord Bot List] Report sent.");
-                } else {
+                if (!response.isSuccessful())  {
                     logger.warn("[Discord Bot List] Bad response: {} {}", response.code(), response.message());
                 }
 

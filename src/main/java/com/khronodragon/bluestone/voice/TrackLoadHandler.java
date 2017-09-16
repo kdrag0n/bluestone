@@ -12,6 +12,7 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
+import net.dv8tion.jda.core.entities.TextChannel;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -112,7 +113,8 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
         if (playlist.isSearchResult()) {
             if (tracks.size() < 1)
                 noMatches();
-            else if (settings != null && settings.alwaysPlayFirstResult())
+            else if ((settings != null && settings.alwaysPlayFirstResult()) ||
+                    (ctx.channel instanceof TextChannel) && !((TextChannel) ctx.channel).canTalk())
                 trackLoaded(tracks.get(0));
             else
                 searchResults(tracks);
