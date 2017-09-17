@@ -597,7 +597,13 @@ public class UtilityCog extends Cog {
                 if (channel == null)
                     return;
 
-                Message message = channel.getMessageById(poll.getMessageId()).complete();
+                Message message;
+                try {
+                    message = channel.getMessageById(poll.getMessageId()).complete();
+                } catch (Exception ignored) {
+                    return;
+                }
+
                 if (message == null)
                     return;
 

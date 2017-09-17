@@ -65,14 +65,14 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     private static final Pattern GENERAL_MENTION_PATTERN = Pattern.compile("^<@[!&]?[0-9]{17,20}>\\s*");
     public Logger logger = LogManager.getLogger(Bot.class);
     private final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(4, new ThreadFactoryBuilder()
-                                                            .setDaemon(true)
-                                                            .setNameFormat("Bot BG-Task Thread %d")
-                                                            .build());
+            .setDaemon(true)
+            .setNameFormat("Bot BG-Task Thread %d")
+            .build());
     private final ThreadPoolExecutor cogEventExecutor = new ThreadPoolExecutor(3, 32, 10, TimeUnit.SECONDS,
             new ArrayBlockingQueue<>(64), new ThreadFactoryBuilder()
-                                                .setDaemon(true)
-                                                .setNameFormat("Bot Cog-Event Pool Thread %d")
-                                                .build(), new RejectedExecHandlerImpl("Cog-Event"));
+            .setDaemon(true)
+            .setNameFormat("Bot Cog-Event Pool Thread %d")
+            .build(), new RejectedExecHandlerImpl("Cog-Event"));
     public final ThreadPoolExecutor threadExecutor = new ThreadPoolExecutor(3, 85, 10, TimeUnit.SECONDS,
             new ArrayBlockingQueue<>(72), new ThreadFactoryBuilder()
             .setDaemon(true)
@@ -461,48 +461,50 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 Command command = commands.get(cmdName);
 
                 try {
-                    command.invoke(this, event, args, prefix, cmdName);
-                } catch (IllegalAccessException e) {
-                    logger.error("Severe command ({}) invocation error:", cmdName, e);
-                    channel.sendMessage(Emotes.getFailure() + " A severe internal error occurred.").queue();
-                } catch (InvocationTargetException e) {
-                    Throwable cause = e.getCause();
+                    try {
+                        command.invoke(this, event, args, prefix, cmdName);
+                    } catch (IllegalAccessException e) {
+                        logger.error("Severe command ({}) invocation error:", cmdName, e);
+                        channel.sendMessage(Emotes.getFailure() + " A severe internal error occurred.").queue();
+                    } catch (InvocationTargetException e) {
+                        Throwable cause = e.getCause();
 
-                    if (cause == null) {
-                        logger.error("Unknown command ({}) invocation error:", cmdName, e);
-                        channel.sendMessage(Emotes.getFailure() + " An unknown internal error occurred.").queue();
-                    } else if (cause instanceof PassException) {
-                        // assume error has already been sent
-                    } else if (cause instanceof PermissionError) {
+                        if (cause == null) {
+                            logger.error("Unknown command ({}) invocation error:", cmdName, e);
+                            channel.sendMessage(Emotes.getFailure() + " An unknown internal error occurred.").queue();
+                        } else if (cause instanceof PassException) {
+                            // assume error has already been sent
+                        } else if (cause instanceof PermissionError) {
+                            channel.sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.",
+                                    author.getAsMention(), prefix, cmdName,
+                                    Strings.smartJoin(((PermissionError) cause).getFriendlyPerms(), "or"))).queue();
+                        } else if (cause instanceof PermissionException) {
+                            try {
+                                channel.sendMessage(Emotes.getFailure() + " I need the **" +
+                                        ((PermissionException) cause).getPermission().getName() + "** permission!").queue();
+                            } catch (PermissionException ignored) {} // can't talk there...
+                        } else {
+                            logger.error("Command ({}) invocation error:", cmdName, cause);
+                            channel.sendMessage(format(Emotes.getFailure() + " Error!```java\n{2}```This error will be reported.",
+                                    prefix, cmdName, vagueTrace(cause))).queue();
+
+                            if (command.reportErrors)
+                                reportErrorToOwner(cause, message, command);
+                        }
+                    } catch (PermissionError e) {
                         channel.sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.",
                                 author.getAsMention(), prefix, cmdName,
-                                Strings.smartJoin(((PermissionError) cause).getFriendlyPerms(), "or"))).queue();
-                    } else if (cause instanceof PermissionException) {
-                        try {
-                            channel.sendMessage(Emotes.getFailure() + " I need the **" +
-                                    ((PermissionException) cause).getPermission().getName() + "** permission!").queue();
-                        } catch (PermissionException ignored) {} // can't talk there...
-                    } else {
-                        logger.error("Command ({}) invocation error:", cmdName, cause);
-                        channel.sendMessage(format(Emotes.getFailure() + " Error!```java\n{2}```This error will be reported.",
-                                prefix, cmdName, vagueTrace(cause))).queue();
-
-                        if (command.reportErrors)
-                            reportErrorToOwner(cause, message, command);
+                                Strings.smartJoin(e.getFriendlyPerms(), "or"))).queue();
+                    } catch (GuildOnlyError e) {
+                        channel.sendMessage("Sorry, that command only works in a server.").queue();
+                    } catch (CheckFailure e) {
+                        channel.sendMessage(format("{0} A check for `{1}{2}` failed. Do you not have permissions?",
+                                author.getAsMention(), prefix, cmdName)).queue();
+                    } catch (Exception e) {
+                        logger.error("Unknown command ({}) error:", cmdName, e);
+                        channel.sendMessage(Emotes.getFailure() + " A severe internal error occurred.").queue();
                     }
-                } catch (PermissionError e) {
-                    channel.sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.",
-                            author.getAsMention(), prefix, cmdName,
-                            Strings.smartJoin(e.getFriendlyPerms(), "or"))).queue();
-                } catch (GuildOnlyError e) {
-                    channel.sendMessage("Sorry, that command only works in a server.").queue();
-                } catch (CheckFailure e) {
-                    channel.sendMessage(format("{0} A check for `{1}{2}` failed. Do you not have permissions?",
-                            author.getAsMention(), prefix, cmdName)).queue();
-                } catch (Exception e) {
-                    logger.error("Unknown command ({}) error:", cmdName, e);
-                    channel.sendMessage(Emotes.getFailure() + " A severe internal error occurred.").queue();
-                }
+                } catch (PermissionException ignored) {}
 
                 try {
                     shardUtil.getCommandCalls().get(command.name).incrementAndGet();

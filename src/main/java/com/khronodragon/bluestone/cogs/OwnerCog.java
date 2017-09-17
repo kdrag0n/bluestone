@@ -100,7 +100,7 @@ public class OwnerCog extends Cog {
                         .append(musicCog.getActiveStreamCount())
                         .append(" | MTracks: ")
                         .append(musicCog.getTracksLoaded());
-            
+
             result.append(" | WSPing: ")
                     .append(shard.getJda().getPing())
                     .append('\n');

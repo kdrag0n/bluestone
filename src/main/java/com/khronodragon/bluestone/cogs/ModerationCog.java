@@ -272,7 +272,9 @@ public class ModerationCog extends Cog {
                 }
             });
 
-            ctx.message.addReaction("\uD83D\uDC4D").queue();
+            try {
+                ctx.message.addReaction("\uD83D\uDC4D").queue(null, f -> {});
+            } catch (Exception ignored) {}
         });
     }
 
@@ -478,6 +480,12 @@ public class ModerationCog extends Cog {
             return;
         }
 
+        if (user.getUser().isBot()) {
+            ctx.guild.getController().kick(user, reason).reason(reason).queue();
+            ctx.send("👢 Kicked.").queue();
+            return;
+        }
+
         user.getUser().openPrivateChannel().queue(ch -> {
             if (validUreason)
                 ch.sendMessage("You've been kicked from **" + ctx.guild.getName() + "** for `" + userReason + "`.").queue();
@@ -485,10 +493,10 @@ public class ModerationCog extends Cog {
                 ch.sendMessage("You've been kicked from **" + ctx.guild.getName() + "**. No reason was specified.").queue();
 
             ctx.guild.getController().kick(user, reason).reason(reason).queue();
-            ctx.send(Emotes.getSuccess() + " Kicked.").queue();
+            ctx.send("👢 Kicked.").queue();
         }, ignored -> {
             ctx.guild.getController().kick(user, reason).reason(reason).queue();
-            ctx.send(Emotes.getSuccess() + " Kicked.").queue();
+            ctx.send("👢 Kicked.").queue();
         });
     }
 
