@@ -1055,7 +1055,7 @@ public class UtilityCog extends Cog {
                     .toString(), true);
         }
 
-        PrivateChannel ownerChannel = bot.owner.openPrivateChannel().complete(); // one-time and fast enough
+        PrivateChannel ownerChannel = bot.getOwner().openPrivateChannel().complete(); // one-time and fast enough
         ownerChannel.sendMessage(new MessageBuilder()
                 .append("📧 New message.")
                 .setEmbed(emb.build())

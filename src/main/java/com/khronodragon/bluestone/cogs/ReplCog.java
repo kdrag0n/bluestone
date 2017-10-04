@@ -91,7 +91,8 @@ public class ReplCog extends Cog {
         return StringUtils.stripEnd(StringUtils.stripStart(stage1, "`"), "`");
     }
 
-    @Command(name = "repl", desc = "A multilingual REPL, in Discord!", perms = {"owner"}, usage = "[language] {flags}", thread=true)
+    @Command(name = "repl", desc = "A multilingual REPL, in Discord!\n\nFlags come before language in arguments.",
+            perms = {"owner"}, usage = "[language] {flags}", thread=true)
     public void cmdRepl(Context ctx) throws ScriptException {
         if (ctx.args.size() < 1) {
             ctx.send("You need to specify a language, like `scala` or `js`!").queue();
@@ -99,7 +100,19 @@ public class ReplCog extends Cog {
         }
 
         String prefix = "`";
+        boolean untrusted = false;
         String language = ctx.args.get(0);
+        if (language.equalsIgnoreCase("untrusted")) {
+            untrusted = true;
+
+            if (ctx.args.size() < 2) {
+                ctx.send("You need to specify a language, like `scala` or `js`!").queue();
+                return;
+            }
+
+            language = ctx.args.get(1);
+        }
+
         ScriptEngineManager man = new ScriptEngineManager();
 
         if (language.equalsIgnoreCase("list")) {
@@ -166,7 +179,8 @@ public class ReplCog extends Cog {
         if (language.equalsIgnoreCase("python"))
             engine.put("imports", PYTHON_IMPORTS);
 
-        ctx.send("REPL started. Prefix is " + prefix).queue();
+        ctx.send("REPL started. Untrusted mode (`untrusted` flag) is " + (untrusted ? "on" : "off") +
+                ". Prefix is " + prefix).queue();
         while (true) {
             Message response = bot.waitForMessage(0, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
                     msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&

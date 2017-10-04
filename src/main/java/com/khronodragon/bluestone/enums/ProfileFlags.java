@@ -20,7 +20,7 @@ public class ProfileFlags {
     public static int calculate(Context ctx, User user) {
         int flags = 0;
 
-        if (user.getIdLong() == ctx.bot.owner.getIdLong())
+        if (user.getIdLong() == ctx.bot.getOwner().getIdLong())
             flags |= BOT_OWNER;
 
         try {
@@ -44,7 +44,7 @@ public class ProfileFlags {
     public static TIntList getFlags(Bot bot, User user) {
         TIntList flags = new TIntArrayList(3);
 
-        if (user.getIdLong() == bot.owner.getIdLong())
+        if (user.getIdLong() == bot.getOwner().getIdLong())
             flags.add(BOT_OWNER);
 
         try {

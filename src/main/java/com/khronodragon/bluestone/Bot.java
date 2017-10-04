@@ -93,8 +93,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             .writeTimeout(6, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
             .build();
-    private ApplicationInfo appInfo;
-    public User owner;
+    public long ownerId;
 
     public Dao<BotAdmin, Long> getAdminDao() {
         return shardUtil.getAdminDao();
@@ -263,10 +262,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         long uid = jda.getSelfUser().getIdLong();
 
         if (jda.getSelfUser().isBot()) {
-            this.appInfo = jda.asBot().getApplicationInfo().complete();
-            this.owner = appInfo.getOwner();
+            ApplicationInfo appInfo = jda.asBot().getApplicationInfo().complete();
+            this.ownerId = appInfo.getOwner().getIdLong();
         } else {
-            this.owner = jda.getSelfUser();
+            this.ownerId = jda.getSelfUser().getIdLong();
         }
         logger.info("Ready - ID {}", uid);
 
@@ -585,7 +584,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public void reportErrorToOwner(Throwable e, Message msg, Command cmd) {
         if (jda.getGuilds().size() < 100) return;
 
-        owner.openPrivateChannel().queue(ch -> {
+        getOwner().openPrivateChannel().queue(ch -> {
             ch.sendMessage(errorEmbed(e, msg, cmd)).queue();
         });
     }
@@ -644,6 +643,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     private long getUptimeMillis() {
         return new Date().getTime() - shardUtil.startTime.getTime();
+    }
+
+    public User getOwner() {
+        return jda.getUserById(ownerId);
     }
 
     public String formatUptime() {
