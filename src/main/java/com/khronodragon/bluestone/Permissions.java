@@ -10,12 +10,12 @@ import java.util.stream.Collectors;
 
 public class Permissions {
     public static boolean check(String[] permsAccepted, Context ctx) {
-        if (ctx.author.getIdLong() == ctx.bot.getOwner().getIdLong())
+        if (ctx.author.getIdLong() == ctx.bot.owner.getIdLong())
             return true;
 
         for (String perm: permsAccepted) {
             if (perm.equals("owner")) {
-                if (ctx.author.getIdLong() == ctx.bot.getOwner().getIdLong())
+                if (ctx.author.getIdLong() == ctx.bot.owner.getIdLong())
                     return true;
             } else if (perm.equals("admin")) {
                 try {

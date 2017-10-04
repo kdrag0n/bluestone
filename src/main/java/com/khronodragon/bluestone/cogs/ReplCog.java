@@ -11,6 +11,7 @@ import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageEmbed;
+import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.requests.RestAction;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -18,6 +19,7 @@ import org.apache.logging.log4j.Logger;
 
 import javax.script.*;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import static com.khronodragon.bluestone.util.Strings.format;
@@ -182,9 +184,17 @@ public class ReplCog extends Cog {
         ctx.send("REPL started. Untrusted mode (`untrusted` flag) is " + (untrusted ? "on" : "off") +
                 ". Prefix is " + prefix).queue();
         while (true) {
-            Message response = bot.waitForMessage(0, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
+            Predicate<Message> check = untrusted ? null : msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
                     msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
-                    msg.getRawContent().startsWith(prefix));
+                    msg.getRawContent().startsWith(prefix);
+            Message response = bot.waitForMessage(0, check);
+
+            if (untrusted) {
+                response.addReaction("🛡").queue();
+
+                continue;
+            }
+
             engine.put("message", response);
             engine.put("msg", response);
 

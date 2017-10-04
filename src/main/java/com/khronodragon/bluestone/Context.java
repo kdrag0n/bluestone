@@ -6,6 +6,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.requests.RestAction;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.annotation.CheckReturnValue;
 import java.util.List;
 
 public class Context {
@@ -57,6 +58,7 @@ public class Context {
         }
     }
 
+    @CheckReturnValue
     public RestAction<Message> send(String msg) {
         msg = truncate(StringUtils.replace(StringUtils.replace(msg, "@everyone", "@\u200beveryone")
                 , "@here", "@\u200bhere"));
@@ -64,14 +66,17 @@ public class Context {
         return channel.sendMessage(msg);
     }
 
+    @CheckReturnValue
     public RestAction<Message> rawSend(String msg) {
         return channel.sendMessage(msg);
     }
 
+    @CheckReturnValue
     public RestAction<Message> send(MessageEmbed msg) {
         return channel.sendMessage(msg);
     }
 
+    @CheckReturnValue
     public RestAction<Message> send(Message msg) {
         return channel.sendMessage(msg);
     }

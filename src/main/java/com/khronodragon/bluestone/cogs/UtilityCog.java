@@ -75,7 +75,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -1055,7 +1054,7 @@ public class UtilityCog extends Cog {
                     .toString(), true);
         }
 
-        PrivateChannel ownerChannel = bot.getOwner().openPrivateChannel().complete(); // one-time and fast enough
+        PrivateChannel ownerChannel = bot.owner.openPrivateChannel().complete(); // one-time and fast enough
         ownerChannel.sendMessage(new MessageBuilder()
                 .append("📧 New message.")
                 .setEmbed(emb.build())

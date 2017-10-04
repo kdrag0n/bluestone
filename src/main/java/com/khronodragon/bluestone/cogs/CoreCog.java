@@ -74,7 +74,7 @@ public class CoreCog extends Cog {
     public void cmdHelp(Context ctx) {
         int charLimit = ctx.jda.getSelfUser().isBot() ? MessageEmbed.EMBED_MAX_LENGTH_BOT : MessageEmbed.EMBED_MAX_LENGTH_CLIENT;
         boolean sendPublic = false;
-        boolean isOwner = ctx.author.getIdLong() == bot.getOwner().getIdLong();
+        boolean isOwner = ctx.author.getIdLong() == bot.owner.getIdLong();
         if (ctx.invoker.startsWith("p") && Permissions.check(phelpPerms, ctx)) {
             sendPublic = true;
         }

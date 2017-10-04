@@ -89,11 +89,11 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public static final OkHttpClient http = new OkHttpClient.Builder()
             .cache(new Cache(new File("data/http_cache"), 24000000000L))
             .connectTimeout(5, TimeUnit.SECONDS)
-            .readTimeout(8, TimeUnit.SECONDS)
-            .writeTimeout(6, TimeUnit.SECONDS)
+            .readTimeout(12, TimeUnit.SECONDS)
+            .writeTimeout(8, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
             .build();
-    public long ownerId;
+    public User owner;
 
     public Dao<BotAdmin, Long> getAdminDao() {
         return shardUtil.getAdminDao();
@@ -255,18 +255,22 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
     }
 
+    private void updateOwner() {
+        if (jda.getSelfUser().isBot()) {
+            ApplicationInfo appInfo = jda.asBot().getApplicationInfo().complete();
+            owner = appInfo.getOwner();
+        } else {
+            owner = jda.getSelfUser();
+        }
+    }
+
     @Override
     public void onReady(ReadyEvent event) {
         JDA jda = event.getJDA();
         jda.getPresence().setStatus(OnlineStatus.ONLINE);
         long uid = jda.getSelfUser().getIdLong();
 
-        if (jda.getSelfUser().isBot()) {
-            ApplicationInfo appInfo = jda.asBot().getApplicationInfo().complete();
-            this.ownerId = appInfo.getOwner().getIdLong();
-        } else {
-            this.ownerId = jda.getSelfUser().getIdLong();
-        }
+        updateOwner();
         logger.info("Ready - ID {}", uid);
 
         if (jda.getGuildById(110373943822540800L) != null)
@@ -402,11 +406,13 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     @Override
     public void onResume(ResumedEvent event) {
         logger.info("WebSocket resumed.");
+        updateOwner();
     }
 
     @Override
     public void onReconnect(ReconnectedEvent event) {
         logger.info("Reconnected.");
+        updateOwner();
     }
 
     @Override
@@ -532,9 +538,15 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                             "` \u2022 Help command: `" + prefix + "help`").queue();
                 }
             }
-        } else if (channel instanceof PrivateChannel) {
-            String request = message.getContent();
-            chatengineResponse(channel, "bs_GMdbot2-" + author.getId(), request, "💬 ");
+        } else if (channel instanceof PrivateChannel &&
+                !(author.getIdLong() == owner.getIdLong() && message.getRawContent().charAt(0) == '`')) {
+            String request = Strings.renderMessage(message, message.getGuild(), message.getRawContent());
+
+            if (request.length() < 1) {
+                channel.sendMessage("**Hey there**! My prefix is `" + prefix + "` here.\nYou can use commands, or talk to me directly.").queue();
+            } else {
+                chatengineResponse(channel, "bs_GMdbot2-" + author.getId(), request, "💬 ");
+            }
         }
     }
 
@@ -584,7 +596,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public void reportErrorToOwner(Throwable e, Message msg, Command cmd) {
         if (jda.getGuilds().size() < 100) return;
 
-        getOwner().openPrivateChannel().queue(ch -> {
+        owner.openPrivateChannel().queue(ch -> {
             ch.sendMessage(errorEmbed(e, msg, cmd)).queue();
         });
     }
@@ -643,10 +655,6 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     private long getUptimeMillis() {
         return new Date().getTime() - shardUtil.startTime.getTime();
-    }
-
-    public User getOwner() {
-        return jda.getUserById(ownerId);
     }
 
     public String formatUptime() {
