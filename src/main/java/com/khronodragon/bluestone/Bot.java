@@ -684,46 +684,6 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         return sd + (d > 0 ? " " : "") + sh + (h > 0 ? " " : "") + sm + (m > 0 ? " " : "") + ss;
     }
 
-    private static void setupJdaLogging() {
-        SimpleLog.LEVEL = SimpleLog.Level.OFF;
-
-        SimpleLog.addListener(new SimpleLog.LogListener() {
-            @Override
-            public void onLog(SimpleLog log, SimpleLog.Level level, Object msg) {
-                Logger logger = LogManager.getLogger(log.name);
-
-                switch (level) {
-                    case TRACE:
-                        logger.trace(msg);
-                        break;
-                    case DEBUG:
-                        logger.debug(msg);
-                        break;
-                    case FATAL:
-                        if (!msg.toString().equals("RestAction queue returned failure: [ErrorResponseException] 10008: Unknown Message"))
-                            logger.fatal(msg);
-                        break;
-                    case WARNING:
-                        logger.warn(msg);
-                        break;
-                    case INFO:
-                        logger.info(msg);
-                        break;
-                    default:
-                        logger.info("[unknown] {}", msg);
-                        break;
-                }
-            }
-
-            @Override
-            public void onError(SimpleLog log, Throwable err) {
-                Logger logger = LogManager.getLogger(log.name);
-
-                logger.error(err);
-            }
-        });
-    }
-
     public static boolean loadPatreonData() {
         String jsonCode;
         try {
@@ -769,7 +729,6 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX))
             builder.setAudioSendFactory(new NativeAudioSendFactory());
 
-        setupJdaLogging();
         loadPatreonData();
 
         for (int i = 0; i < shardCount; i++) {
