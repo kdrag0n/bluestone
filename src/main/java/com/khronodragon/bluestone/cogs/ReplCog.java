@@ -5,9 +5,10 @@ import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
+import com.khronodragon.bluestone.handlers.RMessageWaitListener;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
-import jdk.jfr.internal.Options;
+import jdk.nashorn.api.scripting.NashornScriptEngine;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Message;
@@ -15,12 +16,18 @@ import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.MessageReaction;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.requests.RestAction;
+import net.dv8tion.jda.core.utils.MiscUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl;
+import org.luaj.vm2.script.LuaScriptEngine;
+import org.python.jsr223.PyScriptEngine;
 
 import javax.script.*;
+import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -153,6 +160,9 @@ public class ReplCog extends Cog {
             String exec = importsObj.toString();
 
             engine.eval(exec + ";function loadShims(){load('https://raw.githubusercontent.com/es-shims/es5-shim/master/es5-shim.min.js');load('https://raw.githubusercontent.com/paulmillr/es6-shim/master/es6-shim.min.js');}");
+        } else if (language.equalsIgnoreCase("kotlin") || language.equalsIgnoreCase("kt") ||
+                language.equalsIgnoreCase("kts")) {
+            engine = man.getEngineByExtension("kts");
         } else {
             engine = man.getEngineByName(language.toLowerCase());
 
@@ -167,6 +177,7 @@ public class ReplCog extends Cog {
             return;
         }
         replSessions.add(ctx.channel.getIdLong());
+        OffsetDateTime startTime = OffsetDateTime.now();
 
         engine.put("ctx", ctx);
         engine.put("event", ctx.event);
@@ -180,31 +191,46 @@ public class ReplCog extends Cog {
         engine.put("guild", ctx.guild);
         engine.put("test", "Test right back at ya!");
         engine.put("msg", ctx.message);
-        if (language.equalsIgnoreCase("python"))
-            engine.put("imports", PYTHON_IMPORTS);
+        engine.put("startTime", startTime);
+        engine.put("engine", engine);
+
+        try {
+            if (engine instanceof GroovyScriptEngineImpl) {
+                engine.eval("def print = { Object... args -> ctx.send(Arrays.stream(args).map(a -> a.toString()).collect(Collectors.joining(' '))).queue() }");
+            } else if (engine instanceof PyScriptEngine) {
+                engine.put("imports", PYTHON_IMPORTS);
+                engine.eval("def print(*args): ctx.send(map(str, args).join(' ')).queue()");
+            } else if (engine instanceof NashornScriptEngine) {
+                engine.eval("print = function() { ctx.send.apply(ctx, arguments.join(' ')) }");
+            } else if (engine instanceof LuaScriptEngine) {
+                engine.eval("print = function(...) ctx.send(string.join(' ', ...)) end");
+            }
+        } catch (ScriptException e) {
+            ctx.send("⚠ Engine post-init failed.\n```java" + Bot.renderStackTrace(e) + "```").queue();
+        }
 
         ctx.send("REPL started. Untrusted mode (`untrusted` flag) is " + (untrusted ? "on" : "off") +
                 ". Prefix is " + prefix).queue();
         while (true) {
-            Predicate<Message> check = untrusted ?
-
-                    msg -> msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
-                    msg.getRawContent().startsWith(prefix)
-
-                    :
-
-                    msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
-                    msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
-                    msg.getRawContent().startsWith(prefix);
-            Message response = bot.waitForMessage(0, check);
-
+            Message response;
             if (untrusted) {
+                response = waitForRMessage(0, msg -> msg.getRawContent().startsWith(prefix) &&
+                        msg.getAuthor().getIdLong() != ctx.jda.getSelfUser().getIdLong(),
+                        e -> e.getUser().getIdLong() == ctx.author.getIdLong() &&
+                                !MiscUtil.getCreationTime(e.getMessageIdLong()).isBefore(startTime), ctx.channel.getIdLong());
+            } else {
+                response = bot.waitForMessage(0, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
+                        msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
+                        msg.getRawContent().startsWith(prefix));
+            }
+
+            if (untrusted && response.getAuthor().getIdLong() != ctx.author.getIdLong()) {
                 Optional<MessageReaction> rr =
                         response.getReactions().stream().filter(r -> r.getEmote().getName().equals("🛡")).findFirst();
                 if (rr.isPresent()) {
                     MessageReaction mr = rr.get();
                     if (!mr.getUsers().complete().stream().anyMatch(u -> u.getIdLong() == ctx.author.getIdLong())) {
-
+                        continue;
                     }
                 } else {
                     response.addReaction("🛡").queue();
@@ -217,7 +243,8 @@ public class ReplCog extends Cog {
 
             String cleaned = cleanupCode(response.getRawContent());
 
-            if (stringExists(cleaned, "quit", "exit", "System.exit()", "System.exit", "System.exit(0)", "exit()")) {
+            if (stringExists(cleaned, "quit", "exit", "System.exit()", "System.exit", "System.exit(0)",
+                    "exit()", "stop", "stop()", "System.exit();", "stop;", "stop();", "System.exit(0);")) {
                 ctx.send("**Exiting...**").queue();
                 replSessions.remove(ctx.channel.getIdLong());
                 break;
@@ -273,6 +300,23 @@ public class ReplCog extends Cog {
             } else {
                 response.addReaction("✅").queue();
             }
+        }
+    }
+
+    private Message waitForRMessage(long millis, Predicate<Message> check,
+                                    Predicate<MessageReactionAddEvent> rCheck, long channelId) {
+        AtomicReference<Message> lock = new AtomicReference<>();
+        RMessageWaitListener listener = new RMessageWaitListener(lock, check, rCheck, channelId);
+        bot.getJda().addEventListener(listener);
+
+        synchronized (lock) {
+            try {
+                lock.wait(millis);
+            } catch (InterruptedException e) {
+                bot.getJda().removeEventListener(listener);
+                return null;
+            }
+            return lock.get();
         }
     }
 }

@@ -34,6 +34,8 @@ shadowJar {
     mergeServiceFiles()
 }
 
+def kotlinVersion = '1.1.51'
+
 dependencies {
     compile 'net.dv8tion:JDA:3.3.1_284'
     compile 'com.sedmelluq:lavaplayer:1.2.43'
@@ -68,6 +70,19 @@ dependencies {
     compile 'com.google.re2j:re2j:1.1'
     compile 'org.jsoup:jsoup:1.10.3'
     compile 'com.kotcrab.remark:remark:1.0.0'
+    compile 'org.luaj:luaj-jse:3.0.1'
+
+    compile "org.jetbrains.kotlin:kotlin-script-runtime:$kotlinVersion"
+    compile "org.jetbrains.kotlin:kotlin-compiler:$kotlinVersion"
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+    compile "org.jetbrains.kotlin:kotlin-script-util:$kotlinVersion"
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlinVersion"
+
+    jython ':requests'
+    jython ':beautifulsoup4'
+    jython ':twisted'
+    jython ':nltk'
 }
 
 compileJava.options.encoding = 'UTF-8'
