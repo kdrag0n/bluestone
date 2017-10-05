@@ -40,16 +40,20 @@ public class PermissionError extends CheckFailure {
             } else if (p.equals("admin")) {
                 return "Bot Admin";
             } else {
-                String jdaPermStr = String.join("_",
-                        Arrays.stream(StringUtils.splitByCharacterTypeCamelCase(p))
-                                .map(String::toUpperCase)
-                                .collect(Collectors.toList()));
-                Permission perm = Permission.valueOf(jdaPermStr);
-                if (perm == null) {
-                    return "Unknown";
-                } else {
-                    return perm.getName();
-                }
+                return Arrays.stream(StringUtils.split(p, '&'))
+                        .map(p2 -> {
+                            String jdaPermStr = String.join("_",
+                                    Arrays.stream(StringUtils.splitByCharacterTypeCamelCase(p2))
+                                            .map(String::toUpperCase)
+                                            .collect(Collectors.toList()));
+                            Permission perm = Permission.valueOf(jdaPermStr);
+                            if (perm == null) {
+                                return "Unknown";
+                            } else {
+                                return perm.getName();
+                            }
+                        })
+                        .collect(Collectors.joining(" + "));
             }
         }).collect(Collectors.toList()).toArray(new String[0]);
     }

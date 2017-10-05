@@ -146,7 +146,7 @@ public class ModerationCog extends Cog {
     }
 
     @Command(name = "purge", desc = "Purge messages from a channel.", guildOnly = true,
-            aliases = {"clean", "nuke", "prune", "clear"}, perms = {"messageManage", "messageHistory"},
+            aliases = {"clean", "nuke", "prune", "clear"}, perms = {"messageManage&messageHistory"},
             usage = "[parameters]", thread = true)
     public void cmdPurge(Context ctx) {
         if (bot.isSelfbot()) {
@@ -391,7 +391,7 @@ public class ModerationCog extends Cog {
         String _userReason = _m.replaceFirst("");
         final String userReason = _m.reset(_userReason).usePattern(FIRST_ID_PATTERN)
                 .replaceFirst("").trim();
-        final boolean validUreason = userReason.length() < 1 || userReason.length() > 450;
+        final boolean validUreason = !(userReason.length() < 1 || userReason.length() > 450);
 
         if (validUreason)
             reason = getTag(ctx.author) + " used the ban command (with sufficient permissions)";
@@ -438,7 +438,7 @@ public class ModerationCog extends Cog {
     }
 
     @Command(name = "kick", desc = "Kick a member of the server.", guildOnly = true,
-            usage = "[@user or user ID] [reason]")
+            usage = "[@user or user ID] [reason]", perms = {"kickMembers"})
     public void cmdKick(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need someone to kick!").queue();
@@ -454,7 +454,7 @@ public class ModerationCog extends Cog {
         String _userReason = _m.replaceFirst("");
         final String userReason = _m.reset(_userReason).usePattern(FIRST_ID_PATTERN)
                 .replaceFirst("").trim();
-        final boolean validUreason = userReason.length() < 1 || userReason.length() > 450;
+        final boolean validUreason = !(userReason.length() < 1 || userReason.length() > 450);
 
         if (validUreason)
             reason = getTag(ctx.author) + " used the kick command (with sufficient permissions)";

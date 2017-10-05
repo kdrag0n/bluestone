@@ -7,10 +7,12 @@ import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
+import jdk.jfr.internal.Options;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageEmbed;
+import net.dv8tion.jda.core.entities.MessageReaction;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.requests.RestAction;
 import org.apache.commons.lang3.StringUtils;
@@ -184,15 +186,30 @@ public class ReplCog extends Cog {
         ctx.send("REPL started. Untrusted mode (`untrusted` flag) is " + (untrusted ? "on" : "off") +
                 ". Prefix is " + prefix).queue();
         while (true) {
-            Predicate<Message> check = untrusted ? null : msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
+            Predicate<Message> check = untrusted ?
+
+                    msg -> msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
+                    msg.getRawContent().startsWith(prefix)
+
+                    :
+
+                    msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
                     msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
                     msg.getRawContent().startsWith(prefix);
             Message response = bot.waitForMessage(0, check);
 
             if (untrusted) {
-                response.addReaction("🛡").queue();
+                Optional<MessageReaction> rr =
+                        response.getReactions().stream().filter(r -> r.getEmote().getName().equals("🛡")).findFirst();
+                if (rr.isPresent()) {
+                    MessageReaction mr = rr.get();
+                    if (!mr.getUsers().complete().stream().anyMatch(u -> u.getIdLong() == ctx.author.getIdLong())) {
 
-                continue;
+                    }
+                } else {
+                    response.addReaction("🛡").queue();
+                    continue;
+                }
             }
 
             engine.put("message", response);

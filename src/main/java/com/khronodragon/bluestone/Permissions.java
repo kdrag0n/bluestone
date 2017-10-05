@@ -15,8 +15,7 @@ public class Permissions {
 
         for (String perm: permsAccepted) {
             if (perm.equals("owner")) {
-                if (ctx.author.getIdLong() == ctx.bot.owner.getIdLong())
-                    return true;
+                return false;
             } else if (perm.equals("admin")) {
                 try {
                     if (ctx.bot.getAdminDao().idExists(ctx.author.getIdLong()))
@@ -26,19 +25,23 @@ public class Permissions {
                 }
             } else {
                 if (ctx.guild != null) {
-                    String jdaPermStr = String.join("_", Arrays.stream(StringUtils.splitByCharacterTypeCamelCase(perm))
-                            .map(String::toUpperCase)
-                            .collect(Collectors.toList()));
+                    for (String cmpPerm: StringUtils.split(perm, '&')) {
+                        String jdaPermStr = String.join("_", Arrays.stream(StringUtils.splitByCharacterTypeCamelCase(cmpPerm))
+                                .map(String::toUpperCase)
+                                .collect(Collectors.toList()));
 
-                    Permission jdaPerm;
-                    try {
-                        jdaPerm = Permission.valueOf(jdaPermStr);
-                    } catch (IllegalArgumentException ignored) {
-                        continue;
+                        Permission jdaPerm;
+                        try {
+                            jdaPerm = Permission.valueOf(jdaPermStr);
+                        } catch (IllegalArgumentException ignored) {
+                            continue;
+                        }
+
+                        if (!ctx.member.hasPermission((Channel) ctx.channel, jdaPerm))
+                            return false;
                     }
 
-                    if (ctx.member.hasPermission((Channel) ctx.channel, jdaPerm))
-                        return true;
+                    return true;
                 }
             }
         }

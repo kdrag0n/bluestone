@@ -88,7 +88,7 @@ public class WelcomeCog extends Cog {
 
     @Command(name = "welcome", desc = "Manage member welcome messages.", guildOnly = true,
             aliases = {"welcome_msgs", "welcomemsg"}, thread = true,
-            perms = {"manageServer", "createInstantInvite", "manageRoles"}, usage = "[action] {args...}")
+            perms = {"manageServer&createInstantInvite", "manageRoles&createInstantInvite"}, usage = "[action] {args...}")
     public void welcomeControl(Context ctx) throws SQLException {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(NO_COMMAND).queue();
@@ -191,7 +191,7 @@ public class WelcomeCog extends Cog {
 
     @Command(name = "leave", desc = "Manage member leave messages.", guildOnly = true,
             aliases = {"leave_msgs", "leavemsg"}, thread = true,
-            perms = {"manageServer", "createInstantInvite", "manageRoles"}, usage = "[action] {args...}")
+            perms = {"manageServer&createInstantInvite", "manageRoles&createInstantInvite"}, usage = "[action] {args...}")
     public void leaveControl(Context ctx) throws SQLException {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(NO_COMMAND).queue();
