@@ -5,12 +5,16 @@ import com.khronodragon.bluestone.errors.GuildOnlyError;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.errors.PermissionError;
 import com.khronodragon.bluestone.util.Strings;
+import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -57,58 +61,81 @@ public class Command {
 
         runChecks(ctx);
 
+        func.invoke(cog, ctx);
+    }
+
+    public void simpleInvoke(Bot bot, MessageReceivedEvent event, List<String> args,
+                             String prefix, String invoker) {
         if (needThread) {
             Runnable task = () -> {
-                try {
-                    func.invoke(cog, ctx);
-                } catch (IllegalAccessException e) {
-                    bot.logger.error("Severe command ({}) invocation error:", invoker, e);
-                    event.getChannel().sendMessage(Emotes.getFailure() + " A severe internal error occurred.").queue();
-                } catch (InvocationTargetException e) {
-                    Throwable cause = e.getCause();
-                    if (cause == null) {
-                        bot.logger.error("Unknown command ({}) invocation error:", invoker, e);
-                        event.getChannel().sendMessage(Emotes.getFailure() + " An unknown internal error occurred.").queue();
-                    } else if (cause instanceof PassException) {
-                        // assume error has already been sent
-                    } else if (cause instanceof PermissionError) {
-                        event.getChannel().sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.",
-                                event.getAuthor().getAsMention(), prefix, invoker,
-                                Strings.smartJoin(((PermissionError) cause).getFriendlyPerms(), "or"))).queue();
-                    } else if (cause instanceof PermissionException) {
-                        event.getChannel().sendMessage(Emotes.getFailure() + " I need the **" +
-                                ((PermissionException) cause).getPermission().getName() + "** permission!").queue();
-                    } else {
-                        bot.logger.error("Command ({}) invocation error:", invoker, cause);
-                        event.getChannel().sendMessage(format(Emotes.getFailure() + " Error!```java\n{2}```This error will be reported.",
-                                prefix, invoker, bot.vagueTrace(cause))).queue();
-
-                        if (reportErrors)
-                            bot.reportErrorToOwner(cause, event.getMessage(), this);
-                    }
-                } catch (PermissionError e) {
-                    event.getChannel().sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.",
-                            event.getAuthor().getAsMention(), prefix, invoker,
-                            Strings.smartJoin(e.getFriendlyPerms(), "or"))).queue();
-                } catch (GuildOnlyError e) {
-                    event.getChannel().sendMessage("Sorry, that command only works in a server.").queue();
-                } catch (CheckFailure e) {
-                    event.getChannel().sendMessage(format("{0} A check for `{1}{2}` failed. Do you not have permissions?",
-                            event.getAuthor().getAsMention(), prefix, invoker)).queue();
-                } catch (Exception e) {
-                    bot.logger.error("Unknown command ({}) error:", invoker, e);
-                    event.getChannel().sendMessage(format(Emotes.getFailure() + " Error in `{0}{1}`:```java\n{2}```",
-                            prefix, invoker, e.toString())).queue();
-                } // CheckFailure and friends may seem redundant, but used for perm checks in threads
+                invokeWithHandling(bot, event, args, prefix, invoker);
             };
 
             if (bot.threadExecutor.getActiveCount() >= bot.threadExecutor.getMaximumPoolSize()) {
-                event.getChannel().sendMessage(":hourglass: Your command has been queued. *If this happens often, contact the owner!*").queue();
+                event.getChannel().sendMessage(
+                        "⌛ Your command has been queued. **If this happens often, contact the owner!**").queue();
             }
             bot.threadExecutor.execute(task);
         } else {
-            func.invoke(cog, ctx);
+            invokeWithHandling(bot, event, args, prefix, invoker);
         }
+    }
+
+    public void invokeWithHandling(Bot bot, MessageReceivedEvent event, List<String> args,
+                                   String prefix, String invoker) {
+        MessageChannel channel = event.getChannel();
+
+        try {
+            try {
+                invoke(bot, event, args, prefix, invoker);
+            } catch (IllegalAccessException e) {
+                bot.logger.error("Severe command ({}) invocation error:", invoker, e);
+                channel.sendMessage(Emotes.getFailure() + " A severe internal error occurred.").queue();
+            } catch (InvocationTargetException e) {
+                Throwable cause = e.getCause();
+
+                if (cause == null) {
+                    bot.logger.error("Unknown command ({}) invocation error:", invoker, e);
+                    channel.sendMessage(Emotes.getFailure() + " An unknown internal error occurred.").queue();
+                } else if (cause instanceof PassException) {
+                    // assume error has already been sent
+                } else if (cause instanceof PermissionError) {
+                    channel.sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.",
+                            event.getAuthor().getAsMention(), prefix, invoker,
+                            Strings.smartJoin(((PermissionError) cause).getFriendlyPerms(), "or"))).queue();
+                } else if (cause instanceof PermissionException) {
+                    channel.sendMessage(Emotes.getFailure() + " I need the **" +
+                            ((PermissionException) cause).getPermission().getName() + "** permission!").queue();
+                } else if (cause instanceof SQLException) {
+                    bot.logger.error("SQL error in command {}:", invoker, cause);
+                    channel.sendMessage(format(Emotes.getFailure() + " A database error has occurred.```java\n{2}```This error has been reported.",
+                            prefix, invoker, Bot.briefSqlError(((SQLException) cause)))).queue();
+
+                    bot.reportErrorToOwner(cause, event.getMessage(), this);
+                } else {
+                    bot.logger.error("Command ({}) invocation error:", invoker, cause);
+                    channel.sendMessage(format(Emotes.getFailure() + " Error!```java\n{2}```This error has been reported.",
+                            prefix, invoker, Bot.vagueTrace(cause))).queue();
+
+                    if (reportErrors)
+                        bot.reportErrorToOwner(cause, event.getMessage(), this);
+                }
+            } catch (PermissionError e) {
+                channel.sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.",
+                        event.getAuthor().getAsMention(), prefix, invoker,
+                        Strings.smartJoin(e.getFriendlyPerms(), "or"))).queue();
+            } catch (GuildOnlyError e) {
+                channel.sendMessage(Emotes.getFailure() + "Sorry, that command only works in a server.").queue();
+            } catch (CheckFailure e) {
+                channel.sendMessage(format("{0} A check for `{1}{2}` failed. Do you not have permissions?",
+                        event.getAuthor().getAsMention(), prefix, invoker)).queue();
+            } catch (Exception e) {
+                bot.logger.error("Unknown command ({}) error:", invoker, e);
+                channel.sendMessage(Emotes.getFailure() + " A severe internal error occurred. The error has been reported.").queue();
+
+                bot.reportErrorToOwner(e, event.getMessage(), this);
+            }
+        } catch (PermissionException ignored) {}
     }
 
     private boolean runChecks(Context ctx) throws CheckFailure {

@@ -608,4 +608,34 @@ public class ModerationCog extends Cog {
 
         ctx.send(Emotes.getSuccess() + " Cleared " + deleted + " autoroles.").queue();
     }
+
+    @Command(name = "instant_invite", desc = "Create an instant invite that never expires.",
+            usage = "{#channel - default current channel}", guildOnly = true, perms = {"createInstantInvite"},
+            aliases = {"inv", "make_invite", "mkinvite", "makeinvite", "createinvite", "instantinvite", "create_invite"})
+    public void cmdMakeInvite(Context ctx) {
+        MessageChannel channel = ctx.channel;
+        if (ctx.message.getMentionedChannels().size() > 0) {
+            channel = ctx.message.getMentionedChannels().get(0);
+        }
+
+        final TextChannel ch = ((TextChannel) channel);
+
+        if (!ctx.guild.getSelfMember().hasPermission(ch, Permission.CREATE_INSTANT_INVITE)) {
+            ctx.send(Emotes.getFailure() + " I need to be able to **create instant invites**!").queue();
+            return;
+        }
+
+        ch.createInvite()
+                .setUnique(false)
+                .setTemporary(false)
+                .setMaxAge(0)
+                .setMaxUses(0)
+                .queue(i -> {
+                    ctx.send(Emotes.getSuccess() + " Invite created to " +
+                            ch.getAsMention() + ".\n" + i.getURL()).queue();
+                }, e -> {
+                    ctx.send(Emotes.getFailure() + " Failed to create invite!").queue();
+                    logger.error("Invite creation error", e);
+                });
+    }
 }

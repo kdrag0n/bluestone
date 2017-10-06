@@ -5,10 +5,6 @@ import com.google.re2j.Pattern;
 import com.j256.ormlite.dao.Dao;
 import com.jagrosh.jdautilities.waiter.EventWaiter;
 import com.khronodragon.bluestone.annotations.*;
-import com.khronodragon.bluestone.errors.CheckFailure;
-import com.khronodragon.bluestone.errors.GuildOnlyError;
-import com.khronodragon.bluestone.errors.PassException;
-import com.khronodragon.bluestone.errors.PermissionError;
 import com.khronodragon.bluestone.handlers.MessageWaitEventListener;
 import com.khronodragon.bluestone.handlers.RejectedExecHandlerImpl;
 import com.khronodragon.bluestone.sql.BotAdmin;
@@ -24,11 +20,9 @@ import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import net.dv8tion.jda.core.requests.SessionReconnectQueue;
-import net.dv8tion.jda.core.utils.SimpleLog;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
@@ -37,15 +31,18 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.reflections.Reflections;
+import sun.misc.Unsafe;
 
 import javax.security.auth.login.LoginException;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.text.NumberFormat;
 import java.time.Instant;
 import java.util.*;
@@ -79,6 +76,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             .setNameFormat("Bot Command-Exec Pool Thread %d")
             .build(), new RejectedExecHandlerImpl("Command-Exec"));
     private final EventWaiter eventWaiter = new EventWaiter();
+    private static Unsafe unsafe = null;
     private JDA jda;
     private ShardUtil shardUtil;
     public static JSONObject patreonData = new JSONObject();
@@ -94,6 +92,16 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             .retryOnConnectionFailure(true)
             .build();
     public User owner;
+
+    static {
+        try {
+            Field f = Unsafe.class.getDeclaredField("theUnsafe");
+            f.setAccessible(true);
+            unsafe = (Unsafe) f.get(null);
+        } catch (ReflectiveOperationException e) {
+            LogManager.getLogger(Bot.class).error("Failed to get Unsafe!");
+        }
+    }
 
     public Dao<BotAdmin, Long> getAdminDao() {
         return shardUtil.getAdminDao();
@@ -169,7 +177,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     protected static StringBuilder addVagueElement(StringBuilder builder, StackTraceElement elem) {
         return builder.append("> ")
                 .append(StringUtils.replaceOnce(StringUtils.replaceOnce(elem.getClassName(),
-                        "java.util", "stdlib"),
+                        "java.base/java.util", "stdlib"),
                         "com.khronodragon.bluestone", "bot"))
                 .append('.')
                 .append(elem.getMethodName())
@@ -465,51 +473,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             if (commands.containsKey(cmdName)) {
                 Command command = commands.get(cmdName);
 
-                try {
-                    try {
-                        command.invoke(this, event, args, prefix, cmdName);
-                    } catch (IllegalAccessException e) {
-                        logger.error("Severe command ({}) invocation error:", cmdName, e);
-                        channel.sendMessage(Emotes.getFailure() + " A severe internal error occurred.").queue();
-                    } catch (InvocationTargetException e) {
-                        Throwable cause = e.getCause();
-
-                        if (cause == null) {
-                            logger.error("Unknown command ({}) invocation error:", cmdName, e);
-                            channel.sendMessage(Emotes.getFailure() + " An unknown internal error occurred.").queue();
-                        } else if (cause instanceof PassException) {
-                            // assume error has already been sent
-                        } else if (cause instanceof PermissionError) {
-                            channel.sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.",
-                                    author.getAsMention(), prefix, cmdName,
-                                    Strings.smartJoin(((PermissionError) cause).getFriendlyPerms(), "or"))).queue();
-                        } else if (cause instanceof PermissionException) {
-                            try {
-                                channel.sendMessage(Emotes.getFailure() + " I need the **" +
-                                        ((PermissionException) cause).getPermission().getName() + "** permission!").queue();
-                            } catch (PermissionException ignored) {} // can't talk there...
-                        } else {
-                            logger.error("Command ({}) invocation error:", cmdName, cause);
-                            channel.sendMessage(format(Emotes.getFailure() + " Error!```java\n{2}```This error will be reported.",
-                                    prefix, cmdName, vagueTrace(cause))).queue();
-
-                            if (command.reportErrors)
-                                reportErrorToOwner(cause, message, command);
-                        }
-                    } catch (PermissionError e) {
-                        channel.sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.",
-                                author.getAsMention(), prefix, cmdName,
-                                Strings.smartJoin(e.getFriendlyPerms(), "or"))).queue();
-                    } catch (GuildOnlyError e) {
-                        channel.sendMessage("Sorry, that command only works in a server.").queue();
-                    } catch (CheckFailure e) {
-                        channel.sendMessage(format("{0} A check for `{1}{2}` failed. Do you not have permissions?",
-                                author.getAsMention(), prefix, cmdName)).queue();
-                    } catch (Exception e) {
-                        logger.error("Unknown command ({}) error:", cmdName, e);
-                        channel.sendMessage(Emotes.getFailure() + " A severe internal error occurred.").queue();
-                    }
-                } catch (PermissionException ignored) {}
+                command.simpleInvoke(this, event, args, prefix, cmdName);
 
                 try {
                     shardUtil.getCommandCalls().get(command.name).incrementAndGet();
@@ -601,6 +565,22 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         });
     }
 
+    public static String briefSqlError(SQLException e) {
+        String result = e.getMessage();
+        if (e.getCause() != null) {
+            result = result + "\n\u2007\u2007> " + e.getCause().getMessage();
+        }
+
+        return result;
+    }
+
+    public static Unsafe getUnsafe() {
+        if (unsafe == null)
+            throw new RuntimeException("Unsafe instance is not available!");
+        else
+            return unsafe;
+    }
+
     private static MessageEmbed errorEmbed(Throwable e, Message msg, Command cmd) {
         String stack = renderStackTrace(e, "\u3000", "> ");
 
@@ -610,8 +590,15 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 .setColor(Color.ORANGE)
                 .appendDescription("```java\n")
                 .appendDescription(stack.substring(0, Math.min(stack.length(), 2037)))
-                .appendDescription("```")
-                .addField("Timestamp", System.currentTimeMillis() + "ms", true)
+                .appendDescription("```");
+
+        if (e.getCause() != null) {
+            String causeStack = renderStackTrace(e, "\u3000", "> ");
+            emb.addField("Caused by", "```java\n" +
+                    causeStack.substring(0, Math.min(causeStack.length(), 1013)), false);
+        }
+
+        emb.addField("Timestamp", System.currentTimeMillis() + "ms", true)
                 .addField("Author ID", msg.getAuthor().getId(), true)
                 .addField("Message ID", msg.getId(), true)
                 .addField("Attachments", str(msg.getAttachments().size()), true)

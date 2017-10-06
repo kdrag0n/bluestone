@@ -3,12 +3,31 @@ package com.khronodragon.bluestone;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Channel;
 import org.apache.commons.lang3.StringUtils;
+import sun.misc.Unsafe;
 
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class Permissions {
+    private static final Unsafe unsafe = Bot.getUnsafe();
+    public static final Permission BOT_OWNER;
+    public static final Permission BOT_ADMIN;
+    public static final Permission PATREON_SUPPORTER;
+
+    static {
+        Class<Permission> clazz = Permission.class;
+        unsafe.allocateInstance(clazz)
+    }
+
+    public static Permission createPerm(int offset, boolean isGuild, boolean isChannel, String name) {
+        try {
+
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static boolean check(String[] permsAccepted, Context ctx) {
         if (ctx.author.getIdLong() == ctx.bot.owner.getIdLong())
             return true;

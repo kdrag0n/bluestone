@@ -1,7 +1,6 @@
 package com.khronodragon.bluestone;
 
 import com.khronodragon.bluestone.enums.MemberStatus;
-import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.Member;
 import org.apache.commons.lang3.text.WordUtils;
