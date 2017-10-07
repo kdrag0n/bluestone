@@ -24,7 +24,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 import static com.khronodragon.bluestone.util.Strings.str;
-import static com.khronodragon.bluestone.util.Strings.format;
 
 public class OwnerCog extends Cog {
     private static final Logger logger = LogManager.getLogger(OwnerCog.class);

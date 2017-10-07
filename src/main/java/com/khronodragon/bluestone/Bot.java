@@ -5,6 +5,7 @@ import com.google.re2j.Pattern;
 import com.j256.ormlite.dao.Dao;
 import com.jagrosh.jdautilities.waiter.EventWaiter;
 import com.khronodragon.bluestone.annotations.*;
+import com.khronodragon.bluestone.cogs.OwnerCog;
 import com.khronodragon.bluestone.handlers.MessageWaitEventListener;
 import com.khronodragon.bluestone.handlers.RejectedExecHandlerImpl;
 import com.khronodragon.bluestone.sql.BotAdmin;
@@ -353,9 +354,11 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             if (method.isAnnotationPresent(com.khronodragon.bluestone.annotations.Command.class)) {
                 com.khronodragon.bluestone.annotations.Command anno = method.getDeclaredAnnotation(com.khronodragon.bluestone.annotations.Command.class);
 
-                List<Permission> perms = new ArrayList<>(method.getAnnotations().length - 1);
-                for (Annotation a: method.getAnnotations()) {
+                List<Permission> perms = new ArrayList<>(method.getDeclaredAnnotations().length - 1);
+                for (Annotation a: method.getDeclaredAnnotations()) {
                     Class<? extends Annotation> type = a.annotationType();
+                    if (type == com.khronodragon.bluestone.annotations.Command.class)
+                        return;
 
                     if (type == Perm.Owner.class) {
                         perms.add(OWNER);
@@ -365,14 +368,14 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                         perms.add(Permissions.PATREON_SUPPORTER);
                     } else if (type == Perm.All.class) {
                         try {
-                            perms.add(((Permission[]) type.getDeclaredMethod("value").invoke(anno))[0]);
+                            perms.add(((Permission[]) type.getDeclaredMethod("value").invoke(a))[0]);
                                     // TODO: AND + multi
                         } catch (ReflectiveOperationException e) {
                             throw new RuntimeException(e);
                         }
                     } else if (type == Perm.PermAnds.class) {
                         try {
-                            Perm.All[] alls = (Perm.All[]) type.getDeclaredMethod("value").invoke(anno);
+                            Perm.All[] alls = (Perm.All[]) type.getDeclaredMethod("value").invoke(a);
 
                             for (Perm.All all: alls) {
                                 perms.add(all.value()[0]); // TODO: AND + multi

@@ -340,10 +340,6 @@ public class FunCog extends Cog {
             ctx.send(Emotes.getFailure() + " You need to specify an emote!").queue();
             return;
         }
-        if (!emoteProviderManager.isFullyLoaded()) {
-            ctx.send(Emotes.getFailure() + " The emote data hasn't been loaded yet! Try again soon.").queue();
-            return;
-        }
 
         final String url = emoteProviderManager.getFirstUrl(ctx.rawArgs);
         if (url == null) {
