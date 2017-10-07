@@ -64,7 +64,7 @@ public class CogmanCog extends Cog {
         return "Manage all the cogs.";
     }
 
-    @Command(name = "cogall", desc = "Manage all the cogs - run on ALL shards.", perms = {"owner"}, aliases = {"cogsall"},
+    @Command(name = "cogall", desc = "Manage all the cogs - run on ALL shards.", perms = {Bot.OWNER}, aliases = {"cogsall"},
             reportErrors = false)
     public void mainCmdAll(Context ctx) throws ReflectiveOperationException, MalformedURLException {
         for (Bot shard: bot.getShardUtil().getShards()) {
@@ -78,7 +78,7 @@ public class CogmanCog extends Cog {
         }
     }
 
-    @Command(name = "cog", desc = "Manage all the cogs.", perms = {"owner"}, aliases = {"cogs"}, reportErrors = false)
+    @Command(name = "cog", desc = "Manage all the cogs.", perms = {Bot.OWNER}, aliases = {"cogs"}, reportErrors = false)
     public void mainCmd(Context ctx) throws ReflectiveOperationException, MalformedURLException {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(NO_COMMAND).queue();

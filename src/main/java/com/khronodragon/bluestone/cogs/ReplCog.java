@@ -103,7 +103,7 @@ public class ReplCog extends Cog {
     }
 
     @Command(name = "repl", desc = "A multilingual REPL, in Discord!\n\nFlags come before language in arguments.",
-            perms = {"owner"}, usage = "[language] {flags}", thread=true)
+            perms = {Bot.OWNER}, usage = "[language] {flags}", thread=true)
     public void cmdRepl(Context ctx) throws ScriptException {
         if (ctx.args.size() < 1) {
             ctx.send("You need to specify a language, like `scala` or `js`!").queue();

@@ -524,7 +524,7 @@ public class KewlCog extends Cog {
     }
 
     @Command(name = "profile_override_bg", desc = "Override an user's profile background. This just executes `profile bg` as them.",
-            perms = {"owner"}, usage = "[@user/user ID] {to: reset/default / attach image}", thread = true)
+            perms = {Bot.OWNER}, usage = "[@user/user ID] {to: reset/default / attach image}", thread = true)
     public void cmdProfileOverrideBg(Context ctx) {
         User target;
 

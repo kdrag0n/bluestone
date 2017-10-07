@@ -56,11 +56,14 @@ import static com.khronodragon.bluestone.util.Strings.str;
 import static com.khronodragon.bluestone.util.Strings.format;
 
 public class Bot extends ListenerAdapter implements ClassUtilities {
+    private static final Logger defLog = LogManager.getLogger(Bot.class);
+    public static final Permission OWNER = Permissions.BOT_OWNER;
+    public static final Permission ADMIN = Permissions.BOT_ADMIN;
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
     public static final JSONObject EMPTY_JSON_OBJECT = new JSONObject();
     public static final JSONArray EMPTY_JSON_ARRAY = new JSONArray();
     private static final Pattern GENERAL_MENTION_PATTERN = Pattern.compile("^<@[!&]?[0-9]{17,20}>\\s*");
-    public Logger logger = LogManager.getLogger(Bot.class);
+    public Logger logger = defLog;
     private final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(4, new ThreadFactoryBuilder()
             .setDaemon(true)
             .setNameFormat("Bot BG-Task Thread %d")
@@ -99,7 +102,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             f.setAccessible(true);
             unsafe = (Unsafe) f.get(null);
         } catch (ReflectiveOperationException e) {
-            LogManager.getLogger(Bot.class).error("Failed to get Unsafe!");
+            defLog.error("Failed to get Unsafe!");
         }
     }
 
@@ -676,7 +679,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         try {
             jsonCode = new String(Files.readAllBytes(Paths.get("patreon.json")));
         } catch (IOException e) {
-            LogManager.getLogger(Bot.class).error("Failed to load Patreon data", e);
+            defLog.error("Failed to load Patreon data", e);
             return false;
         }
 

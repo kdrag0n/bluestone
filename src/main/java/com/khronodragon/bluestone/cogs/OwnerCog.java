@@ -1,9 +1,6 @@
 package com.khronodragon.bluestone.cogs;
 
-import com.khronodragon.bluestone.Bot;
-import com.khronodragon.bluestone.Cog;
-import com.khronodragon.bluestone.Context;
-import com.khronodragon.bluestone.Emotes;
+import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.Cooldown;
 import com.khronodragon.bluestone.enums.BucketType;
@@ -47,7 +44,7 @@ public class OwnerCog extends Cog {
         return "Commands for the bot owner.";
     }
 
-    @Command(name = "shutdown", desc = "Shutdown the bot.", perms = {"owner"}, thread = true)
+    @Command(name = "shutdown", desc = "Shutdown the bot.", perms = {Permissions.BOT_OWNER}, thread = true)
     public void cmdShutdown(Context ctx) {
         ctx.send(Emotes.getFailure() + " Are you **sure** you want to stop the entire bot? Type `yes` to continue.").complete();
         Message resp = bot.waitForMessage(7000, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
@@ -64,7 +61,7 @@ public class OwnerCog extends Cog {
         }
     }
 
-    @Command(name = "stopshard", desc = "Stop the current shard.", perms = {"owner"}, aliases = {"restart"}, thread = true)
+    @Command(name = "stopshard", desc = "Stop the current shard.", perms = {Bot.OWNER}, aliases = {"restart"}, thread = true)
     public void cmdStopShard(Context ctx) {
         final Integer n = ctx.rawArgs.length() > 0 ? Integer.valueOf(ctx.rawArgs) : ctx.bot.getShardNum() - 1;
         ctx.send(Emotes.getFailure() + " Are you **sure** you want to stop (restart) shard " + n + "? Type `yes` to continue.").complete();
@@ -77,7 +74,7 @@ public class OwnerCog extends Cog {
         }
     }
 
-    @Command(name = "shardinfo", desc = "Display global shard information.", perms = {"owner"})
+    @Command(name = "shardinfo", desc = "Display global shard information.", perms = {Bot.OWNER})
     public void cmdShardTree(Context ctx) {
         MessageBuilder result = new MessageBuilder()
                 .append("```css\n");
@@ -122,7 +119,7 @@ public class OwnerCog extends Cog {
 
     @Cooldown(scope = BucketType.GLOBAL, delay = 10)
     @Command(name = "broadcast", desc = "Broadcast a message to all available guilds.",
-            usage = "[message]", perms = {"owner"}, reportErrors = false)
+            usage = "[message]", perms = {Bot.OWNER}, reportErrors = false)
     public void cmdBroadcast(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need a message to broadcast!").queue();
@@ -176,7 +173,7 @@ public class OwnerCog extends Cog {
     }
 
     @Command(name = "eval", desc = "Evaluate some Groovy code.", usage = "[code]",
-            aliases = {"reval"}, perms = {"owner"}, thread = true, reportErrors = false)
+            aliases = {"reval"}, perms = {Bot.OWNER}, thread = true, reportErrors = false)
     public void cmdEval(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need some code!").queue();
@@ -211,7 +208,7 @@ public class OwnerCog extends Cog {
             ctx.send("```java\n" + result.toString() + "```").queue();
     }
 
-    @Command(name = "sendfile", desc = "Upload a local file here.", perms = {"owner"},
+    @Command(name = "sendfile", desc = "Upload a local file here.", perms = {Bot.OWNER},
             usage = "[file path]", reportErrors = false)
     public void cmdSendfile(Context ctx) throws IOException {
         if (ctx.rawArgs.length() < 1) {
@@ -223,7 +220,7 @@ public class OwnerCog extends Cog {
                 .build()).queue();
     }
 
-    @Command(name = "command_calls", desc = "Get the top 25 command calls.", perms = {"owner"},
+    @Command(name = "command_calls", desc = "Get the top 25 command calls.", perms = {Bot.OWNER},
             hidden = true, aliases = {"ccalls"})
     public void cmdCmdCalls(Context ctx) {
         EmbedBuilder emb = new EmbedBuilder()
@@ -243,7 +240,7 @@ public class OwnerCog extends Cog {
         ctx.send(emb.build()).queue();
     }
 
-    @Command(name = "setavatar", desc = "Change my avatar.", perms = {"owner"}, aliases = {"set_avatar"})
+    @Command(name = "setavatar", desc = "Change my avatar.", perms = {Bot.OWNER}, aliases = {"set_avatar"})
     public void cmdSetAvatar(Context ctx) throws IOException {
         if (ctx.rawArgs.length() < 1) {
             ctx.send("🤔 I need a file path!").queue();
@@ -254,7 +251,7 @@ public class OwnerCog extends Cog {
         ctx.send(Emotes.getSuccess() + " Avatar changed.").queue();
     }
 
-    @Command(name = "setgame", desc = "Set my game.", perms = {"owner"}, aliases = {"set_game"})
+    @Command(name = "setgame", desc = "Set my game.", perms = {Bot.OWNER}, aliases = {"set_game"})
     public void cmdSetGame(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send("🤔 I need a game to set!").queue();
@@ -266,7 +263,7 @@ public class OwnerCog extends Cog {
     }
 
     @Command(name = "patreload", desc = "Reload the Patreon supporter list.",
-            perms = {"owner"}, hidden = true, aliases = {"preload"}, thread = true)
+            perms = {Bot.OWNER}, hidden = true, aliases = {"preload"}, thread = true)
     public void cmdPatReload(Context ctx) {
         boolean success = Bot.loadPatreonData();
         if (success) {

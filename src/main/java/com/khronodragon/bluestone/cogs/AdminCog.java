@@ -8,6 +8,7 @@ import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.errors.PermissionError;
 import com.khronodragon.bluestone.sql.BotAdmin;
 import com.khronodragon.bluestone.sql.GuildPrefix;
+import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.utils.MiscUtil;
 
@@ -19,7 +20,8 @@ import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 
 public class AdminCog extends Cog {
     private static final String[] ADMIN_PERM = {"admin"};
-    private static final String[] PREFIX_MOD_PERMS = {"manageServer", "manageChannel", "messageManage"};
+    private static final Permission[] PREFIX_MOD_PERMS = {Permission.MANAGE_SERVER, Permission.MANAGE_CHANNEL,
+            Permission.MESSAGE_MANAGE};
     private static final String ADMIN_NO_COMMAND = "🤔 **I need an action!**\n" +
             "The following are valid:\n" +
             "    \u2022 `test` - test if you're an admin\n" +

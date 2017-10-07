@@ -5,10 +5,9 @@ import com.khronodragon.bluestone.errors.GuildOnlyError;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.errors.PermissionError;
 import com.khronodragon.bluestone.util.Strings;
+import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -26,7 +25,7 @@ public class Command {
     public final String description;
     public final String usage;
     public final boolean hidden;
-    public final String[] permsRequired;
+    public final Permission[] permsRequired;
     public final boolean guildOnly;
     public final String[] aliases;
     public final String cogName;
@@ -38,7 +37,7 @@ public class Command {
     public final Cog cog;
 
     public Command(String name, String desc, String usage, boolean hidden,
-                   String[] permsRequired, boolean guildOnly, String[] aliases,
+                   Permission[] permsRequired, boolean guildOnly, String[] aliases,
                    Method func, Cog cogInstance, boolean needThread, boolean reportErrors) {
         this.name = name;
         this.description = desc;
@@ -162,13 +161,13 @@ public class Command {
     }
 
     private void checkPerms(Context ctx) throws PermissionError {
-        if (!Permissions.check(permsRequired, ctx))
+        if (!Permissions.check(ctx, permsRequired))
             throw new PermissionError("Requester missing permissions for command " + name)
                    .setPerms(permsRequired);
     }
 
-    public static void checkPerms(Context ctx, String[] permsRequired) {
-        if (!Permissions.check(permsRequired, ctx))
+    public static void checkPerms(Context ctx, Permission[] permsRequired) {
+        if (!Permissions.check(ctx, permsRequired))
             throw new PermissionError("Requester missing permissions for command")
                     .setPerms(permsRequired);
     }

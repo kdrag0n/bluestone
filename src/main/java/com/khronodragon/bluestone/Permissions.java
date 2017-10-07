@@ -1,41 +1,66 @@
 package com.khronodragon.bluestone;
 
 import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Channel;
-import org.apache.commons.lang3.StringUtils;
+import net.dv8tion.jda.core.entities.TextChannel;
 import sun.misc.Unsafe;
 
+import java.lang.reflect.Field;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 public class Permissions {
     private static final Unsafe unsafe = Bot.getUnsafe();
+    private static final Class<Permission> permClass = Permission.class;
+    private static final Field permOffset, permRaw, permIsGuild, permIsChannel, permName;
     public static final Permission BOT_OWNER;
     public static final Permission BOT_ADMIN;
     public static final Permission PATREON_SUPPORTER;
 
     static {
-        Class<Permission> clazz = Permission.class;
-        unsafe.allocateInstance(clazz)
+        try {
+            permOffset = permClass.getDeclaredField("offset");
+            permRaw = permClass.getDeclaredField("raw");
+            permIsGuild = permClass.getDeclaredField("isGuild");
+            permIsChannel = permClass.getDeclaredField("isChannel");
+            permName = permClass.getDeclaredField("name");
+
+            permOffset.setAccessible(true);
+            permRaw.setAccessible(true);
+            permIsGuild.setAccessible(true);
+            permIsChannel.setAccessible(true);
+            permName.setAccessible(true);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+
+        BOT_OWNER = createPerm(61, false, false, "Bot Owner");
+        BOT_ADMIN = createPerm(60, false, false, "Bot Admin");
+        PATREON_SUPPORTER = createPerm(59, false, false, "Patreon Supporter");
     }
 
     public static Permission createPerm(int offset, boolean isGuild, boolean isChannel, String name) {
         try {
+            Permission perm = (Permission) unsafe.allocateInstance(permClass);
 
+            permOffset.setInt(perm, offset);
+            permRaw.setLong(perm, 1 << offset);
+            permIsGuild.setBoolean(perm, isGuild);
+            permIsChannel.setBoolean(perm, isChannel);
+            permName.set(perm, name);
+
+            return perm;
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static boolean check(String[] permsAccepted, Context ctx) {
+    public static boolean check(Context ctx, Permission... permsAccepted) {
         if (ctx.author.getIdLong() == ctx.bot.owner.getIdLong())
             return true;
 
-        for (String perm: permsAccepted) {
-            if (perm.equals("owner")) {
+        for (Permission perm: permsAccepted) {
+            if (perm == BOT_OWNER) {
                 return false;
-            } else if (perm.equals("admin")) {
+            } else if (perm == BOT_ADMIN) {
                 try {
                     if (ctx.bot.getAdminDao().idExists(ctx.author.getIdLong()))
                         return true;
@@ -44,23 +69,8 @@ public class Permissions {
                 }
             } else {
                 if (ctx.guild != null) {
-                    for (String cmpPerm: StringUtils.split(perm, '&')) {
-                        String jdaPermStr = String.join("_", Arrays.stream(StringUtils.splitByCharacterTypeCamelCase(cmpPerm))
-                                .map(String::toUpperCase)
-                                .collect(Collectors.toList()));
-
-                        Permission jdaPerm;
-                        try {
-                            jdaPerm = Permission.valueOf(jdaPermStr);
-                        } catch (IllegalArgumentException ignored) {
-                            continue;
-                        }
-
-                        if (!ctx.member.hasPermission((Channel) ctx.channel, jdaPerm))
-                            return false;
-                    }
-
-                    return true;
+                    if (ctx.member.hasPermission((TextChannel) ctx.channel, perm))
+                        return true;
                 }
             }
         }

@@ -376,7 +376,7 @@ public class GameDealCog extends Cog {
     }
 
     @Command(name = "gdtest", desc = "Test GameDeal providers by sending all deals found.", thread = true,
-            perms = {"owner"})
+            perms = {Bot.OWNER})
     public void cmdGdTest(Context ctx) {
         ctx.send("Checking...").queue();
 

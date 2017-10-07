@@ -1,13 +1,13 @@
 package com.khronodragon.bluestone.errors;
 
 import net.dv8tion.jda.core.Permission;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class PermissionError extends CheckFailure {
-    private String[] erroredPerms;
+    private Permission[] erroredPerms;
 
     public PermissionError() {}
 
@@ -28,33 +28,13 @@ public class PermissionError extends CheckFailure {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 
-    public PermissionError setPerms(String[] perms) {
+    public PermissionError setPerms(Permission[] perms) {
         erroredPerms = perms;
         return this;
     }
 
-    public String[] getFriendlyPerms() {
-        return Arrays.stream(erroredPerms).map(p -> {
-            if (p.equals("owner")) {
-                return "Bot Owner";
-            } else if (p.equals("admin")) {
-                return "Bot Admin";
-            } else {
-                return Arrays.stream(StringUtils.split(p, '&'))
-                        .map(p2 -> {
-                            String jdaPermStr = String.join("_",
-                                    Arrays.stream(StringUtils.splitByCharacterTypeCamelCase(p2))
-                                            .map(String::toUpperCase)
-                                            .collect(Collectors.toList()));
-                            Permission perm = Permission.valueOf(jdaPermStr);
-                            if (perm == null) {
-                                return "Unknown";
-                            } else {
-                                return perm.getName();
-                            }
-                        })
-                        .collect(Collectors.joining(" + "));
-            }
-        }).collect(Collectors.toList()).toArray(new String[0]);
+    public List<String> getFriendlyPerms() {
+        return Arrays.stream(erroredPerms).map(Permission::getName)
+                .collect(Collectors.toList());
     }
 }

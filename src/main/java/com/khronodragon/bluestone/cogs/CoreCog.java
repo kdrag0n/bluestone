@@ -6,6 +6,7 @@ import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.enums.MessageDestination;
 import com.khronodragon.bluestone.util.Paginator;
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.TextChannel;
@@ -29,7 +30,6 @@ public class CoreCog extends Cog {
                     "\n" +
                     "*If you like Goldmine, please help keep it alive by donating here: <https://patreon.com/kdragon>.\n" +
                     "Any amount is appreciated.*";
-    private static final String[] phelpPerms = {"manageChannel", "managePermissions", "messageManage", "manageServer"};
     public CoreCog(Bot bot) {
         super(bot);
     }
@@ -75,7 +75,9 @@ public class CoreCog extends Cog {
         int charLimit = ctx.jda.getSelfUser().isBot() ? MessageEmbed.EMBED_MAX_LENGTH_BOT : MessageEmbed.EMBED_MAX_LENGTH_CLIENT;
         boolean sendPublic = false;
         boolean isOwner = ctx.author.getIdLong() == bot.owner.getIdLong();
-        if (ctx.invoker.startsWith("p") && Permissions.check(phelpPerms, ctx)) {
+        if (ctx.invoker.startsWith("p") && Permissions.check(ctx,
+                Permission.MANAGE_CHANNEL, Permission.MANAGE_PERMISSIONS,
+                Permission.MESSAGE_MANAGE, Permission.MANAGE_SERVER)) {
             sendPublic = true;
         }
 

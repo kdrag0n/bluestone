@@ -12,7 +12,6 @@ import static com.khronodragon.bluestone.sql.GuildRoleOption.RoleConditions.*;
 
 @DatabaseTable(tableName = "role_options")
 public class GuildRoleOption implements Predicate<Context> {
-    private static final String[] BOT_OWNER_PERM
     @DatabaseField(id = true, canBeNull = false)
     private long roleId;
 
@@ -85,7 +84,7 @@ public class GuildRoleOption implements Predicate<Context> {
 
         // Ranks
         if ((conditions & IS_BOT_OWNER) == IS_BOT_OWNER) {
-            if (!Permissions.check(BOT_OWNER_PERM, ctx))
+            if (!Permissions.check(ctx, Permissions.BOT_OWNER))
                 return false;
         }
 

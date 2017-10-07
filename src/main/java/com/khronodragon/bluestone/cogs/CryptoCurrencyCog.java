@@ -325,7 +325,7 @@ public class CryptoCurrencyCog extends Cog {
         builder.build().paginate(ctx.channel, page);
     }
 
-    @Command(name = "cryptoupdate", desc = "Update the cryptocurrency data.", perms = {"owner"},
+    @Command(name = "cryptoupdate", desc = "Update the cryptocurrency data.", perms = {},
             thread = true, aliases = {"currencyupdate", "cupdate", "crypto_update"})
     public void cmdCryptoUpdate(Context ctx) {
         update();
