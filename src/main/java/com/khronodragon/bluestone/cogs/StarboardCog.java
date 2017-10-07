@@ -11,10 +11,7 @@ import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.table.TableUtils;
 import com.joestelmach.natty.DateGroup;
 import com.joestelmach.natty.Parser;
-import com.khronodragon.bluestone.Bot;
-import com.khronodragon.bluestone.Cog;
-import com.khronodragon.bluestone.Context;
-import com.khronodragon.bluestone.Emotes;
+import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.errors.PassException;
@@ -55,7 +52,7 @@ import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 
 public class StarboardCog extends Cog {
     private static final Logger logger = LogManager.getLogger(StarboardCog.class);
-    private static final String[] MOD_PERMS = {"manageServer", "manageChannel"};
+    private static final Permission[] MOD_PERMS = {Permission.MANAGE_SERVER, Permission.MANAGE_CHANNEL};
     private static final String[] TOP_3_BADGES = {"🥇", "🥈", "🥉"};
     private static final String NO_COMMAND = "🤔 **I need an action!**\n" +
             "The following are valid:\n" +

@@ -24,9 +24,4 @@ public class DiscordEmoteProvider implements EmoteProvider {
         matcher.find();
         return new EmoteInfo(matcher.group(1), matcher.group(2), null);
     }
-
-    @Override
-    public boolean isLoaded() {
-        return true;
-    }
 }

@@ -1,9 +1,6 @@
 package com.khronodragon.bluestone.cogs;
 
-import com.khronodragon.bluestone.Bot;
-import com.khronodragon.bluestone.Cog;
-import com.khronodragon.bluestone.Context;
-import com.khronodragon.bluestone.Emotes;
+import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.errors.PermissionError;
 import com.khronodragon.bluestone.sql.BotAdmin;
@@ -19,7 +16,7 @@ import java.util.stream.Collectors;
 import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 
 public class AdminCog extends Cog {
-    private static final String[] ADMIN_PERM = {"admin"};
+    private static final Permission[] ADMIN_PERM = {Permissions.BOT_ADMIN};
     private static final Permission[] PREFIX_MOD_PERMS = {Permission.MANAGE_SERVER, Permission.MANAGE_CHANNEL,
             Permission.MESSAGE_MANAGE};
     private static final String ADMIN_NO_COMMAND = "🤔 **I need an action!**\n" +

@@ -4,10 +4,7 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.table.TableUtils;
-import com.khronodragon.bluestone.Bot;
-import com.khronodragon.bluestone.Cog;
-import com.khronodragon.bluestone.Context;
-import com.khronodragon.bluestone.Emotes;
+import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.enums.AutoroleConditions;
@@ -145,8 +142,9 @@ public class ModerationCog extends Cog {
         return pattern.matcher(input).replaceAll(" ");
     }
 
+    @Perm.All({Permission.MESSAGE_MANAGE, Permission.MESSAGE_HISTORY})
     @Command(name = "purge", desc = "Purge messages from a channel.", guildOnly = true,
-            aliases = {"clean", "nuke", "prune", "clear"}, perms = {"messageManage&messageHistory"},
+            aliases = {"clean", "nuke", "prune", "clear"},
             usage = "[parameters]", thread = true)
     public void cmdPurge(Context ctx) {
         if (bot.isSelfbot()) {
@@ -278,8 +276,10 @@ public class ModerationCog extends Cog {
         });
     }
 
+    @Perm.ManageRoles
+    @Perm.ManageChannels
     @Command(name = "mute", desc = "Mute someone in all text channels.", guildOnly = true,
-            perms = {"manageRoles", "manageChannel"}, usage = "[@user] {reason}")
+            usage = "[@user] {reason}")
     public void cmdMute(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need someone to mute!").queue();
@@ -328,8 +328,9 @@ public class ModerationCog extends Cog {
         });
     }
 
-    @Command(name = "unmute", desc = "Unmute someone in all text channels.", guildOnly = true,
-            perms = {"manageRoles", "manageChannel"}, usage = "[@user] {reason}")
+    @Perm.ManageRoles
+    @Perm.ManageChannels
+    @Command(name = "unmute", desc = "Unmute someone in all text channels.", guildOnly = true, usage = "[@user] {reason}")
     public void cmdUnmute(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need someone to unmute!").queue();
@@ -374,8 +375,9 @@ public class ModerationCog extends Cog {
         });
     }
 
+    @Perm.Ban
     @Command(name = "ban", desc = "Swing the ban hammer on someone.", guildOnly = true,
-            perms = {"banMembers"}, usage = "[@user or user ID] {reason}")
+            usage = "[@user or user ID] {reason}")
     public void cmdBan(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need someone to ban!").queue();
@@ -437,8 +439,9 @@ public class ModerationCog extends Cog {
         });
     }
 
+    @Perm.Kick
     @Command(name = "kick", desc = "Kick a member of the server.", guildOnly = true,
-            usage = "[@user or user ID] [reason]", perms = {"kickMembers"})
+            usage = "[@user or user ID] [reason]")
     public void cmdKick(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need someone to kick!").queue();
@@ -500,7 +503,8 @@ public class ModerationCog extends Cog {
         });
     }
 
-    @Command(name = "autorole", desc = "Manage autoroles in this server.", guildOnly = true, perms = {"manageRoles"},
+    @Perm.ManageRoles
+    @Command(name = "autorole", desc = "Manage autoroles in this server.", guildOnly = true,
             usage = "[action] {role}", aliases = {"autoroles"}, thread = true)
     public void cmdAutorole(Context ctx) throws SQLException {
         if (ctx.rawArgs.length() < 1) {
@@ -609,8 +613,9 @@ public class ModerationCog extends Cog {
         ctx.send(Emotes.getSuccess() + " Cleared " + deleted + " autoroles.").queue();
     }
 
+    @Perm.Invite
     @Command(name = "instant_invite", desc = "Create an instant invite that never expires.",
-            usage = "{#channel - default current channel}", guildOnly = true, perms = {"createInstantInvite"},
+            usage = "{#channel - default current channel}", guildOnly = true,
             aliases = {"inv", "make_invite", "mkinvite", "makeinvite", "createinvite", "instantinvite", "create_invite"})
     public void cmdMakeInvite(Context ctx) {
         MessageChannel channel = ctx.channel;

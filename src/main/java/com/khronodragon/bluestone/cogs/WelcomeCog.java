@@ -3,14 +3,12 @@ package com.khronodragon.bluestone.cogs;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.table.TableUtils;
-import com.khronodragon.bluestone.Bot;
-import com.khronodragon.bluestone.Cog;
-import com.khronodragon.bluestone.Context;
-import com.khronodragon.bluestone.Emotes;
+import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.sql.GuildWelcomeMessages;
 import com.khronodragon.bluestone.util.Strings;
+import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.TextChannel;
@@ -86,9 +84,10 @@ public class WelcomeCog extends Cog {
         return "The cog that welcomes people.";
     }
 
+    @Perm.All({Permission.MANAGE_SERVER, Permission.CREATE_INSTANT_INVITE})
+    @Perm.All({Permission.MANAGE_ROLES, Permission.CREATE_INSTANT_INVITE})
     @Command(name = "welcome", desc = "Manage member welcome messages.", guildOnly = true,
-            aliases = {"welcome_msgs", "welcomemsg"}, thread = true,
-            perms = {"manageServer&createInstantInvite", "manageRoles&createInstantInvite"}, usage = "[action] {args...}")
+            aliases = {"welcome_msgs", "welcomemsg"}, thread = true, usage = "[action] {args...}")
     public void welcomeControl(Context ctx) throws SQLException {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(NO_COMMAND).queue();
@@ -189,9 +188,10 @@ public class WelcomeCog extends Cog {
         }
     }
 
+    @Perm.All({Permission.MANAGE_SERVER, Permission.CREATE_INSTANT_INVITE})
+    @Perm.All({Permission.MANAGE_ROLES, Permission.CREATE_INSTANT_INVITE})
     @Command(name = "leave", desc = "Manage member leave messages.", guildOnly = true,
-            aliases = {"leave_msgs", "leavemsg"}, thread = true,
-            perms = {"manageServer&createInstantInvite", "manageRoles&createInstantInvite"}, usage = "[action] {args...}")
+            aliases = {"leave_msgs", "leavemsg"}, thread = true, usage = "[action] {args...}")
     public void leaveControl(Context ctx) throws SQLException {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(NO_COMMAND).queue();

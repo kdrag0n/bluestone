@@ -9,10 +9,7 @@ import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 import com.j256.ormlite.table.TableUtils;
-import com.khronodragon.bluestone.Bot;
-import com.khronodragon.bluestone.Cog;
-import com.khronodragon.bluestone.Context;
-import com.khronodragon.bluestone.Emotes;
+import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.sql.GameDealDestination;
@@ -375,8 +372,8 @@ public class GameDealCog extends Cog {
             return desc.substring(0, 2045) + "...";
     }
 
-    @Command(name = "gdtest", desc = "Test GameDeal providers by sending all deals found.", thread = true,
-            perms = {Bot.OWNER})
+    @Perm.Owner
+    @Command(name = "gdtest", desc = "Test GameDeal providers by sending all deals found.", thread = true)
     public void cmdGdTest(Context ctx) {
         ctx.send("Checking...").queue();
 

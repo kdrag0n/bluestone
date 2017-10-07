@@ -37,6 +37,7 @@ import javax.security.auth.login.LoginException;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -51,6 +52,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static com.khronodragon.bluestone.util.Strings.str;
 import static com.khronodragon.bluestone.util.Strings.format;
@@ -97,13 +99,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public User owner;
 
     static {
-        try {
-            Field f = Unsafe.class.getDeclaredField("theUnsafe");
-            f.setAccessible(true);
-            unsafe = (Unsafe) f.get(null);
-        } catch (ReflectiveOperationException e) {
-            defLog.error("Failed to get Unsafe!");
-        }
+        ensureUnsafe();
     }
 
     public Dao<BotAdmin, Long> getAdminDao() {
@@ -355,11 +351,63 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
         for (Method method: clazz.getDeclaredMethods()) {
             if (method.isAnnotationPresent(com.khronodragon.bluestone.annotations.Command.class)) {
-                com.khronodragon.bluestone.annotations.Command anno = method.getAnnotation(com.khronodragon.bluestone.annotations.Command.class);
+                com.khronodragon.bluestone.annotations.Command anno = method.getDeclaredAnnotation(com.khronodragon.bluestone.annotations.Command.class);
+
+                List<Permission> perms = new ArrayList<>(method.getAnnotations().length - 1);
+                for (Annotation a: method.getAnnotations()) {
+                    Class<? extends Annotation> type = a.annotationType();
+
+                    if (type == Perm.Owner.class) {
+                        perms.add(OWNER);
+                    } else if (type == Perm.Admin.class) {
+                        perms.add(ADMIN);
+                    } else if (type == Perm.Patron.class) {
+                        perms.add(Permissions.PATREON_SUPPORTER);
+                    } else if (type == Perm.All.class) {
+                        try {
+                            perms.add(((Permission[]) type.getDeclaredMethod("value").invoke(anno))[0]);
+                                    // TODO: AND + multi
+                        } catch (ReflectiveOperationException e) {
+                            throw new RuntimeException(e);
+                        }
+                    } else if (type == Perm.PermAnds.class) {
+                        try {
+                            Perm.All[] alls = (Perm.All[]) type.getDeclaredMethod("value").invoke(anno);
+
+                            for (Perm.All all: alls) {
+                                perms.add(all.value()[0]); // TODO: AND + multi
+                            }
+                        } catch (ReflectiveOperationException e) {
+                            throw new RuntimeException(e);
+                        }
+                    } else {
+                        Method valueMethod;
+                        try {
+                            valueMethod = type.getDeclaredMethod("value");
+                        } catch (NoSuchMethodException ignored) {
+                            continue;
+                        }
+
+                        if (valueMethod.getReturnType() != Permission.class)
+                            continue;
+
+                        Permission perm;
+                        try {
+                            perm = (Permission) valueMethod.invoke(a);
+                        } catch (ReflectiveOperationException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                        perms.add(perm);
+                    }
+                }
+
+                if (perms.size() > 0)
+                    logger.info("{} perms: {}", anno.name(), perms.stream().map(Permission::getName).collect(Collectors.joining(", ")));
 
                 Command command = new Command(
                         anno.name(), anno.desc(), anno.usage(), anno.hidden(),
-                        anno.perms(), anno.guildOnly(), anno.aliases(), method, cog,
+                        perms.toArray(new Permission[0]), anno.guildOnly(), anno.aliases(), method, cog,
                         anno.thread(), anno.reportErrors()
                 );
 
@@ -578,13 +626,15 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     }
 
     public static Unsafe getUnsafe() {
-        if (unsafe == null)
-            throw new RuntimeException("Unsafe instance is not available!");
-        else
+        if (unsafe == null) {
+            ensureUnsafe();
             return unsafe;
+        }
+
+        return unsafe;
     }
 
-    private static MessageEmbed errorEmbed(Throwable e, Message msg, Command cmd) {
+    private MessageEmbed errorEmbed(Throwable e, Message msg, Command cmd) {
         String stack = renderStackTrace(e, "\u3000", "> ");
 
         EmbedBuilder emb = new EmbedBuilder()
@@ -611,6 +661,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 .addField("Channel ID", msg.getChannel().getId(), true)
                 .addField("Content", '`' + msg.getContent() + '`', true)
                 .addField("Embeds", str(msg.getEmbeds().size()), true)
+                .addField("Shard ID", str(getShardNum() - 1), true)
                 .setTimestamp(Instant.now());
 
         if (msg.getGuild() != null)
@@ -786,5 +837,17 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
 
         return 0;
+    }
+
+    private static void ensureUnsafe() {
+        if (unsafe == null) {
+            try {
+                Field f = Unsafe.class.getDeclaredField("theUnsafe");
+                f.setAccessible(true);
+                unsafe = (Unsafe) f.get(null);
+            } catch (ReflectiveOperationException e) {
+                defLog.error("Failed to get Unsafe!");
+            }
+        }
     }
 }

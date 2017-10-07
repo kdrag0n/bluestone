@@ -12,8 +12,8 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 public class BetterTTVEmoteProvider implements EmoteProvider {
-    private JSONObject emotes = null;
-    private String template = null;
+    private JSONObject emotes = new JSONObject();
+    private String template = "";
 
     public BetterTTVEmoteProvider(OkHttpClient client) {
         client.newCall(new Request.Builder()
@@ -23,9 +23,6 @@ public class BetterTTVEmoteProvider implements EmoteProvider {
             @Override
             public void onFailure(Call call, IOException e) {
                 LogManager.getLogger(BetterTTVEmoteProvider.class).error("Failed to get data", e);
-
-                emotes = new JSONObject();
-                template = "";
             }
 
             @Override
@@ -54,11 +51,6 @@ public class BetterTTVEmoteProvider implements EmoteProvider {
     @Override
     public boolean hasEmote(String emote) {
         return emotes.has(emote);
-    }
-
-    @Override
-    public boolean isLoaded() {
-        return emotes != null && template != null;
     }
 
     @Override

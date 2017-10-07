@@ -1,9 +1,6 @@
 package com.khronodragon.bluestone.cogs;
 
-import com.khronodragon.bluestone.Bot;
-import com.khronodragon.bluestone.Cog;
-import com.khronodragon.bluestone.Context;
-import com.khronodragon.bluestone.Emotes;
+import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.handlers.RMessageWaitListener;
 import gnu.trove.set.TLongSet;
@@ -102,8 +99,9 @@ public class ReplCog extends Cog {
         return StringUtils.stripEnd(StringUtils.stripStart(stage1, "`"), "`");
     }
 
+    @Perm.Owner
     @Command(name = "repl", desc = "A multilingual REPL, in Discord!\n\nFlags come before language in arguments.",
-            perms = {Bot.OWNER}, usage = "[language] {flags}", thread=true)
+            usage = "[language] {flags}", thread=true)
     public void cmdRepl(Context ctx) throws ScriptException {
         if (ctx.args.size() < 1) {
             ctx.send("You need to specify a language, like `scala` or `js`!").queue();

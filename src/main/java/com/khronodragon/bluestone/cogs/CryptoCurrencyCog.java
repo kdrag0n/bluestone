@@ -6,10 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 import com.jagrosh.jdautilities.menu.pagination.PaginatorBuilder;
-import com.khronodragon.bluestone.Bot;
-import com.khronodragon.bluestone.Cog;
-import com.khronodragon.bluestone.Context;
-import com.khronodragon.bluestone.Emotes;
+import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -325,7 +322,9 @@ public class CryptoCurrencyCog extends Cog {
         builder.build().paginate(ctx.channel, page);
     }
 
-    @Command(name = "cryptoupdate", desc = "Update the cryptocurrency data.", perms = {},
+    @Perm.Owner
+    @Perm.Admin
+    @Command(name = "cryptoupdate", desc = "Update the cryptocurrency data.",
             thread = true, aliases = {"currencyupdate", "cupdate", "crypto_update"})
     public void cmdCryptoUpdate(Context ctx) {
         update();

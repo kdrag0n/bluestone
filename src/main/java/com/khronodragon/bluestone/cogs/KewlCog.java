@@ -7,10 +7,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.table.TableUtils;
-import com.khronodragon.bluestone.Bot;
-import com.khronodragon.bluestone.Cog;
-import com.khronodragon.bluestone.Context;
-import com.khronodragon.bluestone.Emotes;
+import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.Cooldown;
 import com.khronodragon.bluestone.annotations.EventHandler;
@@ -523,8 +520,9 @@ public class KewlCog extends Cog {
         }
     }
 
+    @Perm.Owner
     @Command(name = "profile_override_bg", desc = "Override an user's profile background. This just executes `profile bg` as them.",
-            perms = {Bot.OWNER}, usage = "[@user/user ID] {to: reset/default / attach image}", thread = true)
+            usage = "[@user/user ID] {to: reset/default / attach image}", thread = true)
     public void cmdProfileOverrideBg(Context ctx) {
         User target;
 

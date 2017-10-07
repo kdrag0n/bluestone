@@ -1,9 +1,6 @@
 package com.khronodragon.bluestone.cogs;
 
-import com.khronodragon.bluestone.Bot;
-import com.khronodragon.bluestone.Cog;
-import com.khronodragon.bluestone.Context;
-import com.khronodragon.bluestone.Emotes;
+import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.util.Strings;
@@ -64,7 +61,8 @@ public class CogmanCog extends Cog {
         return "Manage all the cogs.";
     }
 
-    @Command(name = "cogall", desc = "Manage all the cogs - run on ALL shards.", perms = {Bot.OWNER}, aliases = {"cogsall"},
+    @Perm.Owner
+    @Command(name = "cogall", desc = "Manage all the cogs - run on ALL shards.", aliases = {"cogsall"},
             reportErrors = false)
     public void mainCmdAll(Context ctx) throws ReflectiveOperationException, MalformedURLException {
         for (Bot shard: bot.getShardUtil().getShards()) {
@@ -78,7 +76,8 @@ public class CogmanCog extends Cog {
         }
     }
 
-    @Command(name = "cog", desc = "Manage all the cogs.", perms = {Bot.OWNER}, aliases = {"cogs"}, reportErrors = false)
+    @Perm.Owner
+    @Command(name = "cog", desc = "Manage all the cogs.", aliases = {"cogs"}, reportErrors = false)
     public void mainCmd(Context ctx) throws ReflectiveOperationException, MalformedURLException {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(NO_COMMAND).queue();

@@ -13,7 +13,7 @@ import java.io.IOException;
 import static com.khronodragon.bluestone.util.Strings.str;
 
 public class FrankerFaceZEmoteProvider implements EmoteProvider {
-    private JSONObject emotes = null;
+    private JSONObject emotes = new JSONObject();
 
     public FrankerFaceZEmoteProvider(OkHttpClient client) {
         client.newCall(new Request.Builder()
@@ -23,7 +23,6 @@ public class FrankerFaceZEmoteProvider implements EmoteProvider {
             @Override
             public void onFailure(Call call, IOException e) {
                 LogManager.getLogger(FrankerFaceZEmoteProvider.class).error("Failed to get data", e);
-                emotes = new JSONObject();
             }
 
             @Override
@@ -54,11 +53,6 @@ public class FrankerFaceZEmoteProvider implements EmoteProvider {
     @Override
     public boolean hasEmote(String emote) {
         return emotes.has(emote);
-    }
-
-    @Override
-    public boolean isLoaded() {
-        return emotes != null;
     }
 
     @Override

@@ -27,7 +27,7 @@ public class Emotes {
 
     public static String getMemberStatus(Member member) {
         if (hasDbots) {
-            if (member.getGame() != null && member.getGame().getType() == Game.GameType.TWITCH)
+            if (member.getGame() != null && member.getGame().getType() == Game.GameType.STREAMING)
                 return "<:streaming:313956277132853248>";
 
             switch (member.getOnlineStatus()) {

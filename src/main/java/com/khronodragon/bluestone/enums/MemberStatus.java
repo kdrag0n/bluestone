@@ -25,7 +25,7 @@ public enum MemberStatus {
     }
 
     public static MemberStatus from(Member member) {
-        if (member.getGame() != null && member.getGame().getType() == Game.GameType.TWITCH)
+        if (member.getGame() != null && member.getGame().getType() == Game.GameType.STREAMING)
             return STREAMING;
         else
             return from(member.getOnlineStatus());

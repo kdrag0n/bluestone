@@ -5,10 +5,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.table.TableUtils;
-import com.khronodragon.bluestone.Bot;
-import com.khronodragon.bluestone.Cog;
-import com.khronodragon.bluestone.Context;
-import com.khronodragon.bluestone.Emotes;
+import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.errors.PassException;
@@ -26,6 +23,7 @@ import gnu.trove.map.TLongObjectMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
+import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.GuildVoiceState;
 import net.dv8tion.jda.core.entities.Member;
@@ -425,8 +423,11 @@ public class MusicCog extends Cog {
         }
     }
 
-    @Command(name = "force_skip", desc = "Force skip the current track.", aliases = {"forceskip"}, guildOnly = true,
-            perms = {"kickMembers", "voiceMuteOthers", "voiceDeafOthers", "voiceMoveOthers"})
+    @Perm.Kick
+    @Perm.Voice.Mute
+    @Perm.Voice.Deafen
+    @Perm.Voice.Move
+    @Command(name = "force_skip", desc = "Force skip the current track.", aliases = {"forceskip"}, guildOnly = true)
     public void cmdForceSkip(Context ctx) {
         channelChecks(ctx);
         AudioState state = getAudioState(ctx.guild);
@@ -479,9 +480,13 @@ public class MusicCog extends Cog {
             ctx.send("Disconnected.").queue();
     }
 
+    @Perm.ManageServer
+    @Perm.Voice.Mute
+    @Perm.Voice.Move
+    @Perm.Voice.Deafen
+    @Perm.ManagePermissions
     @Command(name = "play_first_result", desc = "Toggle the setting for always playing the first search result.",
-            aliases = {"first_result", "always_play_first", "play_first", "playfirst", "apfr"}, guildOnly = true, thread = true,
-            perms = {"manageServer", "voiceMuteOthers", "voiceMoveOthers", "voiceDeafOthers", "managePermissions"})
+            aliases = {"first_result", "always_play_first", "play_first", "playfirst", "apfr"}, guildOnly = true, thread = true)
     public void cmdPlayFirstResult(Context ctx) throws SQLException {
         GuildMusicSettings settings = settingsDao.queryForId(ctx.guild.getIdLong());
         if (settings == null)
