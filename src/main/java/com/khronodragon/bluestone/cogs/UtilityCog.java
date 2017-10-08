@@ -1561,6 +1561,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "calculate", desc = "Evaluate a mathematical expression.", aliases = {"calc", "calculator"})
     public void cmdCalculate(Context ctx) throws ScriptException { // TODO: properly handle error
+        // TODO: !!!!! in constructor, eval assets/calc.lua from classpath in calcEngine. !!! IMPORTANT
         // TODO: properly handle no code
         Object _result = calcEngine.eval("return calc('" + StringUtils.replace(ctx.rawArgs, "'", "\\\"") + "')");
         String result = _result instanceof String ? (String) _result : _result.toString();
