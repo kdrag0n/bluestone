@@ -942,7 +942,6 @@ public class UtilityCog extends Cog {
         ctx.channel.sendTyping().queue();
 
         JSONObject data;
-        logger.info("Connecting to Minecraft server {}:{}", server, port);
         try {
             data = new MinecraftPing().getPing(new MinecraftPingOptions().setHostname(server).setPort(port).setTimeout(5000));
         } catch (IOException e) {

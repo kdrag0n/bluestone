@@ -12,6 +12,7 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
+import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.TextChannel;
 
 import java.util.List;
@@ -27,12 +28,17 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
     private final AudioPlayerManager manager;
     private final String term;
     private final GuildMusicSettings settings;
+    private final boolean canTalk;
+    private final boolean canReact;
 
     public TrackLoadHandler(Context ctx, AudioState state, AudioPlayerManager man, String term, GuildMusicSettings settings) {
         this.ctx = ctx;
         this.state = state;
         this.term = term;
         this.settings = settings;
+        this.canTalk = ((TextChannel) ctx).canTalk();
+        this.canReact = ctx.guild.getSelfMember()
+                .hasPermission((TextChannel) ctx.channel, Permission.MESSAGE_ADD_REACTION);
         manager = man;
         iteration = 0;
     }
@@ -40,9 +46,11 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
     @Override
     public void trackLoaded(AudioTrack track) {
         if (!track.getInfo().isStream && track.getDuration() > TimeUnit.MINUTES.toMillis(2 * 60 + 32)) {
-            ctx.send("⛔ Track longer than **2 h 30 min**!").queue();
-            Cog.removeReactionIfExists(ctx.message, "⌛");
-            ctx.message.addReaction("❌").queue();
+            if (canTalk) ctx.send("⛔ Track longer than **2 h 30 min**!").queue();
+            if (canReact) {
+                Cog.removeReactionIfExists(ctx.message, "⌛");
+                ctx.message.addReaction("❌").queue();
+            }
             return;
         }
 
@@ -50,10 +58,12 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
         if (!state.scheduler.queue.isEmpty()) {
             AudioTrackInfo info = track.getInfo();
 
-            ctx.send(Emotes.getSuccess() + " Queued **" + info.title + "** by **" + info.author +
+            if (canTalk) ctx.send(Emotes.getSuccess() + " Queued **" + info.title + "** by **" + info.author +
                     "**, length **" + Bot.formatDuration(info.length / 1000L) + "**").queue();
-            Cog.removeReactionIfExists(ctx.message, "⌛");
-            ctx.message.addReaction("✅").queue();
+            if (canReact) {
+                Cog.removeReactionIfExists(ctx.message, "⌛");
+                ctx.message.addReaction("✅").queue();
+            }
         }
     }
 
@@ -114,30 +124,36 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
             if (tracks.size() < 1)
                 noMatches();
             else if ((settings != null && settings.alwaysPlayFirstResult()) ||
-                    (ctx.channel instanceof TextChannel) && !((TextChannel) ctx.channel).canTalk())
+                    (ctx.channel instanceof TextChannel) && !canTalk)
                 trackLoaded(tracks.get(0));
             else
                 searchResults(tracks);
 
             return;
         }
-        if (tracks.size() > 24) {
-            ctx.send(Emotes.getFailure() + " Playlist is longer than 24 tracks!").queue();
-            return;
+        if (tracks.size() > 18) {
+            if (canTalk) ctx.send(Emotes.getFailure() +
+                    " Playlist is longer than 18 tracks - only adding the first 18 tracks.").queue();
+            tracks = tracks.subList(0, 18);
         }
         long duration = 0L;
 
         for (AudioTrack track: tracks) {
             if (!track.getInfo().isStream && track.getDuration() > TimeUnit.HOURS.toMillis(3)) {
-                ctx.send("⛔ Track **" + track.getInfo().title + "** longer than **3 hours**!").queue();
+                if (canTalk) ctx.send("⛔ Track **" + track.getInfo().title +
+                        "** longer than **3 hours**!").queue();
                 return;
             }
             state.scheduler.queue(track, new ExtraTrackInfo(ctx.channel, ctx.member));
             duration += track.getDuration();
         }
-        ctx.send(Emotes.getSuccess() + " Queued playlist **" + playlist.getName() + "**, length **" + Bot.formatDuration(duration / 1000L) + "**").queue();
-        Cog.removeReactionIfExists(ctx.message, "⌛");
-        ctx.message.addReaction("✅").queue();
+
+        if (canTalk) ctx.send(Emotes.getSuccess() + " Queued playlist **" + playlist.getName() + "**, length **" +
+                Bot.formatDuration(duration / 1000L) + "**").queue();
+        if (canReact) {
+            Cog.removeReactionIfExists(ctx.message, "⌛");
+            ctx.message.addReaction("✅").queue();
+        }
     }
 
     @Override
@@ -146,16 +162,20 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
             iteration += 1;
             manager.loadItem(PREFIXES[iteration] + term, this);
         } else {
-            ctx.send(Emotes.getFailure() + " No matches found!").queue();
-            Cog.removeReactionIfExists(ctx.message, "⌛");
-            ctx.message.addReaction("❌").queue();
+            if (canTalk) ctx.send(Emotes.getFailure() + " No matches found!").queue();
+            if (canReact) {
+                Cog.removeReactionIfExists(ctx.message, "⌛");
+                ctx.message.addReaction("❌").queue();
+            }
         }
     }
 
     @Override
     public void loadFailed(FriendlyException exception) {
-        ctx.send("‼ Error loading track: " + exception.getMessage()).queue();
-        Cog.removeReactionIfExists(ctx.message, "⌛");
-        ctx.message.addReaction("❌").queue();
+        if (canTalk) ctx.send("‼ Error loading track: " + exception.getMessage()).queue();
+        if (canReact) {
+            Cog.removeReactionIfExists(ctx.message, "⌛");
+            ctx.message.addReaction("❌").queue();
+        }
     }
 }

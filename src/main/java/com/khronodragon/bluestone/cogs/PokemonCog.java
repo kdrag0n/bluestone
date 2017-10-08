@@ -23,6 +23,7 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -121,6 +122,13 @@ public class PokemonCog extends Cog {
             pokemon = pokeCache.get(url.toString());
         } catch (ExecutionException container) {
             Throwable e = container.getCause();
+
+            if (e instanceof SocketTimeoutException) {
+                ctx.send(Emotes.getFailure() +
+                        " The Pokémon service is having issues right now. Try again later.").queue();
+                return;
+            }
+
             logger.warn("Error contacting PokeAPI", e);
             ctx.send(Emotes.getFailure() + " Failed to fetch Pokémon. `" + e.getMessage() + '`').queue();
             return;

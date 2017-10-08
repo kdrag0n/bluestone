@@ -251,7 +251,8 @@ public class MonitorCog extends Cog {
 
         private boolean isValid(String input) {
             return input != null &&
-                    !StringUtils.isBlank(input);
+                    !StringUtils.isBlank(input) &&
+                    !input.equals("RestAction queue returned failure: [ErrorResponseException] 10008: Unknown Message");
         }
     }
 }
