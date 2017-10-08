@@ -6,12 +6,11 @@ import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.Permissions;
 
 import java.time.OffsetDateTime;
-import java.util.function.Predicate;
 
 import static com.khronodragon.bluestone.sql.GuildRoleOption.RoleConditions.*;
 
 @DatabaseTable(tableName = "role_options")
-public class GuildRoleOption implements Predicate<Context> {
+public class GuildRoleOption {
     @DatabaseField(id = true, canBeNull = false)
     private long roleId;
 
@@ -50,7 +49,7 @@ public class GuildRoleOption implements Predicate<Context> {
         return extraData;
     }
 
-    public boolean test(Context ctx) {
+    public boolean test(Context ctx, int mSend, boolean hasBeenMentioned, boolean hasMentionedOther) {
         OffsetDateTime now = OffsetDateTime.now();
         OffsetDateTime mJoin = ctx.member.getJoinDate();
 
@@ -77,14 +76,54 @@ public class GuildRoleOption implements Predicate<Context> {
 
         // Sending messages
         if ((conditions & SEND_1_MESSAGE) == SEND_1_MESSAGE) {
+            if (mSend < 1)
+                return false;
+        }
 
+        if ((conditions & SEND_2_MESSAGES) == SEND_2_MESSAGES) {
+            if (mSend < 2)
+                return false;
+        }
+
+        if ((conditions & SEND_5_MESSAGES) == SEND_5_MESSAGES) {
+            if (mSend < 5)
+                return false;
+        }
+
+        if ((conditions & SEND_10_MESSAGES) == SEND_10_MESSAGES) {
+            if (mSend < 10)
+                return false;
         }
 
         // Special
+        if ((conditions & HAS_BEEN_MENTIONED) == HAS_BEEN_MENTIONED) {
+            if (!hasBeenMentioned)
+                return false;
+        }
+
+        if ((conditions & HAS_MENTIONED_OTHER) == HAS_MENTIONED_OTHER) {
+            if (!hasMentionedOther)
+                return false;
+        }
+
+        if ((conditions & HAS_CUSTOM_AVATAR) == HAS_CUSTOM_AVATAR) {
+            if (ctx.member.getUser().getAvatarId() == null)
+                return false;
+        }
 
         // Ranks
         if ((conditions & IS_BOT_OWNER) == IS_BOT_OWNER) {
             if (!Permissions.check(ctx, Permissions.BOT_OWNER))
+                return false;
+        }
+
+        if ((conditions & IS_BOT_ADMIN) == IS_BOT_ADMIN) {
+            if (!Permissions.check(ctx, Permissions.BOT_ADMIN))
+                return false;
+        }
+
+        if ((conditions & IS_PATRON) == IS_PATRON) {
+            if (!Permissions.check(ctx, Permissions.PATREON_SUPPORTER))
                 return false;
         }
 
@@ -108,11 +147,10 @@ public class GuildRoleOption implements Predicate<Context> {
         public static final int HAS_BEEN_MENTIONED = 1<<9;
         public static final int HAS_MENTIONED_OTHER = 1<<10;
         public static final int HAS_CUSTOM_AVATAR = 1<<11;
-        public static final int HAS_BOT_PROFILE = 1<<12;
 
         // Ranks
-        public static final int IS_BOT_OWNER = 1<<13;
-        public static final int IS_BOT_ADMIN = 1<<14;
-        public static final int IS_PATRON = 1<<15;
+        public static final int IS_BOT_OWNER = 1<<12;
+        public static final int IS_BOT_ADMIN = 1<<13;
+        public static final int IS_PATRON = 1<<14;
     }
 }

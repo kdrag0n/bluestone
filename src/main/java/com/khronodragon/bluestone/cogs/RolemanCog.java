@@ -1,26 +1,64 @@
 package com.khronodragon.bluestone.cogs;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.table.TableUtils;
-import com.khronodragon.bluestone.Bot;
-import com.khronodragon.bluestone.Cog;
-import com.khronodragon.bluestone.Context;
-import com.khronodragon.bluestone.Emotes;
+import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
+import com.khronodragon.bluestone.annotations.DoNotAutoload;
+import com.khronodragon.bluestone.annotations.EventHandler;
+import com.khronodragon.bluestone.sql.GuildMemberActions;
 import com.khronodragon.bluestone.sql.GuildRoleOption;
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Role;
+import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+@DoNotAutoload
 public class RolemanCog extends Cog {
     private static final Logger logger = LogManager.getLogger(RolemanCog.class);
+    private static final String NO_COMMAND = "🤔 **I need an action!**\n" +
+            "The following are valid:\n" +
+            "    \u2022 `[id]` - show quote `id`\n" +
+            "    \u2022 `add [quote]` - add a quote\n" +
+            "    \u2022 `delete [id]` - delete a quote, if you own it\n" +
+            "    \u2022 `list` - list all the quotes (paginated)\n" +
+            "    \u2022 `random` - view a random quote\n" +
+            "    \u2022 `count` - see how many quotes there are\n" +
+            "    \u2022 `message [message id]` - quote a message by its ID\n" +
+            "\n" +
+            "**Note**: this is ";
+    private static final Object TRUE = new Object();
+    private static final Object FALSE = new Object();
+    private final LoadingCache<Long, Object> guildIsUsing = CacheBuilder.newBuilder()
+            .concurrencyLevel(6)
+            .maximumSize(750)
+            .initialCapacity(25)
+            .expireAfterAccess(10, TimeUnit.MINUTES)
+            .build(new CacheLoader<Long, Object>() {
+                @Override
+                public Object load(Long key) throws SQLException {
+                    return dao.queryBuilder()
+                            .where()
+                            .eq("guildId", key)
+                            .query()
+                            .size() > 0 ? TRUE : FALSE;
+                }
+            });
     private Dao<GuildRoleOption, Long> dao;
+    private Dao<GuildMemberActions, Integer> profDao;
 
     public RolemanCog(Bot bot) {
         super(bot);
@@ -36,6 +74,18 @@ public class RolemanCog extends Cog {
         } catch (SQLException e) {
             logger.warn("Failed to create role option DAO!", e);
         }
+
+        try {
+            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), GuildMemberActions.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create member action table!", e);
+        }
+
+        try {
+            profDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), GuildMemberActions.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create member action DAO!", e);
+        }
     }
 
     public String getName() {
@@ -44,6 +94,33 @@ public class RolemanCog extends Cog {
 
     public String getDescription() {
         return "The role manager that allows users to get roles.";
+    }
+
+    @EventHandler(threaded = true)
+    public void onGuildMessageReceived(GuildMessageReceivedEvent event) throws SQLException {
+        long guildId = event.getGuild().getIdLong();
+
+        if (guildIsUsing.getUnchecked(guildId) == TRUE) {
+            long userId = event.getAuthor().getIdLong();
+
+            GuildMemberActions prof = profDao.queryBuilder()
+                    .where()
+                    .eq("userId", userId)
+                    .eq("guildId", guildId)
+                    .queryForFirst();
+            if (prof == null)
+                prof = new GuildMemberActions(userId, guildId, (short)0, false, false);
+
+            List<User> mU = event.getMessage().getMentionedUsers();
+            if (mU.size() > 0 && mU.get(0) != event.getAuthor()) {
+                prof.hasMentionedOther = true;
+            }
+
+            if (prof.messagesSent < 100)
+                prof.messagesSent++;
+
+            profDao.createOrUpdate(prof);
+        }
     }
 
     @Command(name = "role", desc = "Get or remove a role.", aliases = {"rank"}, usage = "[role name]",
@@ -75,7 +152,10 @@ public class RolemanCog extends Cog {
                         .build()).queue();
                 return;
             } else {
-                ctx.send(Emotes.getFailure() + " This server doesn't have any roles available.").queue();
+                String h = ctx.member.hasPermission(Permission.MANAGE_ROLES) ?
+                        "\n**Tip**: You can add role options with the `roles` command, because you have Manage Roles."
+                        : "";
+                ctx.send(Emotes.getFailure() + " This server doesn't have any roles available." + h).queue();
             }
         }
 
@@ -87,9 +167,31 @@ public class RolemanCog extends Cog {
 
         Role role = roles.get(0);
         GuildRoleOption option = dao.queryForId(role.getIdLong());
-
-        if (option == null || !option.test(ctx)) {
-
+        GuildMemberActions prof = profDao.queryBuilder()
+                .where()
+                .eq("userId", ctx.author.getIdLong())
+                .eq("guildId", ctx.guild.getIdLong())
+                .queryForFirst();
+        if (prof == null) {
+            prof = new GuildMemberActions(ctx.author.getIdLong(), ctx.guild.getIdLong(), (short)0,
+                    false, false);
+            profDao.create(prof);
         }
+
+        if (option == null || !option.test(ctx, prof.messagesSent, prof.hasBeenMentioned, prof.hasMentionedOther)) {
+            ctx.send(Emotes.getFailure() + " You can't get that role right now!").queue();
+            return;
+        }
+
+        ctx.guild.getController().addSingleRoleToMember(ctx.member, role).complete();
+
+        ctx.send(Emotes.getSuccess() + " Role added.").queue();
+    }
+
+    @Perm.ManageRoles
+    @Command(name = "roles", desc = "Manage roles that users can get.", thread = true,
+            aliases = {"roleman", "role_manager", "rolecontrol", "rcontrol", "rman"})
+    public void cmdControl(Context ctx) {
+
     }
 }

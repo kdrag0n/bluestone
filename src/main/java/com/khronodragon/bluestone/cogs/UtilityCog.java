@@ -55,6 +55,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.ocpsoft.prettytime.PrettyTime;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+
 import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 import static com.khronodragon.bluestone.util.Strings.smartJoin;
 import static com.khronodragon.bluestone.util.Strings.statify;
@@ -83,7 +87,6 @@ import java.util.stream.IntStream;
 
 public class UtilityCog extends Cog {
     private static final Logger logger = LogManager.getLogger(UtilityCog.class);
-    private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
 
     private static final Collection<Permission> PERMS_NEEDED = Permission.getPermissions(473295957L);
     private static final Pattern UNICODE_EMOTE_PATTERN = Pattern.compile("([\\u20a0-\\u32ff\\x{1f000}-\\x{1ffff}\\x{fe4e5}-\\x{fe4ee}])");
@@ -117,7 +120,7 @@ public class UtilityCog extends Cog {
     private static final String INFO_LINKS = "\u200b    \u2022 Use my [invite link]([invite]) to take me to another server!\n" +
             "    \u2022 [Donate](https://patreon.com/kdragon) to help keep me alive!\n" +
             "    \u2022 Go to [my website](https://khronodragon.com/goldmine/) for help!\n" +
-            "    \u2022 Join my [support server](https://discord.gg/dwykTHc) for even more help.";
+            "    \u2022 Join my [support server](https://discord.gg/sYkwfxA) for even more help.";
     private static final String SHRUG = "¯\\_(ツ)_/¯";
     private final LoadingCache<String, EmbedBuilder> ipInfoCache = CacheBuilder.newBuilder()
             .maximumSize(36)
@@ -183,6 +186,8 @@ public class UtilityCog extends Cog {
             .stream()
             .map(p -> ImmutablePair.of(Pattern.compile(p.getLeft(), Pattern.CASE_INSENSITIVE), p.getRight()))
             .collect(Collectors.toList());
+
+    private final ScriptEngine calcEngine = new ScriptEngineManager().getEngineByName("lua");
 
     private static<L, R> ImmutablePair<L, R> pair(L l, R r) {
         return ImmutablePair.of(l, r);
@@ -492,7 +497,7 @@ public class UtilityCog extends Cog {
     public void cmdHome(Context ctx) {
         ctx.send("**Website**: <https://khronodragon.com/goldmine>\n" +
                 "**Forums**: <https://forums.khronodragon.com>\n" +
-                "**Support Server**: <https://discord.gg/dwykTHc>\n" +
+                "**Support Server**: <https://discord.gg/sYkwfxA>\n" +
                 "**Patreon**: <https://patreon.com/kdragon>").queue();
     }
 
@@ -1537,8 +1542,13 @@ public class UtilityCog extends Cog {
             usage = "[snowflake]")
     public void cmdSnowtime(Context ctx) {
         long id;
-        if (ctx.args.size() < 1 || (id = MiscUtil.parseSnowflake(ctx.args.get(0))) < 0) {
-            ctx.send(Emotes.getFailure() + " Invalud Snowflake ID provided!").queue();
+        try {
+            if (ctx.args.size() < 1 || (id = MiscUtil.parseSnowflake(ctx.args.get(0))) < 0) {
+                ctx.send(Emotes.getFailure() + " Invalid Snowflake ID provided!").queue();
+                return;
+            }
+        } catch (NumberFormatException ignored) {
+            ctx.send(Emotes.getFailure() + " Invalid Snowflake ID provided!").queue();
             return;
         }
 
@@ -1547,5 +1557,14 @@ public class UtilityCog extends Cog {
                 .setAuthor("Snowflake Time:", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
                 .setTimestamp(MiscUtil.getCreationTime(id))
                 .build()).queue();
+    }
+
+    @Command(name = "calculate", desc = "Evaluate a mathematical expression.", aliases = {"calc", "calculator"})
+    public void cmdCalculate(Context ctx) throws ScriptException { // TODO: properly handle error
+        // TODO: properly handle no code
+        Object _result = calcEngine.eval("return calc('" + StringUtils.replace(ctx.rawArgs, "'", "\\\"") + "')");
+        String result = _result instanceof String ? (String) _result : _result.toString();
+
+        ctx.send("```lua\n" + result + "```").queue(); // TODO: handle empty
     }
 }

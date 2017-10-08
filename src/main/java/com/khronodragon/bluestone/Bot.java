@@ -337,6 +337,9 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         Reflections reflector = new Reflections("com.khronodragon.bluestone.cogs");
         Set<Class<? extends Cog>> cogClasses = reflector.getSubTypesOf(Cog.class);
         for (Class<?> cogClass: cogClasses) {
+            if (cogClass.isAnnotationPresent(DoNotAutoload.class))
+                continue;
+
             try {
                 Cog cog = (Cog) cogClass.getConstructor(Bot.class).newInstance(this);
                 registerCog(cog);
@@ -358,7 +361,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 for (Annotation a: method.getDeclaredAnnotations()) {
                     Class<? extends Annotation> type = a.annotationType();
                     if (type == com.khronodragon.bluestone.annotations.Command.class)
-                        return;
+                        continue;
 
                     if (type == Perm.Owner.class) {
                         perms.add(OWNER);
@@ -404,9 +407,6 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                         perms.add(perm);
                     }
                 }
-
-                if (perms.size() > 0)
-                    logger.info("{} perms: {}", anno.name(), perms.stream().map(Permission::getName).collect(Collectors.joining(", ")));
 
                 Command command = new Command(
                         anno.name(), anno.desc(), anno.usage(), anno.hidden(),

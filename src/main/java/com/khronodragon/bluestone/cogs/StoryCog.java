@@ -5,7 +5,9 @@ import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
+import com.khronodragon.bluestone.annotations.DoNotAutoload;
 
+@DoNotAutoload
 public class StoryCog extends Cog {
     public StoryCog(Bot bot) {
         super(bot);
