@@ -55,7 +55,7 @@ public class TwitchEmoteProvider implements EmoteProvider {
                         emotes.put(obj.getString("code"), obj);
                     }
                 }
-                
+
                 LogManager.getLogger(TwitchEmoteProvider.class).info("Subscriber emotes loaded.");
             }
         });

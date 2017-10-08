@@ -44,6 +44,7 @@ import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import okhttp3.*;
 import org.apache.commons.codec.DecoderException;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
@@ -71,6 +72,7 @@ import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.*;
@@ -212,6 +214,15 @@ public class UtilityCog extends Cog {
             scheduleAllPolls();
         } catch (SQLException e) {
             logger.warn("Error rescheduling previous polls", e);
+        }
+
+        InputStream st = Bot.class.getClassLoader().getResourceAsStream("assets/calc.lua");
+        try {
+            calcEngine.eval(IOUtils.toString(st, StandardCharsets.UTF_8));
+        } catch (IOException|ScriptException e) {
+            logger.error("Error evaluating calc.lua for calc command", e);
+        } finally {
+            IOUtils.closeQuietly(st);
         }
     }
 
@@ -1560,12 +1571,27 @@ public class UtilityCog extends Cog {
     }
 
     @Command(name = "calculate", desc = "Evaluate a mathematical expression.", aliases = {"calc", "calculator"})
-    public void cmdCalculate(Context ctx) throws ScriptException { // TODO: properly handle error
-        // TODO: !!!!! in constructor, eval assets/calc.lua from classpath in calcEngine. !!! IMPORTANT
-        // TODO: properly handle no code
-        Object _result = calcEngine.eval("return calc('" + StringUtils.replace(ctx.rawArgs, "'", "\\\"") + "')");
+    public void cmdCalculate(Context ctx) {
+        if (ctx.rawArgs.length() < 1) {
+            ctx.send(Emotes.getFailure() + " I need an expression to evalulate!").queue();
+            return;
+        }
+
+        Object _result;
+        try {
+            _result = calcEngine.eval("return calc('" +
+                    StringUtils.replace(ctx.rawArgs, "'", "\\\"") + "')");
+        } catch (ScriptException e) {
+            ctx.send(Emotes.getFailure() + " An error occurred evaluating your expression.\n`" +
+                    (e.getCause() == null ? e.getMessage() : e.getCause().getMessage()) + '`').queue();
+            return;
+        }
+
         String result = _result instanceof String ? (String) _result : _result.toString();
 
-        ctx.send("```lua\n" + result + "```").queue(); // TODO: handle empty
+        if (result.length() < 1)
+            result = "\u200b";
+
+        ctx.send("```lua\n" + result + "```").queue();
     }
 }

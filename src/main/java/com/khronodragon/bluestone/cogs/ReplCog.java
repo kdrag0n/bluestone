@@ -252,6 +252,8 @@ public class ReplCog extends Cog {
             try {
                 if (language.equalsIgnoreCase("groovy"))
                     result = engine.eval(GROOVY_PRE_INJECT + cleaned);
+                else if (language.equalsIgnoreCase("lua"))
+                    result = engine.eval("return (" + cleaned + ")");
                 else
                     result = engine.eval(cleaned);
             } catch (ScriptException e) {
