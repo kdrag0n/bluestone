@@ -1572,19 +1572,28 @@ public class UtilityCog extends Cog {
     @Command(name = "calculate", desc = "Evaluate a mathematical expression.", aliases = {"calc", "calculator"})
     public void cmdCalculate(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need an expression to evalulate!").queue();
+            ctx.send(Emotes.getFailure() + " I need an expression to evaluate!").queue();
             return;
+        }
+
+        int lastNidx = ctx.rawArgs.lastIndexOf(10);
+        String code = lastNidx == -1 ? "" : ctx.rawArgs.substring(0, lastNidx);
+        String lastLine = lastNidx == -1 ? ctx.rawArgs : ctx.rawArgs.substring(lastNidx + 1);
+
+        if (lastLine.equals("end")) {
+            code += "\nend";
+            lastLine = "nil";
         }
 
         Object _result;
         try {
-            _result = calcEngine.eval("return calc('" +
-                    StringUtils.replace(ctx.rawArgs, "'", "\\\"") + "')");
+            _result = calcEngine.eval("return calc([[" + code + "]], [[" + lastLine + "]])");
         } catch (ScriptException e) {
-            ctx.send(Emotes.getFailure() + " An error occurred evaluating your expression.\n`" +
-                    (e.getCause() == null ? e.getMessage() : e.getCause().getMessage()) + '`').queue();
-            return;
+            _result = e.getCause().getCause().getMessage();
         }
+
+        if (_result == null)
+            _result = "nil";
 
         String result = _result instanceof String ? (String) _result : _result.toString();
 

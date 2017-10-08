@@ -1,7 +1,8 @@
-function calc(code)
+function calc(c, last)
     local sandbox = setmetatable({}, {__index = math})
+    sandbox['while'] = error
 
-    local fn, err = load('return (' .. code .. ')', 'calculator', 't', sandbox)
+    local fn, err = load(c .. '\nreturn (' .. last .. ')', 'calculator', 't', sandbox)
     if not fn then return err end
 
     local success, result = pcall(fn)

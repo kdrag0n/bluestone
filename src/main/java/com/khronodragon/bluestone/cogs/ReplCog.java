@@ -194,7 +194,7 @@ public class ReplCog extends Cog {
 
         try {
             if (engine instanceof GroovyScriptEngineImpl) {
-                engine.eval("def print = { Object... args -> ctx.send(Arrays.stream(args).map(a -> a.toString()).collect(Collectors.joining(' '))).queue() }");
+                engine.eval("def print = { Object... args -> ctx.send(Arrays.stream(args).map({ it.toString() }).collect(Collectors.joining(' '))).queue() }");
             } else if (engine instanceof PyScriptEngine) {
                 engine.put("imports", PYTHON_IMPORTS);
                 engine.eval("def print(*args): ctx.send(map(str, args).join(' ')).queue()");
