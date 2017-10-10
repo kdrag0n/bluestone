@@ -77,9 +77,7 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
@@ -1576,9 +1574,10 @@ public class UtilityCog extends Cog {
             return;
         }
 
-        int lastNidx = ctx.rawArgs.lastIndexOf(10);
-        String code = lastNidx == -1 ? "" : ctx.rawArgs.substring(0, lastNidx);
-        String lastLine = lastNidx == -1 ? ctx.rawArgs : ctx.rawArgs.substring(lastNidx + 1);
+        String pCode = StringUtils.replace(ctx.rawArgs, "**", "^");
+        int lastNidx = pCode.lastIndexOf(10);
+        String code = lastNidx == -1 ? "" : pCode.substring(0, lastNidx);
+        String lastLine = lastNidx == -1 ? pCode : pCode.substring(lastNidx + 1);
 
         if (lastLine.equals("end")) {
             code += "\nend";
@@ -1587,9 +1586,23 @@ public class UtilityCog extends Cog {
 
         Object _result;
         try {
-            _result = calcEngine.eval("return calc([[" + code + "]], [[" + lastLine + "]])");
-        } catch (ScriptException e) {
-            _result = e.getCause().getCause().getMessage();
+            final String c = code;
+            final String l = lastLine;
+
+            FutureTask<Object> task = new FutureTask<>(() -> calcEngine
+                    .eval("return calc([[" + c + "]], [[" + l + "]])"));
+            _result = task.get(2, TimeUnit.SECONDS);
+        } catch (TimeoutException|InterruptedException ignored) {
+            ctx.send(Emotes.getFailure() + " Your expression took too long to evaluate!").queue();
+            return;
+        } catch (ExecutionException _e) {
+            Throwable e = _e.getCause();
+
+            if (e instanceof ScriptException) {
+                _result = e.getCause().getCause().getMessage();
+            } else {
+                _result = e.getMessage();
+            }
         }
 
         if (_result == null)

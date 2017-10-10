@@ -14,6 +14,8 @@ import com.khronodragon.bluestone.util.ClassUtilities;
 import com.khronodragon.bluestone.util.Strings;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
+import gnu.trove.set.TLongSet;
+import gnu.trove.set.hash.TLongHashSet;
 import net.dv8tion.jda.bot.entities.ApplicationInfo;
 import net.dv8tion.jda.core.*;
 import net.dv8tion.jda.core.JDA.ShardInfo;
@@ -85,6 +87,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     private JDA jda;
     private ShardUtil shardUtil;
     public static JSONObject patreonData = new JSONObject();
+    public static TLongSet patronIds = new TLongHashSet();
     private final Set<ScheduledFuture> tasks = new HashSet<>();
     public final Map<String, Command> commands = new HashMap<>();
     public final Map<String, Cog> cogs = new HashMap<>();
@@ -737,6 +740,13 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
 
         patreonData = new JSONObject(jsonCode);
+
+        TLongSet ids = new TLongHashSet();
+        for (Object iter: patreonData.getJSONArray("user_ids")) {
+            ids.add(Long.parseUnsignedLong((String) iter));
+        }
+        patronIds = ids;
+
         return true;
     }
 

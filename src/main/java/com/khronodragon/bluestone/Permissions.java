@@ -59,7 +59,7 @@ public class Permissions {
 
         for (Permission perm: permsAccepted) {
             if (perm == BOT_OWNER) {
-                return false;
+                continue;
             } else if (perm == BOT_ADMIN) {
                 try {
                     if (ctx.bot.getAdminDao().idExists(ctx.author.getIdLong()))
@@ -67,6 +67,9 @@ public class Permissions {
                 } catch (SQLException e) {
                     ctx.bot.logger.warn("Bot admin perm check error", e);
                 }
+            } else if (perm == PATREON_SUPPORTER) {
+                if (Bot.patronIds.contains(ctx.author.getIdLong()))
+                    return true;
             } else {
                 if (ctx.guild != null) {
                     if (ctx.member.hasPermission((TextChannel) ctx.channel, perm))
@@ -74,6 +77,7 @@ public class Permissions {
                 }
             }
         }
+
         return false;
     }
 }

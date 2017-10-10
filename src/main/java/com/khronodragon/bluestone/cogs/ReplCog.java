@@ -202,6 +202,7 @@ public class ReplCog extends Cog {
                 engine.eval("print = function() { ctx.send.apply(ctx, arguments.join(' ')) }");
             } else if (engine instanceof LuaScriptEngine) {
                 engine.eval("print = function(...) ctx.send(string.join(' ', ...)) end");
+                engine.eval("require 'assets.essentials'; local cron = require 'assets.cron'; local class = require 'assets.middleclass'; local stateful = require 'assets.stateful'; local inspect = require 'assets.inspect'");
             }
         } catch (ScriptException e) {
             ctx.send("⚠ Engine post-init failed.\n```java" + Bot.renderStackTrace(e) + "```").queue();

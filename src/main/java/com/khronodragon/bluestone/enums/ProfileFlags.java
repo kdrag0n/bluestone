@@ -5,12 +5,8 @@ import com.khronodragon.bluestone.Context;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
 import net.dv8tion.jda.core.entities.User;
-import org.json.JSONArray;
-import org.json.JSONException;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class ProfileFlags {
     public static final int BOT_OWNER = 0x1;
@@ -28,15 +24,8 @@ public class ProfileFlags {
                 flags |= BOT_ADMIN;
         } catch (SQLException ignored) {}
 
-        try {
-            JSONArray patreonIds = Bot.patreonData.getJSONArray("user_ids");
-            for (int i = 0; i < patreonIds.length(); i++) {
-                if (patreonIds.getLong(i) == user.getIdLong()) {
-                    flags |= PATREON_SUPPORTER;
-                    break;
-                }
-            }
-        } catch (JSONException ignored) {}
+        if (Bot.patronIds.contains(user.getIdLong()))
+            flags |= PATREON_SUPPORTER;
 
         return flags;
     }
@@ -52,15 +41,8 @@ public class ProfileFlags {
                 flags.add(BOT_ADMIN);
         } catch (SQLException ignored) {}
 
-        try {
-            JSONArray patreonIds = Bot.patreonData.getJSONArray("user_ids");
-            for (int i = 0; i < patreonIds.length(); i++) {
-                if (patreonIds.getLong(i) == user.getIdLong()) {
-                    flags.add(PATREON_SUPPORTER);
-                    break;
-                }
-            }
-        } catch (JSONException ignored) {}
+        if (Bot.patronIds.contains(user.getIdLong()))
+            flags.add(PATREON_SUPPORTER);
 
         return flags;
     }
