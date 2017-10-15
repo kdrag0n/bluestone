@@ -5,7 +5,6 @@ import com.google.re2j.Pattern;
 import com.j256.ormlite.dao.Dao;
 import com.jagrosh.jdautilities.waiter.EventWaiter;
 import com.khronodragon.bluestone.annotations.*;
-import com.khronodragon.bluestone.cogs.OwnerCog;
 import com.khronodragon.bluestone.handlers.MessageWaitEventListener;
 import com.khronodragon.bluestone.handlers.RejectedExecHandlerImpl;
 import com.khronodragon.bluestone.sql.BotAdmin;
@@ -861,5 +860,35 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 defLog.error("Failed to get Unsafe!");
             }
         }
+    }
+
+    private interface EConsumer<T> {
+        void accept(T value) throws Throwable;
+    }
+
+    public static okhttp3.Callback callback(EConsumer<Response> success, EConsumer<Throwable> failure) {
+        return new okhttp3.Callback() {
+            @Override
+            public void onResponse(Call call, Response response) {
+                try {
+                    success.accept(response);
+                } catch (Throwable e) {
+                    try {
+                        failure.accept(e);
+                    } catch (Throwable ee) {
+                        defLog.error("Error running HTTP call failure callback after error in success callback!", ee);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                try {
+                    failure.accept(e);
+                } catch (Throwable ee) {
+                    defLog.error("Error running HTTP call failure callback!", ee);
+                }
+            }
+        };
     }
 }

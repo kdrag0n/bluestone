@@ -644,7 +644,7 @@ public class UtilityCog extends Cog {
                             final Integer value = e.getValue();
                             final String userKey = key.getEmote() == null ? key.getName() : key.getEmote().getAsMention();
 
-                            return userKey + ": " + value + " vote" + (value == 1 ? '\00' : 's');
+                            return userKey + ": " + value + " vote" + (value == 1 ? "" : "s");
                         })
                         .collect(Collectors.toList());
 
@@ -1428,7 +1428,7 @@ public class UtilityCog extends Cog {
                     .addField("Code", invite.getCode(), true)
                     .addField("Server ID", guild.getId(), true)
                     .addField("Server Creation Time", Date.from(guild.getCreationTime().toInstant()).toString(), true)
-                    .addField("Channel", (channel.getType() == ChannelType.TEXT ? '#' : '\00') + channel.getName(), true)
+                    .addField("Channel", (channel.getType() == ChannelType.TEXT ? "#" : "") + channel.getName(), true)
                     .addField("Channel Creation Time", Date.from(channel.getCreationTime().toInstant()).toString(), true)
                     .addField("Channel ID", channel.getId(), true);
 

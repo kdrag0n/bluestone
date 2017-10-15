@@ -3,10 +3,7 @@ package com.khronodragon.bluestone.cogs;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.table.TableUtils;
-import com.khronodragon.bluestone.Bot;
-import com.khronodragon.bluestone.Cog;
-import com.khronodragon.bluestone.Context;
-import com.khronodragon.bluestone.Emotes;
+import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.emotes.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.sql.UserProfile;
@@ -33,6 +30,7 @@ import org.json.JSONObject;
 
 import java.awt.*;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.*;
@@ -337,16 +335,22 @@ public class FunCog extends Cog {
     @Command(name = "emote", desc = "Get an emoticon, from many sources.", usage = "[emote name]")
     public void cmdEmote(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " You need to specify an emote!").queue();
+            ctx.send(Emotes.getFailure() + " You need to specify an emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.").queue();
             return;
         }
 
-        final String url = emoteProviderManager.getFirstUrl(ctx.rawArgs);
-        if (url == null) {
-            ctx.send(Emotes.getFailure() + " No such emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV should work.").queue();
+        String eName = ctx.args.get(0);
+        if (eName.equalsIgnoreCase("add")) {
+            cmdAddEmote(ctx);
             return;
         }
-        EmoteInfo info = emoteProviderManager.getFirstInfo(ctx.rawArgs);
+
+        final String url = emoteProviderManager.getFirstUrl(eName);
+        if (url == null) {
+            ctx.send(Emotes.getFailure() + " No such emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.").queue();
+            return;
+        }
+        EmoteInfo info = emoteProviderManager.getFirstInfo(eName);
 
         Bot.http.newCall(new Request.Builder()
                 .get()
@@ -368,6 +372,45 @@ public class FunCog extends Cog {
                 }
 
                 ctx.channel.sendFile(response.body().byteStream(), "emote.png", msg).queue();
+            }
+        });
+    }
+
+    @Perm.ManageEmotes
+    @Command(name = "add_emote", desc = "Add an emote to the server.", usage = "[emote name]",
+            aliases = {"addemote", "emoteadd", "emote_add", "+emote", "+e"}, guildOnly = true)
+    public void cmdAddEmote(Context ctx) {
+        if (ctx.rawArgs.length() < 1) {
+            ctx.send(Emotes.getFailure() + " You need to specify an emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.").queue();
+            return;
+        }
+
+        String eName = ctx.args.get(0);
+        if (eName.equalsIgnoreCase("add") && ctx.args.size() > 1)
+            eName = ctx.args.get(1);
+        final String n = eName;
+
+        final String url = emoteProviderManager.getFirstUrl(eName);
+        if (url == null) {
+            ctx.send(Emotes.getFailure() + " No such emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.").queue();
+            return;
+        }
+
+        Bot.http.newCall(new Request.Builder()
+                .get()
+                .url(url)
+                .build()).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                ctx.send(Emotes.getFailure() + " Failed to fetch emote.").queue();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                InputStream is = response.body().byteStream();
+                ctx.guild.getController().createEmote(n, Icon.from(is))
+                        .reason("")
+                        .complete();
             }
         });
     }
@@ -473,7 +516,8 @@ public class FunCog extends Cog {
 
     @Command(name = "soon", desc = "Feel the loading of 10000 years, aka Soon™.", aliases = {"soontm"})
     public void cmdSoon(Context ctx) {
-        ctx.channel.sendFile(FunCog.class.getResourceAsStream("/assets/soon.gif"), "soon.gif", null).queue();
+        ctx.channel.sendFile(FunCog.class.getResourceAsStream("/assets/soon.gif"),
+                "soon.gif", null).queue();
     }
 
     @Command(name = "akinator", desc = "Play a game of Akinator, where you answer questions for it to guess your character.",
@@ -519,7 +563,7 @@ public class FunCog extends Cog {
         private boolean lastQuestionWasGuess = false;
         private boolean isActive = true;
 
-        private AkinatorGame(Context ctx) throws IOException {
+        private AkinatorGame(Context ctx) throws IOException, JSONException {
             this.channel = ctx.channel;
             this.userId = ctx.author.getIdLong();
 
@@ -579,12 +623,14 @@ public class FunCog extends Cog {
 
         private void scheduleEventWait(Context ctx) {
             bot.getEventWaiter().waitForEvent(MessageReactionAddEvent.class, ev -> {
-                return isActive && ev.getChannel().getIdLong() == channel.getIdLong() &&
+                return ev.getChannel().getIdLong() == channel.getIdLong() &&
                         ev.getMessageIdLong() == message.getIdLong() && ev.getUser().getIdLong() == userId;
             }, ev -> {
+                if (isActive) return;
+
                 byte answer = (byte) ArrayUtils.indexOf(REACTIONS, ev.getReactionEmote().getName());
 
-                if (answer == (byte)5) {
+                if (answer == 5) {
                     emb.setImage(null)
                             .clearFields()
                             .addField("Status", "Game was stopped before the end!", false);
@@ -611,6 +657,13 @@ public class FunCog extends Cog {
             }, 2, TimeUnit.MINUTES, onFinish);
         }
 
+        private void endInvalidData() {
+            emb.setImage(null)
+                    .clearFields()
+                    .addField("Status", "Akinator sent invalid data, or failed to respond.", false);
+            onFinish.run();
+        }
+
         private void presentNextQuestion() {
             emb.setDescription(null)
                     .clearFields()
@@ -622,7 +675,13 @@ public class FunCog extends Cog {
         }
 
         private void presentGuess() throws IOException {
-            guess = new Guess();
+            try {
+                guess = new Guess();
+            } catch (JSONException|IOException ignored) {
+                endInvalidData();
+                return;
+            }
+
             emb.clearFields()
                     .addField("Is this your character?", guess.toString(), false)
                     .setImage(guess.getImgPath());

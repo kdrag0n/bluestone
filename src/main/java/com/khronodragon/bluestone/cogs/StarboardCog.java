@@ -674,7 +674,7 @@ public class StarboardCog extends Cog {
                     .append('(')
                     .append(entry.getStars())
                     .append(" star")
-                    .append(entry.getStars() == 1 ? '\00' : 's')
+                    .append(entry.getStars() == 1 ? "" : "s")
                     .append(")\n");
         }
         emb.addField("Top Starred Messages", top3entriesBuilder.toString(), false);
@@ -704,7 +704,7 @@ public class StarboardCog extends Cog {
                     .append("> (")
                     .append(entry.getRight())
                     .append(" star")
-                    .append(entry.getRight() == 1 ? '\00' : 's')
+                    .append(entry.getRight() == 1 ? "" : "s")
                     .append(")\n");
         }
         emb.addField("Top Stargazers", top3recvBuilder.toString(), false);
@@ -733,7 +733,7 @@ public class StarboardCog extends Cog {
                     .append("> (")
                     .append(entry.getRight())
                     .append(" star")
-                    .append(entry.getRight() == 1 ? '\00' : 's')
+                    .append(entry.getRight() == 1 ? "" : "s")
                     .append(")\n");
         }
         emb.addField("Top Star Givers", top3sendBuilder.toString(), false);

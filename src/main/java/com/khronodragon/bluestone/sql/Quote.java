@@ -56,7 +56,7 @@ public class Quote {
     }
 
     public String render() {
-        char italicKey = quote.indexOf('*') == -1 ? '*' : '\00';
+        String italicKey = quote.indexOf('*') == -1 ? "*" : "";
 
         return format(QUOTE_FORMAT, id, quote, authorName, date, italicKey);
     }
