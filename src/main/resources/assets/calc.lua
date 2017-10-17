@@ -6,6 +6,5 @@ function calc(c, last)
     if not fn then return err end
 
     local success, result = pcall(fn)
-    if not success then return result end
     return result
 end

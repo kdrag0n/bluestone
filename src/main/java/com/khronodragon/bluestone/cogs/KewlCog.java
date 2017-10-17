@@ -228,7 +228,7 @@ public class KewlCog extends Cog {
             hasWarmedUp = true;
             logger.info("Warming up JIT for profiles...");
 
-            new Thread(() -> {
+            Thread thread = new Thread(() -> {
                 User user = bot.getJda().getSelfUser();
 
                 for (short i = 0; i < 8; i++) {
@@ -240,7 +240,10 @@ public class KewlCog extends Cog {
                 }
 
                 logger.info("Finished warming up JIT for profile rendering.");
-            }).start();
+            });
+
+            thread.setName("Profile Render JIT Warm-up Thread");
+            thread.start();
         }
     }
 

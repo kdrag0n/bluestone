@@ -24,6 +24,7 @@ import com.khronodragon.bluestone.annotations.Cooldown;
 import com.khronodragon.bluestone.emotes.DiscordEmoteProvider;
 import com.khronodragon.bluestone.enums.BucketType;
 import com.khronodragon.bluestone.enums.MemberStatus;
+import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.sql.ActivePoll;
 import com.khronodragon.bluestone.util.*;
 import com.sun.management.OperatingSystemMXBean;
@@ -558,11 +559,12 @@ public class UtilityCog extends Cog {
         preQuestion = _m.usePattern(DiscordEmoteProvider.CUSTOM_EMOTE_PATTERN).reset(preQuestion).replaceAll("");
         preQuestion = _m.usePattern(CONTIGUOUS_SPACE_PATTERN).reset(preQuestion).replaceAll(" ");
         final String question = preQuestion.trim();
+        final Color c = ctx.member.getColor();
 
         EmbedBuilder embed = new EmbedBuilder()
                 .setAuthor(ctx.member.getEffectiveName() + " is polling...",
                         null, ctx.author.getEffectiveAvatarUrl())
-                .setColor(ctx.member.getColor())
+                .setColor(c == null ? Color.WHITE : c)
                 .setDescription(question)
                 .appendDescription("\n\n")
                 .appendDescription("**⌛ Reactions are being added...**");
@@ -735,27 +737,21 @@ public class UtilityCog extends Cog {
         Bot.http.newCall(new Request.Builder()
                 .post(data.build())
                 .url("https://api.imgflip.com/caption_image")
-                .build()).enqueue(new okhttp3.Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                logger.error("Imgflip request errored", e);
-                ctx.send(Emotes.getFailure() + " Request failed. `" + e.getMessage() + '`').queue();
-            }
+                .build()).enqueue(Bot.callback(response -> {
+            JSONObject resp = new JSONObject(response.body().string());
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                JSONObject resp = new JSONObject(response.body().string());
-
-                if (resp.optBoolean("success", false)) {
-                    ctx.send(new EmbedBuilder()
-                            .setColor(randomColor())
-                            .setImage(resp.getJSONObject("data").getString("url"))
-                            .build()).queue();
-                } else {
-                    ctx.send(Emotes.getFailure() + " Error: `" + resp.getString("error_message") + '`').queue();
-                }
+            if (resp.optBoolean("success", false)) {
+                ctx.send(new EmbedBuilder()
+                        .setColor(randomColor())
+                        .setImage(resp.getJSONObject("data").getString("url"))
+                        .build()).queue();
+            } else {
+                ctx.send(Emotes.getFailure() + " Error: `" + resp.getString("error_message") + '`').queue();
             }
-        });
+        }, e -> {
+            logger.error("Imgflip request errored", e);
+            ctx.send(Emotes.getFailure() + " Request failed. `" + e.getMessage() + '`').queue();
+        }));
     }
 
     @Command(name = "urban", desc = "Define something with Urban Dictionary.", aliases = {"define"})
@@ -769,52 +765,46 @@ public class UtilityCog extends Cog {
         Bot.http.newCall(new Request.Builder()
                 .get()
                 .url("https://api.urbandictionary.com/v0/define?term=" + URLEncoder.encode(ctx.rawArgs, "UTF-8"))
-                .build()).enqueue(new okhttp3.Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                logger.error("Urban Dictionary API error", e);
-                ctx.send(Emotes.getFailure() + " Request failed.").queue();
+                .build()).enqueue(Bot.callback(response -> {
+            JSONArray results = new JSONObject(response.body().string()).getJSONArray("list");
+
+            if (results.length() < 1) {
+                ctx.send(Emotes.getFailure() + " No definitions found.").queue();
+                return;
+            }
+            JSONObject word = results.getJSONObject(0);
+
+            EmbedBuilder emb = new EmbedBuilder()
+                    .setColor(randomColor())
+                    .setTitle(word.getString("word"))
+                    .setAuthor("Urban Dictionary", word.getString("permalink"), "https://images.discordapp.net/.eJwFwdsNwyAMAMBdGICHhUPIMpULiCAlGIHzUVXdvXdf9cxLHeoUGeswJreVeGa9hCfVoitzvQqNtnTi25AIpfMuXZaBDSM4G9wWAdA5vxuIAQNCQB9369F7a575pv7KLUnjTvOjR6_q9wdVRCZ_.BorCGmKDHUzN6L0CodSwX7Yv3kg");
+
+            String definition = word.getString("definition");
+            if (definition.length() > 0) {
+                for (String page: embedFieldPages(definition)) {
+                    emb.addField("Definition", page, false);
+                }
+            } else {
+                emb.addField("Definition", "None?!", false);
             }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                JSONArray results = new JSONObject(response.body().string()).getJSONArray("list");
-
-                if (results.length() < 1) {
-                    ctx.send(Emotes.getFailure() + " No definitions found.").queue();
-                    return;
+            String example = word.getString("example");
+            if (example.length() > 0) {
+                for (String page: embedFieldPages(example)) {
+                    emb.addField("Example", page, false);
                 }
-                JSONObject word = results.getJSONObject(0);
-
-                EmbedBuilder emb = new EmbedBuilder()
-                        .setColor(randomColor())
-                        .setTitle(word.getString("word"))
-                        .setAuthor("Urban Dictionary", word.getString("permalink"), "https://images.discordapp.net/.eJwFwdsNwyAMAMBdGICHhUPIMpULiCAlGIHzUVXdvXdf9cxLHeoUGeswJreVeGa9hCfVoitzvQqNtnTi25AIpfMuXZaBDSM4G9wWAdA5vxuIAQNCQB9369F7a575pv7KLUnjTvOjR6_q9wdVRCZ_.BorCGmKDHUzN6L0CodSwX7Yv3kg");
-
-                String definition = word.getString("definition");
-                if (definition.length() > 0) {
-                    for (String page: embedFieldPages(definition)) {
-                        emb.addField("Definition", page, false);
-                    }
-                } else {
-                    emb.addField("Definition", "None?!", false);
-                }
-
-                String example = word.getString("example");
-                if (example.length() > 0) {
-                    for (String page: embedFieldPages(example)) {
-                        emb.addField("Example", page, false);
-                    }
-                } else {
-                    emb.addField("Example", "None?!", false);
-                }
-
-                emb.addField("\uD83D\uDC4D", str(word.getInt("thumbs_up")), true)
-                        .addField("\uD83D\uDC4E", str(word.getInt("thumbs_down")), true);
-
-                ctx.send(emb.build()).queue();
+            } else {
+                emb.addField("Example", "None?!", false);
             }
-        });
+
+            emb.addField("\uD83D\uDC4D", str(word.getInt("thumbs_up")), true)
+                    .addField("\uD83D\uDC4E", str(word.getInt("thumbs_down")), true);
+
+            ctx.send(emb.build()).queue();
+        }, e -> {
+            logger.error("Urban Dictionary API error", e);
+            ctx.send(Emotes.getFailure() + " Request failed.").queue();
+        }));
     }
 
     @Command(name = "rcolor", desc = "Generate a random color.", aliases = {"rc", "randcolor"})
@@ -1341,34 +1331,27 @@ public class UtilityCog extends Cog {
     @Command(name = "mcstatus", desc = "Check the status of all the official Minecraft services.",
             aliases = {"mc_status", "minestatus", "mine_status", "minecraft_status"})
     public void cmdMcstatus(Context ctx) {
-
         Bot.http.newCall(new Request.Builder()
                 .get()
                 .url("https://use.gameapis.net/mc/extra/status")
-                .build()).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                logger.error("mcapi status API error", e);
-                ctx.send(Emotes.getFailure() + " Failed to check Minecraft services.").queue();
+                .build()).enqueue(Bot.callback(response -> {
+            EmbedBuilder emb = new EmbedBuilder()
+                    .setAuthor("Minecraft Status", null,
+                            "https://minecraft.gamepedia.com/media/minecraft.gamepedia.com/c/c5/Grass.png")
+                    .setColor(ThreadLocalRandom.current().nextInt(2) == 1 ? MC_GREEN : MC_BROWN)
+                    .setTimestamp(Instant.now());
+
+            JSONObject json = new JSONObject(response.body().string());
+            for (String key: json.keySet()) {
+                String status = json.getJSONObject(key).getString("status");
+                emb.addField(key, status.equals("Online") ? "✅" : "❌", false);
             }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                EmbedBuilder emb = new EmbedBuilder()
-                        .setAuthor("Minecraft Status", null,
-                                "https://minecraft.gamepedia.com/media/minecraft.gamepedia.com/c/c5/Grass.png")
-                        .setColor(ThreadLocalRandom.current().nextInt(2) == 1 ? MC_GREEN : MC_BROWN)
-                        .setTimestamp(Instant.now());
-
-                JSONObject json = new JSONObject(response.body().string());
-                for (String key: json.keySet()) {
-                    String status = json.getJSONObject(key).getString("status");
-                    emb.addField(key, status.equals("Online") ? "✅" : "❌", false);
-                }
-
-                ctx.send(emb.build()).queue();
-            }
-        });
+            ctx.send(emb.build()).queue();
+        }, e -> {
+            logger.error("mcapi status API error", e);
+            ctx.send(Emotes.getFailure() + " Failed to check Minecraft services.").queue();
+        }));
     }
 
     @Command(name = "supporters", desc = "Get a list of Patreon supporters.", aliases = {"patrons", "patreon"})
@@ -1486,64 +1469,55 @@ public class UtilityCog extends Cog {
                         "type", "like",
                         "units", "imperial"))
                 .header("X-API-Key", bot.getKeys().getString("openweathermap"))
-                .build()).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                ctx.send(Emotes.getFailure() + " Failed to get weather for that location!").queue();
+                .build()).enqueue(Bot.callback(response -> {
+            if (!response.isSuccessful()) {
+                throw new PassException();
             }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (!response.isSuccessful()) {
-                    onFailure(call, null);
-                    return;
-                }
+            JSONObject root = new JSONObject(response.body().string());
 
-                JSONObject root = new JSONObject(response.body().string());
+            if (root.optInt("count") > 0 && root.getJSONArray("list").length() > 0) {
+                JSONObject data = root.getJSONArray("list").getJSONObject(0);
+                JSONObject wind = val(data.optJSONObject("wind")).or(Bot.EMPTY_JSON_OBJECT);
+                JSONObject main = val(data.optJSONObject("main")).or(Bot.EMPTY_JSON_OBJECT);
+                JSONObject sys = val(data.optJSONObject("sys")).or(Bot.EMPTY_JSON_OBJECT);
+                JSONObject clouds = val(data.optJSONObject("clouds")).or(Bot.EMPTY_JSON_OBJECT);
+                JSONObject condition = val(data.optJSONArray("weather")).or(Bot.EMPTY_JSON_ARRAY).optJSONObject(0);
 
-                if (root.optInt("count") > 0 && root.getJSONArray("list").length() > 0) {
-                    JSONObject data = root.getJSONArray("list").getJSONObject(0);
-                    JSONObject wind = val(data.optJSONObject("wind")).or(Bot.EMPTY_JSON_OBJECT);
-                    JSONObject main = val(data.optJSONObject("main")).or(Bot.EMPTY_JSON_OBJECT);
-                    JSONObject sys = val(data.optJSONObject("sys")).or(Bot.EMPTY_JSON_OBJECT);
-                    JSONObject clouds = val(data.optJSONObject("clouds")).or(Bot.EMPTY_JSON_OBJECT);
-                    JSONObject condition = val(data.optJSONArray("weather")).or(Bot.EMPTY_JSON_ARRAY).optJSONObject(0);
+                EmbedBuilder emb = new EmbedBuilder()
+                        .setAuthor("Weather for " + data.getString("name"), null,
+                                ctx.jda.getSelfUser().getEffectiveAvatarUrl())
+                        .addField("💨 Wind", wind.optDouble("speed") +
+                                " mph (direction: " + wind.optInt("deg") + "°)", true)
+                        .addField("💧 Humidity",
+                                str(main.optDouble("humidity")) + '%', true)
+                        .addField("🌅 Sunrise Time", sys.optLong("sunrise") == 0L ? SHRUG :
+                                new Date(sys.optLong("sunrise")).toString(), true)
+                        .addField("🌇 Sunset Time", sys.optLong("sunset") == 0L ? SHRUG :
+                                new Date(sys.optLong("sunset")).toString(), true)
+                        .addField("☀ Today's High", str(main.optDouble("temp_max")) + "°F", true)
+                        .addField("❄ Today's Low", str(main.optDouble("temp_min")) + "°F", true)
+                        .addField("🌡 Temperature Now", str(main.optDouble("temp")) + "°F", true)
+                        .addField("☁ Cloudiness", clouds.optInt("all") + "%", true)
+                        .addField("⏬ Pressure", main.optInt("pressure") + " hPa", true)
+                        .addField("🏙 Condition", "**" + condition.optString("main", SHRUG) +
+                                "** - " + condition.optString("description", SHRUG), true)
+                        .setColor(GraphicsUtils.interpolateColors(Color.BLUE, Color.RED,
+                                Math.max(Math.min(main.optDouble("temp") / 106, 1.0), 0.0)));
 
-                    EmbedBuilder emb = new EmbedBuilder()
-                            .setAuthor("Weather for " + data.getString("name"), null,
-                                    ctx.jda.getSelfUser().getEffectiveAvatarUrl())
-                            .addField("💨 Wind", wind.optDouble("speed") +
-                                    " mph (direction: " + wind.optInt("deg") + "°)", true)
-                            .addField("💧 Humidity",
-                                    str(main.optDouble("humidity")) + '%', true)
-                            .addField("🌅 Sunrise Time", sys.optLong("sunrise") == 0L ? SHRUG :
-                                    new Date(sys.optLong("sunrise")).toString(), true)
-                            .addField("🌇 Sunset Time", sys.optLong("sunset") == 0L ? SHRUG :
-                                    new Date(sys.optLong("sunset")).toString(), true)
-                            .addField("☀ Today's High", str(main.optDouble("temp_max")) + "°F", true)
-                            .addField("❄ Today's Low", str(main.optDouble("temp_min")) + "°F", true)
-                            .addField("🌡 Temperature Now", str(main.optDouble("temp")) + "°F", true)
-                            .addField("☁ Cloudiness", clouds.optInt("all") + "%", true)
-                            .addField("⏬ Pressure", main.optInt("pressure") + " hPa", true)
-                            .addField("🏙 Condition", "**" + condition.optString("main", SHRUG) +
-                                    "** - " + condition.optString("description", SHRUG), true)
-                            .setColor(GraphicsUtils.interpolateColors(Color.BLUE, Color.RED,
-                                    Math.max(Math.min(main.optDouble("temp") / 106, 1.0), 0.0)));
+                if (data.getLong("dt") < System.currentTimeMillis() - 157784630000L)
+                    emb.setFooter("Data fetched at", null)
+                            .setTimestamp(Instant.now());
+                else
+                    emb.setFooter("Data updated at", null)
+                            .setTimestamp(Instant.ofEpochMilli(data.getLong("dt")));
 
-                    if (data.getLong("dt") < System.currentTimeMillis() - 157784630000L)
-                        emb.setFooter("Data fetched at", null)
-                                .setTimestamp(Instant.now());
-                    else
-                        emb.setFooter("Data updated at", null)
-                                .setTimestamp(Instant.ofEpochMilli(data.getLong("dt")));
+                if (condition.has("icon"))
+                    emb.setThumbnail("https://openweathermap.org/img/w/" + condition.getString("icon") + ".png");
 
-                    if (condition.has("icon"))
-                        emb.setThumbnail("https://openweathermap.org/img/w/" + condition.getString("icon") + ".png");
-
-                    ctx.send(emb.build()).queue();
-                }
+                ctx.send(emb.build()).queue();
             }
-        });
+        }, e -> ctx.send(Emotes.getFailure() + " Failed to get weather for that location!").queue()));
     }
 
     @Command(name = "snowtime", desc = "Get the time of a Snowflake ID.", aliases = {"snowflake"},

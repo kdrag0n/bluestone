@@ -1,15 +1,12 @@
 package com.khronodragon.bluestone.emotes;
 
-import okhttp3.Call;
+import com.khronodragon.bluestone.Bot;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.io.IOException;
 
 public class BetterTTVEmoteProvider implements EmoteProvider {
     private JSONObject emotes = new JSONObject();
@@ -19,33 +16,25 @@ public class BetterTTVEmoteProvider implements EmoteProvider {
         client.newCall(new Request.Builder()
                 .get()
                 .url("https://api.betterttv.net/2/emotes")
-                .build()).enqueue(new okhttp3.Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                LogManager.getLogger(BetterTTVEmoteProvider.class).error("Failed to get data", e);
+                .build()).enqueue(Bot.callback(response -> {
+            JSONObject data = new JSONObject(response.body().string());
+            JSONArray rawEmotes = data.getJSONArray("emotes");
+            JSONObject tempEmotes = new JSONObject();
+
+            for (Object emote: rawEmotes) {
+                JSONObject realEmote = (JSONObject) emote;
+                final String name = realEmote.getString("code");
+                realEmote.remove("code");
+                realEmote.remove("restrictions");
+                realEmote.remove("channel");
+
+                tempEmotes.put(name, realEmote);
             }
+            emotes = tempEmotes;
+            template = "https:" + StringUtils.replaceOnce(data.getString("urlTemplate"), "{{image}}", "2x");
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                JSONObject data = new JSONObject(response.body().string());
-                JSONArray rawEmotes = data.getJSONArray("emotes");
-                JSONObject tempEmotes = new JSONObject();
-
-                for (Object emote: rawEmotes) {
-                    JSONObject realEmote = (JSONObject) emote;
-                    final String name = realEmote.getString("code");
-                    realEmote.remove("code");
-                    realEmote.remove("restrictions");
-                    realEmote.remove("channel");
-
-                    tempEmotes.put(name, realEmote);
-                }
-                emotes = tempEmotes;
-                template = "https:" + StringUtils.replaceOnce(data.getString("urlTemplate"), "{{image}}", "2x");
-
-                LogManager.getLogger(BetterTTVEmoteProvider.class).info("Data loaded.");
-            }
-        });
+            LogManager.getLogger(BetterTTVEmoteProvider.class).info("Data loaded.");
+        }, e -> LogManager.getLogger(BetterTTVEmoteProvider.class).error("Failed to get data", e)));
     }
 
     @Override

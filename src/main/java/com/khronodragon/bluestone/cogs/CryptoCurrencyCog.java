@@ -13,6 +13,7 @@ import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageEmbed;
+import net.dv8tion.jda.core.entities.MessageReaction;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import okhttp3.Request;
@@ -252,7 +253,15 @@ public class CryptoCurrencyCog extends Cog {
                 msg.addReaction("⏹").queue(v2 -> {
                     msg.addReaction("▶").queue(v3 -> {
                         Runnable stop = () -> {
-                            msg.clearReactions().queue();
+                            try {
+                                msg.clearReactions().queue();
+                            } catch (PermissionException|IllegalStateException ignored) {
+                                try {
+                                    for (MessageReaction r: msg.getReactions()) {
+                                        r.removeReaction().queue();
+                                    }
+                                } catch (PermissionException i) {}
+                            }
                         };
 
                         dclStep(ctx.author.getIdLong(), index, msg, stop);
@@ -311,7 +320,14 @@ public class CryptoCurrencyCog extends Cog {
 
                     try {
                         msg.clearReactions().queue();
-                    } catch (PermissionException ignored) {}
+                    } catch (PermissionException|IllegalStateException ignored) {
+                        try {
+                            for (MessageReaction r: msg.getReactions()) {
+                                r.removeReaction().queue();
+                                r.removeReaction(ctx.author).queue();
+                            }
+                        } catch (PermissionException i) {}
+                    }
                 })
                 .setEventWaiter(bot.getEventWaiter())
                 .setTimeout(2, TimeUnit.MINUTES)

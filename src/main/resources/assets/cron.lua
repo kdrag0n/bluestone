@@ -1,4 +1,4 @@
-local cron = {
+cron = {
     __VERSION     = 'cron.lua 2.0.0',
     __DESCRIPTION = 'Time-related functions for lua',
     __URL         = 'https://github.com/kikito/cron.lua',

@@ -5,6 +5,7 @@ import com.google.re2j.Pattern;
 import com.j256.ormlite.dao.Dao;
 import com.jagrosh.jdautilities.waiter.EventWaiter;
 import com.khronodragon.bluestone.annotations.*;
+import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.handlers.MessageWaitEventListener;
 import com.khronodragon.bluestone.handlers.RejectedExecHandlerImpl;
 import com.khronodragon.bluestone.sql.BotAdmin;
@@ -90,7 +91,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     private final Set<ScheduledFuture> tasks = new HashSet<>();
     public final Map<String, Command> commands = new HashMap<>();
     public final Map<String, Cog> cogs = new HashMap<>();
-    private final Map<Class<? extends Event>, Set<ExtraEvent>> extraEvents = new HashMap<>();
+    private final Map<Class<? extends Event>, List<ExtraEvent>> extraEvents = new HashMap<>();
     public static final OkHttpClient http = new OkHttpClient.Builder()
             .cache(new Cache(new File("data/http_cache"), 24000000000L))
             .connectTimeout(5, TimeUnit.SECONDS)
@@ -232,11 +233,11 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     @Override
     public void onGenericEvent(Event event) {
-        for (Map.Entry<Class<? extends Event>, Set<ExtraEvent>> entry: extraEvents.entrySet()) {
+        for (Map.Entry<Class<? extends Event>, List<ExtraEvent>> entry: extraEvents.entrySet()) {
             Class<? extends Event> eventClass = entry.getKey();
 
             if (eventClass.isInstance(event)) {
-                Set<ExtraEvent> events = entry.getValue();
+                List<ExtraEvent> events = entry.getValue();
 
                 for (ExtraEvent extraEvent: events) {
                     Runnable task = () -> {
@@ -434,10 +435,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 if (extraEvents.containsKey(eventClass)) {
                     extraEvents.get(eventClass).add(extraEvent);
                 } else {
-                    Set<ExtraEvent> set = new HashSet<>();
-                    set.add(extraEvent);
+                    List<ExtraEvent> list = new ArrayList<>();
+                    list.add(extraEvent);
 
-                    extraEvents.put(eventClass, set);
+                    extraEvents.put(eventClass, list);
                 }
             }
         }
@@ -457,7 +458,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         cog.unload();
         cogs.remove(cog.getName(), cog);
 
-        for (Set<ExtraEvent> events: extraEvents.values()) {
+        for (List<ExtraEvent> events: extraEvents.values()) {
             for (ExtraEvent event: new HashSet<>(events)) {
                 if (event.getMethod().getDeclaringClass().equals(cog.getClass())) {
                     events.remove(event);
@@ -584,32 +585,26 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                         .toString()))
                 .url(reqDest)
                 .header("Authorization", getKeys().optString("chatengine"))
-                .build()).enqueue(new okhttp3.Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                logger.error("Error getting ChatEngine response", e);
-                channel.sendMessage(Emotes.getFailure() + " My brain isn't really working right now.").queue();
+                .build()).enqueue(Bot.callback(response -> {
+            JSONObject resp = new JSONObject(response.body().string());
+
+            if (!resp.optBoolean("success", false)) {
+                logger.error("ChatEngine returned error: {}", resp.optString("error", "Not specified"));
+                channel.sendMessage(Emotes.getFailure() + " An error occurred getting a response!").queue();
+                return;
             }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                JSONObject resp = new JSONObject(response.body().string());
+            String toSend;
+            if (respPrefix == null)
+                toSend = resp.getString("response");
+            else
+                toSend = respPrefix + resp.getString("response");
 
-                if (!resp.optBoolean("success", false)) {
-                    logger.error("ChatEngine returned error: {}", resp.optString("error", "Not specified"));
-                    channel.sendMessage(Emotes.getFailure() + " An error occurred getting a response!").queue();
-                    return;
-                }
-
-                String toSend;
-                if (respPrefix == null)
-                    toSend = resp.getString("response");
-                else
-                    toSend = respPrefix + resp.getString("response");
-
-                channel.sendMessage(toSend).queue();
-            }
-        });
+            channel.sendMessage(toSend).queue();
+        }, e -> {
+            logger.error("Error getting ChatEngine response", e);
+            channel.sendMessage(Emotes.getFailure() + " My brain isn't really working right now.").queue();
+        }));
     }
 
     public void reportErrorToOwner(Throwable e, Message msg, Command cmd) {
@@ -742,7 +737,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
         TLongSet ids = new TLongHashSet();
         for (Object iter: patreonData.getJSONArray("user_ids")) {
-            ids.add(Long.parseUnsignedLong((String) iter));
+            ids.add(iter instanceof Long ? (Long) iter : Long.parseUnsignedLong((String) iter));
         }
         patronIds = ids;
 
@@ -862,7 +857,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
     }
 
-    private interface EConsumer<T> {
+    public interface EConsumer<T> {
         void accept(T value) throws Throwable;
     }
 
@@ -874,6 +869,9 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     success.accept(response);
                 } catch (Throwable e) {
                     try {
+                        if (!(e instanceof PassException))
+                            defLog.error("Error in HTTP success callback", e);
+
                         failure.accept(e);
                     } catch (Throwable ee) {
                         defLog.error("Error running HTTP call failure callback after error in success callback!", ee);

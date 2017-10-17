@@ -355,25 +355,17 @@ public class FunCog extends Cog {
         Bot.http.newCall(new Request.Builder()
                 .get()
                 .url(url)
-                .build()).enqueue(new okhttp3.Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                ctx.send(Emotes.getFailure() + " Failed to fetch emote.").queue();
+                .build()).enqueue(Bot.callback(response -> {
+            Message msg = null;
+
+            if (info.description != null && info.description.length() > 0) {
+                msg = new MessageBuilder()
+                        .append(info.description)
+                        .build();
             }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                Message msg = null;
-
-                if (info.description != null) {
-                    msg = new MessageBuilder()
-                            .append(info.description)
-                            .build();
-                }
-
-                ctx.channel.sendFile(response.body().byteStream(), "emote.png", msg).queue();
-            }
-        });
+            ctx.channel.sendFile(response.body().byteStream(), "emote.png", msg).queue();
+        }, e -> ctx.send(Emotes.getFailure() + " Failed to fetch emote.").queue()));
     }
 
     @Perm.ManageEmotes
@@ -395,24 +387,17 @@ public class FunCog extends Cog {
             ctx.send(Emotes.getFailure() + " No such emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.").queue();
             return;
         }
+        // TODO: finish
 
         Bot.http.newCall(new Request.Builder()
                 .get()
                 .url(url)
-                .build()).enqueue(new okhttp3.Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                ctx.send(Emotes.getFailure() + " Failed to fetch emote.").queue();
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                InputStream is = response.body().byteStream();
-                ctx.guild.getController().createEmote(n, Icon.from(is))
-                        .reason("")
-                        .complete();
-            }
-        });
+                .build()).enqueue(Bot.callback(response -> {
+            InputStream is = response.body().byteStream();
+            ctx.guild.getController().createEmote(n, Icon.from(is))
+                    .reason("")
+                    .complete();
+        }, e -> ctx.send(Emotes.getFailure() + " Failed to fetch emote.").queue()));
     }
 
     private String applyStyle(String orig, UnisafeString mapTo) {

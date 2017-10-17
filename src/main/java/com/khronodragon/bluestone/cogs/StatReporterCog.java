@@ -171,24 +171,18 @@ public class StatReporterCog extends Cog {
                 .post(RequestBody.create(JSON_MEDIA_TYPE, json.toString()))
                 .url(Endpoints.DISCORD_BOTS.format(bot.getJda().getSelfUser().getId()))
                 .header("Authorization", key)
-                .build()).enqueue(new okhttp3.Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                if (e instanceof SocketTimeoutException)
-                    logger.error("[Discord Bots] Report: timeout");
-                else
-                    logger.error("[Discord Bots] Report failed", e);
+                .build()).enqueue(Bot.callback(response -> {
+            if (!response.isSuccessful()) {
+                logger.warn("[Discord Bots] Bad response: {} {}", response.code(), response.message());
             }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (!response.isSuccessful()) {
-                    logger.warn("[Discord Bots] Bad response: {} {}", response.code(), response.message());
-                }
-
-                response.body().close();
-            }
-        });
+            response.body().close();
+        }, e -> {
+            if (e instanceof SocketTimeoutException)
+                logger.error("[Discord Bots] Report: timeout");
+            else
+                logger.error("[Discord Bots] Report failed", e);
+        }));
     }
 
     private void reportCarbonitex(String key) {
@@ -198,24 +192,18 @@ public class StatReporterCog extends Cog {
                         .add("servercount", str(bot.getShardUtil().getGuildCount()))
                         .build())
                 .url(Endpoints.CARBONITEX.getUrl())
-                .build()).enqueue(new okhttp3.Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                if (e instanceof SocketTimeoutException)
-                    logger.error("[Carbonitex] Report: timeout");
-                else
-                    logger.error("[Carbonitex] Report failed", e);
+                .build()).enqueue(Bot.callback(response -> {
+            if (!response.isSuccessful()) {
+                logger.warn("[Carbonitex] Bad response: {} {}", response.code(), response.message());
             }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (!response.isSuccessful()) {
-                    logger.warn("[Carbonitex] Bad response: {} {}", response.code(), response.message());
-                }
-
-                response.body().close();
-            }
-        });
+            response.body().close();
+        }, e -> {
+            if (e instanceof SocketTimeoutException)
+                logger.error("[Carbonitex] Report: timeout");
+            else
+                logger.error("[Carbonitex] Report failed", e);
+        }));
     }
 
     private void reportDiscordBotsOrg(String key) {
@@ -234,23 +222,17 @@ public class StatReporterCog extends Cog {
                 .post(RequestBody.create(JSON_MEDIA_TYPE, json.toString()))
                 .url(Endpoints.DISCORD_BOTS_ORG.format(bot.getJda().getSelfUser().getId()))
                 .header("Authorization", key)
-                .build()).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                if (e instanceof SocketTimeoutException)
-                    logger.error("[Discord Bot List] Report: timeout");
-                else
-                    logger.error("[Discord Bot List] Report failed", e);
+                .build()).enqueue(Bot.callback(response -> {
+            if (!response.isSuccessful())  {
+                logger.warn("[Discord Bot List] Bad response: {} {}", response.code(), response.message());
             }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (!response.isSuccessful())  {
-                    logger.warn("[Discord Bot List] Bad response: {} {}", response.code(), response.message());
-                }
-
-                response.body().close();
-            }
-        });
+            response.body().close();
+        }, e -> {
+            if (e instanceof SocketTimeoutException)
+                logger.error("[Discord Bot List] Report: timeout");
+            else
+                logger.error("[Discord Bot List] Report failed", e);
+        }));
     }
 }

@@ -167,4 +167,6 @@ end
 
 setmetatable(middleclass, { __call = function(_, ...) return middleclass.class(...) end })
 
+class = middleclass
+
 return middleclass

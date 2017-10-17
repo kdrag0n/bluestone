@@ -30,8 +30,10 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
     private final GuildMusicSettings settings;
     private final boolean canTalk;
     private final boolean canReact;
+    private final boolean isPatron;
 
-    public TrackLoadHandler(Context ctx, AudioState state, AudioPlayerManager man, String term, GuildMusicSettings settings) {
+    public TrackLoadHandler(Context ctx, boolean isPatron, AudioState state, AudioPlayerManager man,
+                            String term, GuildMusicSettings settings) {
         this.ctx = ctx;
         this.state = state;
         this.term = term;
@@ -39,14 +41,23 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
         this.canTalk = ((TextChannel) ctx).canTalk();
         this.canReact = ctx.guild.getSelfMember()
                 .hasPermission((TextChannel) ctx.channel, Permission.MESSAGE_ADD_REACTION);
+        this.isPatron = isPatron;
         manager = man;
+
         iteration = 0;
     }
 
     @Override
     public void trackLoaded(AudioTrack track) {
-        if (!track.getInfo().isStream && track.getDuration() > TimeUnit.MINUTES.toMillis(2 * 60 + 32)) {
-            if (canTalk) ctx.send("⛔ Track longer than **2 h 30 min**!").queue();
+        if (!track.getInfo().isStream && track.getDuration() >
+                TimeUnit.MINUTES.toMillis(isPatron ? 10 * 60 : 2 * 60 + 32)) {
+            if (canTalk) {
+                if (isPatron)
+                    ctx.send("⛔ Track longer than **10 h**!").queue();
+                else
+                    ctx.send("⛔ Track longer than **2 h 30 min**!").queue();
+            }
+
             if (canReact) {
                 Cog.removeReactionIfExists(ctx.message, "⌛");
                 ctx.message.addReaction("❌").queue();
@@ -131,17 +142,20 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
 
             return;
         }
-        if (tracks.size() > 18) {
+
+        int mn = isPatron ? 48 : 18;
+        if (tracks.size() > mn) {
             if (canTalk) ctx.send(Emotes.getFailure() +
-                    " Playlist is longer than 18 tracks - only adding the first 18 tracks.").queue();
-            tracks = tracks.subList(0, 18);
+                    " Playlist is longer than " + mn + " tracks - only adding the first " + mn + " tracks.").queue();
+            tracks = tracks.subList(0, mn);
         }
         long duration = 0L;
 
+        mn = isPatron ? 32 : 8;
         for (AudioTrack track: tracks) {
-            if (!track.getInfo().isStream && track.getDuration() > TimeUnit.HOURS.toMillis(3)) {
+            if (!track.getInfo().isStream && track.getDuration() > TimeUnit.HOURS.toMillis(mn)) {
                 if (canTalk) ctx.send("⛔ Track **" + track.getInfo().title +
-                        "** longer than **3 hours**!").queue();
+                        "** longer than **" + mn + " hours**!").queue();
                 return;
             }
             state.scheduler.queue(track, new ExtraTrackInfo(ctx.channel, ctx.member));

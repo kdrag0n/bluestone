@@ -199,6 +199,7 @@ public class ModerationCog extends Cog {
             ctx.send(Emotes.getFailure() + " Invalid message limit!").queue();
             return;
         }
+        limit += 1;
 
         boolean bots = args.contains("bot");
         boolean embeds = args.contains("embed");
@@ -213,9 +214,6 @@ public class ModerationCog extends Cog {
         for (Message msg: channel.getIterableHistory()) {
             if (toDelete.size() >= limit)
                 break;
-
-            if (msg.getIdLong() == ctx.message.getIdLong())
-                continue;
 
             if (msg.getCreationTime().isBefore(maxAge)) {
                 twoWeekWarn = "\n:vertical_traffic_light: *Some messages may not have been deleted, because they were more than 2 weeks old.*";
@@ -269,10 +267,6 @@ public class ModerationCog extends Cog {
                     }
                 }
             });
-
-            try {
-                ctx.message.addReaction("\uD83D\uDC4D").queue(null, f -> {});
-            } catch (Exception ignored) {}
         });
     }
 
@@ -526,6 +520,9 @@ public class ModerationCog extends Cog {
     }
 
     private Role parseRole(Guild guild, String roleArg) {
+        if (roleArg == null)
+            return null;
+
         if (Strings.isRoleMention(roleArg)) {
             return guild.getRoleById(roleArg.substring(3, roleArg.length() - 1));
         } else if (Strings.isID(roleArg)) {
@@ -540,9 +537,10 @@ public class ModerationCog extends Cog {
     }
 
     private Role requireRole(Context ctx) {
-        Role role = parseRole(ctx.guild, ctx.rawArgs.substring(ctx.args.get(0).length()).trim());
+        Role role;
 
-        if (role == null) {
+        if (ctx.args.size() < 2 ||
+                (role = parseRole(ctx.guild, ctx.rawArgs.substring(ctx.args.get(0).length()).trim())) == null) {
             ctx.send(Emotes.getFailure() + " I need a role in the form of the name, @role, or ID!").queue();
             throw new PassException();
         }

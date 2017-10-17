@@ -18,6 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl;
+import org.luaj.vm2.LuaError;
 import org.luaj.vm2.script.LuaScriptEngine;
 import org.python.jsr223.PyScriptEngine;
 
@@ -199,12 +200,13 @@ public class ReplCog extends Cog {
                 engine.put("imports", PYTHON_IMPORTS);
                 engine.eval("def print(*args): ctx.send(map(str, args).join(' ')).queue()");
             } else if (engine instanceof NashornScriptEngine) {
-                engine.eval("print = function() { ctx.send.apply(ctx, arguments.join(' ')) }");
+                engine.eval("print = function() { ctx.send.apply(ctx, arguments.join(' ')).queue() }");
             } else if (engine instanceof LuaScriptEngine) {
-                engine.eval("print = function(...) ctx.send(string.join(' ', ...)) end");
-                engine.eval("require 'assets.essentials'; local cron = require 'assets.cron'; local class = require 'assets.middleclass'; local stateful = require 'assets.stateful'; local inspect = require 'assets.inspect'");
+                engine.eval("print = function(...) ctx.send(string.join(' ', ...)).queue() end");
+                engine.put("__dirsep", System.getProperty("file.separator"));
+                engine.eval("debug = debug or {}; package = package or {}; package.config = package.config or (__dirsep .. '\\n;\\n?\\n!\\n-'); require 'assets.essentials'; require 'assets.cron'; require 'assets.middleclass'; require 'assets.stateful'; require 'assets.inspect'; require 'assets.repl_base'");
             }
-        } catch (ScriptException e) {
+        } catch (ScriptException|LuaError e) {
             ctx.send("⚠ Engine post-init failed.\n```java" + Bot.renderStackTrace(e) + "```").queue();
         }
 
@@ -251,12 +253,27 @@ public class ReplCog extends Cog {
 
             Object result;
             try {
-                if (language.equalsIgnoreCase("groovy"))
+                if (language.equalsIgnoreCase("groovy")) {
                     result = engine.eval(GROOVY_PRE_INJECT + cleaned);
-                else if (language.equalsIgnoreCase("lua"))
-                    result = engine.eval("return (" + cleaned + ")");
-                else
+                } else if (language.equalsIgnoreCase("lua")) {
+                    String pCode = StringUtils.replace(cleaned, "**", "^");
+                    int lastNidx = pCode.lastIndexOf(10);
+                    String code = lastNidx == -1 ? "" : pCode.substring(0, lastNidx);
+                    String lastLine = lastNidx == -1 ? pCode : pCode.substring(lastNidx + 1);
+
+                    if (lastLine.equals("end")) {
+                        code += "\nend";
+                        lastLine = "nil";
+                    }
+
+                    engine.put("__code", code);
+                    engine.put("__last_line", lastLine);
+                    engine.put("__orig", cleaned);
+
+                    result = engine.eval("__repl_step()");
+                } else {
                     result = engine.eval(cleaned);
+                }
             } catch (ScriptException e) {
                 result = e.getCause();
 

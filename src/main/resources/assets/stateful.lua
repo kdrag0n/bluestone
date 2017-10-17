@@ -220,4 +220,6 @@ function Stateful:getStateStackDebugInfo()
     return info
 end
 
+stateful = Stateful
+
 return Stateful
