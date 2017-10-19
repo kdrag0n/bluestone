@@ -1,16 +1,15 @@
 package com.khronodragon.bluestone.cogs;
 
-import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.dao.DaoManager;
-import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.emotes.*;
 import com.khronodragon.bluestone.annotations.Command;
-import com.khronodragon.bluestone.sql.UserProfile;
+import com.khronodragon.bluestone.util.GraphicsUtils;
 import com.khronodragon.bluestone.util.Strings;
 import com.khronodragon.bluestone.util.UnisafeString;
 import gnu.trove.map.TCharObjectMap;
+import gnu.trove.map.TShortObjectMap;
 import gnu.trove.map.hash.TCharObjectHashMap;
+import gnu.trove.map.hash.TShortObjectHashMap;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.Permission;
@@ -18,7 +17,12 @@ import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.exceptions.PermissionException;
+import net.dv8tion.jda.webhook.WebhookClient;
+import net.dv8tion.jda.webhook.WebhookClientBuilder;
+import net.dv8tion.jda.webhook.WebhookMessage;
+import net.dv8tion.jda.webhook.WebhookMessageBuilder;
 import okhttp3.*;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -28,12 +32,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.SQLException;
 import java.time.Instant;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -64,7 +71,8 @@ public class FunCog extends Cog {
         put("upside_down", uniString("ɐqɔpǝɟƃɥᴉɾʞlɯuodbɹsʇnʌʍxʎz∀qƆpƎℲפHIſʞ˥WNOԀQɹS┴∩ΛMX⅄Z0ƖᄅƐㄣϛ9ㄥ86~ ,¡@#$%^⅋*)(-‾=+][}{|;:,,,'>˙</¿"));
     }};
     private static final int[] normalChars = {97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 126, 32, 96, 33, 64, 35, 36, 37, 94, 38, 42, 40, 41, 45, 95, 61, 43, 91, 93, 123, 125, 124, 59, 58, 39, 34, 44, 60, 46, 62, 47, 63};
-    private static final TCharObjectMap<String> alphabetToEmote = new TCharObjectHashMap<String>() {{
+    private static final TShortObjectMap<WebhookMessage> numToBleachMsg = new TShortObjectHashMap<>();
+    private static final TCharObjectMap<String> alphabetToEmote = new TCharObjectHashMap<>() {{
         put(' ', "    ");
         put('#', "#⃣");
         put('!', "❗");
@@ -173,7 +181,27 @@ public class FunCog extends Cog {
             "An old man carries {0} away.",
             "{0} is in shock.",
             "{0} passes out."};
+    private static final Color BLEACH_COLOR = new Color(51, 143, 216);
+    private static final MessageEmbed BLEACH_EMBED = new EmbedBuilder()
+            .setColor(BLEACH_COLOR)
+            .setTitle("Bleach")
+            .setImage("https://upload.wikimedia.org/wikipedia/commons/d/d3/Clorox_Bleach_products.jpg")
+            .build();
     private final EmoteProviderManager emoteProviderManager = new EmoteProviderManager();
+
+    static {
+        List<MessageEmbed> list = new LinkedList<>();
+
+        for (short i = 1; i <= 10; i++) {
+            list.add(BLEACH_EMBED);
+
+            numToBleachMsg.put(i, new WebhookMessageBuilder()
+                    .setUsername("Bleach Delivery")
+                    .setAvatarUrl("https://upload.wikimedia.org/wikipedia/commons/d/d3/Clorox_Bleach_products.jpg")
+                    .addEmbeds(list)
+                    .build());
+        }
+    }
 
     private static final UnisafeString uniString(String javaString) {
         return new UnisafeString(javaString);
@@ -252,11 +280,7 @@ public class FunCog extends Cog {
 
     @Command(name = "bleach", desc = "Get me some bleach. NOW.")
     public void cmdBleach(Context ctx) {
-        ctx.send(new EmbedBuilder()
-                .setColor(randomColor())
-                .setTitle("Bleach")
-                .setImage("https://upload.wikimedia.org/wikipedia/commons/d/d3/Clorox_Bleach_products.jpg")
-                .build()).queue();
+        ctx.send(BLEACH_EMBED).queue();
     }
 
     @Command(name = "cat", desc = "Get a random cat!", thread = true, aliases = {"randcat"})
@@ -375,6 +399,9 @@ public class FunCog extends Cog {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " You need to specify an emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.").queue();
             return;
+        } else if (!ctx.guild.getSelfMember().hasPermission(Permission.MANAGE_EMOTES)) {
+            ctx.send(Emotes.getFailure() + " I need to be able to **manage emotes**!").queue();
+            return;
         }
 
         String eName = ctx.args.get(0);
@@ -387,17 +414,143 @@ public class FunCog extends Cog {
             ctx.send(Emotes.getFailure() + " No such emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.").queue();
             return;
         }
-        // TODO: finish
+
+        ctx.channel.sendTyping().queue();
 
         Bot.http.newCall(new Request.Builder()
                 .get()
                 .url(url)
                 .build()).enqueue(Bot.callback(response -> {
+            final String nm = url.startsWith("https://cdn.discordapp.com/emojis/")
+                    ? emoteProviderManager.getFirstInfo(n).name : n;
+
             InputStream is = response.body().byteStream();
-            ctx.guild.getController().createEmote(n, Icon.from(is))
-                    .reason("")
+            Emote emote = ctx.guild.getController().createEmote(nm, Icon.from(is))
+                    .reason("Adding emote " + nm + " by user request. User has Manage Emotes.")
                     .complete();
-        }, e -> ctx.send(Emotes.getFailure() + " Failed to fetch emote.").queue()));
+
+            ctx.send(Emotes.getSuccess() + " Emote added. " + emote.getAsMention()).queue();
+        }, e -> ctx.send(Emotes.getFailure() + " Failed to fetch or create emote.").queue()));
+    }
+
+    @Perm.ManageEmotes
+    @Command(name = "add_compound_emote", desc = "Add a compound emote to the server.", guildOnly = true,
+            aliases = {"add_cmp_emote", "addcemote", "addcmpemote", "cmp_add", "cadd",
+                    "cemote_add", "cmp_emote_add", "+ce", "+cmp", "+compound", "+cemote"},
+            usage = "[attach an image]")
+    public void cmdAddCompoundEmote(Context ctx) {
+        Message.Attachment attachment;
+        if (ctx.message.getAttachments().size() < 1 || !(attachment = ctx.message.getAttachments().get(0)).isImage()) {
+            ctx.send(Emotes.getFailure() + " You must upload an image!").queue();
+            return;
+        }
+
+        ctx.channel.sendTyping().queue();
+
+        Bot.http.newCall(new Request.Builder()
+                .get()
+                .url(attachment.getProxyUrl())
+                .build()).enqueue(Bot.callback(resp -> {
+            InputStream is = resp.body().byteStream();
+            BufferedImage base;
+
+            // Load image
+            try {
+                base = ImageIO.read(is);
+            } catch (IOException | NullPointerException | IllegalArgumentException ignored) {
+                ctx.send(Emotes.getFailure() + " Invalid image! Only GIF, PNG, and JPEG images are supported.").queue();
+                return;
+            } catch (ArrayIndexOutOfBoundsException ignored) {
+                ctx.send(Emotes.getFailure() + " Your image seems to be in a weird format, or corrupted...").queue();
+                return;
+            } finally {
+                IOUtils.closeQuietly(is);
+            }
+
+            // Crop to square based on smallest dimension, if not already exactly square
+            int dim;
+            if (base.getWidth() != base.getHeight()) {
+                dim = Math.min(base.getWidth(), base.getHeight());
+                base = base.getSubimage(0, 0, dim, dim);
+            } else {
+                dim = base.getWidth();
+            }
+
+            // Init some variables
+            final int emoteImageDim = 112;
+            final int maxEmoteDim = 5;
+
+            // Dimension verification
+            int emoteDim = Math.round((float) dim / (float) emoteImageDim);
+            if (emoteDim > maxEmoteDim) {
+                emoteDim = maxEmoteDim;
+            }
+
+            int targetDim = emoteImageDim * emoteDim;
+            base = GraphicsUtils.resizeImage(base, targetDim, targetDim);
+            dim = targetDim;
+
+            // Init some variables
+            List<byte[]> results = new ArrayList<>(emoteDim * emoteDim);
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+
+            // Do actual emote cropping
+            for (int x = 0; x < emoteDim; x++) {
+                for (int y = 0; y < emoteDim; y++) {
+                    BufferedImage section = base.getSubimage(emoteImageDim * x, emoteImageDim * y,
+                            emoteImageDim, emoteImageDim);
+
+                    ImageIO.write(section, "png", stream);
+                    results.add(stream.toByteArray());
+
+                    stream.reset();
+                }
+            }
+
+            // TODO: make it input. maybe an argument / rawArgs
+            String baseName = "cmpe_test";
+
+
+            List<Emote> finalEmotes = new ArrayList<>(results.size());
+            for (int i = 0; i < results.size(); i++) {
+                Emote emote =
+                        ctx.guild.getController().createEmote(baseName + (i + 1), Icon.from(results.get(i)))
+                        .reason("Creating emote " + (i + 1) + " of " + results.size() +
+                                " for " + emoteDim + "x" + emoteDim + " compound emote \"" + baseName + '"')
+                        .complete();
+
+                finalEmotes.add(emote);
+
+                Thread.sleep(100);
+            }
+
+            // Render and send the result
+            StringBuilder usageAll = new StringBuilder((baseName.length() + 4) * finalEmotes.size() + emoteDim);
+            StringBuilder renderAll = new StringBuilder((baseName.length() + 25) * finalEmotes.size() + emoteDim);
+
+            for (int i = 0; i < finalEmotes.size(); i++) {
+                Emote emote = finalEmotes.get(i);
+
+                // add to usageAll
+                usageAll.append(':')
+                        .append(emote.getName())
+                        .append(':');
+
+                // add to renderAll
+                renderAll.append(emote.getAsMention());
+
+                if (i != 0 && i % emoteDim - 1 == 0) {
+                    usageAll.append('\n');
+                    renderAll.append('\n');
+                }
+            }
+
+            ctx.send(Emotes.getSuccess() + " Compound emote created.\n\nUsage:\n```" + usageAll.toString() +
+                    "```\n\nResult:\n" + renderAll.toString()).queue();
+        }, e -> {
+            logger.error("Error creating compound emote", e);
+            ctx.send(Emotes.getFailure() + " Failed to create compound emote.").queue();
+        }));
     }
 
     private String applyStyle(String orig, UnisafeString mapTo) {
@@ -503,6 +656,54 @@ public class FunCog extends Cog {
     public void cmdSoon(Context ctx) {
         ctx.channel.sendFile(FunCog.class.getResourceAsStream("/assets/soon.gif"),
                 "soon.gif", null).queue();
+    }
+
+    @Perm.Patron
+    @Command(name = "multibleach", desc = "Get multiple loads of bleach.", usage = "[amount of bleach]",
+            aliases = {"mbleach", "mb"}, guildOnly = true)
+    public void cmdMultiBleach(Context ctx) {
+        short n;
+        try {
+            if ((n = Short.parseShort(ctx.args.get(0))) < 2 || n > 10) {
+                ctx.send(Emotes.getFailure() + " You must specify between 2 and 10 bleach!").queue();
+                return;
+            }
+        } catch (IndexOutOfBoundsException|NumberFormatException ignored) {
+            ctx.send(Emotes.getFailure() + " You must specify between 2 and 10 bleach!").queue();
+            return;
+        }
+
+        if (!ctx.guild.getSelfMember().hasPermission((TextChannel) ctx.channel, Permission.MANAGE_WEBHOOKS)) {
+            ctx.send(Emotes.getFailure() + " I need to be able to **manage webhooks** here!").queue();
+            return;
+        }
+
+        ctx.guild.getWebhooks().queue(wl -> {
+            Webhook hook = wl.stream()
+                    .filter(w -> w.getName().equals("multibleach for #" + ctx.channel.getName()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (hook == null) {
+                ((TextChannel) ctx.channel).createWebhook("multibleach for #" + ctx.channel.getName())
+                        .queue(h -> {
+                            mb2(h, n);
+                        }, e -> ctx.send(Emotes.getFailure() + " Failed to create webhook."));
+                return;
+            }
+
+            mb2(hook, n);
+        }, e -> ctx.send(Emotes.getFailure() + " Failed to fetch webhooks.").queue());
+    }
+
+    private void mb2(Webhook hook, short n) {
+        WebhookClient client = new WebhookClientBuilder(hook)
+                .setHttpClient(Bot.http)
+                .setDaemon(true)
+                .setExecutorService(bot.getScheduledExecutor())
+                .build();
+        client.send(numToBleachMsg.get(n));
+        client.close();
     }
 
     @Command(name = "akinator", desc = "Play a game of Akinator, where you answer questions for it to guess your character.",

@@ -486,7 +486,8 @@ public class UtilityCog extends Cog {
         ctx.send(emb.build()).queue();
     }
 
-    @Command(name = "invite", desc = "Generate an invite link for myself or another bot.", aliases = {"addbot", "join"})
+    @Command(name = "invite", desc = "Generate an invite link for myself or another bot.", aliases = {"addbot", "join"},
+            usage = "{bot ID (default: me)}")
     public void cmdInvite(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.send('<' + ctx.jda.asBot().getInviteUrl(PERMS_NEEDED) + '>').queue();

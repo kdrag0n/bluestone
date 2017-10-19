@@ -56,6 +56,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
+import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 import static com.khronodragon.bluestone.util.Strings.str;
 import static com.khronodragon.bluestone.util.Strings.format;
 
@@ -866,6 +867,17 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             @Override
             public void onResponse(Call call, Response response) {
                 try {
+                    if (!(response.isSuccessful() || response.isRedirect())) {
+                        failure.accept(new IOException("Request was not successful. Got status " +
+                                response.code() + " " + response.message()));
+                        return;
+                    }
+
+                    if (response.isRedirect()) {
+                        defLog.warn("Response is redirect, status " + response.code() + " " + response.message() +
+                                ". Destination: " + val(response.header("Location")).or("[not sent]"));
+                    }
+
                     success.accept(response);
                 } catch (Throwable e) {
                     try {

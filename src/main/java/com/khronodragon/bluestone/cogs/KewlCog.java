@@ -32,6 +32,7 @@ import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
@@ -476,6 +477,7 @@ public class KewlCog extends Cog {
     public void cmdSetProfileBg(Context ctx) {
         String a = ctx.invoker.equalsIgnoreCase("profile") ?
                 ctx.args.get(ctx.args.size() - 1) : ctx.rawArgs;
+        Message.Attachment attachment;
 
         if (a.equalsIgnoreCase("reset") || a.equalsIgnoreCase("default")) {
             File path = new File("data/profiles/bg/" + ctx.author.getIdLong() + ".png");
@@ -489,14 +491,16 @@ public class KewlCog extends Cog {
             } else {
                 ctx.send(Emotes.getFailure() + " You're **already** using the default background!").queue();
             }
-        } else if (ctx.message.getAttachments().size() > 0) {
+        } else if (ctx.message.getAttachments().size() > 0 && (attachment = ctx.message.getAttachments().get(0)).isImage()) {
             ctx.channel.sendTyping().queue();
 
             try {
-                BufferedImage image = ImageIO.read(Bot.http.newCall(new Request.Builder()
+                InputStream is = Bot.http.newCall(new Request.Builder()
                         .get()
-                        .url(ctx.message.getAttachments().get(0).getUrl())
-                        .build()).execute().body().byteStream());
+                        .url(attachment.getUrl())
+                        .build()).execute().body().byteStream();
+                BufferedImage image = ImageIO.read(is);
+                IOUtils.closeQuietly(is);
 
                 if (image.getType() != BufferedImage.TYPE_INT_RGB) {
                     BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
