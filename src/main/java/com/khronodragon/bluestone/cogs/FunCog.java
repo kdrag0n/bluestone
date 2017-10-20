@@ -39,6 +39,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -437,10 +438,14 @@ public class FunCog extends Cog {
     @Command(name = "add_compound_emote", desc = "Add a compound emote to the server.", guildOnly = true,
             aliases = {"add_cmp_emote", "addcemote", "addcmpemote", "cmp_add", "cadd",
                     "cemote_add", "cmp_emote_add", "+ce", "+cmp", "+compound", "+cemote"},
-            usage = "[attach an image]")
+            usage = "[emote name] [attach an image]")
     public void cmdAddCompoundEmote(Context ctx) {
+        String baseName;
         Message.Attachment attachment;
-        if (ctx.message.getAttachments().size() < 1 || !(attachment = ctx.message.getAttachments().get(0)).isImage()) {
+        if (ctx.rawArgs.length() < 1 || !Strings.isEmoteName(baseName = ctx.args.get(0))) {
+            ctx.send(Emotes.getFailure() + " Invalid emote name! Must be between 2 and 32 characters in length.").queue();
+            return;
+        } else if (ctx.message.getAttachments().size() < 1 || !(attachment = ctx.message.getAttachments().get(0)).isImage()) {
             ctx.send(Emotes.getFailure() + " You must upload an image!").queue();
             return;
         }
@@ -507,11 +512,10 @@ public class FunCog extends Cog {
                 }
             }
 
-            // TODO: make it input. maybe an argument / rawArgs
-            String baseName = "cmpe_test";
-
-
+            ctx.channel.sendTyping().queue();
+            OffsetDateTime lastSentTyping = OffsetDateTime.now();
             List<Emote> finalEmotes = new ArrayList<>(results.size());
+
             for (int i = 0; i < results.size(); i++) {
                 Emote emote =
                         ctx.guild.getController().createEmote(baseName + (i + 1), Icon.from(results.get(i)))
@@ -521,6 +525,12 @@ public class FunCog extends Cog {
 
                 finalEmotes.add(emote);
 
+                OffsetDateTime now = OffsetDateTime.now();
+                if (lastSentTyping.isBefore(now.minusSeconds(14))) {
+                    ctx.channel.sendTyping().queue();
+                    lastSentTyping = now;
+                }
+
                 Thread.sleep(100);
             }
 
@@ -528,6 +538,7 @@ public class FunCog extends Cog {
             StringBuilder usageAll = new StringBuilder((baseName.length() + 4) * finalEmotes.size() + emoteDim);
             StringBuilder renderAll = new StringBuilder((baseName.length() + 25) * finalEmotes.size() + emoteDim);
 
+            int ix = 1;
             for (int i = 0; i < finalEmotes.size(); i++) {
                 Emote emote = finalEmotes.get(i);
 
@@ -539,10 +550,13 @@ public class FunCog extends Cog {
                 // add to renderAll
                 renderAll.append(emote.getAsMention());
 
-                if (i != 0 && i % emoteDim - 1 == 0) {
+                if (ix == 5) {
                     usageAll.append('\n');
                     renderAll.append('\n');
+                    ix = 0;
                 }
+
+                ix++;
             }
 
             ctx.send(Emotes.getSuccess() + " Compound emote created.\n\nUsage:\n```" + usageAll.toString() +

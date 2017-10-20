@@ -10,11 +10,11 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.text.DecimalFormat;
 import java.text.MessageFormat;
-import java.util.HashMap;
+import java.text.NumberFormat;
 import java.util.IntSummaryStatistics;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,6 +34,8 @@ public class Strings {
     private static final Pattern channelNamePattern = Pattern.compile("^[a-z0-9_-]{2,100}$", Pattern.CASE_INSENSITIVE);
     private static final Pattern ipDomainPattern = Pattern.compile("^(?:localhost|[a-zA-Z\\-.]+\\.[a-z]{2,15}|(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|[0-9a-f:]+)$");
     private static final Pattern mcNamePattern = Pattern.compile("^[a-zA-Z0-9_]{1,32}$");
+    private static final Pattern emoteNamePattern = Pattern.compile("^[a-zA-Z0-9]{2,32}$");
+    private static final ThreadLocal<NumberFormat> numberFormat = ThreadLocal.withInitial(DecimalFormat::getNumberInstance);
     private static final LoadingCache<String, MessageFormat> formatCache = CacheBuilder.newBuilder()
             .maximumSize(120)
             .concurrencyLevel(6)
@@ -97,19 +99,23 @@ public class Strings {
     }
 
     public static String str(long value) {
-        return Long.toString(value);
+        return value < 1000 ? Long.toString(value) : number(value); // user-friendly formatting, e.g. 11,000,246.273
     }
 
     public static String str(int value) {
-        return Integer.toString(value);
+        return value < 1000 ? Integer.toString(value) : number(value); // user-friendly formatting, e.g. 11,000,246.273
     }
 
     public static String str(short value) {
-        return Short.toString(value);
+        return value < 1000 ? Short.toString(value) : number(value); // user-friendly formatting, e.g. 11,000,246.273
+    }
+
+    public static String str(float value) {
+        return value < 1000 ? Float.toString(value) : number(value); // user-friendly formatting, e.g. 11,000,246.273
     }
 
     public static String str(double value) {
-        return Double.toString(value);
+        return value < 1000 ? Double.toString(value) : number(value); // user-friendly formatting, e.g. 11,000,246.273
     }
 
     public static String simpleJoin(List<String> strings) {
@@ -238,6 +244,30 @@ public class Strings {
 
     public static boolean isMinecraftName(CharSequence str) {
         return mcNamePattern.matcher(str).matches();
+    }
+
+    public static boolean isEmoteName(CharSequence str) {
+        return emoteNamePattern.matcher(str).matches();
+    }
+
+    public static String number(short n) {
+        return numberFormat.get().format((long) n);
+    }
+
+    public static String number(int n) {
+        return numberFormat.get().format((long) n);
+    }
+
+    public static String number(long n) {
+        return numberFormat.get().format(n);
+    }
+
+    public static String number(float n) {
+        return numberFormat.get().format((double) n);
+    }
+
+    public static String number(double n) {
+        return numberFormat.get().format(n);
     }
 
     public static String format(String pattern, Object... args) {

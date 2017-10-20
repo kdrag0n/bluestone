@@ -200,14 +200,14 @@ public class ReplCog extends Cog {
                 engine.put("imports", PYTHON_IMPORTS);
                 engine.eval("def print(*args): ctx.send(map(str, args).join(' ')).queue()");
             } else if (engine instanceof NashornScriptEngine) {
-                engine.eval("print = function() { ctx.send.apply(ctx, arguments.join(' ')).queue() }");
+                engine.eval("function print() { ctx.send.apply(ctx, arguments.join(' ')).queue() }; var console = {log: print};");
             } else if (engine instanceof LuaScriptEngine) {
-                engine.eval("print = function(...) ctx.send(string.join(' ', ...)).queue() end");
+                engine.eval("function print(...) ctx.send(string.join(' ', ...)).queue() end");
                 engine.put("__dirsep", System.getProperty("file.separator"));
                 engine.eval("debug = debug or {}; package = package or {}; package.config = package.config or (__dirsep .. '\\n;\\n?\\n!\\n-'); require 'assets.essentials'; require 'assets.cron'; require 'assets.middleclass'; require 'assets.stateful'; require 'assets.inspect'; require 'assets.repl_base'");
             }
         } catch (ScriptException|LuaError e) {
-            ctx.send("⚠ Engine post-init failed.\n```java" + Bot.renderStackTrace(e) + "```").queue();
+            ctx.send("⚠ Engine post-init failed.\n```java\n" + Bot.renderStackTrace(e) + "```").queue();
         }
 
         ctx.send("REPL started. Untrusted mode (`untrusted` flag) is " + (untrusted ? "on" : "off") +

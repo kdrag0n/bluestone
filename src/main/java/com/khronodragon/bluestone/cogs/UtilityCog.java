@@ -1547,6 +1547,9 @@ public class UtilityCog extends Cog {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need an expression to evaluate!").queue();
             return;
+        } else if (ctx.rawArgs.contains("while") || ctx.rawArgs.contains("for")) {
+            ctx.send(Emotes.getFailure() + " Blocked keywords found!").queue();
+            return;
         }
 
         String pCode = StringUtils.replace(ctx.rawArgs, "**", "^");

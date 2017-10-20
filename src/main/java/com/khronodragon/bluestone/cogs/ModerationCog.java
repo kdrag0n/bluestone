@@ -6,8 +6,10 @@ import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
+import com.khronodragon.bluestone.annotations.Cooldown;
 import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.enums.AutoroleConditions;
+import com.khronodragon.bluestone.enums.BucketType;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.sql.GuildAutorole;
 import com.khronodragon.bluestone.util.Strings;
@@ -20,6 +22,9 @@ import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.requests.RestAction;
 import net.dv8tion.jda.core.utils.MiscUtil;
+import net.dv8tion.jda.webhook.WebhookClient;
+import net.dv8tion.jda.webhook.WebhookClientBuilder;
+import net.dv8tion.jda.webhook.WebhookMessageBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -29,6 +34,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -55,6 +61,7 @@ public class ModerationCog extends Cog {
             "    \u2022 `add [id/name/@role]` - add a role to autoroles\n" +
             "    \u2022 `remove [id/name/@role]` - remove a role from autoroles\n" +
             "    \u2022 `clear` - clear autoroles (remove all)";
+    private static final String[] BYTE_UNITS = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
     private static final Pattern FIRST_ID_PATTERN = Pattern.compile("^[0-9]{17,20}");
     private static final Pattern PURGE_LINK_PATTERN = Pattern.compile("https?://.+");
     private static final Pattern PURGE_QUOTE_PATTERN = Pattern.compile("[\"“](.*?)[\"”]", Pattern.DOTALL);
@@ -640,5 +647,208 @@ public class ModerationCog extends Cog {
                     ctx.send(Emotes.getFailure() + " Failed to create invite!").queue();
                     logger.error("Invite creation error", e);
                 });
+    }
+
+    @Perm.ManageChannels
+    @Perm.Message.Manage
+    @Perm.ManageServer
+    @Cooldown(scope = BucketType.GUILD, delay = 30)
+    @Command(name = "archive", desc = "Archive a channel's messages into another.", guildOnly = true,
+            usage = "[channel to archive] [destination channel] {number of messages, default = all}", thread = true)
+    public void cmdArchive(Context ctx) {
+        if (ctx.message.getMentionedChannels().size() < 2) {
+            ctx.send(Emotes.getFailure() +
+                    " You must specify a #channel to archive, and a destination #channel.").queue();
+            return;
+        }
+
+        TextChannel from = ctx.message.getMentionedChannels().get(0);
+        TextChannel to = ctx.message.getMentionedChannels().get(1);
+
+        if (!ctx.guild.getSelfMember().hasPermission(from, Permission.MESSAGE_HISTORY)) {
+            ctx.send(Emotes.getFailure() + " I need to be able to **read message history** in " +
+                    from.getAsMention() + '!').queue();
+            return;
+        } else if (!ctx.guild.getSelfMember().hasPermission(to, Permission.MANAGE_WEBHOOKS)) {
+            ctx.send(Emotes.getFailure() + " I need to be able to **manage webhooks** in " +
+                    to.getAsMention() + '!').queue();
+            return;
+        }
+
+        LinkedList<Message> history = new LinkedList<>();
+        EmbedBuilder statusEmb = newEmbedWithAuthor(ctx)
+                .setTitle("Archiving channel into #" + to.getName() + "...")
+                .setColor(val(ctx.guild.getSelfMember().getColor()).or(Color.WHITE))
+                .addField("Stage", "1 of 2", false)
+                .addField("Status", "Collecting messages...", false)
+                .setFooter("Last updated at", null)
+                .setTimestamp(OffsetDateTime.now());
+        Message statusMsg = ctx.send(statusEmb.build()).complete();
+
+        try {
+            for (Message msg: from.getIterableHistory()) {
+                history.push(msg);
+
+                int sz = history.size();
+
+                if (sz % 200 == 0) {
+                    statusMsg.editMessage(statusEmb.clearFields()
+                            .addField("Stage", "1 of 2", false)
+                            .addField("Status", "Collecting messages...", false)
+                            .addField("Progress", "Collected **" + sz + "** messages so far.", false)
+                            .setTimestamp(OffsetDateTime.now())
+                            .build()).queue();
+                }
+
+                if (sz > 2500000) {
+                    ctx.send(Emotes.getFailure() +
+                            " Sorry, but there are too many messages here (2.5 million). As this is a public bot, it must be available for everyone to use. More than 2,500,000 messages takes up too much memory. Contact the bot owner if you still want to archive this channel.").queue();
+                    return;
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error archiving channel (collecting messages)", e);
+            ctx.send(Emotes.getFailure() + " An error occurred while collecting messages.").queue();
+            return;
+        }
+
+        if (history.size() < 1) {
+            ctx.send(Emotes.getFailure() + " There are no messages in " + from.getAsMention() + '!').queue();
+            return;
+        }
+
+        if (!ctx.guild.getSelfMember().hasPermission(to, Permission.MANAGE_WEBHOOKS)) {
+            ctx.send(Emotes.getFailure() + " I need to be able to **manage webhooks** in " +
+                    to.getAsMention() + '!').queue();
+            return;
+        } // if they revoke the perm during message collection...
+
+        String b = "(Temp) Archival to #";
+        Webhook hook = to.createWebhook(b +
+                (to.getName().substring(0, Math.min(to.getName().length(), 32 - b.length()))))
+                .reason("Creating temporary webhook for the archival of messages from #" +
+                        from.getName() + " to #" + to.getName() +
+                        ". This will be deleted afterwards, and is used to speed up the process by orders of magnitude.")
+                .complete();
+
+        try {
+            WebhookClient client = new WebhookClientBuilder(hook)
+                    .setHttpClient(Bot.http)
+                    .setDaemon(true)
+                    .setExecutorService(bot.getScheduledExecutor())
+                    .build();
+            WebhookMessageBuilder wmb = new WebhookMessageBuilder()
+                    .setUsername("Message Archive")
+                    .setAvatarUrl(ctx.jda.getSelfUser().getEffectiveAvatarUrl()); // TODO: maybe change this?
+
+            List<MessageEmbed> embedQueue = new ArrayList<>(10);
+            EmbedBuilder emb = new EmbedBuilder();
+            statusMsg.editMessage(statusEmb.clearFields()
+                    .addField("Stage", "2 of 2", false)
+                    .addField("Status", "Creating messages in target channel...", false)
+                    .setTimestamp(OffsetDateTime.now())
+                    .build()).queue();
+
+            for (Message msg: history) {
+                User author = msg.getAuthor();
+
+                emb.clearFields()
+                        .setImage(null)
+                        .setAuthor(author.getName() + '#' + author.getDiscriminator(), null,
+                                author.getEffectiveAvatarUrl())
+                        .setDescription(msg.getRawContent())
+                        .setTimestamp(msg.getCreationTime());
+
+                Member member;
+                if ((member = ctx.guild.getMember(author)) != null) {
+                    Color col = member.getColor();
+
+                    if (col == null) {
+                        emb.setColor(Color.WHITE);
+                    } else {
+                        emb.setColor(col);
+                    }
+                } else {
+                    emb.setColor(Color.WHITE);
+                }
+
+                if (msg.getEmbeds().size() > 0) {
+                    // TODO: this
+                }
+
+                if (msg.getAttachments().size() > 0) {
+                    boolean fi = true;
+                    for (Message.Attachment attachment: msg.getAttachments()) {
+                        if (fi && attachment.isImage()) {
+                            emb.setImage(attachment.getUrl());
+                            fi = false;
+                        } else {
+                            String ct;
+                            if (attachment.isImage()) {
+                                ct = "**Image** \u2022 Dimensions: " + attachment.getWidth() + "x" +
+                                        attachment.getHeight() + "\n" + attachment.getUrl();
+                            } else {
+                                ct = attachment.getUrl();
+                            }
+
+                            float bytes = attachment.getSize();
+                            int unitIdx = 0;
+
+                            while (bytes >= 1000) {
+                                bytes /= 1000;
+                                unitIdx++;
+                            }
+
+                            String sz = Strings.number(bytes) + " " + BYTE_UNITS[unitIdx > 8 ? 8 : unitIdx];
+
+                            emb.addField("Attachment: " + attachment.getFileName() +
+                                    " (" + sz + ')', ct, false);
+                        }
+                    }
+                }
+
+                embedQueue.add(emb.build());
+
+                if (embedQueue.size() == 10) {
+                    try {
+                        client.send(wmb.resetEmbeds()
+                                .addEmbeds(embedQueue) // TODO: maybe more efficent, iterate+cloneless with reflection?
+                                .build()).get();
+
+                        Thread.sleep(100);
+                    } catch (InterruptedException ignored) {}
+                    catch (ExecutionException e) {
+                        logger.warn("Archival embed send error", e);
+                        client.send(Emotes.getFailure() + " Failed to send messages.");
+
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException ign) {}
+                    }
+                }
+            }
+
+            if (embedQueue.size() > 0) {
+                client.send(wmb.resetEmbeds()
+                        .addEmbeds(embedQueue)
+                        .build());
+            }
+
+            statusMsg.editMessage(statusEmb.clearFields()
+                    .addField("Stage", "Completed!", false)
+                    .addField("Status", "Successfully archived " + history.size() + " messages from " +
+                            from.getAsMention() + " to " + to.getAsMention() + '.', false)
+                    .setTimestamp(OffsetDateTime.now())
+                    .build()).queue();
+            ctx.send(Emotes.getSuccess() + " Archival from " + from.getAsMention() + " to " +
+                    to.getAsMention() + " has **finished**!").queue();
+        } finally {
+            if (ctx.guild.getSelfMember().hasPermission(to, Permission.MANAGE_WEBHOOKS)) {
+                hook.delete()
+                        .reason("Archival from #" + from.getName() + " to #" + to.getName() +
+                                " has finished, so the temporary webhook is being deleted.")
+                        .queue();
+            } // if they revoke the perm during message creation...
+        }
     }
 }
