@@ -914,7 +914,7 @@ public class UtilityCog extends Cog {
             usage = "[server address]", aliases = {"mc", "mcserver"}, thread = true)
     public void cmdMineServer(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need a server address.").queue();
+            ctx.send(Emotes.getFailure() + " I need a server address or skin name!").queue();
             return;
         }
 
@@ -928,7 +928,19 @@ public class UtilityCog extends Cog {
             } catch (NumberFormatException ignored) {}
         }
         if (server.indexOf((int)'.') == -1 || ctx.rawArgs.indexOf((int)' ') != -1) {
-            ctx.send(Emotes.getFailure() + " Invalid address.").queue();
+            if (Strings.isMinecraftName(ctx.rawArgs)) {
+                final String name = ctx.rawArgs;
+
+                ctx.send(new EmbedBuilder()
+                        .setColor(randomColor())
+                        .setAuthor(name + "'s skin", null, "https://use.gameapis.net/mc/images/avatar/" + name + "/150/true")
+                        .setFooter("Tip: the " + ctx.invoker + " command can also give server info!", null)
+                        .setImage("https://use.gameapis.net/mc/images/skin/" + name + "/150/true")
+                        .build()).queue();
+            } else {
+                ctx.send(Emotes.getFailure() + " Invalid server address or skin name.").queue();
+            }
+
             return;
         }
 
