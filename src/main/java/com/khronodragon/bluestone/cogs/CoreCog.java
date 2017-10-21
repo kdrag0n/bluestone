@@ -57,6 +57,12 @@ public class CoreCog extends Cog {
     public CoreCog(Bot bot) {
         super(bot);
 
+        if (bot.getJda().getSelfUser().getIdLong() == 239775420470394897L &&
+                !Bot.NAME.equals(bot.getJda().getSelfUser().getName()) &&
+                bot.getShardNum() == 1) {
+            bot.getJda().getSelfUser().getManager().setName(Bot.NAME).queue();
+        }
+
         if (bot.getJda().getGuildById(239772188649979904L) != null &&
                 bot.getJda().getSelfUser().getIdLong() == 239775420470394897L &&
                 bot.getJda().getTextChannelById(256647384656904192L) != null) {
