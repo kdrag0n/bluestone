@@ -23,6 +23,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
 import java.lang.reflect.Field;
+import java.net.SocketTimeoutException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.time.Duration;
@@ -113,7 +114,11 @@ public class CryptoCurrencyCog extends Cog {
             rankedList = newRanked;
             currencyArray = currencies.values().toArray(new Cryptocurrency[0]);
         } catch (Exception e) {
-            logger.error("Error updating cryptocurrency data", e);
+            if (e.getCause() instanceof SocketTimeoutException) {
+                logger.error("Timeout updating cryptocurrency data");
+            } else {
+                logger.error("Error updating cryptocurrency data", e);
+            }
         }
     }
 

@@ -850,9 +850,9 @@ public class UtilityCog extends Cog {
             pager.addLine(String.format(fmt, codepoint, Character.getName(codepoint)));
         }
 
-        String[] pages = pager.getPages();
-        if (pages.length > 4) {
-            pages = ArrayUtils.subarray(pages, 0, 4);
+        List<String> pages = pager.getPages();
+        if (pages.size() > 4) {
+            pages = pages.subList(0, 4);
             ctx.send("Result trimmed to 4 pages.").queue();
         }
 

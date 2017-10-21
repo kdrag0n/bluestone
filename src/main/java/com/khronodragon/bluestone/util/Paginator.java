@@ -35,10 +35,15 @@ public class Paginator {
         count = 0;
     }
 
-    public String[] getPages() {
+    public List<String> getPages() {
         if (currentPage.size() > 0) {
             closePage();
         }
-        return pages.toArray(new String[0]);
+        return pages;
+    }
+
+    public void reset() {
+        currentPage.clear();
+        pages.clear();
     }
 }
