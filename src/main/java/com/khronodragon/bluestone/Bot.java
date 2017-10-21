@@ -63,8 +63,7 @@ import static com.khronodragon.bluestone.util.Strings.format;
 public class Bot extends ListenerAdapter implements ClassUtilities {
     private static final Logger defLog = LogManager.getLogger(Bot.class);
     public static final String NAME = "Goldmine";
-    public static final Permission OWNER = Permissions.BOT_OWNER;
-    public static final Permission ADMIN = Permissions.BOT_ADMIN;
+
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
     public static final JSONObject EMPTY_JSON_OBJECT = new JSONObject();
     public static final JSONArray EMPTY_JSON_ARRAY = new JSONArray();
@@ -368,15 +367,15 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                         continue;
 
                     if (type == Perm.Owner.class) {
-                        perms.add(OWNER);
+                        perms.add(Permissions.BOT_OWNER);
                     } else if (type == Perm.Admin.class) {
-                        perms.add(ADMIN);
+                        perms.add(Permissions.BOT_ADMIN);
                     } else if (type == Perm.Patron.class) {
                         perms.add(Permissions.PATREON_SUPPORTER);
-                    } else if (type == Perm.All.class) {
+                    } /*else if (type == Perm.All.class) {
                         try {
                             perms.add(((Permission[]) type.getDeclaredMethod("value").invoke(a))[0]);
-                                    // TODO: AND + multi
+                                    // need to add AND + multi
                         } catch (ReflectiveOperationException e) {
                             throw new RuntimeException(e);
                         }
@@ -385,12 +384,13 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                             Perm.All[] alls = (Perm.All[]) type.getDeclaredMethod("value").invoke(a);
 
                             for (Perm.All all: alls) {
-                                perms.add(all.value()[0]); // TODO: AND + multi
+                                perms.add(all.value()[0]); // need to add AND + multi
                             }
                         } catch (ReflectiveOperationException e) {
                             throw new RuntimeException(e);
                         }
-                    } else {
+                    }*/
+                    else {
                         Method valueMethod;
                         try {
                             valueMethod = type.getDeclaredMethod("value");
@@ -398,14 +398,46 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                             continue;
                         }
 
-                        if (valueMethod.getReturnType() != Permission.class)
-                            continue;
-
                         Permission perm;
-                        try {
-                            perm = (Permission) valueMethod.invoke(a);
-                        } catch (ReflectiveOperationException e) {
-                            throw new RuntimeException(e);
+
+                        if (valueMethod.getReturnType() == Permission.class) {
+                            try {
+                                perm = (Permission) valueMethod.invoke(a);
+                            } catch (ReflectiveOperationException e) {
+                                throw new RuntimeException(e);
+                            }
+                        } else if (valueMethod.getReturnType() == Permission[].class) {
+                            Permission[] permA;
+                            try {
+                                permA = (Permission[]) valueMethod.invoke(a);
+                            } catch (ReflectiveOperationException e) {
+                                throw new RuntimeException(e);
+                            }
+
+                            boolean isGuild = false;
+                            boolean isChannel = false;
+                            long finalRaw = 0;
+                            StringBuilder joinedName = new StringBuilder();
+
+                            for (Permission p: permA) {
+                                if (p.isGuild()) isGuild = true;
+                                if (p.isChannel()) isChannel = true;
+
+                                if (p != Permission.UNKNOWN)
+                                    finalRaw |= p.getRawValue();
+
+                                joinedName.append(p.getName())
+                                        .append(" & ");
+                            }
+
+                            String jn = joinedName.toString();
+                            perm = Permissions.createPerm(58, isGuild, isChannel,
+                                    jn.substring(0, jn.length() - 3));
+                            Permissions.setRaw(perm, finalRaw);
+
+                            Permissions.compoundMap.put(perm, permA);
+                        } else {
+                            continue;
                         }
 
                         perms.add(perm);

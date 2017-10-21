@@ -927,6 +927,7 @@ public class UtilityCog extends Cog {
                 port = Integer.parseInt(portSplit[1]);
             } catch (NumberFormatException ignored) {}
         }
+
         if (server.indexOf((int)'.') == -1 || ctx.rawArgs.indexOf((int)' ') != -1) {
             if (Strings.isMinecraftName(ctx.rawArgs)) {
                 final String name = ctx.rawArgs;

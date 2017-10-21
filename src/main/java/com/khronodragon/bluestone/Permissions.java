@@ -6,6 +6,8 @@ import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
 import java.sql.SQLException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Permissions {
     private static final Unsafe unsafe = Bot.getUnsafe();
@@ -14,6 +16,9 @@ public class Permissions {
     public static final Permission BOT_OWNER;
     public static final Permission BOT_ADMIN;
     public static final Permission PATREON_SUPPORTER;
+    public static final Permission COMPOUND;
+    public static final Map<Permission, Permission[]> compoundMap =
+            new ConcurrentHashMap<>(128, 0.85f, 8);
 
     static {
         try {
@@ -35,6 +40,7 @@ public class Permissions {
         BOT_OWNER = createPerm(61, false, false, "Bot Owner");
         BOT_ADMIN = createPerm(60, false, false, "Bot Admin");
         PATREON_SUPPORTER = createPerm(59, false, false, "Patreon Supporter");
+        COMPOUND = createPerm(58, false, false, "Compound Permission");
     }
 
     public static Permission createPerm(int offset, boolean isGuild, boolean isChannel, String name) {
@@ -53,10 +59,20 @@ public class Permissions {
         }
     }
 
+    public static Permission setRaw(Permission perm, long raw) {
+        try {
+            permRaw.setLong(perm, raw);
+            return perm;
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static boolean check(Context ctx, Permission... permsAccepted) {
         if (ctx.author.getIdLong() == ctx.bot.owner.getIdLong())
             return true;
 
+        outerLoop:
         for (Permission perm: permsAccepted) {
             if (perm == BOT_OWNER) {
                 continue;
@@ -70,6 +86,35 @@ public class Permissions {
             } else if (perm == PATREON_SUPPORTER) {
                 if (Bot.patronIds.contains(ctx.author.getIdLong()))
                     return true;
+            } else if (perm.getOffset() == 58) {
+                Permission[] pA = compoundMap.get(perm);
+                if (pA == null) {
+                    ctx.bot.logger.error("Compound permission found, but not in compoundMap!");
+                    continue;
+                }
+
+                for (Permission p: pA) {
+                    if (p == BOT_OWNER) {
+                        continue outerLoop;
+                    } else if (p == BOT_ADMIN) {
+                        try {
+                            if (!ctx.bot.getAdminDao().idExists(ctx.author.getIdLong()))
+                                continue outerLoop;
+                        } catch (SQLException e) {
+                            ctx.bot.logger.warn("Bot admin perm check error", e);
+                        }
+                    } else if (p == PATREON_SUPPORTER) {
+                        if (!Bot.patronIds.contains(ctx.author.getIdLong()))
+                            continue outerLoop;
+                    } else {
+                        if (ctx.guild != null) {
+                            if (!ctx.member.hasPermission((TextChannel) ctx.channel, p))
+                                continue outerLoop;
+                        }
+                    }
+                }
+
+                return true;
             } else {
                 if (ctx.guild != null) {
                     if (ctx.member.hasPermission((TextChannel) ctx.channel, perm))

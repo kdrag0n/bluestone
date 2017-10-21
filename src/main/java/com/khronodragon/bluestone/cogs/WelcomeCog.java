@@ -84,8 +84,8 @@ public class WelcomeCog extends Cog {
         return "The cog that welcomes people.";
     }
 
-    @Perm.All({Permission.MANAGE_SERVER, Permission.CREATE_INSTANT_INVITE})
-    @Perm.All({Permission.MANAGE_ROLES, Permission.CREATE_INSTANT_INVITE})
+    @Perm.Combo.ManageServerAndInvite
+    @Perm.Combo.ManageRolesAndInvite
     @Command(name = "welcome", desc = "Manage member welcome messages.", guildOnly = true,
             aliases = {"welcome_msgs", "welcomemsg"}, thread = true, usage = "[action] {args...}")
     public void welcomeControl(Context ctx) throws SQLException {
@@ -188,8 +188,8 @@ public class WelcomeCog extends Cog {
         }
     }
 
-    @Perm.All({Permission.MANAGE_SERVER, Permission.CREATE_INSTANT_INVITE})
-    @Perm.All({Permission.MANAGE_ROLES, Permission.CREATE_INSTANT_INVITE})
+    @Perm.Combo.ManageServerAndInvite
+    @Perm.Combo.ManageRolesAndInvite
     @Command(name = "leave", desc = "Manage member leave messages.", guildOnly = true,
             aliases = {"leave_msgs", "leavemsg"}, thread = true, usage = "[action] {args...}")
     public void leaveControl(Context ctx) throws SQLException {

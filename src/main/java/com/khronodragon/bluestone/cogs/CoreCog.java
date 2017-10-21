@@ -62,8 +62,6 @@ public class CoreCog extends Cog {
                 bot.getJda().getTextChannelById(256647384656904192L) != null) {
             scheduleAniv();
         }
-
-        f(null);
     }
 
     private void scheduleAniv() {

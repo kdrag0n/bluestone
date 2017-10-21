@@ -8,6 +8,7 @@ public class Perm {
     // Permission annotations
 
     // Compounds/Operators
+    @Deprecated
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     @Repeatable(PermAnds.class)
@@ -15,6 +16,7 @@ public class Perm {
         Permission[] value();
     }
 
+    @Deprecated
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     public @interface PermAnds {
@@ -216,5 +218,37 @@ public class Perm {
     @Target(ElementType.METHOD)
     public @interface Unknown {
         Permission value() default Permission.UNKNOWN;
+    }
+
+    public static class Combo {
+        @Retention(RetentionPolicy.RUNTIME)
+        @Target(ElementType.METHOD)
+        public @interface ManageMessagesAndReadHistory {
+            Permission[] value() default {Permission.MESSAGE_MANAGE, Permission.MESSAGE_HISTORY};
+        }
+
+        @Retention(RetentionPolicy.RUNTIME)
+        @Target(ElementType.METHOD)
+        public @interface ManageServerAndInvite {
+            Permission[] value() default {Permission.MANAGE_SERVER, Permission.CREATE_INSTANT_INVITE};
+        }
+
+        @Retention(RetentionPolicy.RUNTIME)
+        @Target(ElementType.METHOD)
+        public @interface ManageRolesAndInvite {
+            Permission[] value() default {Permission.MANAGE_ROLES, Permission.CREATE_INSTANT_INVITE};
+        }
+
+        @Retention(RetentionPolicy.RUNTIME)
+        @Target(ElementType.METHOD)
+        public @interface ManageChannelsAndMessages {
+            Permission[] value() default {Permission.MANAGE_CHANNEL, Permission.MESSAGE_MANAGE};
+        }
+
+        @Retention(RetentionPolicy.RUNTIME)
+        @Target(ElementType.METHOD)
+        public @interface ManageServerAndMessages {
+            Permission[] value() default {Permission.MANAGE_SERVER, Permission.MESSAGE_MANAGE};
+        }
     }
 }

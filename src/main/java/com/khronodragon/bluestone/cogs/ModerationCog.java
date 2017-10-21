@@ -153,7 +153,7 @@ public class ModerationCog extends Cog {
         return pattern.matcher(input).replaceAll(" ");
     }
 
-    @Perm.All({Permission.MESSAGE_MANAGE, Permission.MESSAGE_HISTORY})
+    @Perm.Combo.ManageMessagesAndReadHistory
     @Command(name = "purge", desc = "Purge messages from a channel.", guildOnly = true,
             aliases = {"clean", "nuke", "prune", "clear"},
             usage = "[parameters]", thread = true)
@@ -653,9 +653,8 @@ public class ModerationCog extends Cog {
                 });
     }
 
-    @Perm.ManageChannels
-    @Perm.Message.Manage
-    @Perm.ManageServer
+    @Perm.Combo.ManageChannelsAndMessages
+    @Perm.Combo.ManageServerAndMessages
     @Cooldown(scope = BucketType.GUILD, delay = 30)
     @Command(name = "archive", desc = "Archive a channel's messages into another.", guildOnly = true,
             usage = "[channel to archive] [destination channel] {number of messages, default = all}", thread = true)
