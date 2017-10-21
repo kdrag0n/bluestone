@@ -8,6 +8,8 @@ import gnu.trove.list.linked.TIntLinkedList;
 import net.dv8tion.jda.core.entities.*;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
@@ -204,10 +206,32 @@ public class Strings {
         return tmp;
     }
 
+    @Deprecated
     public static String statify(IntStream stream) {
         IntSummaryStatistics stats = stream.summaryStatistics();
 
         return String.format("Min: %d\nAvg: %.2f\nMax: %d", stats.getMin(), stats.getAverage(), stats.getMax());
+    }
+
+    public static String statify(TIntList list) {
+        MinMaxV v = new MinMaxV();
+        double avg = (double) list.sum() / list.size();
+
+        list.forEach(i -> {
+            if (i > v.max)
+                v.max = i;
+            if (i < v.min)
+                v.min = i;
+
+            return true;
+        });
+
+        return String.format("Min: %d\nAvg: %.2f\nMax: %d", v.min, avg, v.max);
+    }
+
+    private static class MinMaxV {
+        private int min = Integer.MAX_VALUE;
+        private int max = Integer.MIN_VALUE;
     }
 
     public static boolean isMention(CharSequence str) {
@@ -270,7 +294,7 @@ public class Strings {
         return numberFormat.get().format(n);
     }
 
-    public static String format(String pattern, Object... args) {
+    public static String format(@Nonnull String pattern, @Nullable Object... args) {
         return formatCache.getUnchecked(pattern).format(args, new StringBuffer(), null).toString();
     }
 }

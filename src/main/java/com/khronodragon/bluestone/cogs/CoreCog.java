@@ -5,6 +5,7 @@ import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.enums.MessageDestination;
 import com.khronodragon.bluestone.util.Paginator;
+import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.MessageChannel;
@@ -14,10 +15,15 @@ import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.requests.RestAction;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class CoreCog extends Cog {
+    private static final Logger logger = LogManager.getLogger(CoreCog.class);
     private static final String JOIN_MESSAGE =
             "By adding this bot, you agree that the activity of all users in this server *may* be logged, depending on features used or enabled..\n" +
                     "Features that may log data: quotes, starboard, etc. (this is to comply with the Discord ToS.)\n\n" +
@@ -26,12 +32,90 @@ public class CoreCog extends Cog {
                     "If you ever have questions, *please* read the **FAQ** first: <https://khronodragon.com/goldmine/faq>\n" +
                     "It saves everyone a lot of time.\n" +
                     "\n" +
-                    "Welcome and leave messages are on by default, but will not send if Goldmine cannot send messages in the default channel, or the default channel was deleted. In that case, simply use the `welcome` or `leave` commands to set the channel they send in.\n" +
+                    "Welcome and leave messages are on by default, but will not send if " + Bot.NAME + " cannot send messages in the default channel, or the default channel was deleted. In that case, simply use the `welcome` or `leave` commands to set the channel they send in.\n" +
                     "\n" +
-                    "*If you like Goldmine, please help keep it alive by donating here: <https://patreon.com/kdragon>.\n" +
+                    "*If you like " + Bot.NAME + ", please help keep it alive by donating here: <https://patreon.com/kdragon>.\n" +
                     "Any amount is appreciated.*";
+    public static final String ANNIVERSARY_MESSAGE =
+            "👏 Hey @everyone! Today, right now, is a very special moment.\n" +
+            "**Exactly {0} year{1} ago**, in :two::zero::one::six:, " + Bot.NAME +
+                    " was created. At exactly October 23, 8:41:55 AM in Pacific time.\n" +
+            "This means a lot to me. It''s been a great, long journey with plenty of road bumps, but it was worth it.\n" +
+            "Right now, " + Bot.NAME + " is serving **{2} servers** and **{3} channels**. {0} year{1} ago, I never imagined this may happen.\n" +
+            Bot.NAME + " is helping moderators and owners alike, while providing fun and music to others.\n" +
+            "When I first created " + Bot.NAME + ", I expected nothing. I expected it to fail, and die. Become a test bot.\n" +
+            "What happened? It came alive! Slowly but steadily, it was gaining servers. It completely exceeded my expectations.\n" +
+            "And for this, **thank you**. Thank you all. Without your support, this would have never happened.\n" +
+            "\n" +
+            "**If you love " + Bot.NAME + ", please donate. Even $1 is appreciated.**\n" +
+            "Your continued support ensures " + Bot.NAME + " stays alive.\n" +
+            "**Patreon: <https://patreon.com/kdragon>**\n" +
+            "\n" +
+            "**__Enjoy the bot, and the anniversary!__**";
+    private static volatile int sTries = 0;
+
     public CoreCog(Bot bot) {
         super(bot);
+
+        if (bot.getJda().getGuildById(239772188649979904L) != null &&
+                bot.getJda().getSelfUser().getIdLong() == 239775420470394897L &&
+                bot.getJda().getTextChannelById(256647384656904192L) != null) {
+            scheduleAniv();
+        }
+
+        f(null);
+    }
+
+    private void scheduleAniv() {
+        OffsetDateTime ctime = bot.getJda().getSelfUser().getCreationTime();
+
+        Calendar now = Calendar.getInstance();
+        int year = now.get(Calendar.YEAR);
+        int yearDiff = year - ctime.getYear();
+
+        ctime.plusYears(yearDiff);
+
+        bot.getScheduledExecutor().schedule(() -> {
+            do {
+                TextChannel channel = bot.getJda().getTextChannelById(256647384656904192L);
+                if (channel == null) {
+                    logger.error("Couldn't find #announcements channel in home guild!");
+                    break;
+                } else if (!channel.canTalk()) {
+                    logger.error("Can't talk in <#256647384656904192> in home guild!");
+                    break;
+                }
+
+                String m = Strings.format(ANNIVERSARY_MESSAGE, yearDiff, yearDiff == 1 ? "" : "s",
+                        bot.getShardUtil().getGuildCount(), bot.getShardUtil().getChannelCount());
+
+                channel.sendMessage(m).queue(null, this::f);
+            } while (false); // totally not dirty code but I don't want code dupe down there
+
+            scheduleAniv();
+        }, ctime.toInstant().toEpochMilli() - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+    }
+
+    private void f(Throwable e) {
+        logger.error("Error sending anniversary announcement in <#256647384656904192>, retrying", e);
+
+        if (sTries >= 10) {
+            logger.fatal("Failed to send anniversary announcement 10 times. Not retrying", e);
+            sTries = 0;
+            return;
+        }
+        sTries++;
+
+        OffsetDateTime ctime = bot.getJda().getSelfUser().getCreationTime();
+
+        Calendar now = Calendar.getInstance();
+        int year = now.get(Calendar.YEAR);
+        int yearDiff = year - ctime.getYear();
+
+        bot.getJda().getTextChannelById(250780048943087618L)
+                .sendMessage(Strings.format(ANNIVERSARY_MESSAGE, yearDiff, yearDiff == 1 ? "" : "s",
+                        bot.getShardUtil().getGuildCount(),
+                        bot.getShardUtil().getChannelCount())).queue(null, this::f);
     }
 
     public String getName() {

@@ -62,6 +62,7 @@ import static com.khronodragon.bluestone.util.Strings.format;
 
 public class Bot extends ListenerAdapter implements ClassUtilities {
     private static final Logger defLog = LogManager.getLogger(Bot.class);
+    public static final String NAME = "Goldmine";
     public static final Permission OWNER = Permissions.BOT_OWNER;
     public static final Permission ADMIN = Permissions.BOT_ADMIN;
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");

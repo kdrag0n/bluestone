@@ -28,6 +28,7 @@ import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.sql.ActivePoll;
 import com.khronodragon.bluestone.util.*;
 import com.sun.management.OperatingSystemMXBean;
+import gnu.trove.list.TIntList;
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import io.codearte.jfairy.Fairy;
@@ -432,23 +433,31 @@ public class UtilityCog extends Cog {
         ctx.send(emb.build()).queue();
     }
 
+    private int mCount(GuildImpl g, ShardUtil.ObjectFunctionBool<Member> fn) {
+        int c = 0;
+
+        for (Member member: g.getMembersMap().valueCollection()) {
+            if (fn.apply(member))
+                c++;
+        }
+
+        return c;
+    }
+
     @Command(name = "xstats", desc = "Get a lot of extended statistics about me.", aliases = {"xstatistics", "xinfo"})
     public void cmdXInfo(Context ctx) {
         ctx.channel.sendTyping().queue();
         ShardUtil shardUtil = bot.getShardUtil();
 
-        Map<String, IntStream> stats = new LinkedHashMap<String, IntStream>() {{
-            put("Members per Server", shardUtil.getGuildStream().mapToInt(g -> ((GuildImpl) g).getMembersMap().size()));
-            put("Online Members per Server", shardUtil.getGuildStream()
-                    .mapToInt(g -> (int) ((GuildImpl) g).getMembersMap().valueCollection()
-                            .stream()
-                            .filter(member -> member.getOnlineStatus() == OnlineStatus.ONLINE)
-                            .count()));
-            put("Text Channels per Server", shardUtil.getGuildStream().mapToInt(g -> ((GuildImpl) g).getTextChannelsMap().size()));
-            put("Voice Channels per Server", shardUtil.getGuildStream().mapToInt(g -> ((GuildImpl) g).getVoiceChannelsMap().size()));
-            put("Categories per Server", shardUtil.getGuildStream().mapToInt(g -> ((GuildImpl) g).getCategoriesMap().size()));
-            put("Roles per Server", shardUtil.getGuildStream().mapToInt(g -> ((GuildImpl) g).getRolesMap().size()));
-            put("Custom Emotes per Server", shardUtil.getGuildStream().mapToInt(g -> ((GuildImpl) g).getEmoteMap().size()));
+        Map<String, TIntList> stats = new LinkedHashMap<>() {{
+            put("Members per Server", shardUtil.guildNums(g -> g.getMembersMap().size()));
+            put("Online Members per Server", shardUtil.guildNums(g ->
+                    mCount(g, m -> m.getOnlineStatus() == OnlineStatus.ONLINE)));
+            put("Text Channels per Server", shardUtil.guildNums(g -> g.getTextChannelsMap().size()));
+            put("Voice Channels per Server", shardUtil.guildNums(g -> g.getVoiceChannelsMap().size()));
+            put("Categories per Server", shardUtil.guildNums(g -> g.getCategoriesMap().size()));
+            put("Roles per Server", shardUtil.guildNums(g -> g.getRolesMap().size()));
+            put("Custom Emotes per Server", shardUtil.guildNums(g -> g.getEmoteMap().size()));
         }};
 
         EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://khronodragon.com/goldmine")
@@ -457,25 +466,20 @@ public class UtilityCog extends Cog {
                 .setFooter("Also try the info command!", null)
                 .setTimestamp(Instant.now());
 
-        for (Map.Entry<String, IntStream> stat: stats.entrySet()) {
+        for (Map.Entry<String, TIntList> stat: stats.entrySet()) {
             emb.addField(stat.getKey(), statify(stat.getValue()), true);
         }
 
-        int exclusive = (int) shardUtil.getGuildStream().filter(g -> ((GuildImpl) g).getMembersMap().valueCollection()
-                .stream()
-                .filter(m -> m.getUser().isBot())
-                .count() < 2).count();
-        String excText = String.format("%d (%.2f%%)", exclusive, ((float) exclusive / (float) shardUtil.getGuildCount()) * 100f);
+        int exclusive = shardUtil.guildCount(g -> mCount(g, m -> m.getUser().isBot()) < 2);
+        String excText = String.format("%d (%.2f%%)", exclusive,
+                ((float) exclusive / (float) shardUtil.getGuildCount()) * 100f);
 
-        int big = (int) shardUtil.getGuildStream()
-                .filter(g -> ((GuildImpl) g).getMembersMap().size() >= 250)
-                .count();
+        int big = shardUtil.guildCount(g -> g.getMembersMap().size() >= 250);
         String bigText = String.format("%d (%.2f%%)", big, ((float) big / (float) shardUtil.getGuildCount()) * 100f);
 
-        int partnered = (int) shardUtil.getGuildStream()
-                .filter(g -> g.getSplashUrl() != null || g.getRegion().isVip())
-                .count();
-        String partneredText = String.format("%d (%.2f%%)", partnered, ((float) partnered / (float) shardUtil.getGuildCount()) * 100f);
+        int partnered = shardUtil.guildCount(g -> g.getSplashUrl() != null || g.getRegion().isVip());
+        String partneredText = String.format("%d (%.2f%%)", partnered,
+                ((float) partnered / (float) shardUtil.getGuildCount()) * 100f);
 
         emb.addBlankField(false)
                 .addField("Total Queue Size", str(shardUtil.getTrackCount()), true)
@@ -1364,7 +1368,7 @@ public class UtilityCog extends Cog {
         EmbedBuilder emb = newEmbedWithAuthor(ctx)
                 .setColor(randomColor())
                 .setDescription("Support me at <https://patreon.com/kdragon>!")
-                .setFooter("If you ❤ Goldmine, please become a Patron.", null);
+                .setFooter("If you ❤ " + Bot.NAME + ", please become a Patron.", null);
         StringBuilder randBuilder = new StringBuilder();
         StringBuilder alwaysBuilder = new StringBuilder();
         List<Object> randList = Bot.patreonData.getJSONArray("rand").toList();

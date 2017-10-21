@@ -14,9 +14,10 @@ import com.khronodragon.bluestone.sql.BotAdmin;
 import com.khronodragon.bluestone.sql.GuildPrefix;
 import com.khronodragon.bluestone.sql.MySQLDatabaseType;
 import com.zaxxer.hikari.HikariDataSource;
-import net.dv8tion.jda.core.JDA;
+import gnu.trove.list.TIntList;
+import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.list.linked.TIntLinkedList;
 import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.impl.GuildImpl;
 import net.dv8tion.jda.core.entities.impl.JDAImpl;
 import org.apache.logging.log4j.LogManager;
@@ -152,26 +153,23 @@ public class ShardUtil {
     }
 
     public int getGuildCount() {
-        return shards.values().stream().mapToInt(b -> ((JDAImpl) b.getJda()).getGuildMap().size()).sum();
+        return sumJda(j -> j.getGuildMap().size());
     }
 
     public int getChannelCount() {
-        return shards.values().stream().mapToInt(b -> {
-            JDAImpl jda = (JDAImpl) b.getJda();
-            return jda.getTextChannelMap().size() + jda.getVoiceChannelMap().size();
-        }).sum();
+        return sumJda(jda -> jda.getTextChannelMap().size() + jda.getVoiceChannelMap().size());
     }
 
     public int getVoiceChannelCount() {
-        return shards.values().stream().mapToInt(b -> ((JDAImpl) b.getJda()).getVoiceChannelMap().size()).sum();
+        return sumJda(j -> j.getVoiceChannelMap().size());
     }
 
     public int getTextChannelCount() {
-        return shards.values().stream().mapToInt(b -> ((JDAImpl) b.getJda()).getTextChannelMap().size()).sum();
+        return sumJda(j -> j.getTextChannelMap().size());
     }
 
     public int getUserCount() {
-        return shards.values().stream().mapToInt(b -> ((JDAImpl) b.getJda()).getUserMap().size()).sum();
+        return sumJda(j -> j.getUserMap().size());
     }
 
     public int getRequestCount() {
@@ -179,32 +177,86 @@ public class ShardUtil {
     }
 
     public int getEmoteCount() {
-        return shards.values().stream().mapToInt(b -> ((JDAImpl) b.getJda()).getGuildMap().valueCollection().stream()
-                .mapToInt(g -> ((GuildImpl) g).getEmoteMap().size())
-                .sum()).sum();
+        return sumJda(j -> (int) j.getEmoteCache().size());
     }
 
     public int getTrackCount() {
-        return shards.values().stream().mapToInt(b -> {
+        return sumBot(b -> {
             MusicCog cog = (MusicCog) b.cogs.get("Music");
             if (cog == null)
                 return 0;
 
             return cog.getTracksLoaded();
-        }).sum();
+        });
     }
 
     public int getStreamCount() {
-        return shards.values().stream().mapToInt(b -> {
+        return sumBot(b -> {
             MusicCog cog = (MusicCog) b.cogs.get("Music");
             if (cog == null)
                 return 0;
 
             return cog.getActiveStreamCount();
-        }).sum();
+        });
     }
 
+    @Deprecated
     public Stream<Guild> getGuildStream() {
         return shards.values().stream().flatMap(b -> ((JDAImpl) b.getJda()).getGuildMap().valueCollection().stream());
+    }
+
+    public int sumBot(ObjectFunctionInt<Bot> fn) {
+        int total = 0;
+
+        for (Bot shard: shards.values()) {
+            total += fn.apply(shard);
+        }
+
+        return total;
+    }
+
+    public int sumJda(ObjectFunctionInt<JDAImpl> fn) {
+        int total = 0;
+
+        for (Bot shard: shards.values()) {
+            total += fn.apply((JDAImpl) shard.getJda());
+        }
+
+        return total;
+    }
+
+    public TIntList guildNums(ObjectFunctionInt<GuildImpl> fn) {
+        TIntList l = new TIntLinkedList();
+
+        for (Bot shard: shards.values()) {
+            for (Guild guild: shard.getJda().getGuildCache()) {
+                l.add(fn.apply((GuildImpl) guild));
+            }
+        }
+
+        return l;
+    }
+
+    public int guildCount(ObjectFunctionBool<GuildImpl> fn) {
+        int c = 0;
+
+        for (Bot shard: shards.values()) {
+            for (Guild guild: shard.getJda().getGuildCache()) {
+                if (fn.apply((GuildImpl) guild))
+                    c++;
+            }
+        }
+
+        return c;
+    }
+
+    @FunctionalInterface
+    public interface ObjectFunctionInt<A> {
+        int apply(A value);
+    }
+
+    @FunctionalInterface
+    public interface ObjectFunctionBool<A> {
+        boolean apply(A value);
     }
 }
