@@ -34,7 +34,7 @@ public class Strings {
     private static final Pattern tagPattern = Pattern.compile("^.{2,32}#\\d{4}$");
     private static final Pattern d4Pattern = Pattern.compile("^\\d{1,4}$");
     private static final Pattern channelNamePattern = Pattern.compile("^[a-z0-9_-]{2,100}$", Pattern.CASE_INSENSITIVE);
-    private static final Pattern ipDomainPattern = Pattern.compile("^(?:localhost|[a-zA-Z\\-.]+\\.[a-z]{2,15}|(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|[0-9a-f:]+)$");
+    private static final Pattern ipDomainPattern = Pattern.compile("^(?:localhost|[a-zA-Z\\-.]+\\.[a-z]{2,15}|(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|[0-9a-f:]+)(?::[0-9]{1,5})?$");
     private static final Pattern mcNamePattern = Pattern.compile("^[a-zA-Z0-9_]{1,32}$");
     private static final Pattern emoteNamePattern = Pattern.compile("^[a-zA-Z0-9]{2,32}$");
     private static final ThreadLocal<NumberFormat> numberFormat = ThreadLocal.withInitial(DecimalFormat::getNumberInstance);

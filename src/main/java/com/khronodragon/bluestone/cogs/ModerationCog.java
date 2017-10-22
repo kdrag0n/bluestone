@@ -75,7 +75,29 @@ public class ModerationCog extends Cog {
     private static final Collection<Permission> MUTED_PERMS = Arrays.asList(Permission.MESSAGE_WRITE,
             Permission.MESSAGE_ADD_REACTION);
     private static final Pattern MENTION_PATTERN = Pattern.compile("<@!?(\\d{17,20})>");
+    private static final Field embFields;
+    private static final Field embDescription;
+    private static final Field stringValue;
+    private static final Field stringBuilderValue;
     private Dao<GuildAutorole, Long> autoroleDao;
+
+    static {
+        try {
+            embFields = EmbedBuilder.class.getDeclaredField("fields");
+            embFields.setAccessible(true);
+
+            embDescription = EmbedBuilder.class.getDeclaredField("description");
+            embDescription.setAccessible(true);
+
+            stringValue = String.class.getDeclaredField("value");
+            stringValue.setAccessible(true);
+
+            stringBuilderValue = Class.forName("java.lang.AbstractStringBuilder").getDeclaredField("value");
+            stringBuilderValue.setAccessible(true);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public ModerationCog(Bot bot) {
         super(bot);
@@ -688,13 +710,22 @@ public class ModerationCog extends Cog {
                 .setTimestamp(OffsetDateTime.now());
         Message statusMsg = ctx.send(statusEmb.build()).complete();
 
+        int sz = 0; // history.size
+
+        try {
+            statusMsg.pin().queue(null, f -> {});
+        } catch (Throwable e) {}
+        // TODO: in embed msg, add image to embed for the link to image in msg
         try {
             for (Message msg: from.getIterableHistory()) {
+                if (msg.getRawContent().contains("An exception of type NameError has occured!\n" +
+                        "name 'const' is not defined") && msg.getRawContent().startsWith("```") &&
+                        msg.getRawContent().endsWith("```"))
+                    break;
+
                 history.push(msg);
 
-                int sz = history.size();
-
-                if (sz % 1000 == 0) {
+                if (++sz % 1000 == 0) {
                     statusMsg.editMessage(statusEmb.clearFields()
                             .addField("Stage", "1 of 2", false)
                             .addField("Status", "Collecting messages...", false)
@@ -720,7 +751,7 @@ public class ModerationCog extends Cog {
             return;
         }
 
-        if (history.size() < 1) {
+        if (sz < 1) {
             ctx.send(Emotes.getFailure() + " There are no messages in " + from.getAsMention() + '!').queue();
             return;
         }
@@ -733,7 +764,7 @@ public class ModerationCog extends Cog {
 
         String b = "(Temp) Archival to #";
         Webhook hook = to.createWebhook(b +
-                (to.getName().substring(0, Math.min(to.getName().length(), 33 - b.length()))))
+                (to.getName().substring(0, Math.min(to.getName().length(), 32 - b.length()))))
                 .reason("Creating temporary webhook for the archival of messages from #" +
                         from.getName() + " to #" + to.getName() +
                         ". This will be deleted afterwards, and is used to speed up the process by orders of magnitude.")
@@ -768,26 +799,53 @@ public class ModerationCog extends Cog {
             statusMsg.editMessage(statusEmb.clearFields()
                     .addField("Stage", "2 of 2", false)
                     .addField("Status", "Creating messages in target channel...", false)
-                    .addField("Progress", "Created **0** of " + history.size() + " messages.", false)
+                    .addField("Progress", "Created **0** of " + sz + " messages.", false)
                     .setTimestamp(OffsetDateTime.now())
                     .build()).queue();
 
             String pt1 = "Created **";
-            String pt2 = "** of " + history.size() + " messages.";
+            String pt2 = "** of " + sz + " messages.";
             int i = 0;
 
             Paginator embMeta = new Paginator(1024);
             Paginator fieldPager = new Paginator(1024);
+            StringBuilder stringBuilder = new StringBuilder();
+            try {
+                embDescription.set(emb, stringBuilder);
+            } catch (ReflectiveOperationException e) {
+                throw new RuntimeException(e);
+            }
 
+            boolean hIterFi = true;
             for (Message msg: history) {
+                if (hIterFi) {
+                    hIterFi = false;
+                } else {
+                    //history.removeFirst(); // TODO: fix this. throws ConcurrentModificationException.
+                    // TODO: maybe with a ConcurrentLinkedList or something.
+                }
+
                 User author = msg.getAuthor();
 
-                emb.clearFields()
-                        .setImage(null)
+                try {
+                    embFields.set(emb, new LinkedList<>());
+                } catch (ReflectiveOperationException e) {
+                    logger.fatal("Error setting fields = new LinkedList on EmbedBuilder", e);
+                    emb.clearFields();
+                }
+
+                emb.setImage(null)
+                        .setThumbnail(null)
+                        .setFooter(null, null)
                         .setAuthor(author.getName() + '#' + author.getDiscriminator(), null,
                                 author.getEffectiveAvatarUrl())
-                        .setDescription(msg.getRawContent())
                         .setTimestamp(msg.getCreationTime());
+
+                try {
+                    stringBuilderValue.set(stringBuilder, stringValue.get(msg.getRawContent()));
+                } catch (ReflectiveOperationException e) {
+                    throw new RuntimeException(e);
+                }
 
                 Member member;
                 if ((member = ctx.guild.getMember(author)) != null) {
@@ -954,10 +1012,10 @@ public class ModerationCog extends Cog {
                                 unitIdx++;
                             }
 
-                            String sz = Strings.number(bytes) + " " + BYTE_UNITS[unitIdx > 8 ? 8 : unitIdx];
+                            String szz = Strings.number(bytes) + " " + BYTE_UNITS[unitIdx > 8 ? 8 : unitIdx];
 
                             emb.addField("Attachment: " + attachment.getFileName() +
-                                    " (" + sz + ')', ct, false);
+                                    " (" + szz + ')', ct, false);
                         }
                     }
                 }
@@ -1000,7 +1058,7 @@ public class ModerationCog extends Cog {
 
             statusMsg.editMessage(statusEmb.clearFields()
                     .addField("Stage", "Completed!", false)
-                    .addField("Status", "Successfully archived " + history.size() + " messages from " +
+                    .addField("Status", "Successfully archived " + sz + " messages from " +
                             from.getAsMention() + " to " + to.getAsMention() + '.', false)
                     .setTimestamp(OffsetDateTime.now())
                     .build()).queue();

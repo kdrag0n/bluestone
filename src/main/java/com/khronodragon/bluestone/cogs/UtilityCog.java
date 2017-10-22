@@ -928,7 +928,7 @@ public class UtilityCog extends Cog {
             } catch (NumberFormatException ignored) {}
         }
 
-        if (server.indexOf((int)'.') == -1 || ctx.rawArgs.indexOf((int)' ') != -1) {
+        if (server.indexOf((int)'.') == -1 || ctx.rawArgs.indexOf((int)' ') != -1 || !Strings.isIPorDomain(ctx.rawArgs)) {
             if (Strings.isMinecraftName(ctx.rawArgs)) {
                 final String name = ctx.rawArgs;
 
@@ -1040,6 +1040,7 @@ public class UtilityCog extends Cog {
 
         emb.addField("Server Type", serverType, true);
         emb.addField("Ping", format("{0,number}ms", data.getInt("ping_millis")), true);
+        emb.setFooter("Tip: the " + ctx.invoker + " command can also show skins!", null);
 
         ctx.send(emb.build()).queue();
     }
