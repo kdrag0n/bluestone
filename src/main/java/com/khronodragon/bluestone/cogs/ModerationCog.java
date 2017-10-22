@@ -22,7 +22,11 @@ import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.exceptions.PermissionException;
+import net.dv8tion.jda.core.requests.Request;
+import net.dv8tion.jda.core.requests.Response;
 import net.dv8tion.jda.core.requests.RestAction;
+import net.dv8tion.jda.core.requests.Route;
+import net.dv8tion.jda.core.utils.Checks;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import net.dv8tion.jda.webhook.WebhookClient;
 import net.dv8tion.jda.webhook.WebhookClientBuilder;
@@ -30,7 +34,9 @@ import net.dv8tion.jda.webhook.WebhookMessage;
 import net.dv8tion.jda.webhook.WebhookMessageBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONArray;
 
+import javax.annotation.CheckReturnValue;
 import java.awt.*;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
@@ -700,12 +706,13 @@ public class ModerationCog extends Cog {
             return;
         }
 
-        LinkedList<Message> history = new LinkedList<>();
+        String fromId = from.getId();
+        String fromMsgId = fromId;
+
         EmbedBuilder statusEmb = newEmbedWithAuthor(ctx)
                 .setTitle("Archiving channel into #" + to.getName() + "...")
                 .setColor(val(ctx.guild.getSelfMember().getColor()).or(Color.WHITE))
-                .addField("Stage", "1 of 2", false)
-                .addField("Status", "Collecting messages...", false)
+                .addField("Status", "Processed **0** messages.", false)
                 .setFooter("Last updated at", null)
                 .setTimestamp(OffsetDateTime.now());
         Message statusMsg = ctx.send(statusEmb.build()).complete();
@@ -714,13 +721,13 @@ public class ModerationCog extends Cog {
 
         try {
             statusMsg.pin().queue(null, f -> {});
-        } catch (Throwable e) {}
+        } catch (Throwable ignored) {}
         // TODO: in embed msg, add image to embed for the link to image in msg
         try {
             for (Message msg: from.getIterableHistory()) {
                 if (msg.getRawContent().contains("An exception of type NameError has occured!\n" +
                         "name 'const' is not defined") && msg.getRawContent().startsWith("```") &&
-                        msg.getRawContent().endsWith("```"))
+                        msg.getRawContent().endsWith("```")) // TODO: remove | temp
                     break;
 
                 history.push(msg);
@@ -773,13 +780,11 @@ public class ModerationCog extends Cog {
         List<MessageEmbed> embedQueue = new ArrayList<>(10);
         embedQueue.add(null);
 
-        WebhookClient client = new WebhookClientBuilder(hook)
+        try (WebhookClient client = new WebhookClientBuilder(hook)
                 .setHttpClient(Bot.http)
                 .setDaemon(true)
                 .setExecutorService(bot.getScheduledExecutor())
-                .build();
-
-        try {
+                .build()) {
             WebhookMessageBuilder wmb = new WebhookMessageBuilder()
                     .setUsername("Message Archive")
                     .setAvatarUrl(ctx.jda.getSelfUser().getEffectiveAvatarUrl());
@@ -816,14 +821,10 @@ public class ModerationCog extends Cog {
                 throw new RuntimeException(e);
             }
 
-            boolean hIterFi = true;
-            for (Message msg: history) {
-                if (hIterFi) {
-                    hIterFi = false;
-                } else {
-                    //history.removeFirst(); // TODO: fix this. throws ConcurrentModificationException.
-                    // TODO: maybe with a ConcurrentLinkedList or something.
-                }
+            ListIterator<Message> iter = history.listIterator();
+            while (iter.hasNext()) {
+                Message msg = iter.next();
+                iter.remove();
 
                 User author = msg.getAuthor();
 
@@ -870,7 +871,7 @@ public class ModerationCog extends Cog {
                     int embedsProcessed = 0;
 
                     embedRenderLoop:
-                    for (MessageEmbed embed: msg.getEmbeds()) {
+                    for (MessageEmbed embed : msg.getEmbeds()) {
                         int fieldsUsedForEmb = 0;
                         if (embedsProcessed >= 5) {
                             break;
@@ -901,7 +902,7 @@ public class ModerationCog extends Cog {
                             } else {
                                 embMeta.addLine("Author: **" + aInfo.getName() + "**" +
                                         (aInfo.getIconUrl() == null ? "" : " | [Icon](" +
-                                aInfo.getIconUrl() + ')'));
+                                                aInfo.getIconUrl() + ')'));
                             }
                         }
 
@@ -947,7 +948,7 @@ public class ModerationCog extends Cog {
                         embMeta.addLine("Total Length: " + embed.getLength() + " characters");
                         embMeta.addLine("Fields: " + embed.getFields().size());
 
-                        for (String page: embMeta.getPages()) {
+                        for (String page : embMeta.getPages()) {
                             emb.addField(title, page, false);
                             fieldsUsedForEmb++;
 
@@ -957,7 +958,7 @@ public class ModerationCog extends Cog {
 
                         // Description
                         if (embed.getDescription() != null) {
-                            for (String page: embedFieldPages(embed.getDescription())) {
+                            for (String page : embedFieldPages(embed.getDescription())) {
                                 emb.addField("Description", page, false);
                                 fieldsUsedForEmb++;
 
@@ -970,13 +971,13 @@ public class ModerationCog extends Cog {
                         if (embed.getFields().size() > 0) {
                             fieldPager.reset();
 
-                            for (MessageEmbed.Field field: embed.getFields()) {
+                            for (MessageEmbed.Field field : embed.getFields()) {
                                 fieldPager.addLine("**" + field.getName() + "**");
                                 fieldPager.addLine(field.getValue());
                                 fieldPager.addLine("");
                             }
 
-                            for (String page: fieldPager.getPages()) {
+                            for (String page : fieldPager.getPages()) {
                                 emb.addField("Fields", page, false);
 
                                 fieldsUsedForEmb++;
@@ -991,7 +992,7 @@ public class ModerationCog extends Cog {
                 }
 
                 if (msg.getAttachments().size() > 0) {
-                    for (Message.Attachment attachment: msg.getAttachments()) {
+                    for (Message.Attachment attachment : msg.getAttachments()) {
                         if (fiImg && attachment.isImage()) {
                             emb.setImage(attachment.getUrl());
                             fiImg = false;
@@ -1027,14 +1028,15 @@ public class ModerationCog extends Cog {
                         client.send(wm).get();
 
                         Thread.sleep(100);
-                    } catch (InterruptedException ignored) {}
-                    catch (ExecutionException e) {
+                    } catch (InterruptedException ignored) {
+                    } catch (ExecutionException e) {
                         logger.warn("Archival embed send error", e);
                         client.send(Emotes.getFailure() + " Failed to send messages.");
 
                         try {
                             Thread.sleep(100);
-                        } catch (InterruptedException ign) {}
+                        } catch (InterruptedException ign) {
+                        }
                     } finally {
                         embedQueue.clear();
                     }
@@ -1069,8 +1071,6 @@ public class ModerationCog extends Cog {
                     e.getPermission().getName() + "**!").queue();
             return;
         } finally {
-            client.close();
-
             if (ctx.guild.getSelfMember().hasPermission(to, Permission.MANAGE_WEBHOOKS)) {
                 hook.delete()
                         .reason("Archival from #" + from.getName() + " to #" + to.getName() +
@@ -1078,5 +1078,34 @@ public class ModerationCog extends Cog {
                         .queue();
             } // if they revoke the perm during message creation...
         }
+    }
+
+    @CheckReturnValue
+    private RestAction<List<Message>> getHistoryAfter(MessageChannel channel, String channelId, String messageId,
+                                                       short limit, List<Message> target) {
+        Checks.check(limit >= 1 && limit <= 100,
+                "Provided limit was out of bounds. Minimum: 1, Max: 100. Provided: %d", limit);
+
+        Route.CompiledRoute route = Route.Messages.GET_MESSAGE_HISTORY.compile(channelId)
+                .withQueryParams("limit", Short.toString(limit), "after", messageId);
+
+        return new RestAction<>(bot.getJda(), route) {
+            @Override
+            protected void handleResponse(Response response, Request<List<Message>> request) {
+                if (!response.isOk()) {
+                    request.onFailure(response);
+                    return;
+                }
+
+                EntityBuilder builder = api.getEntityBuilder();
+                target.clear();
+                JSONArray historyJson = response.getArray();
+
+                for (int i = 0; i < historyJson.length(); i++)
+                    target.add(builder.createMessage(historyJson.getJSONObject(i), channel, false));
+
+                request.onSuccess(target);
+            }
+        };
     }
 }

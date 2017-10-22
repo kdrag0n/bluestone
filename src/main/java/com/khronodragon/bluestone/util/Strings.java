@@ -17,6 +17,8 @@ import java.text.MessageFormat;
 import java.text.NumberFormat;
 import java.util.IntSummaryStatistics;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,16 +40,8 @@ public class Strings {
     private static final Pattern mcNamePattern = Pattern.compile("^[a-zA-Z0-9_]{1,32}$");
     private static final Pattern emoteNamePattern = Pattern.compile("^[a-zA-Z0-9]{2,32}$");
     private static final ThreadLocal<NumberFormat> numberFormat = ThreadLocal.withInitial(DecimalFormat::getNumberInstance);
-    private static final LoadingCache<String, MessageFormat> formatCache = CacheBuilder.newBuilder()
-            .maximumSize(120)
-            .concurrencyLevel(6)
-            .expireAfterAccess(1, TimeUnit.HOURS)
-            .build(new CacheLoader<String, MessageFormat>() {
-                @Override
-                public MessageFormat load(String key) throws Exception {
-                    return new MessageFormat(key);
-                }
-            });
+    private static final ConcurrentMap<String, MessageFormat> formatCache =
+            new ConcurrentHashMap<>(48, 0.75f, 8);
 
     public static int[] spread(String str) {
         TIntList codePoints = new TIntLinkedList();
@@ -295,6 +289,16 @@ public class Strings {
     }
 
     public static String format(@Nonnull String pattern, @Nullable Object... args) {
-        return formatCache.getUnchecked(pattern).format(args, new StringBuffer(), null).toString();
+        MessageFormat f = formatCache.get(pattern);
+        if (f == null) {
+            f = new MessageFormat(pattern);
+            formatCache.put(pattern, f);
+        }
+
+        if (formatCache.size() > 128) {
+            formatCache.clear();
+        }
+
+        return f.format(args, new StringBuffer(), null).toString();
     }
 }

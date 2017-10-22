@@ -649,10 +649,10 @@ public class FunCog extends Cog {
             ctx.send(Emotes.getFailure() + " I need someone to " + ctx.invoker + "!").queue();
             return;
         }
-        final String target = format("*{0}*", ctx.rawArgs);
+        final String target = '*' + ctx.rawArgs + '*';
 
-        ctx.send(format("{0} {1}. {2}", (ctx.guild == null ? ctx.author : ctx.member).getAsMention(),
-                format(randomChoice(FIGHTS), target), format(randomChoice(DEATHS), target))).queue();
+        ctx.send((ctx.guild == null ? ctx.author : ctx.member).getAsMention() + ' ' +
+                format(randomChoice(FIGHTS), target) + ". " + format(randomChoice(DEATHS), target)).queue();
     }
 
     @Command(name = "charlie", desc = "Ask a question... Charlie Charlie are you there?")
@@ -663,7 +663,7 @@ public class FunCog extends Cog {
         }
         String question = ctx.rawArgs.endsWith("?") ? ctx.rawArgs : ctx.rawArgs + "?";
 
-        ctx.send(format("*Charlie Charlie* {0}\n**{1}**", question, (randint(0, 1) == 1 ? "Yes" : "No"))).queue();
+        ctx.send("*Charlie Charlie* " + question + "\n**" + (randint(0, 1) == 1 ? "Yes" : "No") + "**").queue();
     }
 
     @Command(name = "soon", desc = "Feel the loading of 10000 years, aka Soon™.", aliases = {"soontm"})

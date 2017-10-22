@@ -184,7 +184,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                         "com.khronodragon.bluestone", "bot"))
                 .append('.')
                 .append(elem.getMethodName())
-                .append(elem.isNativeMethod() ? "(native)" : format("({0})", elem.getLineNumber()));
+                .append(elem.isNativeMethod() ? "(native)" : "(" + elem.getLineNumber() + ")");
     }
 
     public static String vagueTrace(Throwable e) {
