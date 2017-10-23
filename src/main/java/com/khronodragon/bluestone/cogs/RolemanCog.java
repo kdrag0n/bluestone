@@ -8,13 +8,11 @@ import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
-import com.khronodragon.bluestone.annotations.DoNotAutoload;
 import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.sql.GuildMemberActions;
 import com.khronodragon.bluestone.sql.GuildRoleOption;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Role;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
@@ -26,7 +24,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@DoNotAutoload
 public class RolemanCog extends Cog {
     private static final Logger logger = LogManager.getLogger(RolemanCog.class);
     private static final String NO_COMMAND = "🤔 **I need an action!**\n" +

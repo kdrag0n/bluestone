@@ -3,11 +3,8 @@ package com.khronodragon.bluestone.sql;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-@DatabaseTable(tableName = "GuildMemberActions")
+@DatabaseTable(tableName = "member_actions")
 public class GuildMemberActions {
-    @DatabaseField(id = true, generatedId = true)
-    public int id;
-
     @DatabaseField(canBeNull = false)
     public long userId;
 

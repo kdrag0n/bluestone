@@ -681,7 +681,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         if (e.getCause() != null) {
             String causeStack = renderStackTrace(e, "\u3000", "> ");
             emb.addField("Caused by", "```java\n" +
-                    causeStack.substring(0, Math.min(causeStack.length(), 1013)), false);
+                    causeStack.substring(0, Math.min(causeStack.length(), 1013)) + "```", false);
         }
 
         emb.addField("Timestamp", System.currentTimeMillis() + "ms", true)

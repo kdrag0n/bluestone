@@ -16,6 +16,8 @@ import com.khronodragon.bluestone.util.Paginator;
 import com.khronodragon.bluestone.util.Strings;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.linked.TLongLinkedList;
+import gnu.trove.set.TLongSet;
+import gnu.trove.set.hash.TLongHashSet;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
@@ -83,8 +85,7 @@ public class ModerationCog extends Cog {
     private static final Pattern MENTION_PATTERN = Pattern.compile("<@!?(\\d{17,20})>");
     private static final Field embFields;
     private static final Field embDescription;
-    private static final Field stringValue;
-    private static final Field stringBuilderValue;
+    private final TLongSet archivingGuilds = new TLongHashSet();
     private Dao<GuildAutorole, Long> autoroleDao;
 
     static {
@@ -94,12 +95,6 @@ public class ModerationCog extends Cog {
 
             embDescription = EmbedBuilder.class.getDeclaredField("description");
             embDescription.setAccessible(true);
-
-            stringValue = String.class.getDeclaredField("value");
-            stringValue.setAccessible(true);
-
-            stringBuilderValue = Class.forName("java.lang.AbstractStringBuilder").getDeclaredField("value");
-            stringBuilderValue.setAccessible(true);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
@@ -691,392 +686,345 @@ public class ModerationCog extends Cog {
             ctx.send(Emotes.getFailure() +
                     " You must specify a #channel to archive, and a destination #channel.").queue();
             return;
-        }
-
-        TextChannel from = ctx.message.getMentionedChannels().get(0);
-        TextChannel to = ctx.message.getMentionedChannels().get(1);
-
-        if (!ctx.guild.getSelfMember().hasPermission(from, Permission.MESSAGE_HISTORY)) {
-            ctx.send(Emotes.getFailure() + " I need to be able to **read message history** in " +
-                    from.getAsMention() + '!').queue();
-            return;
-        } else if (!ctx.guild.getSelfMember().hasPermission(to, Permission.MANAGE_WEBHOOKS)) {
-            ctx.send(Emotes.getFailure() + " I need to be able to **manage webhooks** in " +
-                    to.getAsMention() + '!').queue();
+        } else if (archivingGuilds.contains(ctx.guild.getIdLong())) {
+            ctx.send(Emotes.getFailure() + " There is already an archival running in this server!").queue();
             return;
         }
 
-        String fromId = from.getId();
-        String fromMsgId = fromId;
-
-        EmbedBuilder statusEmb = newEmbedWithAuthor(ctx)
-                .setTitle("Archiving channel into #" + to.getName() + "...")
-                .setColor(val(ctx.guild.getSelfMember().getColor()).or(Color.WHITE))
-                .addField("Status", "Processed **0** messages.", false)
-                .setFooter("Last updated at", null)
-                .setTimestamp(OffsetDateTime.now());
-        Message statusMsg = ctx.send(statusEmb.build()).complete();
-
-        int sz = 0; // history.size
+        archivingGuilds.add(ctx.guild.getIdLong());
 
         try {
-            statusMsg.pin().queue(null, f -> {});
-        } catch (Throwable ignored) {}
-        // TODO: in embed msg, add image to embed for the link to image in msg
-        try {
-            for (Message msg: from.getIterableHistory()) {
-                if (msg.getRawContent().contains("An exception of type NameError has occured!\n" +
-                        "name 'const' is not defined") && msg.getRawContent().startsWith("```") &&
-                        msg.getRawContent().endsWith("```")) // TODO: remove | temp
-                    break;
+            TextChannel from = ctx.message.getMentionedChannels().get(0);
+            TextChannel to = ctx.message.getMentionedChannels().get(1);
 
-                history.push(msg);
-
-                if (++sz % 1000 == 0) {
-                    statusMsg.editMessage(statusEmb.clearFields()
-                            .addField("Stage", "1 of 2", false)
-                            .addField("Status", "Collecting messages...", false)
-                            .addField("Progress", "Collected **" + Strings.number(sz) +
-                                    "** messages so far.", false)
-                            .setTimestamp(OffsetDateTime.now())
-                            .build()).queue();
-                }
-
-                if (sz > 2500000) {
-                    ctx.send(Emotes.getFailure() +
-                            " Sorry, but there are too many messages here (2.5 million). As this is a public bot, it must be available for everyone to use. More than 2,500,000 messages takes up too much memory. Contact the bot owner if you still want to archive this channel.").queue();
-                    return;
-                }
+            if (!ctx.guild.getSelfMember().hasPermission(from, Permission.MESSAGE_HISTORY)) {
+                ctx.send(Emotes.getFailure() + " I need to be able to **read message history** in " +
+                        from.getAsMention() + '!').queue();
+                return;
+            } else if (!ctx.guild.getSelfMember().hasPermission(to, Permission.MANAGE_WEBHOOKS)) {
+                ctx.send(Emotes.getFailure() + " I need to be able to **manage webhooks** in " +
+                        to.getAsMention() + '!').queue();
+                return;
             }
-        } catch (PermissionException e) {
-            ctx.send(Emotes.getFailure() + " Don't revoke my permissions! I need **" +
-                    e.getPermission().getName() + "**!").queue();
-            return;
-        } catch (Exception e) {
-            logger.error("Error archiving channel (collecting messages)", e);
-            ctx.send(Emotes.getFailure() + " An error occurred while collecting messages.").queue();
-            return;
-        }
 
-        if (sz < 1) {
-            ctx.send(Emotes.getFailure() + " There are no messages in " + from.getAsMention() + '!').queue();
-            return;
-        }
+            String fromId = from.getId();
+            String fromMsgId = fromId;
 
-        if (!ctx.guild.getSelfMember().hasPermission(to, Permission.MANAGE_WEBHOOKS)) {
-            ctx.send(Emotes.getFailure() + " I need to be able to **manage webhooks** in " +
-                    to.getAsMention() + '!').queue();
-            return;
-        } // if they revoke the perm during message collection...
+            EmbedBuilder statusEmb = newEmbedWithAuthor(ctx)
+                    .setTitle("Archiving channel into #" + to.getName() + "...")
+                    .setColor(val(ctx.guild.getSelfMember().getColor()).or(Color.WHITE))
+                    .addField("Status", "Processed **0** messages so far.", false)
+                    .setFooter("Last updated at", null)
+                    .setTimestamp(OffsetDateTime.now());
+            Message statusMsg = ctx.send(statusEmb.build()).complete();
 
-        String b = "(Temp) Archival to #";
-        Webhook hook = to.createWebhook(b +
-                (to.getName().substring(0, Math.min(to.getName().length(), 32 - b.length()))))
-                .reason("Creating temporary webhook for the archival of messages from #" +
-                        from.getName() + " to #" + to.getName() +
-                        ". This will be deleted afterwards, and is used to speed up the process by orders of magnitude.")
-                .complete();
-
-        List<MessageEmbed> embedQueue = new ArrayList<>(10);
-        embedQueue.add(null);
-
-        try (WebhookClient client = new WebhookClientBuilder(hook)
-                .setHttpClient(Bot.http)
-                .setDaemon(true)
-                .setExecutorService(bot.getScheduledExecutor())
-                .build()) {
-            WebhookMessageBuilder wmb = new WebhookMessageBuilder()
-                    .setUsername("Message Archive")
-                    .setAvatarUrl(ctx.jda.getSelfUser().getEffectiveAvatarUrl());
+            int sz = 0; // number of messages
+            short oneHundred = (short)100;
 
             try {
-                Field f = wmb.getClass().getDeclaredField("embeds");
-                f.setAccessible(true);
-                f.set(wmb, embedQueue);
-            } catch (ReflectiveOperationException e) {
-                throw new RuntimeException(e);
-            }
+                statusMsg.pin().queue(null, f -> {});
+            } catch (Throwable ignored) {}
+            // TODO: in embed msg, add image to embed for the link to image in msg
 
-            WebhookMessage wm = wmb.build();
-            embedQueue.remove(0);
+            String b = "(Temp) Archival to #";
+            Webhook hook = to.createWebhook(b +
+                    (to.getName().substring(0, Math.min(to.getName().length(), 32 - b.length()))))
+                    .reason("Creating temporary webhook for the archival of messages from #" +
+                            from.getName() + " to #" + to.getName() +
+                            ". This will be deleted afterwards, and is used to speed up the process by orders of magnitude.")
+                    .complete();
 
-            EmbedBuilder emb = new EmbedBuilder();
-            statusMsg.editMessage(statusEmb.clearFields()
-                    .addField("Stage", "2 of 2", false)
-                    .addField("Status", "Creating messages in target channel...", false)
-                    .addField("Progress", "Created **0** of " + sz + " messages.", false)
-                    .setTimestamp(OffsetDateTime.now())
-                    .build()).queue();
+            List<Message> historyChunk = new ArrayList<>(100);
+            List<MessageEmbed> embedQueue = new ArrayList<>(10);
+            embedQueue.add(null);
 
-            String pt1 = "Created **";
-            String pt2 = "** of " + sz + " messages.";
-            int i = 0;
+            try (WebhookClient client = new WebhookClientBuilder(hook)
+                    .setHttpClient(Bot.http)
+                    .setDaemon(true)
+                    .setExecutorService(bot.getScheduledExecutor())
+                    .build()) {
 
-            Paginator embMeta = new Paginator(1024);
-            Paginator fieldPager = new Paginator(1024);
-            StringBuilder stringBuilder = new StringBuilder();
-            try {
-                embDescription.set(emb, stringBuilder);
-            } catch (ReflectiveOperationException e) {
-                throw new RuntimeException(e);
-            }
-
-            ListIterator<Message> iter = history.listIterator();
-            while (iter.hasNext()) {
-                Message msg = iter.next();
-                iter.remove();
-
-                User author = msg.getAuthor();
+                // webhook setup
+                WebhookMessageBuilder wmb = new WebhookMessageBuilder()
+                        .setUsername("Message Archive")
+                        .setAvatarUrl(ctx.jda.getSelfUser().getEffectiveAvatarUrl());
 
                 try {
-                    embFields.set(emb, new LinkedList<>());
-                } catch (ReflectiveOperationException e) {
-                    logger.fatal("Error setting fields = new LinkedList on EmbedBuilder", e);
-                    emb.clearFields();
-                }
-
-                emb.setImage(null)
-                        .setThumbnail(null)
-                        .setFooter(null, null)
-                        .setAuthor(author.getName() + '#' + author.getDiscriminator(), null,
-                                author.getEffectiveAvatarUrl())
-                        .setTimestamp(msg.getCreationTime());
-
-                try {
-                    stringBuilderValue.set(stringBuilder, stringValue.get(msg.getRawContent()));
+                    Field f = wmb.getClass().getDeclaredField("embeds");
+                    f.setAccessible(true);
+                    f.set(wmb, embedQueue);
                 } catch (ReflectiveOperationException e) {
                     throw new RuntimeException(e);
                 }
 
-                Member member;
-                if ((member = ctx.guild.getMember(author)) != null) {
-                    Color col = member.getColor();
+                WebhookMessage wm = wmb.build();
+                embedQueue.remove(0);
 
-                    if (col == null) {
-                        emb.setColor(Color.WHITE);
-                    } else {
-                        emb.setColor(col);
-                    }
-                } else {
-                    emb.setColor(Color.WHITE);
-                }
+                EmbedBuilder emb = new EmbedBuilder();
 
-                boolean fiImg = true;
+                Paginator embMeta = new Paginator(1024);
+                Paginator fieldPager = new Paginator(1024);
 
-                if (msg.getEmbeds().size() > 0) {
-                    final String em = "Embed: ";
-                    boolean fiThumb = true;
-                    boolean fiCol = true;
-                    boolean fiFooterIcon = true;
-                    int embedsProcessed = 0;
+                getHistoryAfter(from, fromId, fromMsgId, oneHundred, historyChunk).complete();
+                while (historyChunk.size() > 0) {
+                    getHistoryAfter(from, fromId, fromMsgId, oneHundred, historyChunk).complete();
+                    fromMsgId = historyChunk.get(historyChunk.size() - 1).getId();
 
-                    embedRenderLoop:
-                    for (MessageEmbed embed : msg.getEmbeds()) {
-                        int fieldsUsedForEmb = 0;
-                        if (embedsProcessed >= 5) {
-                            break;
-                        }
-
-                        String title;
-                        if (embed.getTitle() != null) {
-                            title = em + embed.getTitle().substring(0,
-                                    Math.min(embed.getTitle().length(), 1025 - em.length()));
-                        } else {
-                            title = em + "[no title]";
-                        }
-
-                        embMeta.reset();
-
-                        if (embed.getThumbnail() != null && fiThumb) {
-                            emb.setThumbnail(embed.getThumbnail().getUrl());
-                            fiThumb = false;
-                        }
-
-                        if (embed.getAuthor() != null) {
-                            MessageEmbed.AuthorInfo aInfo = embed.getAuthor();
-
-                            if (aInfo.getUrl() != null) {
-                                embMeta.addLine("Author: **[" + aInfo.getName() + "](" + aInfo.getUrl() +
-                                        ")**" + (aInfo.getIconUrl() == null ? "" : " | [Icon](" +
-                                        aInfo.getIconUrl() + ')'));
-                            } else {
-                                embMeta.addLine("Author: **" + aInfo.getName() + "**" +
-                                        (aInfo.getIconUrl() == null ? "" : " | [Icon](" +
-                                                aInfo.getIconUrl() + ')'));
-                            }
-                        }
-
-                        if (embed.getColor() != null) {
-                            Color col = embed.getColor();
-
-                            if (fiCol) {
-                                emb.setColor(col);
-                                fiCol = false;
-                            }
-
-                            embMeta.addLine("Color: r=" + col.getRed() + ", g=" + col.getGreen() +
-                                    ", b=" + col.getBlue());
-                        }
-
-                        if (embed.getImage() != null) {
-                            MessageEmbed.ImageInfo img = embed.getImage();
-                            if (fiImg) {
-                                emb.setImage(img.getUrl());
-                                fiImg = false;
-                            }
-
-                            embMeta.addLine("[" + img.getWidth() + "x" + img.getHeight() + " Image](" +
-                                    img.getUrl() + ')');
-                        }
-
-                        if (embed.getFooter() != null) {
-                            MessageEmbed.Footer footer = embed.getFooter();
-                            String ic = "";
-
-                            if (footer.getIconUrl() != null) {
-                                if (fiFooterIcon) {
-                                    emb.setFooter(null, footer.getIconUrl());
-                                    fiFooterIcon = true;
-                                }
-
-                                ic = "[Icon](" + footer.getIconUrl() + ") | ";
-                            }
-
-                            embMeta.addLine(ic + "Footer: " + footer.getText());
-                        }
-
-                        embMeta.addLine("Total Length: " + embed.getLength() + " characters");
-                        embMeta.addLine("Fields: " + embed.getFields().size());
-
-                        for (String page : embMeta.getPages()) {
-                            emb.addField(title, page, false);
-                            fieldsUsedForEmb++;
-
-                            if (fieldsUsedForEmb >= 4)
-                                continue embedRenderLoop;
-                        }
-
-                        // Description
-                        if (embed.getDescription() != null) {
-                            for (String page : embedFieldPages(embed.getDescription())) {
-                                emb.addField("Description", page, false);
-                                fieldsUsedForEmb++;
-
-                                if (fieldsUsedForEmb >= 4)
-                                    continue embedRenderLoop;
-                            }
-                        }
-
-                        // Fields
-                        if (embed.getFields().size() > 0) {
-                            fieldPager.reset();
-
-                            for (MessageEmbed.Field field : embed.getFields()) {
-                                fieldPager.addLine("**" + field.getName() + "**");
-                                fieldPager.addLine(field.getValue());
-                                fieldPager.addLine("");
-                            }
-
-                            for (String page : fieldPager.getPages()) {
-                                emb.addField("Fields", page, false);
-
-                                fieldsUsedForEmb++;
-
-                                if (fieldsUsedForEmb >= 4)
-                                    continue embedRenderLoop;
-                            }
-                        }
-
-                        embedsProcessed++;
-                    }
-                }
-
-                if (msg.getAttachments().size() > 0) {
-                    for (Message.Attachment attachment : msg.getAttachments()) {
-                        if (fiImg && attachment.isImage()) {
-                            emb.setImage(attachment.getUrl());
-                            fiImg = false;
-                        } else {
-                            String ct;
-                            if (attachment.isImage()) {
-                                ct = "**Image** \u2022 Dimensions: " + attachment.getWidth() + "x" +
-                                        attachment.getHeight() + "\n[Link to Image](" + attachment.getUrl() + ')';
-                            } else {
-                                ct = "[Link to Attachment](" + attachment.getUrl() + ')';
-                            }
-
-                            float bytes = attachment.getSize();
-                            int unitIdx = 0;
-
-                            while (bytes >= 1000) {
-                                bytes /= 1000;
-                                unitIdx++;
-                            }
-
-                            String szz = Strings.number(bytes) + " " + BYTE_UNITS[unitIdx > 8 ? 8 : unitIdx];
-
-                            emb.addField("Attachment: " + attachment.getFileName() +
-                                    " (" + szz + ')', ct, false);
-                        }
-                    }
-                }
-
-                embedQueue.add(emb.build());
-
-                if (embedQueue.size() == 10) {
-                    try {
-                        client.send(wm).get();
-
-                        Thread.sleep(100);
-                    } catch (InterruptedException ignored) {
-                    } catch (ExecutionException e) {
-                        logger.warn("Archival embed send error", e);
-                        client.send(Emotes.getFailure() + " Failed to send messages.");
+                    for (int i = historyChunk.size() - 1; i > 0; --i) {
+                        Message msg = historyChunk.get(i);
+                        User author = msg.getAuthor();
 
                         try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException ign) {
+                            embFields.set(emb, new LinkedList<>());
+                        } catch (ReflectiveOperationException e) {
+                            logger.fatal("Error setting fields = new LinkedList on EmbedBuilder", e);
+                            emb.clearFields();
                         }
-                    } finally {
-                        embedQueue.clear();
+
+                        emb.setImage(null)
+                                .setThumbnail(null)
+                                .setFooter(null, null)
+                                .setAuthor(author.getName() + '#' + author.getDiscriminator(), null,
+                                        author.getEffectiveAvatarUrl())
+                                .setTimestamp(msg.getCreationTime());
+
+                        try {
+                            embDescription.set(emb, new StringBuilder(msg.getRawContent()));
+                        } catch (ReflectiveOperationException e) {
+                            logger.fatal("Error setting description on EmbedBuilder", e);
+                            emb.setDescription(msg.getRawContent());
+                        }
+
+                        Member member;
+                        if ((member = ctx.guild.getMember(author)) != null) {
+                            Color col = member.getColor();
+
+                            if (col == null) {
+                                emb.setColor(Color.WHITE);
+                            } else {
+                                emb.setColor(col);
+                            }
+                        } else {
+                            emb.setColor(Color.WHITE);
+                        }
+
+                        boolean fiImg = true;
+
+                        if (msg.getEmbeds().size() > 0) {
+                            final String em = "Embed: ";
+                            boolean fiThumb = true;
+                            boolean fiCol = true;
+                            boolean fiFooterIcon = true;
+                            int embedsProcessed = 0;
+
+                            embedRenderLoop:
+                            for (MessageEmbed embed : msg.getEmbeds()) {
+                                int fieldsUsedForEmb = 0;
+                                if (embedsProcessed >= 5) {
+                                    break;
+                                }
+
+                                String title;
+                                if (embed.getTitle() != null) {
+                                    title = em + embed.getTitle().substring(0,
+                                            Math.min(embed.getTitle().length(), 1025 - em.length()));
+                                } else {
+                                    title = em + "[no title]";
+                                }
+
+                                embMeta.reset();
+
+                                if (embed.getThumbnail() != null && fiThumb) {
+                                    emb.setThumbnail(embed.getThumbnail().getUrl());
+                                    fiThumb = false;
+                                }
+
+                                if (embed.getAuthor() != null) {
+                                    MessageEmbed.AuthorInfo aInfo = embed.getAuthor();
+
+                                    if (aInfo.getUrl() != null) {
+                                        embMeta.addLine("Author: **[" + aInfo.getName() + "](" + aInfo.getUrl() +
+                                                ")**" + (aInfo.getIconUrl() == null ? "" : " | [Icon](" +
+                                                aInfo.getIconUrl() + ')'));
+                                    } else {
+                                        embMeta.addLine("Author: **" + aInfo.getName() + "**" +
+                                                (aInfo.getIconUrl() == null ? "" : " | [Icon](" +
+                                                        aInfo.getIconUrl() + ')'));
+                                    }
+                                }
+
+                                if (embed.getColor() != null) {
+                                    Color col = embed.getColor();
+
+                                    if (fiCol) {
+                                        emb.setColor(col);
+                                        fiCol = false;
+                                    }
+
+                                    embMeta.addLine("Color: r=" + col.getRed() + ", g=" + col.getGreen() +
+                                            ", b=" + col.getBlue());
+                                }
+
+                                if (embed.getImage() != null) {
+                                    MessageEmbed.ImageInfo img = embed.getImage();
+                                    if (fiImg) {
+                                        emb.setImage(img.getUrl());
+                                        fiImg = false;
+                                    }
+
+                                    embMeta.addLine("[" + img.getWidth() + "x" + img.getHeight() + " Image](" +
+                                            img.getUrl() + ')');
+                                }
+
+                                if (embed.getFooter() != null) {
+                                    MessageEmbed.Footer footer = embed.getFooter();
+                                    String ic = "";
+
+                                    if (footer.getIconUrl() != null) {
+                                        if (fiFooterIcon) {
+                                            emb.setFooter(null, footer.getIconUrl());
+                                            fiFooterIcon = true;
+                                        }
+
+                                        ic = "[Icon](" + footer.getIconUrl() + ") | ";
+                                    }
+
+                                    embMeta.addLine(ic + "Footer: " + footer.getText());
+                                }
+
+                                embMeta.addLine("Total Length: " + embed.getLength() + " characters");
+                                embMeta.addLine("Fields: " + embed.getFields().size());
+
+                                for (String page : embMeta.getPages()) {
+                                    emb.addField(title, page, false);
+                                    fieldsUsedForEmb++;
+
+                                    if (fieldsUsedForEmb >= 4)
+                                        continue embedRenderLoop;
+                                }
+
+                                // Description
+                                if (embed.getDescription() != null) {
+                                    for (String page : embedFieldPages(embed.getDescription())) {
+                                        emb.addField("Description", page, false);
+                                        fieldsUsedForEmb++;
+
+                                        if (fieldsUsedForEmb >= 4)
+                                            continue embedRenderLoop;
+                                    }
+                                }
+
+                                // Fields
+                                if (embed.getFields().size() > 0) {
+                                    fieldPager.reset();
+
+                                    for (MessageEmbed.Field field : embed.getFields()) {
+                                        fieldPager.addLine("**" + field.getName() + "**");
+                                        fieldPager.addLine(field.getValue());
+                                        fieldPager.addLine("");
+                                    }
+
+                                    for (String page : fieldPager.getPages()) {
+                                        emb.addField("Fields", page, false);
+
+                                        fieldsUsedForEmb++;
+
+                                        if (fieldsUsedForEmb >= 4)
+                                            continue embedRenderLoop;
+                                    }
+                                }
+
+                                embedsProcessed++;
+                            }
+                        }
+
+                        if (msg.getAttachments().size() > 0) {
+                            for (Message.Attachment attachment : msg.getAttachments()) {
+                                if (fiImg && attachment.isImage()) {
+                                    emb.setImage(attachment.getUrl());
+                                    fiImg = false;
+                                } else {
+                                    String ct;
+                                    if (attachment.isImage()) {
+                                        ct = "**Image** \u2022 Dimensions: " + attachment.getWidth() + "x" +
+                                                attachment.getHeight() + "\n[Link to Image](" + attachment.getUrl() + ')';
+                                    } else {
+                                        ct = "[Link to Attachment](" + attachment.getUrl() + ')';
+                                    }
+
+                                    float bytes = attachment.getSize();
+                                    int unitIdx = 0;
+
+                                    while (bytes >= 1000) {
+                                        bytes /= 1000;
+                                        unitIdx++;
+                                    }
+
+                                    String szz = Strings.number(bytes) + " " + BYTE_UNITS[unitIdx > 8 ? 8 : unitIdx];
+
+                                    emb.addField("Attachment: " + attachment.getFileName() +
+                                            " (" + szz + ')', ct, false);
+                                }
+                            }
+                        }
+
+                        embedQueue.add(emb.build());
+
+                        if (embedQueue.size() == 10) {
+                            try {
+                                client.send(wm).get();
+
+                                Thread.sleep(50);
+                            } catch (InterruptedException ignored) {
+                            } catch (ExecutionException e) {
+                                logger.warn("Archival embed send error", e);
+                                client.send(Emotes.getFailure() + " Failed to send messages.");
+
+                                try {
+                                    Thread.sleep(50);
+                                } catch (InterruptedException ign) {
+                                }
+                            } finally {
+                                embedQueue.clear();
+                            }
+                        }
+
+                        if (++sz % 50 == 0) {
+                            statusMsg.editMessage(statusEmb.clearFields()
+                                    .addField("Status", "Processed **" + Strings.number(sz) +
+                                            "** messages so far.", false)
+                                    .setTimestamp(OffsetDateTime.now())
+                                    .build()).queue();
+                        }
+                    }
+
+                    if (embedQueue.size() > 0) {
+                        client.send(wm);
                     }
                 }
 
-                i++;
+                statusMsg.editMessage(statusEmb.clearFields()
+                        .addField("Stage", "Completed!", false)
+                        .addField("Status", "Successfully archived " + sz + " messages from " +
+                                from.getAsMention() + " to " + to.getAsMention() + '.', false)
+                        .setTimestamp(OffsetDateTime.now())
+                        .build()).queue();
 
-                if (i % 50 == 0) {
-                    statusMsg.editMessage(statusEmb.clearFields()
-                            .addField("Stage", "2 of 2", false)
-                            .addField("Status", "Creating messages in target channel...", false)
-                            .addField("Progress", pt1 + i + pt2, false)
-                            .setTimestamp(OffsetDateTime.now())
-                            .build()).queue();
-                }
+                ctx.send(Emotes.getSuccess() + " Archival from " + from.getAsMention() + " to " +
+                        to.getAsMention() + " has **finished**!").queue();
+            } catch (PermissionException e) {
+                ctx.send(Emotes.getFailure() + " Don't revoke my permissions! I need **" +
+                        e.getPermission().getName() + "**!").queue();
+            } finally {
+                if (ctx.guild.getSelfMember().hasPermission(to, Permission.MANAGE_WEBHOOKS)) {
+                    hook.delete()
+                            .reason("Archival from #" + from.getName() + " to #" + to.getName() +
+                                    " has finished, so the temporary webhook is being deleted.")
+                            .queue();
+                } // if they revoke the perm during message creation...
             }
-
-            if (embedQueue.size() > 0) {
-                client.send(wm);
-            }
-
-            statusMsg.editMessage(statusEmb.clearFields()
-                    .addField("Stage", "Completed!", false)
-                    .addField("Status", "Successfully archived " + sz + " messages from " +
-                            from.getAsMention() + " to " + to.getAsMention() + '.', false)
-                    .setTimestamp(OffsetDateTime.now())
-                    .build()).queue();
-            ctx.send(Emotes.getSuccess() + " Archival from " + from.getAsMention() + " to " +
-                    to.getAsMention() + " has **finished**!").queue();
-        } catch (PermissionException e) {
-            ctx.send(Emotes.getFailure() + " Don't revoke my permissions! I need **" +
-                    e.getPermission().getName() + "**!").queue();
-            return;
         } finally {
-            if (ctx.guild.getSelfMember().hasPermission(to, Permission.MANAGE_WEBHOOKS)) {
-                hook.delete()
-                        .reason("Archival from #" + from.getName() + " to #" + to.getName() +
-                                " has finished, so the temporary webhook is being deleted.")
-                        .queue();
-            } // if they revoke the perm during message creation...
+            archivingGuilds.remove(ctx.guild.getIdLong());
         }
     }
 
