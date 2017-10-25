@@ -36,7 +36,7 @@ public class CoreCog extends Cog {
                     "\n" +
                     "*If you like " + Bot.NAME + ", please help keep it alive by donating here: <https://patreon.com/kdragon>.\n" +
                     "Any amount is appreciated.*";
-    public static final String ANNIVERSARY_MESSAGE =
+    private static final String ANNIVERSARY_MESSAGE =
             "👏 Hey @everyone! Today, right now, is a very special moment.\n" +
             "**Exactly {0} year{1} ago**, in :two::zero::one::six:, " + Bot.NAME +
                     " was created. At exactly October 23, 8:41:55 AM in Pacific time.\n" +
@@ -52,20 +52,26 @@ public class CoreCog extends Cog {
             "**Patreon: <https://patreon.com/kdragon>**\n" +
             "\n" +
             "**__Enjoy the bot, and the anniversary!__**";
+
+    // load of IDs
+    private static final long ANNOUNCEMENT_CHANNEL = 256647384656904192L;
+    private static final long PRODUCTION_USER_ID = 239775420470394897L;
+    private static final long HOME_GUILD_ID = 239772188649979904L;
+
     private static volatile int sTries = 0;
 
     public CoreCog(Bot bot) {
         super(bot);
 
-        if (bot.getJda().getSelfUser().getIdLong() == 239775420470394897L &&
+        if (bot.getJda().getSelfUser().getIdLong() == PRODUCTION_USER_ID &&
                 !Bot.NAME.equals(bot.getJda().getSelfUser().getName()) &&
                 bot.getShardNum() == 1) {
             bot.getJda().getSelfUser().getManager().setName(Bot.NAME).queue();
         }
 
-        if (bot.getJda().getGuildById(239772188649979904L) != null &&
-                bot.getJda().getSelfUser().getIdLong() == 239775420470394897L &&
-                bot.getJda().getTextChannelById(256647384656904192L) != null) {
+        if (bot.getJda().getGuildById(HOME_GUILD_ID) != null &&
+                bot.getJda().getSelfUser().getIdLong() == PRODUCTION_USER_ID &&
+                bot.getJda().getTextChannelById(ANNOUNCEMENT_CHANNEL) != null) {
             scheduleAniv();
         }
     }
@@ -81,7 +87,7 @@ public class CoreCog extends Cog {
 
         bot.getScheduledExecutor().schedule(() -> {
             do {
-                TextChannel channel = bot.getJda().getTextChannelById(256647384656904192L);
+                TextChannel channel = bot.getJda().getTextChannelById(ANNOUNCEMENT_CHANNEL);
                 if (channel == null) {
                     logger.error("Couldn't find #announcements channel in home guild!");
                     break;
@@ -101,7 +107,7 @@ public class CoreCog extends Cog {
     }
 
     private void f(Throwable e) {
-        logger.error("Error sending anniversary announcement in <#256647384656904192>, retrying", e);
+        logger.error("Error sending anniversary announcement in <#" + ANNOUNCEMENT_CHANNEL + ">, retrying", e);
 
         if (sTries >= 10) {
             logger.fatal("Failed to send anniversary announcement 10 times. Not retrying", e);
@@ -116,7 +122,7 @@ public class CoreCog extends Cog {
         int year = now.get(Calendar.YEAR);
         int yearDiff = year - ctime.getYear();
 
-        bot.getJda().getTextChannelById(250780048943087618L)
+        bot.getJda().getTextChannelById(ANNOUNCEMENT_CHANNEL)
                 .sendMessage(Strings.format(ANNIVERSARY_MESSAGE, yearDiff, yearDiff == 1 ? "" : "s",
                         bot.getShardUtil().getGuildCount(),
                         bot.getShardUtil().getChannelCount())).queue(null, this::f);
