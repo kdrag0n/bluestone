@@ -72,7 +72,7 @@ public class TrackScheduler extends AudioEventAdapter {
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
         try {
             current = track;
-            if (track.getUserData() != null) {
+            if (track.getUserData() != null && track.getUserData(ExtraTrackInfo.class).sendNowPlaying) {
                 AudioTrackInfo info = track.getInfo();
                 track.getUserData(ExtraTrackInfo.class).textChannel
                         .sendMessage("➡ **" + mentionClean(info.title) + "**, length **" +
@@ -95,6 +95,7 @@ public class TrackScheduler extends AudioEventAdapter {
                 AudioTrack clone = track.makeClone();
                 if (track.getUserData() != null) {
                     clone.setUserData(track.getUserData());
+                    clone.getUserData(ExtraTrackInfo.class).sendNowPlaying = false;
                 }
                 player.startTrack(clone, false);
             } else {

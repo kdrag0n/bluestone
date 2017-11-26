@@ -8,6 +8,7 @@ import java.util.HashSet;
 public class ExtraTrackInfo {
     public final MessageChannel textChannel;
     public final Member requester;
+    public boolean sendNowPlaying = true;
     private HashSet<Member> skipVotes = new HashSet<>();
 
     ExtraTrackInfo(MessageChannel channel, Member req) {

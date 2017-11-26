@@ -714,12 +714,9 @@ public class UtilityCog extends Cog {
 
                 topText = ctx.rawArgs.substring(0, sepIndex).trim();
                 bottomText = ctx.rawArgs.substring(sepIndex + 1).trim();
-            } else if (ctx.args.size() == 1 && ctx.rawArgs.length() % 2 != 0) {
-                topText = ctx.args.get(0);
-                bottomText = " ";
             } else {
                 String[] results = ArrayUtils.subarray(StringUtils.split(WordUtils.wrap(StringUtils.replaceChars(
-                        ctx.rawArgs, '\n', ' '), ctx.rawArgs.length() / 2,
+                        ctx.rawArgs, '\n', ' '), ctx.rawArgs.length() / 2 + 1,
                         "\n", true, "\\s+"), '\n'),
                         0, 2);
 

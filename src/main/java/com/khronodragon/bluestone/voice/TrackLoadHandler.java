@@ -50,10 +50,10 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
     @Override
     public void trackLoaded(AudioTrack track) {
         if (!track.getInfo().isStream && track.getDuration() >
-                TimeUnit.MINUTES.toMillis(isPatron ? 10 * 60 : 2 * 60 + 32)) {
+                TimeUnit.MINUTES.toMillis(isPatron ? 10 * 60 + 40 : 2 * 60 + 37)) {
             if (canTalk) {
                 if (isPatron)
-                    ctx.send("⛔ Track longer than **10 h**!").queue();
+                    ctx.send("⛔ Track longer than **10 h 30 min**!").queue();
                 else
                     ctx.send("⛔ Track longer than **2 h 30 min**!").queue();
             }
@@ -143,10 +143,10 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
             return;
         }
 
-        int mn = isPatron ? 48 : 18;
+        int mn = isPatron ? 36 : 18;
         if (tracks.size() > mn) {
             if (canTalk) ctx.send(Emotes.getFailure() +
-                    " Playlist is longer than " + mn + " tracks - only adding the first " + mn + " tracks.").queue();
+                    " Playlist too long, only adding the first " + mn + " tracks.").queue();
             tracks = tracks.subList(0, mn);
         }
         long duration = 0L;
