@@ -149,9 +149,9 @@ public class MusicCog extends Cog {
                     info = state.scheduler.current.getUserData(ExtraTrackInfo.class);
                 }
 
-                if (info != null) {
+                /*if (info != null) {
                     info.textChannel.sendMessage("Voice channel empty - player paused.").queue();
-                }
+                }*/
             }
         }
     }

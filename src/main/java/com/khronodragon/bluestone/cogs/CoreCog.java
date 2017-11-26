@@ -25,14 +25,12 @@ import java.util.concurrent.TimeUnit;
 public class CoreCog extends Cog {
     private static final Logger logger = LogManager.getLogger(CoreCog.class);
     private static final String JOIN_MESSAGE =
-            "By adding this bot, you agree that the activity of all users in this server *may* be logged, depending on features used or enabled..\n" +
+            "By adding this bot, you agree that the activity of all users in this server *may* be logged, depending on features used or enabled.\n" +
                     "Features that may log data: quotes, starboard, etc. (this is to comply with the Discord ToS.)\n\n" +
                     "**Enjoy this bot!**\n" +
                     "\n" +
                     "If you ever have questions, *please* read the **FAQ** first: <https://khronodragon.com/goldmine/faq>\n" +
-                    "It saves everyone a lot of time.\n" +
-                    "\n" +
-                    "Welcome and leave messages are on by default, but will not send if " + Bot.NAME + " cannot send messages in the default channel, or the default channel was deleted. In that case, simply use the `welcome` or `leave` commands to set the channel they send in.\n" +
+                    "It saves you, me, and everyone else a lot of time.\n" +
                     "\n" +
                     "*If you like " + Bot.NAME + ", please help keep it alive by donating here: <https://patreon.com/kdragon>.\n" +
                     "Any amount is appreciated.*";
