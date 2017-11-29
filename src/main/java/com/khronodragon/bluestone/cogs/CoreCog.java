@@ -67,11 +67,13 @@ public class CoreCog extends Cog {
             bot.getJda().getSelfUser().getManager().setName(Bot.NAME).queue();
         }
 
+        /*
         if (bot.getJda().getGuildById(HOME_GUILD_ID) != null &&
                 bot.getJda().getSelfUser().getIdLong() == PRODUCTION_USER_ID &&
                 bot.getJda().getTextChannelById(ANNOUNCEMENT_CHANNEL) != null) {
             scheduleAniv();
         }
+        */
     }
 
     private void scheduleAniv() {

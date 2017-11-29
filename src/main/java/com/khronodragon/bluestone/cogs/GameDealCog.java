@@ -254,24 +254,28 @@ public class GameDealCog extends Cog {
         }
 
         Document home = Jsoup.parse(rawResponse, HUMBLE_HOME);
-        List<Deal> homeDeals = humbleFindDeals(home);
-        if (homeDeals != null)
-            deals.addAll(homeDeals);
+        try {
+            List<Deal> homeDeals = humbleFindDeals(home);
+            if (homeDeals != null)
+                deals.addAll(homeDeals);
 
-        Elements otherBundleLinks = home.getElementById("subtab-container").getElementsByClass("subtab-button");
-        for (Element link: otherBundleLinks) {
-            if (link.classNames().contains("active"))
-                continue;
+            Elements otherBundleLinks = home.getElementById("subtab-container").getElementsByClass("subtab-button");
+            for (Element link: otherBundleLinks) {
+                if (link.classNames().contains("active"))
+                    continue;
 
-            String url = link.attr("abs:href");
-            try {
-                List<Deal> pageDeals = humbleFindDeals(Jsoup.parse(webFetch(url), url));
+                String url = link.attr("abs:href");
+                try {
+                    List<Deal> pageDeals = humbleFindDeals(Jsoup.parse(webFetch(url), url));
 
-                if (pageDeals != null)
-                    deals.addAll(pageDeals);
-            } catch (Exception e) {
-                logger.error("Error fetching Humble Bundle linked page {}", url, e);
+                    if (pageDeals != null)
+                        deals.addAll(pageDeals);
+                } catch (Exception e) {
+                    logger.error("Error fetching Humble Bundle linked page {}", url, e);
+                }
             }
+        } catch (NullPointerException e) {
+            logger.error("Error parsing Humble Bundle home, something's missing", e);
         }
 
         return deals;

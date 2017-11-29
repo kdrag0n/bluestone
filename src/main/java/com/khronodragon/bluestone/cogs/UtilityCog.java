@@ -6,13 +6,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.EncodeHintType;
-import com.google.zxing.WriterException;
-import com.google.zxing.client.j2se.MatrixToImageWriter;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
-import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.table.TableUtils;
@@ -33,6 +26,7 @@ import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
 import io.codearte.jfairy.Fairy;
 import io.codearte.jfairy.producer.person.Person;
+import io.nayuki.qrcodegen.QrCode;
 import net.dv8tion.jda.client.entities.Group;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
@@ -49,7 +43,7 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.text.WordUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,6 +52,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.ocpsoft.prettytime.PrettyTime;
 
+import javax.imageio.ImageIO;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
@@ -69,6 +64,7 @@ import static com.khronodragon.bluestone.util.Strings.str;
 import static com.khronodragon.bluestone.util.Strings.format;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
@@ -85,7 +81,6 @@ import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class UtilityCog extends Cog {
     private static final Logger logger = LogManager.getLogger(UtilityCog.class);
@@ -110,11 +105,6 @@ public class UtilityCog extends Cog {
             ManagementFactory.getOperatingSystemMXBean();
 
     private static final Fairy fairy = Fairy.create();
-    private static final QRCodeWriter qrWriter = new QRCodeWriter();
-    private static final Map<EncodeHintType, Object> qrHintMap = new HashMap<EncodeHintType, Object>() {{
-        put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
-        put(EncodeHintType.CHARACTER_SET, "UTF-8");
-    }};
     private final PrettyTime prettyTime = new PrettyTime();
     private final Parser timeParser = new Parser();
 
@@ -636,7 +626,7 @@ public class UtilityCog extends Cog {
                                 .count()))
                         .sorted(Collections.reverseOrder(Comparator.comparing(ImmutablePair<MessageReaction, Integer>::getRight)))
                         .collect(Collectors.toMap(
-                                e -> e.getLeft().getEmote(),
+                                e -> e.getLeft().getReactionEmote(),
                                 ImmutablePair::getRight,
                                 (k, v) -> { throw new IllegalStateException("Duplicate key " + k); },
                                 LinkedHashMap::new
@@ -1105,16 +1095,6 @@ public class UtilityCog extends Cog {
         ctx.send(emb.build()).queue();
     }
 
-    private byte[] encodeBarcode(String text, BarcodeFormat format, int size)
-            throws WriterException, IOException {
-        BitMatrix matrix = qrWriter.encode(text, format, size, size, qrHintMap);
-
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        MatrixToImageWriter.writeToStream(matrix, "PNG", stream);
-
-        return stream.toByteArray();
-    }
-
     @Command(name = "qrcode", desc = "Generate a QR code.", aliases = {"qr"}, thread = true)
     public void cmdQrcode(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
@@ -1124,8 +1104,14 @@ public class UtilityCog extends Cog {
 
         byte[] data;
         try {
-            data = encodeBarcode(ctx.rawArgs, BarcodeFormat.QR_CODE, 256);
-        } catch (WriterException|IOException e) {
+            QrCode qr = QrCode.encodeText(ctx.rawArgs, QrCode.Ecc.LOW);
+            BufferedImage img = qr.toImage(6, 2);
+
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            ImageIO.write(img, "png", stream);
+
+            data = stream.toByteArray();
+        } catch (IllegalArgumentException|IOException e) {
             logger.error("QR code error", e);
             ctx.send(Emotes.getFailure() + " An error occurred. Text too long?").queue();
             return;

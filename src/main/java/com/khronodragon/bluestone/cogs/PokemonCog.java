@@ -17,7 +17,7 @@ import com.khronodragon.bluestone.util.IntegerZeroTypeAdapter;
 import net.dv8tion.jda.core.EmbedBuilder;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
