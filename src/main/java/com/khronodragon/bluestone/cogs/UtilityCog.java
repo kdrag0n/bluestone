@@ -86,7 +86,7 @@ public class UtilityCog extends Cog {
     private static final Logger logger = LogManager.getLogger(UtilityCog.class);
 
     private static final Collection<Permission> PERMS_NEEDED = Permission.getPermissions(473295957L);
-    private static final Pattern UNICODE_EMOTE_PATTERN = Pattern.compile("([\\u20a0-\\u32ff\\x{1f000}-\\x{1ffff}\\x{fe4e5}-\\x{fe4ee}])");
+    private static final Pattern UNICODE_EMOTE_PATTERN = Pattern.compile("([\\u20a0-\\u32ff\\x{1f000}-\\x{1ffff}\\x{fe4e5}-\\x{fe4ee}]|[0-9]\\u20e3)");
     private static final Pattern CUSTOM_EMOTE_PATTERN = Pattern.compile("<:[a-z_]+:([0-9]{17,19})>", Pattern.CASE_INSENSITIVE);
     private static final Pattern INVITE_PATTERN = Pattern
             .compile("^(?:https?://discord(?:app\\.com/invite|\\.gg)/([a-zA-Z0-9]{7}|[a-zA-Z0-9]{16})|([a-zA-Z0-9]{7}|[a-zA-Z0-9]{16}))$");
@@ -1557,6 +1557,7 @@ public class UtilityCog extends Cog {
         int lastNidx = pCode.lastIndexOf(10);
         String code = lastNidx == -1 ? "" : pCode.substring(0, lastNidx);
         String lastLine = lastNidx == -1 ? pCode : pCode.substring(lastNidx + 1);
+
 
         if (lastLine.equals("end")) {
             code += "\nend";

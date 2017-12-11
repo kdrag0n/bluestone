@@ -183,7 +183,7 @@ public class WelcomeCog extends Cog {
                 chid = ctx.guild.getIdLong();
             }
 
-            ctx.send("**Current welcome and leave channel**: <@" + chid +
+            ctx.send("**Current welcome and leave channel**: <#" + chid +
                     ">\n*To change it, use this command with a #channel argument.*").queue();
         }
     }
