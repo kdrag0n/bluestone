@@ -218,7 +218,7 @@ public class StarboardCog extends Cog {
                     .setTimestamp(origMessage.getCreationTime())
                     .setAuthor(origMessage.getMember().getEffectiveName(),
                             null, origMessage.getAuthor().getEffectiveAvatarUrl())
-                    .setDescription(origMessage.getRawContent())
+                    .setDescription(origMessage.getContentRaw())
                     .setColor(starGradientColor(stars));
 
             if (origMessage.getEmbeds().size() > 0) {

@@ -280,7 +280,7 @@ public class QuotesCog extends Cog {
             return;
         }
 
-        String text = Strings.renderMessage(msg, msg.getGuild(), msg.getRawContent().replace('\n', ' '));
+        String text = Strings.renderMessage(msg, msg.getGuild(), msg.getContentRaw().replace('\n', ' '));
 
         if (text.length() > 360) {
             ctx.send(Emotes.getFailure() + " Text too long!").queue();
@@ -332,7 +332,7 @@ public class QuotesCog extends Cog {
         builder.where()
                 .eq("authorId", userId);
         int delN = builder.delete();
-        
+
         ctx.send(Emotes.getSuccess() + " Successfully banned **" + getTag(user) +
                 "** from adding quotes. All of their **" + delN + "** quotes have been deleted.").queue();
     }

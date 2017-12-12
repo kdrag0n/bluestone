@@ -116,7 +116,7 @@ public abstract class Cog {
 
     public static void removeReactionIfExists(Message message, String unicode) {
         for (MessageReaction r: message.getReactions()) {
-            if (r.getEmote().getName().equals(unicode)) {
+            if (r.getReactionEmote().getName().equals(unicode)) {
                 r.removeReaction().queue();
                 break;
             }

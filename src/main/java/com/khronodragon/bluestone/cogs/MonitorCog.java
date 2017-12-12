@@ -143,13 +143,13 @@ public class MonitorCog extends Cog {
                     Message item = messageQueue.poll();
 
                     while (item != null) {
-                        if (builder.length() + item.getRawContent().length() + 1 > 2000 ||
+                        if (builder.length() + item.getContentRaw().length() + 1 > 2000 ||
                                 (item.getEmbeds().size() > 0 && hasEmbed(builder))) {
                             channel.sendMessage(builder.build()).queue();
                             builder = new MessageBuilder();
                         }
 
-                        builder.append(item.getRawContent())
+                        builder.append(item.getContentRaw())
                                 .append('\n');
 
                         if (item.getEmbeds().size() > 0)
@@ -161,7 +161,7 @@ public class MonitorCog extends Cog {
                     if (!builder.isEmpty()) {
                         Message message = builder.build();
 
-                        if (StringUtils.isNotBlank(message.getRawContent()))
+                        if (StringUtils.isNotBlank(message.getContentRaw()))
                             channel.sendMessage(message).queue();
                     }
 

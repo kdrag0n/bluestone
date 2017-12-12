@@ -331,7 +331,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     break;
             }
 
-            jda.getPresence().setGame(Game.of(statusLine));
+            jda.getPresence().setGame(Game.playing(statusLine));
         };
 
         ScheduledFuture future = scheduledExecutor.scheduleAtFixedRate(task, 10, 120, TimeUnit.SECONDS);
@@ -548,7 +548,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         } else {
             prefix = shardUtil.getPrefixStore().getPrefix(message.getGuild().getIdLong());
         }
-        final String content = message.getRawContent();
+        final String content = message.getContentRaw();
         final MessageChannel channel = event.getChannel();
 
         if (content.startsWith(prefix)) {
@@ -577,7 +577,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
             if (content.startsWith(mention) || content.startsWith("<@&")) {
                 String request = Strings.renderMessage(message, message.getGuild(),
-                        GENERAL_MENTION_PATTERN.matcher(message.getRawContent()).replaceFirst(""));
+                        GENERAL_MENTION_PATTERN.matcher(message.getContentRaw()).replaceFirst(""));
 
                 if (request.equalsIgnoreCase("prefix")) {
                     channel.sendMessage("My prefix here is `" + prefix + "`.").queue();
@@ -593,8 +593,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 }
             }
         } else if (channel instanceof PrivateChannel &&
-                !(author.getIdLong() == owner.getIdLong() && message.getRawContent().charAt(0) == '`')) {
-            String request = Strings.renderMessage(message, message.getGuild(), message.getRawContent());
+                !(author.getIdLong() == owner.getIdLong() && message.getContentRaw().charAt(0) == '`')) {
+            String request = Strings.renderMessage(message, message.getGuild(), message.getContentRaw());
 
             if (request.length() < 1) {
                 channel.sendMessage("**Hey there**! My prefix is `" + prefix + "` here.\nYou can use commands, or talk to me directly.").queue();
@@ -692,7 +692,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 .addField("Guild ID", msg.getGuild() == null ? "None (no guild)" : msg.getGuild().getId(), true)
                 .addField("Channel", msg.getChannel().getName(), true)
                 .addField("Channel ID", msg.getChannel().getId(), true)
-                .addField("Content", '`' + msg.getContent() + '`', true)
+                .addField("Content", '`' + msg.getContentDisplay() + '`', true)
                 .addField("Embeds", str(msg.getEmbeds().size()), true)
                 .addField("Shard ID", str(getShardNum() - 1), true)
                 .setTimestamp(Instant.now());
@@ -802,7 +802,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 .setEnableShutdownHook(true)
                 .setHttpClientBuilder(new OkHttpClient.Builder()
                         .retryOnConnectionFailure(true))
-                .setGame(Game.of("something"))
+                .setGame(Game.playing("something"))
                 .setReconnectQueue(new SessionReconnectQueue());
 
         if ((System.getProperty("os.arch").startsWith("x86") ||

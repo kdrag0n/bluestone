@@ -256,18 +256,18 @@ public class ModerationCog extends Cog {
 
             if (none || userIds.contains(msg.getAuthor().getIdLong()) || (bots && msg.getAuthor().isBot()) ||
                     (embeds && !msg.getEmbeds().isEmpty()) || (attachments && !msg.getAttachments().isEmpty()) ||
-                    (links && PURGE_LINK_PATTERN.matcher(msg.getRawContent()).find())) {
+                    (links && PURGE_LINK_PATTERN.matcher(msg.getContentRaw()).find())) {
                 toDelete.add(msg);
                 continue;
             }
 
             if (substrings.stream()
-                    .anyMatch(ss -> msg.getRawContent().toLowerCase().contains(ss))) {
+                    .anyMatch(ss -> msg.getContentRaw().toLowerCase().contains(ss))) {
                 toDelete.add(msg);
                 continue;
             }
 
-            if (pattern != null && pattern.matcher(msg.getRawContent()).matches())
+            if (pattern != null && pattern.matcher(msg.getContentRaw()).matches())
                 toDelete.add(msg);
         }
 
@@ -789,10 +789,10 @@ public class ModerationCog extends Cog {
                                 .setTimestamp(msg.getCreationTime());
 
                         try {
-                            embDescription.set(emb, new StringBuilder(msg.getRawContent()));
+                            embDescription.set(emb, new StringBuilder(msg.getContentRaw()));
                         } catch (ReflectiveOperationException e) {
                             logger.fatal("Error setting description on EmbedBuilder", e);
-                            emb.setDescription(msg.getRawContent());
+                            emb.setDescription(msg.getContentRaw());
                         }
 
                         Member member;

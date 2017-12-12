@@ -434,7 +434,7 @@ public class KewlCog extends Cog {
                         return;
                     }
 
-                    String text = resp.getContent();
+                    String text = resp.getContentDisplay();
                     if (text.equalsIgnoreCase("skip"))
                         text = "¯\\_(ツ)_/¯";
                     else if (text.equalsIgnoreCase("stop")) {

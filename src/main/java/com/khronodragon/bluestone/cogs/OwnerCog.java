@@ -49,7 +49,7 @@ public class OwnerCog extends Cog {
         ctx.send(Emotes.getFailure() + " Are you **sure** you want to stop the entire bot? Type `yes` to continue.").complete();
         Message resp = bot.waitForMessage(7000, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
                 msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
-                msg.getRawContent().equalsIgnoreCase("yes"));
+                msg.getContentRaw().equalsIgnoreCase("yes"));
         if (resp != null) {
             ctx.jda.getPresence().setStatus(OnlineStatus.INVISIBLE);
             logger.info("Global shutdown requested.");
@@ -68,7 +68,7 @@ public class OwnerCog extends Cog {
         ctx.send(Emotes.getFailure() + " Are you **sure** you want to stop (restart) shard " + n + "? Type `yes` to continue.").complete();
         Message resp = bot.waitForMessage(7000, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
                 msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
-                msg.getRawContent().equalsIgnoreCase("yes"));
+                msg.getContentRaw().equalsIgnoreCase("yes"));
         if (resp != null) {
             logger.info("Shard {} shutting down...", n);
             ctx.bot.getShardUtil().getShard(n).getJda().shutdown();
@@ -266,7 +266,7 @@ public class OwnerCog extends Cog {
             return;
         }
 
-        bot.getShardUtil().getShards().forEach(b -> b.getJda().getPresence().setGame(Game.of(ctx.rawArgs)));
+        bot.getShardUtil().getShards().forEach(b -> b.getJda().getPresence().setGame(Game.playing(ctx.rawArgs)));
         ctx.send(Emotes.getSuccess() + " Game set.").queue();
     }
 

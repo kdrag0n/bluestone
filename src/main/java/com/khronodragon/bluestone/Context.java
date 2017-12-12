@@ -39,7 +39,7 @@ public class Context {
         this.args = args;
         this.invoker = invoker;
         this.mention = author.getAsMention();
-        this.rawArgs = message.getRawContent().substring(Math.min(prefix.length() + invoker.length() + 1, prefix.length() + invoker.length())).trim();
+        this.rawArgs = message.getContentRaw().substring(Math.min(prefix.length() + invoker.length() + 1, prefix.length() + invoker.length())).trim();
     }
 
     public static String truncate(String msg) {

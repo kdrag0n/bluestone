@@ -37,24 +37,24 @@ shadowJar {
     zip64 true
 }
 
-def kotlinVersion = '1.1.61'
+def kotlinVersion = '1.2.0'
 
 dependencies {
-    compile 'net.dv8tion:JDA:3.3.1_307'
+    compile 'net.dv8tion:JDA:3.3.1_309'
     compile 'com.sedmelluq:lavaplayer:1.2.45'
     compile 'com.squareup.okhttp3:okhttp:3.9.1'
     compile 'com.google.guava:guava:23.5-jre'
     compile 'org.json:json:20171018'
     compile 'org.reflections:reflections:0.9.11'
     compile 'org.python:jython-standalone:2.7.1'
-    compile 'org.codehaus.groovy:groovy-jsr223:2.6.0-alpha-2'
+    compile 'org.codehaus.groovy:groovy-jsr223:3.0.0-alpha-1'
     compile 'org.apache.commons:commons-lang3:3.7'
     compile 'org.apache.commons:commons-text:1.1'
     compile 'org.apache.logging.log4j:log4j-api:2.10.0'
     compile 'org.apache.logging.log4j:log4j-core:2.10.0'
     compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.10.0'
     compile 'com.sparkjava:spark-core:2.7.1'
-    compile 'com.j2html:j2html:1.2.0'
+    compile 'com.j2html:j2html:1.2.2'
     compile 'io.codearte.jfairy:jfairy:0.5.9'
     compile 'com.j256.ormlite:ormlite-core:5.0'
     compile 'com.j256.ormlite:ormlite-jdbc:5.0'

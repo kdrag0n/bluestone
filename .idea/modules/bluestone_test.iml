@@ -10,7 +10,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="bluestone_main" />
-    <orderEntry type="library" name="Gradle: net.dv8tion:JDA:3.3.1_307" level="project" />
+    <orderEntry type="library" name="Gradle: net.dv8tion:JDA:3.3.1_309" level="project" />
     <orderEntry type="library" name="Gradle: com.sedmelluq:lavaplayer:1.2.45" level="project" />
     <orderEntry type="library" name="Gradle: com.squareup.okhttp3:okhttp:3.9.1" level="project" />
     <orderEntry type="library" name="Gradle: io.codearte.jfairy:jfairy:0.5.9" level="project" />
@@ -23,7 +23,7 @@
     <orderEntry type="library" name="Gradle: com.google.guava:guava:23.5-jre" level="project" />
     <orderEntry type="library" name="Gradle: org.json:json:20171018" level="project" />
     <orderEntry type="library" name="Gradle: org.python:jython-standalone:2.7.1" level="project" />
-    <orderEntry type="library" name="Gradle: org.codehaus.groovy:groovy-jsr223:2.6.0-alpha-2" level="project" />
+    <orderEntry type="library" name="Gradle: org.codehaus.groovy:groovy-jsr223:3.0.0-alpha-1" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-text:1.1" level="project" />
     <orderEntry type="library" name="Gradle: com.kotcrab.remark:remark:1.0.0" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-lang3:3.7" level="project" />
@@ -31,7 +31,7 @@
     <orderEntry type="library" name="Gradle: org.apache.logging.log4j:log4j-core:2.10.0" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.logging.log4j:log4j-api:2.10.0" level="project" />
     <orderEntry type="library" name="Gradle: com.sparkjava:spark-core:2.7.1" level="project" />
-    <orderEntry type="library" name="Gradle: com.j2html:j2html:1.2.0" level="project" />
+    <orderEntry type="library" name="Gradle: com.j2html:j2html:1.2.2" level="project" />
     <orderEntry type="library" name="Gradle: com.j256.ormlite:ormlite-jdbc:5.0" level="project" />
     <orderEntry type="library" name="Gradle: com.j256.ormlite:ormlite-core:5.0" level="project" />
     <orderEntry type="library" name="Gradle: com.h2database:h2:1.4.196" level="project" />
@@ -47,13 +47,13 @@
     <orderEntry type="library" name="Gradle: com.google.re2j:re2j:1.1" level="project" />
     <orderEntry type="library" name="Gradle: org.jsoup:jsoup:1.11.2" level="project" />
     <orderEntry type="library" name="Gradle: org.luaj:luaj-jse:3.0.1" level="project" />
-    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-script-util:1.1.61" level="project" />
-    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-compiler:1.1.61" level="project" />
-    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-script-runtime:1.1.61" level="project" />
-    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-reflect:1.1.61" level="project" />
-    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jre8:1.1.61" level="project" />
-    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jre7:1.1.61" level="project" />
-    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.1.61" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-script-util:1.2.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-compiler:1.2.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-script-runtime:1.2.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-reflect:1.2.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jre8:1.2.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jre7:1.2.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.2.0" level="project" />
     <orderEntry type="library" name="Gradle: com.google.code.findbugs:jsr305:3.0.2" level="project" />
     <orderEntry type="library" name="Gradle: com.sedmelluq:udp-queue:1.0.6" level="project" />
     <orderEntry type="library" name="Gradle: com.sedmelluq:lavaplayer-common:1.0.5" level="project" />
@@ -71,7 +71,7 @@
     <orderEntry type="library" name="Gradle: com.google.j2objc:j2objc-annotations:1.1" level="project" />
     <orderEntry type="library" name="Gradle: org.codehaus.mojo:animal-sniffer-annotations:1.14" level="project" />
     <orderEntry type="library" name="Gradle: org.javassist:javassist:3.21.0-GA" level="project" />
-    <orderEntry type="library" name="Gradle: org.codehaus.groovy:groovy:2.6.0-alpha-2" level="project" />
+    <orderEntry type="library" name="Gradle: org.codehaus.groovy:groovy:3.0.0-alpha-1" level="project" />
     <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-webapp:9.4.6.v20170531" level="project" />
     <orderEntry type="library" name="Gradle: org.eclipse.jetty.websocket:websocket-server:9.4.6.v20170531" level="project" />
     <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-servlet:9.4.6.v20170531" level="project" />
@@ -92,7 +92,7 @@
     <orderEntry type="library" name="Gradle: com.twelvemonkeys.common:common-io:3.3.2" level="project" />
     <orderEntry type="library" name="Gradle: com.twelvemonkeys.common:common-lang:3.3.2" level="project" />
     <orderEntry type="library" name="Gradle: org.jetbrains:annotations:13.0" level="project" />
-    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-daemon-client:1.1.61" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-daemon-client:1.2.0" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.httpcomponents:httpcore:4.4.4" level="project" />
     <orderEntry type="library" name="Gradle: net.loomchild:segment:2.0.0" level="project" />
     <orderEntry type="library" name="Gradle: commons-logging:commons-logging:1.2" level="project" />

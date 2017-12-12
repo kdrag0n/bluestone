@@ -215,19 +215,19 @@ public class ReplCog extends Cog {
         while (true) {
             Message response;
             if (untrusted) {
-                response = waitForRMessage(0, msg -> msg.getRawContent().startsWith(prefix) &&
+                response = waitForRMessage(0, msg -> msg.getContentRaw().startsWith(prefix) &&
                         msg.getAuthor().getIdLong() != ctx.jda.getSelfUser().getIdLong(),
                         e -> e.getUser().getIdLong() == ctx.author.getIdLong() &&
                                 !MiscUtil.getCreationTime(e.getMessageIdLong()).isBefore(startTime), ctx.channel.getIdLong());
             } else {
                 response = bot.waitForMessage(0, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
                         msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
-                        msg.getRawContent().startsWith(prefix));
+                        msg.getContentRaw().startsWith(prefix));
             }
 
             if (untrusted && response.getAuthor().getIdLong() != ctx.author.getIdLong()) {
                 Optional<MessageReaction> rr =
-                        response.getReactions().stream().filter(r -> r.getEmote().getName().equals("🛡")).findFirst();
+                        response.getReactions().stream().filter(r -> r.getReactionEmote().getName().equals("🛡")).findFirst();
                 if (rr.isPresent()) {
                     MessageReaction mr = rr.get();
                     if (!mr.getUsers().complete().stream().anyMatch(u -> u.getIdLong() == ctx.author.getIdLong())) {
@@ -242,7 +242,7 @@ public class ReplCog extends Cog {
             engine.put("message", response);
             engine.put("msg", response);
 
-            String cleaned = cleanupCode(response.getRawContent());
+            String cleaned = cleanupCode(response.getContentRaw());
 
             if (stringExists(cleaned, "quit", "exit", "System.exit()", "System.exit", "System.exit(0)",
                     "exit()", "stop", "stop()", "System.exit();", "stop;", "stop();", "System.exit(0);")) {
