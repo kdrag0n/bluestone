@@ -19,6 +19,7 @@ import com.khronodragon.bluestone.enums.BucketType;
 import com.khronodragon.bluestone.enums.MemberStatus;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.sql.ActivePoll;
+import com.khronodragon.bluestone.sql.ContactBannedUser;
 import com.khronodragon.bluestone.util.*;
 import com.sun.management.OperatingSystemMXBean;
 import gnu.trove.list.TIntList;
@@ -180,6 +181,7 @@ public class UtilityCog extends Cog {
             .collect(Collectors.toList());
 
     private final ScriptEngine calcEngine = new ScriptEngineManager().getEngineByName("lua");
+    private Dao<ContactBannedUser, Long> contactBanDao;
 
     private static<L, R> ImmutablePair<L, R> pair(L l, R r) {
         return ImmutablePair.of(l, r);
@@ -213,6 +215,18 @@ public class UtilityCog extends Cog {
             logger.error("Error evaluating calc.lua for calc command", e);
         } finally {
             IOUtils.closeQuietly(st);
+        }
+
+        try {
+            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), ContactBannedUser.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create contact banned users table!", e);
+        }
+
+        try {
+            contactBanDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), ContactBannedUser.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create contact banned users DAO!", e);
         }
     }
 
@@ -1033,10 +1047,14 @@ public class UtilityCog extends Cog {
     }
 
     @Cooldown(scope = BucketType.USER, delay = 20)
-    @Command(name = "contact", desc = "Contact the bot owner with a message.", usage = "[message]")
-    public void cmdContact(Context ctx) {
+    @Command(name = "contact", desc = "Contact the bot owner with a message.", usage = "[message]",
+            thread = true)
+    public void cmdContact(Context ctx) throws SQLException {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(Emotes.getFailure() + " I need a message!").queue();
+            return;
+        } else if (contactBanDao.queryForId(ctx.author.getIdLong()) != null) {
+            ctx.send(Emotes.getFailure() + " You're not allowed to contact the owner!").queue();
             return;
         }
 
@@ -1070,6 +1088,29 @@ public class UtilityCog extends Cog {
                 .build()).queue();
 
         ctx.send(Emotes.getSuccess() + " Message sent.").queue();
+    }
+
+    @Perm.Owner
+    @Command(name = "contact_ban", desc = "Ban an user from contacting the owner.", usage = "[@mention/user ID]",
+            thread = true)
+    public void cmdContactBan(Context ctx) throws SQLException {
+        long userId;
+        User user;
+
+        if (ctx.message.getMentionedUsers().size() > 0) {
+            user = ctx.message.getMentionedUsers().get(0);
+            userId = user.getIdLong();
+        } else if (Strings.isID(ctx.rawArgs)) {
+            userId = MiscUtil.parseSnowflake(ctx.rawArgs);
+            user = ctx.jda.retrieveUserById(userId).complete();
+        } else {
+            ctx.send(Emotes.getFailure() + " You must @mention a user or provide their ID!").queue();
+            return;
+        }
+
+        contactBanDao.createOrUpdate(new ContactBannedUser(userId));
+        ctx.send(Emotes.getSuccess() + " Successfully banned **" + getTag(user) +
+                "** from contacting the owner.").queue();
     }
 
     @Command(name = "rprofile", desc = "Generate a random person.", aliases = {"rperson"})

@@ -11,7 +11,7 @@ plugins {
     id 'idea'
     id 'application'
     id 'com.github.johnrengelman.shadow' version '2.0.1'
-    id 'com.sedmelluq.jdaction' version '1.0.2'
+//    id 'com.sedmelluq.jdaction' version '1.0.2'
     id 'com.github.ben-manes.versions' version '0.17.0'
 }
 
@@ -34,6 +34,7 @@ repositories {
 shadowJar {
     transform(Log4j2PluginsFileTransformer)
     mergeServiceFiles()
+    zip64 true
 }
 
 def kotlinVersion = '1.1.61'

@@ -4,8 +4,10 @@ import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.annotations.Command;
+import com.khronodragon.bluestone.annotations.DoNotAutoload;
 import com.khronodragon.bluestone.errors.PermissionError;
 
+@DoNotAutoload
 public class NotesCog extends Cog {
     private static final String NO_COMMAND = "🤔 **I need an action!**\n" +
             "The following are valid:\n" +

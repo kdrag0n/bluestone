@@ -4,9 +4,11 @@ import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.annotations.Command;
+import com.khronodragon.bluestone.annotations.DoNotAutoload;
 
 import static com.khronodragon.bluestone.util.Strings.format;
 
+@DoNotAutoload
 public class WebCog extends Cog {
     private boolean active = true;
 

@@ -26,6 +26,9 @@ public class Quote {
     @DatabaseField(canBeNull = false, width = 32, defaultValue = "Someone")
     private String authorName;
 
+    @DatabaseField(canBeNull = false)
+    private long quotedById = 0;
+
     public int getId() {
         return id;
     }
@@ -44,6 +47,14 @@ public class Quote {
 
     public String getAuthorName() {
         return authorName;
+    }
+
+    public long getQuotedById() {
+        return quotedById;
+    }
+
+    public void setQuotedById(long quotedById) {
+        this.quotedById = quotedById;
     }
 
     public Quote() {}

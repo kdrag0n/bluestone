@@ -2,14 +2,13 @@ package com.khronodragon.bluestone.cogs;
 
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
+import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.table.TableUtils;
 import com.jagrosh.jdautilities.menu.pagination.PaginatorBuilder;
-import com.khronodragon.bluestone.Bot;
-import com.khronodragon.bluestone.Cog;
-import com.khronodragon.bluestone.Context;
-import com.khronodragon.bluestone.Emotes;
+import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.sql.Quote;
+import com.khronodragon.bluestone.sql.QuotesBannedMember;
 import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
@@ -39,8 +38,9 @@ public class QuotesCog extends Cog {
             "    \u2022 `count` - see how many quotes there are\n" +
             "    \u2022 `message [message id]` - quote a message by its ID\n" +
             "\n" +
-            "Aliases: [create, new, remove], [del, rm], [rand], [num], [addmsg, madd]";
+            "Aliases: [create, new, remove], [del, rm], [rand], [num], [addmsg, madd, msg]";
     private Dao<Quote, Integer> dao;
+    private Dao<QuotesBannedMember, Long> banDao;
 
     public QuotesCog(Bot bot) {
         super(bot);
@@ -55,6 +55,18 @@ public class QuotesCog extends Cog {
             dao = DaoManager.createDao(bot.getShardUtil().getDatabase(), Quote.class);
         } catch (SQLException e) {
             logger.warn("Failed to create quote DAO!", e);
+        }
+
+        try {
+            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), QuotesBannedMember.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create quotes banned members table!", e);
+        }
+
+        try {
+            banDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), QuotesBannedMember.class);
+        } catch (SQLException e) {
+            logger.warn("Failed to create quotes banned members DAO!", e);
         }
     }
 
@@ -86,10 +98,12 @@ public class QuotesCog extends Cog {
             quoteCmdRandom(ctx);
         else if (invoked.equals("count") || invoked.equals("num"))
             quoteCmdCount(ctx);
-        else if (invoked.equals("message") || invoked.equals("addmsg") || invoked.equals("madd"))
+        else if (invoked.equals("message") || invoked.equals("addmsg") || invoked.equals("madd") || invoked.equals("msg"))
             quoteCmdAddMessage(ctx);
         else if (Strings.is4Digits(invoked))
             quoteShowId(ctx, Integer.parseInt(invoked));
+        else if (Strings.isID(invoked))
+            quoteCmdAddMessage(ctx);
         else
             ctx.send(NO_COMMAND).queue();
     }
@@ -98,7 +112,11 @@ public class QuotesCog extends Cog {
         if (ctx.args.size() < 2) {
             ctx.send(Emotes.getFailure() + " I need text to quote!").queue();
             return;
+        } else if (banDao.queryForId(ctx.author.getIdLong()) != null) {
+            ctx.send(Emotes.getFailure() + " You're not allowed to wrote quotes!").queue();
+            return;
         }
+
         String text = Strings.renderMessage(ctx.message, ctx.guild, ctx.rawArgs.substring(ctx.args.get(0).length()).trim()
                 .replace('\n', ' '));
 
@@ -112,8 +130,9 @@ public class QuotesCog extends Cog {
                 .eq("authorId", ctx.author.getIdLong())
                 .countOf();
 
-        if (quotes >= 35 && ctx.author.getIdLong() != bot.owner.getIdLong()) {
-            ctx.send(Emotes.getFailure() + " You already have 35 quotes!").queue();
+        if (quotes >= 25 && !Permissions.check(ctx, Permissions.BOT_ADMIN) &&
+                ctx.author.getIdLong() != 219550353518100480L) {
+            ctx.send(Emotes.getFailure() + " You already have 25 quotes!").queue();
             return;
         }
 
@@ -142,8 +161,9 @@ public class QuotesCog extends Cog {
             ctx.send(Emotes.getFailure() + " No such quote!").queue();
             return;
         } else if (quote.getAuthorId() != ctx.author.getIdLong() &&
-                ctx.author.getIdLong() != bot.owner.getIdLong()) {
-            ctx.send(Emotes.getFailure() + " You didn't write that quote!").queue();
+                ctx.author.getIdLong() != bot.owner.getIdLong() &&
+                ctx.author.getIdLong() != quote.getQuotedById()) {
+            ctx.send(Emotes.getFailure() + " You didn't write or quote that quote!").queue();
             return;
         }
 
@@ -244,6 +264,9 @@ public class QuotesCog extends Cog {
         if (ctx.args.size() < 2 || !Strings.isID(ctx.args.get(1))) {
             ctx.send(Emotes.getFailure() + " I need the ID of a message to quote!").queue();
             return;
+        } else if (banDao.queryForId(ctx.author.getIdLong()) != null) {
+            ctx.send(Emotes.getFailure() + " You're not allowed to quote anyone!").queue();
+            return;
         }
 
         Message msg;
@@ -272,16 +295,46 @@ public class QuotesCog extends Cog {
                 .eq("authorId", msg.getAuthor().getIdLong())
                 .countOf();
 
-        if (quotes >= 35 && ctx.author.getIdLong() != bot.owner.getIdLong()) {
-            ctx.send(Emotes.getFailure() + " The author of that message already has 35 quotes!").queue();
+        if (quotes >= 25 && !Permissions.check(ctx, Permissions.BOT_ADMIN) &&
+                msg.getAuthor().getIdLong() != 219550353518100480L) {
+            ctx.send(Emotes.getFailure() + " The author of that message already has 25 quotes, and you aren't an admin!").queue();
             return;
         }
 
         Quote quote = new Quote(text,
                 msg.getAuthor().getIdLong(), msg.getAuthor().getName());
+        quote.setQuotedById(ctx.author.getIdLong());
         dao.create(quote);
 
         ctx.send(Emotes.getSuccess() + " Quote added with ID `" + quote.getId() + "`.").queue();
+    }
+
+    @Perm.Owner
+    @Command(name = "quote_ban", desc = "Ban an user from adding quotes.", usage = "[@mention/user ID]",
+            thread = true, aliases = {"quotes_ban"})
+    public void cmdQuoteBan(Context ctx) throws SQLException {
+        long userId;
+        User user;
+
+        if (ctx.message.getMentionedUsers().size() > 0) {
+            user = ctx.message.getMentionedUsers().get(0);
+            userId = user.getIdLong();
+        } else if (Strings.isID(ctx.rawArgs)) {
+            userId = MiscUtil.parseSnowflake(ctx.rawArgs);
+            user = ctx.jda.retrieveUserById(userId).complete();
+        } else {
+            ctx.send(Emotes.getFailure() + " You must @mention a user or provide their ID!").queue();
+            return;
+        }
+
+        banDao.createOrUpdate(new QuotesBannedMember(userId));
+        DeleteBuilder builder = dao.deleteBuilder();
+        builder.where()
+                .eq("authorId", userId);
+        int delN = builder.delete();
+        
+        ctx.send(Emotes.getSuccess() + " Successfully banned **" + getTag(user) +
+                "** from adding quotes. All of their **" + delN + "** quotes have been deleted.").queue();
     }
 
     private void quoteShowId(Context ctx, int id) throws SQLException {
