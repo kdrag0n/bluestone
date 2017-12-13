@@ -195,7 +195,6 @@ public class StarboardCog extends Cog {
 
     @EventHandler(threaded = true)
     public void onReactionAdd(GuildMessageReactionAddEvent event) throws SQLException, ExecutionException {
-        logger.info("emote", event.getReactionEmote().getName());
         if (!event.getReactionEmote().getName().equals("⭐")) return;
         if (event.getUser().isBot()) return;
 
