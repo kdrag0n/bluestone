@@ -35,7 +35,7 @@ shadowJar {
     transform(Log4j2PluginsFileTransformer)
     mergeServiceFiles()
     zip64 true
-    mainClassName 'com.khronodragon.bluestone.Start'
+    //mainClassName 'com.khronodragon.bluestone.Start'
 }
 
 def kotlinVersion = '1.2.0'
