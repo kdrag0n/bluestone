@@ -11,6 +11,7 @@ import com.khronodragon.bluestone.handlers.RejectedExecHandlerImpl;
 import com.khronodragon.bluestone.sql.BotAdmin;
 import com.khronodragon.bluestone.sql.GuildPrefix;
 import com.khronodragon.bluestone.util.ClassUtilities;
+import com.khronodragon.bluestone.util.RandomSelect;
 import com.khronodragon.bluestone.util.Strings;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
@@ -59,6 +60,10 @@ import java.util.function.Predicate;
 import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 import static com.khronodragon.bluestone.util.Strings.str;
 import static com.khronodragon.bluestone.util.Strings.format;
+import static net.dv8tion.jda.core.entities.Game.playing;
+import static net.dv8tion.jda.core.entities.Game.listening;
+import static net.dv8tion.jda.core.entities.Game.streaming;
+import static net.dv8tion.jda.core.entities.Game.watching;
 
 public class Bot extends ListenerAdapter implements ClassUtilities {
     private static final Logger defLog = LogManager.getLogger(Bot.class);
@@ -291,47 +296,60 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             Emotes.setHasParadise(true);
 
         Runnable task = () -> {
-            String statusLine;
-            switch (ThreadLocalRandom.current().nextInt(1, 12)) {
-                case 1:
-                    statusLine = format("with {0} users", shardUtil.getUserCount());
-                    break;
-                case 2:
-                    statusLine = format("in {0} channels", shardUtil.getChannelCount());
-                    break;
-                case 3:
-                    statusLine = format("in {0} servers", shardUtil.getGuildCount());
-                    break;
-                case 4:
-                    statusLine = format("in {0} guilds", shardUtil.getGuildCount());
-                    break;
-                case 5:
-                    statusLine = format("from shard {0} of {1}", getShardNum(), getShardTotal());
-                    break;
-                case 6:
-                    statusLine = "with my buddies";
-                    break;
-                case 7:
-                    statusLine = "with bits and bytes";
-                    break;
-                case 8:
-                    statusLine = "World Domination";
-                    break;
-                case 9:
-                    statusLine = "with you";
-                    break;
-                case 10:
-                    statusLine = "with potatoes";
-                    break;
-                case 11:
-                    statusLine = "something";
-                    break;
-                default:
-                    statusLine = "severe ERROR!";
-                    break;
-            }
+            Game status = new RandomSelect<Game>(50)
+                    .add(() -> playing(format("with {0} users", shardUtil.getUserCount())))
+                    .add(() -> playing(format("in {0} channels", shardUtil.getChannelCount())))
+                    .add(() -> playing(format("in {0} servers", shardUtil.getGuildCount())))
+                    .add(() -> playing(format("in {0} guilds", shardUtil.getGuildCount())))
+                    .add(() -> playing(format("from shard {0} of {1}", getShardNum(), getShardTotal())))
+                    .add(playing("with my buddies"))
+                    .add(playing("with bits and bytes"))
+                    .add(playing("World Domination"))
+                    .add(playing("with you"))
+                    .add(playing("with potatoes"))
+                    .add(playing("something"))
+                    .add(streaming("data", ""))
+                    .add(streaming("music", "https://www.youtube.com/channel/UC-9-kyTW8ZkZNDHQJ6FgpwQ"))
+                    .add(streaming("your tunes", "https://www.youtube.com/watch?v=zQJh0MWvccs"))
+                    .add(listening("to you"))
+                    .add(watching("darkness"))
+                    .add(watching("streams"))
+                    .add(streaming("your face", "https://www.youtube.com/watch?v=IUjZtoCrpyA"))
+                    .add(listening("alone"))
+                    .add(streaming("Alone", "https://www.youtube.com/watch?v=YnwsMEabmSo"))
+                    .add(streaming("bits and bytes", "https://www.youtube.com/watch?v=N3ZMvqISfvY"))
+                    .add(listening("to Rick Astley"))
+                    .add(streaming("only the very best", "https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
+                    .add(listening("to those potatoes"))
+                    .add(playing("with my fellow shards"))
+                    .add(listening("to the cries of my shards"))
+                    .add(listening("as the sun goes down"))
+                    .add(streaming("Monstercat", "https://www.twitch.tv/monstercat"))
+                    .add(watching("dem videos"))
+                    .add(watching("you in your sleep"))
+                    .add(watching("over you as I sleep"))
+                    .add(watching("the movement of electrons"))
+                    .add(playing("with some protons"))
+                    .add(listening("to the poor electrons"))
+                    .add(listening("to the poor neutrons"))
+                    .add(listening("to trigger-happy players"))
+                    .add(playing("Discord Hacker v39.2"))
+                    .add(listening("to my favorites"))
+                    .add(watching("the chosen ones"))
+                    .add(watching("stars combust"))
+                    .add(watching("your demise"))
+                    .add(streaming("the supernova", "https://www.youtube.com/watch?v=5WXyCJ1w3Ks"))
+                    .add(watching("aliens die"))
+                    .add(listening("something"))
+                    .add(streaming("something", "https://www.youtube.com/watch?v=FM7MFYoylVs"))
+                    .add(watching("I am Cow"))
+                    .add(watching("you play"))
+                    .add(watching("for raids"))
+                    .add(playing("buffing before the raid"))
+                    .add(streaming("this sick action", "https://www.youtube.com/watch?v=tD6KJ7QtQH8"))
+                    .select();
 
-            jda.getPresence().setGame(Game.playing(statusLine));
+            jda.getPresence().setGame(status);
         };
 
         ScheduledFuture future = scheduledExecutor.scheduleAtFixedRate(task, 10, 120, TimeUnit.SECONDS);

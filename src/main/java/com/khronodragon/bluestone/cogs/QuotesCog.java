@@ -23,6 +23,7 @@ import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 
@@ -79,7 +80,7 @@ public class QuotesCog extends Cog {
     }
 
     @Command(name = "quote", desc = "Add, create, or view a quote!", thread = true,
-            usage = "[action / id] {args?...}", aliases = {"quotes"})
+            usage = "[action / id] {args?...}", aliases = {"quotes", "q"})
     public void cmdQuote(Context ctx) throws SQLException {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(NO_COMMAND).queue();
@@ -102,9 +103,10 @@ public class QuotesCog extends Cog {
             quoteCmdAddMessage(ctx);
         else if (Strings.is4Digits(invoked))
             quoteShowId(ctx, Integer.parseInt(invoked));
-        else if (Strings.isID(invoked))
+        else if (Strings.isID(invoked)) {
+            ctx.args.add(0, null); // null for memory saving, it doesnt use it
             quoteCmdAddMessage(ctx);
-        else
+        } else
             ctx.send(NO_COMMAND).queue();
     }
 
@@ -113,7 +115,7 @@ public class QuotesCog extends Cog {
             ctx.send(Emotes.getFailure() + " I need text to quote!").queue();
             return;
         } else if (banDao.queryForId(ctx.author.getIdLong()) != null) {
-            ctx.send(Emotes.getFailure() + " You're not allowed to wrote quotes!").queue();
+            ctx.send(Emotes.getFailure() + " You're not allowed to write quotes!").queue();
             return;
         }
 
@@ -311,7 +313,7 @@ public class QuotesCog extends Cog {
 
     @Perm.Owner
     @Command(name = "quote_ban", desc = "Ban an user from adding quotes.", usage = "[@mention/user ID]",
-            thread = true, aliases = {"quotes_ban"})
+            thread = true, aliases = {"quotes_ban", "qb"})
     public void cmdQuoteBan(Context ctx) throws SQLException {
         long userId;
         User user;
@@ -327,14 +329,63 @@ public class QuotesCog extends Cog {
             return;
         }
 
-        banDao.createOrUpdate(new QuotesBannedMember(userId));
+        int newN = banDao.create(new QuotesBannedMember(userId));
         DeleteBuilder builder = dao.deleteBuilder();
         builder.where()
                 .eq("authorId", userId);
         int delN = builder.delete();
 
-        ctx.send(Emotes.getSuccess() + " Successfully banned **" + getTag(user) +
-                "** from adding quotes. All of their **" + delN + "** quotes have been deleted.").queue();
+        if (newN > 0) {
+            ctx.send(Emotes.getSuccess() + " Successfully banned **" + getTag(user) +
+                    "** from adding quotes. All of their **" + delN + "** quotes have been deleted.").queue();
+        } else {
+            ctx.send(Emotes.getFailure() + " **" + getTag(user) + "** was already banned from adding quotes.").queue();
+        }
+    }
+
+    @Perm.Owner
+    @Command(name = "quote_ban_list", desc = "List users banned from adding quotes.", thread = true,
+            aliases = {"quotes_ban_list", "qb_list"})
+    public void cmdQuoteBanList(Context ctx) throws SQLException {
+        String rendered =
+                banDao.queryForAll().stream().map(q -> "**" +
+                        getTag(ctx.jda.retrieveUserById(q.id).complete()) +
+                "** (`" + q.id + "`)").collect(Collectors.joining("\n    \u2022 "));
+
+        if (rendered.length() < 1) {
+            ctx.send(Emotes.getSuccess() + " Nobody is banned from adding quotes.").queue();
+        } else {
+            ctx.send("The following users are banned from adding quotes:\n    \u2022 " + rendered).queue();
+        }
+    }
+
+    @Perm.Owner
+    @Command(name = "quote_ban_remove", desc = "Allow a banned user from adding quotes.", usage = "[@mention/user ID]",
+            thread = true, aliases = {"quotes_ban_remove", "qb_remove", "qb_rm", "qb_del", "quote_ban_rm",
+            "quote_ban_del", "quotes_ban_rm", "quotes_ban_del"})
+    public void cmdQuoteBanRemove(Context ctx) throws SQLException {
+        long userId;
+        User user;
+
+        if (ctx.message.getMentionedUsers().size() > 0) {
+            user = ctx.message.getMentionedUsers().get(0);
+            userId = user.getIdLong();
+        } else if (Strings.isID(ctx.rawArgs)) {
+            userId = MiscUtil.parseSnowflake(ctx.rawArgs);
+            user = ctx.jda.retrieveUserById(userId).complete();
+        } else {
+            ctx.send(Emotes.getFailure() + " You must @mention a user or provide their ID!").queue();
+            return;
+        }
+
+        int delN = banDao.deleteById(userId);
+
+        if (delN > 0) {
+            ctx.send(Emotes.getSuccess() + " Successfully unbanned **" + getTag(user) +
+                    "** from adding quotes.").queue();
+        } else {
+            ctx.send(Emotes.getFailure() + " **" + getTag(user) + "** isn't banned from adding quotes.").queue();
+        }
     }
 
     private void quoteShowId(Context ctx, int id) throws SQLException {

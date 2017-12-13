@@ -146,7 +146,8 @@ public class GameDealCog extends Cog {
                 if (steamDeals != null)
                     dealsNow.addAll(steamDeals);
 
-                List<Deal> humbleDeals = checkHumbleBundle();
+                List<Deal> humbleDeals = new ArrayList<>(0);//checkHumbleBundle();
+                // TODO: update humble bundle deal checker for Store and new home layout
                 if (humbleDeals != null)
                     dealsNow.addAll(humbleDeals);
 

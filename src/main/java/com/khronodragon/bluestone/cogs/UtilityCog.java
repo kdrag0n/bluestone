@@ -1092,7 +1092,7 @@ public class UtilityCog extends Cog {
 
     @Perm.Owner
     @Command(name = "contact_ban", desc = "Ban an user from contacting the owner.", usage = "[@mention/user ID]",
-            thread = true)
+            thread = true, aliases = "cb")
     public void cmdContactBan(Context ctx) throws SQLException {
         long userId;
         User user;
@@ -1111,6 +1111,51 @@ public class UtilityCog extends Cog {
         contactBanDao.createOrUpdate(new ContactBannedUser(userId));
         ctx.send(Emotes.getSuccess() + " Successfully banned **" + getTag(user) +
                 "** from contacting the owner.").queue();
+    }
+
+    @Perm.Owner
+    @Command(name = "contact_ban_list", desc = "List users banned from contacting the owner.", thread = true,
+            aliases = {"cb_list"})
+    public void cmdContactBanList(Context ctx) throws SQLException {
+        String rendered =
+                contactBanDao.queryForAll().stream().map(q -> "**" +
+                        getTag(ctx.jda.retrieveUserById(q.id).complete()) +
+                        "** (`" + q.id + "`)").collect(Collectors.joining("\n    \u2022 "));
+
+        if (rendered.length() < 1) {
+            ctx.send(Emotes.getSuccess() + " Nobody is banned from contacting the owner.").queue();
+        } else {
+            ctx.send("The following users are banned from contacting the owner:\n    \u2022 " + rendered).queue();
+        }
+    }
+
+    @Perm.Owner
+    @Command(name = "contact_ban_remove", desc = "Allow a banned user from adding quotes.", usage = "[@mention/user ID]",
+            thread = true, aliases = {"cb_remove", "cb_del", "cb_rm"})
+    public void cmdContactBanRemove(Context ctx) throws SQLException {
+        long userId;
+        User user;
+
+        if (ctx.message.getMentionedUsers().size() > 0) {
+            user = ctx.message.getMentionedUsers().get(0);
+            userId = user.getIdLong();
+        } else if (Strings.isID(ctx.rawArgs)) {
+            userId = MiscUtil.parseSnowflake(ctx.rawArgs);
+            user = ctx.jda.retrieveUserById(userId).complete();
+        } else {
+            ctx.send(Emotes.getFailure() + " You must @mention a user or provide their ID!").queue();
+            return;
+        }
+
+        int delN = contactBanDao.deleteById(userId);
+
+        if (delN > 0) {
+            ctx.send(Emotes.getSuccess() + " Successfully unbanned **" + getTag(user) +
+                    "** from contacting the owner.").queue();
+        } else {
+            ctx.send(Emotes.getFailure() + " **" + getTag(user) + "** isn't banned from contacting the owner.")
+                    .queue();
+        }
     }
 
     @Command(name = "rprofile", desc = "Generate a random person.", aliases = {"rperson"})

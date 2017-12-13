@@ -164,12 +164,17 @@ public class StarboardCog extends Cog {
                 channelMention + " | Message ID: " + messageId;
     }
 
-    private int getStarCount(GenericGuildMessageReactionEvent event) {
+    private int getStarCount(GenericGuildMessageReactionEvent event, int threshold) {
         List<User> users = event.getReaction().getUsers().complete();
+        if (users.size() < threshold) return 0; // fast path
         int c = 0;
 
+        long messageAuthor = messageCache.getUnchecked(
+        Pair.of(event.getChannel().getIdLong(), event.getMessageIdLong()))
+                .getAuthor().getIdLong();
+
         for (int i = 0; i < users.size(); i++) {
-            if (users.get(i).getIdLong() != event.getUser().getIdLong())
+            if (users.get(i).getIdLong() != messageAuthor)
                 c++;
         }
 
@@ -190,6 +195,7 @@ public class StarboardCog extends Cog {
 
     @EventHandler(threaded = true)
     public void onReactionAdd(GuildMessageReactionAddEvent event) throws SQLException, ExecutionException {
+        logger.info("emote", event.getReactionEmote().getName());
         if (!event.getReactionEmote().getName().equals("⭐")) return;
         if (event.getUser().isBot()) return;
 
@@ -198,8 +204,11 @@ public class StarboardCog extends Cog {
         if (starboard.isLocked()) return;
         if (event.getChannel().getIdLong() == starboard.getChannelId()) return;
 
-        int stars = getStarCount(event);
+        logger.info("getting stars");
+        int stars = getStarCount(event, starboard.getStarThreshold());
+        logger.info("got stars, check thres {} have stars {}", starboard.getStarThreshold(), stars);
         if (stars < starboard.getStarThreshold()) return;
+        logger.info("check passed");
 
         String renderedText = renderText(stars, event.getChannel().getAsMention(), event.getMessageId());
 
@@ -282,10 +291,9 @@ public class StarboardCog extends Cog {
         if (!event.getReactionEmote().getName().equals("⭐"))
             return;
 
-        int stars = getStarCount(event);
-
         Starboard starboard = dao.queryForId(event.getGuild().getIdLong());
         if (starboard == null) return;
+        int stars = getStarCount(event, starboard.getStarThreshold());
         if (stars < starboard.getStarThreshold())
             messageDelete(event.getMessageIdLong());
 
