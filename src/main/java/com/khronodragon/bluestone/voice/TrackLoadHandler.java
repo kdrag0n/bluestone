@@ -38,7 +38,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
         this.state = state;
         this.term = term;
         this.settings = settings;
-        this.canTalk = ((TextChannel) ctx).canTalk();
+        this.canTalk = ((TextChannel) ctx.channel).canTalk();
         this.canReact = ctx.guild.getSelfMember()
                 .hasPermission((TextChannel) ctx.channel, Permission.MESSAGE_ADD_REACTION);
         this.isPatron = isPatron;
