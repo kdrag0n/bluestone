@@ -204,11 +204,8 @@ public class StarboardCog extends Cog {
         if (starboard.isLocked()) return;
         if (event.getChannel().getIdLong() == starboard.getChannelId()) return;
 
-        logger.info("getting stars");
         int stars = getStarCount(event, starboard.getStarThreshold());
-        logger.info("got stars, check thres {} have stars {}", starboard.getStarThreshold(), stars);
         if (stars < starboard.getStarThreshold()) return;
-        logger.info("check passed");
 
         String renderedText = renderText(stars, event.getChannel().getAsMention(), event.getMessageId());
 
