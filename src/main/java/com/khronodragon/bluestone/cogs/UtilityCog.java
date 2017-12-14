@@ -725,7 +725,7 @@ public class UtilityCog extends Cog {
                         0, 2);
 
                 topText = results[0];
-                bottomText = results[1];
+                bottomText = results.length > 1 ? results[1] : "";
             }
         }
 
