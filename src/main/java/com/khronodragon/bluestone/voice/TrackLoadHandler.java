@@ -13,6 +13,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.Channel;
 import net.dv8tion.jda.core.entities.TextChannel;
 
 import java.util.List;
@@ -93,6 +94,12 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
     }
 
     private void searchResults(List<AudioTrack> tracks) {
+        if (!ctx.member.hasPermission((Channel) ctx.channel, Permission.MESSAGE_EMBED_LINKS)) {
+            ctx.send("⚠ Selecting first result because I don't have the **Embed Links** permission.\nTo avoid this message in the future, give me **Embed Links** for result selection, or switch to no-selection with `" + ctx.prefix + "play_first_result`.").queue();
+            trackLoaded(tracks.get(0));
+            return;
+        }
+
         ctx.send("⌛ Pick a search result.").queue(msg -> {
             OrderedMenuBuilder builder = new OrderedMenuBuilder()
                     .allowTextInput(true)
