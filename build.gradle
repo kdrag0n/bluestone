@@ -38,10 +38,10 @@ shadowJar {
     //mainClassName 'com.khronodragon.bluestone.Start'
 }
 
-def kotlinVersion = '1.2.0'
+def kotlinVersion = '1.2.10'
 
 dependencies {
-    compile 'net.dv8tion:JDA:3.3.1_309'
+    compile 'net.dv8tion:JDA:3.3.1_313'
     compile 'com.sedmelluq:lavaplayer:1.2.45'
     compile 'com.squareup.okhttp3:okhttp:3.9.1'
     compile 'com.google.guava:guava:23.5-jre'
@@ -50,7 +50,7 @@ dependencies {
     compile 'org.python:jython-standalone:2.7.1'
     compile 'org.codehaus.groovy:groovy-jsr223:3.0.0-alpha-1'
     compile 'org.apache.commons:commons-lang3:3.7'
-    compile 'org.apache.commons:commons-text:1.1'
+    compile 'org.apache.commons:commons-text:1.2'
     compile 'org.apache.logging.log4j:log4j-api:2.10.0'
     compile 'org.apache.logging.log4j:log4j-core:2.10.0'
     compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.10.0'
