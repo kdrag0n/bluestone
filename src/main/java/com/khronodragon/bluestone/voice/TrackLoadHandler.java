@@ -98,7 +98,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
                     .allowTextInput(true)
                     .useCancelButton(true)
                     .useNumbers()
-                    .setAction(i -> {
+                    .setSelection((cmsg, i) -> {
                         AudioTrack track;
                         try {
                             track = tracks.get(i - 1);
@@ -110,7 +110,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
                         trackLoaded(track);
                     })
                     .setText("⌛ Pick a search result.")
-                    .setCancel(() -> msg.delete().queue())
+                    .setCancel(cmsg -> cmsg.delete().queue())
                     .setUsers(ctx.author)
                     .setEventWaiter(ctx.bot.getEventWaiter())
                     .setTimeout(20, TimeUnit.SECONDS);
