@@ -533,7 +533,7 @@ public class ModerationCog extends Cog {
 
     @Perm.ManageRoles
     @Command(name = "autorole", desc = "Manage autoroles in this server.", guildOnly = true,
-            usage = "[action] {role}", aliases = {"autoroles"}, thread = true)
+            usage = "[action] {role}", aliases = {"autoroles", "ar"}, thread = true)
     public void cmdAutorole(Context ctx) throws SQLException {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(NO_COMMAND).queue();
