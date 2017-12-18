@@ -195,7 +195,7 @@ public class OwnerCog extends Cog {
 
         Object result;
         try {
-            result = evalEngine.eval(ReplCog.GROOVY_PRE_INJECT + ReplCog.cleanupCode(ctx.rawArgs));
+            result = evalEngine.eval(ReplCog.GROOVY_PRE_INJECT + ReplCog.cleanUpCode(ctx.rawArgs));
         } catch (ScriptException e) {
             result = e.getCause();
             if (result instanceof ScriptException) {

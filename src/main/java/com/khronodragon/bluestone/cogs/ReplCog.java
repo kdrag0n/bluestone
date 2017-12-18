@@ -106,7 +106,7 @@ public class ReplCog extends Cog {
             usage = "[language] {flags}", thread=true)
     public void cmdRepl(Context ctx) throws ScriptException {
         if (ctx.args.size() < 1) {
-            ctx.send(Emotes.getFailure() + " I need a language, like `scala` or `js`!").queue();
+            ctx.send(Emotes.getFailure() + " I need a valid language!").queue();
             return;
         }
 
@@ -117,7 +117,7 @@ public class ReplCog extends Cog {
             untrusted = true;
 
             if (ctx.args.size() < 2) {
-                ctx.send(Emotes.getFailure() + " I need a language, like `scala` or `js`!").queue();
+                ctx.send(Emotes.getFailure() + " I need a valid language!").queue();
                 return;
             }
 
@@ -155,7 +155,7 @@ public class ReplCog extends Cog {
         }
 
         if (replSessions.contains(ctx.channel.getIdLong())) {
-            ctx.send(Emotes.getFailure() + "REPL is already active in this channel. Exit it with `quit`.").queue();
+            ctx.send(Emotes.getFailure() + "REPL is already active in this channel.").queue();
             return;
         }
 
@@ -217,8 +217,8 @@ public class ReplCog extends Cog {
             ctx.send("⚠ Engine post-init failed.\n```java\n" + Bot.renderStackTrace(e) + "```").queue();
         }
 
-        ctx.send("REPL started. Untrusted mode (`untrusted` flag) is **" + (untrusted ? "on" : "off") +
-                "**. Prefix is " + prefix).queue();
+        ctx.send(Emotes.getSuccess() + "**REPL started" + (untrusted ? " in untrusted mode" : "") +
+                ".** Prefix is " + prefix).queue();
         while (true) {
             Message response;
             if (untrusted) {

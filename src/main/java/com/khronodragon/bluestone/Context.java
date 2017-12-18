@@ -58,10 +58,15 @@ public class Context {
         }
     }
 
+    public static String filterMessage(String msg) {
+        return truncate(StringUtils.replace(StringUtils.replace(msg, "@everyone", "@\u200beveryone")
+                , "@here", "@\u200bhere"));
+    }
+
     @CheckReturnValue
     public RestAction<Message> send(String msg) {
         msg = truncate(StringUtils.replace(StringUtils.replace(msg, "@everyone", "@\u200beveryone")
-                , "@here", "@\u200bhere"));
+                , "@here", "@\u200bhere")); // fully inline filter here for performance
 
         return channel.sendMessage(msg);
     }
