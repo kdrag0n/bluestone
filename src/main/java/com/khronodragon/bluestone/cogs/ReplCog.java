@@ -3,6 +3,7 @@ package com.khronodragon.bluestone.cogs;
 import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.handlers.RMessageWaitListener;
+import com.khronodragon.bluestone.util.Switch;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
@@ -95,7 +96,7 @@ public class ReplCog extends Cog {
         return "A multilingual REPL, in Discord!";
     }
 
-    public static String cleanupCode(String code) {
+    public static String cleanUpCode(String code) {
         String stage1 = CODE_TYPE_PATTERN.matcher(code).replaceFirst("");
         return StringUtils.stripEnd(StringUtils.stripStart(stage1, "`"), "`");
     }
@@ -105,7 +106,7 @@ public class ReplCog extends Cog {
             usage = "[language] {flags}", thread=true)
     public void cmdRepl(Context ctx) throws ScriptException {
         if (ctx.args.size() < 1) {
-            ctx.send("You need to specify a language, like `scala` or `js`!").queue();
+            ctx.send(Emotes.getFailure() + " I need a language, like `scala` or `js`!").queue();
             return;
         }
 
@@ -116,7 +117,7 @@ public class ReplCog extends Cog {
             untrusted = true;
 
             if (ctx.args.size() < 2) {
-                ctx.send("You need to specify a language, like `scala` or `js`!").queue();
+                ctx.send(Emotes.getFailure() + " I need a language, like `scala` or `js`!").queue();
                 return;
             }
 
@@ -124,6 +125,7 @@ public class ReplCog extends Cog {
         }
 
         ScriptEngineManager man = new ScriptEngineManager();
+        ScriptEngine engine;
 
         if (language.equalsIgnoreCase("list")) {
             List<ScriptEngineFactory> factories = man.getEngineFactories();
@@ -136,45 +138,27 @@ public class ReplCog extends Cog {
 
             ctx.send("List of available languages:\n    \u2022 " + StringUtils.join(langs, "\n    \u2022 ")).queue();
             return;
-        }
-
-        boolean isJavascript = language.equalsIgnoreCase("nashorn") ||
+        } else if (language.equalsIgnoreCase("nashorn") ||
                 language.equalsIgnoreCase("js") ||
-                language.equalsIgnoreCase("javascript");
-
-        ScriptEngine engine;
-        if (isJavascript) {
+                language.equalsIgnoreCase("javascript")) {
             engine = new NashornScriptEngineFactory().getScriptEngine(NASHORN_ARGS);
-            StringBuilder importsObj = new StringBuilder("const imports=new JavaImporter(null");
-
-            for (String stmt: StringUtils.split(GROOVY_PRE_INJECT, '\n')) {
-                String pkg = StringUtils.split(stmt, ' ')[1];
-                pkg = pkg.substring(0, pkg.length() - 2);
-
-                importsObj.append(",Packages.")
-                        .append(pkg);
-            }
-
-            importsObj.append(')');
-            String exec = importsObj.toString();
-
-            engine.eval(exec + ";function loadShims(){load('https://raw.githubusercontent.com/es-shims/es5-shim/master/es5-shim.min.js');load('https://raw.githubusercontent.com/paulmillr/es6-shim/master/es6-shim.min.js');}");
         } else if (language.equalsIgnoreCase("kotlin") || language.equalsIgnoreCase("kt") ||
                 language.equalsIgnoreCase("kts")) {
-            engine = man.getEngineByExtension("kts");
+            engine = man.getEngineByExtension("kts"); // hacky workaround for Kotlin JSR-223 being ech
         } else {
             engine = man.getEngineByName(language.toLowerCase());
 
             if (engine == null) {
-                ctx.send(Emotes.getFailure() + " Invalid REPL language!").queue();
+                ctx.send(Emotes.getFailure() + " No such REPL language!").queue();
                 return;
             }
         }
 
         if (replSessions.contains(ctx.channel.getIdLong())) {
-            ctx.send("Already running a REPL session in this channel. Exit it with `quit`.").queue();
+            ctx.send(Emotes.getFailure() + "REPL is already active in this channel. Exit it with `quit`.").queue();
             return;
         }
+
         replSessions.add(ctx.channel.getIdLong());
         OffsetDateTime startTime = OffsetDateTime.now();
 
@@ -193,25 +177,48 @@ public class ReplCog extends Cog {
         engine.put("startTime", startTime);
         engine.put("engine", engine);
 
+        // ScriptEngine post-init
         try {
-            if (engine instanceof GroovyScriptEngineImpl) {
-                engine.eval("def print = { Object... args -> ctx.send(Arrays.stream(args).map({ it.toString() }).collect(Collectors.joining(' '))).queue() }");
-            } else if (engine instanceof PyScriptEngine) {
-                engine.put("imports", PYTHON_IMPORTS);
-                engine.eval("def print(*args): ctx.send(map(str, args).join(' ')).queue()");
-            } else if (engine instanceof NashornScriptEngine) {
-                engine.eval("function print() { ctx.send.apply(ctx, arguments.join(' ')).queue() }; var console = {log: print};");
-            } else if (engine instanceof LuaScriptEngine) {
-                engine.eval("function print(...) ctx.send(string.join(' ', ...)).queue() end");
-                engine.put("__dirsep", System.getProperty("file.separator"));
-                engine.eval("debug = debug or {}; package = package or {}; package.config = package.config or (__dirsep .. '\\n;\\n?\\n!\\n-'); require 'assets.essentials'; require 'assets.cron'; require 'assets.middleclass'; require 'assets.stateful'; require 'assets.inspect'; require 'assets.repl_base'");
-            }
-        } catch (ScriptException|LuaError e) {
+            new Switch<Class<? extends ScriptEngine>>(engine.getClass())
+                    .byInstance()
+                    .match(GroovyScriptEngineImpl.class, () -> engine.eval(
+                            "def print = { Object... args -> ctx.send(Arrays.stream(args).map({ it.toString() }).collect(Collectors.joining(' '))).queue() }"
+                    ))
+                    .match(PyScriptEngine.class, () -> {
+                        engine.put("imports", PYTHON_IMPORTS);
+                        engine.eval("def print(*args): ctx.send(map(str, args).join(' ')).queue()");
+                    })
+                    .match(NashornScriptEngine.class, () -> {
+                        // imports
+                        StringBuilder importsObj = new StringBuilder("const imports=new JavaImporter(null");
+
+                        for (String stmt : StringUtils.split(GROOVY_PRE_INJECT, '\n')) {
+                            String pkg = StringUtils.split(stmt, ' ')[1];
+                            pkg = pkg.substring(0, pkg.length() - 2);
+
+                            importsObj.append(",Packages.")
+                                    .append(pkg);
+                        }
+
+                        importsObj.append(')');
+
+                        engine.eval(importsObj.toString() +
+                                ";function loadShims(){load('https://raw.githubusercontent.com/es-shims/es5-shim/master/es5-shim.min.js');load('https://raw.githubusercontent.com/paulmillr/es6-shim/master/es6-shim.min.js');}");
+
+                        // print
+                        engine.eval("function print() { ctx.send.apply(ctx, arguments.join(' ')).queue() }; var console = {log: print};");
+                    })
+                    .match(LuaScriptEngine.class, () -> {
+                        engine.eval("function print(...) ctx.send(string.join(' ', ...)).queue() end");
+                        engine.put("__dirsep", System.getProperty("file.separator"));
+                        engine.eval("debug = debug or {}; package = package or {}; package.config = package.config or (__dirsep .. '\\n;\\n?\\n!\\n-'); require 'assets.essentials'; require 'assets.cron'; require 'assets.middleclass'; require 'assets.stateful'; require 'assets.inspect'; require 'assets.repl_base'");
+                    });
+        } catch (Exception e) {
             ctx.send("⚠ Engine post-init failed.\n```java\n" + Bot.renderStackTrace(e) + "```").queue();
         }
 
-        ctx.send("REPL started. Untrusted mode (`untrusted` flag) is " + (untrusted ? "on" : "off") +
-                ". Prefix is " + prefix).queue();
+        ctx.send("REPL started. Untrusted mode (`untrusted` flag) is **" + (untrusted ? "on" : "off") +
+                "**. Prefix is " + prefix).queue();
         while (true) {
             Message response;
             if (untrusted) {
@@ -230,7 +237,7 @@ public class ReplCog extends Cog {
                         response.getReactions().stream().filter(r -> r.getReactionEmote().getName().equals("🛡")).findFirst();
                 if (rr.isPresent()) {
                     MessageReaction mr = rr.get();
-                    if (!mr.getUsers().complete().stream().anyMatch(u -> u.getIdLong() == ctx.author.getIdLong())) {
+                    if (mr.getUsers().complete().stream().noneMatch(u -> u.getIdLong() == ctx.author.getIdLong())) {
                         continue;
                     }
                 } else {
@@ -241,29 +248,26 @@ public class ReplCog extends Cog {
 
             engine.put("message", response);
             engine.put("msg", response);
-
-            String cleaned = cleanupCode(response.getContentRaw());
+            String cleaned = cleanUpCode(response.getContentRaw());
 
             if (stringExists(cleaned, "quit", "exit", "System.exit()", "System.exit", "System.exit(0)",
                     "exit()", "stop", "stop()", "System.exit();", "stop;", "stop();", "System.exit(0);")) {
-                ctx.send("**Exiting...**").queue();
                 replSessions.remove(ctx.channel.getIdLong());
                 break;
             }
 
             Object result;
             try {
-                if (language.equalsIgnoreCase("groovy")) {
+                if (engine instanceof GroovyScriptEngineImpl) {
                     result = engine.eval(GROOVY_PRE_INJECT + cleaned);
-                } else if (language.equalsIgnoreCase("lua")) {
-                    String pCode = StringUtils.replace(cleaned, "**", "^");
-                    int lastNidx = pCode.lastIndexOf(10);
-                    String code = lastNidx == -1 ? "" : pCode.substring(0, lastNidx);
-                    String lastLine = lastNidx == -1 ? pCode : pCode.substring(lastNidx + 1);
+                } else if (engine instanceof LuaScriptEngine) {
+                    int lastNidx = cleaned.lastIndexOf(10);
+                    String code = lastNidx == -1 ? "" : cleaned.substring(0, lastNidx);
+                    String lastLine = lastNidx == -1 ? cleaned : cleaned.substring(lastNidx + 1);
 
                     if (lastLine.equals("end")) {
                         code += "\nend";
-                        lastLine = "nil";
+                        lastLine = "return nil";
                     }
 
                     engine.put("__code", code);
@@ -281,7 +285,6 @@ public class ReplCog extends Cog {
                     result = ((ScriptException) result).getCause();
                 }
             } catch (Throwable e) {
-                logger.warn("Error executing code in REPL", e);
                 result = Bot.renderStackTrace(e);
             }
 
@@ -293,12 +296,13 @@ public class ReplCog extends Cog {
                 ctx.channel.sendMessage(((EmbedBuilder) result).build()).queue();
             else if (result instanceof MessageEmbed)
                 ctx.channel.sendMessage((MessageEmbed) result).queue();
+
             engine.put("last", result);
 
             if (result != null) {
                 try {
                     String strResult = result.toString();
-                    if (isJavascript && JS_OBJECT_PATTERN.matcher(strResult).matches()) {
+                    if (engine instanceof NashornScriptEngine && JS_OBJECT_PATTERN.matcher(strResult).matches()) {
                         try {
                             strResult = (String) engine.eval("JSON.stringify(last)");
                         } catch (ScriptException e) {
@@ -308,17 +312,19 @@ public class ReplCog extends Cog {
 
                     ctx.send("```java\n" + strResult + "```").queue();
                 } catch (Exception e) {
-                    logger.warn("Error sending message in REPL", e);
+                    logger.warn("Error sending result", e);
                     try {
                         ctx.send("```java\n" + Bot.renderStackTrace(e) + "```").queue();
                     } catch (Exception ex) {
-                        logger.error("Error reporting send error in REPL", ex);
+                        logger.error("Error sending send error", ex);
                     }
                 }
             } else {
                 response.addReaction("✅").queue();
             }
         }
+
+        ctx.send(Emotes.getSuccess() + " REPL stopped.").queue();
     }
 
     private Message waitForRMessage(long millis, Predicate<Message> check,
