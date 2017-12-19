@@ -11,6 +11,7 @@ import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.MessageEmbed;
+import net.dv8tion.jda.core.entities.TextChannel;
 import okhttp3.Request;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,7 +29,7 @@ import static com.khronodragon.bluestone.util.Strings.format;
 
 public class GoogleCog extends Cog {
     private static final Logger logger = LogManager.getLogger(GoogleCog.class);
-    private static final String API_URL_BASE = "https://www.googleapis.com/customsearch/v1?key={0}&cx=011887893391472424519:xf_tuvgfrgk&safe=off&q={1}";
+    private static final String API_URL_BASE = "https://www.googleapis.com/customsearch/v1?key={0}&cx=011887893391472424519:xf_tuvgfrgk&q={1}";
     private static final MessageEmbed FAILED_EMBED = new EmbedBuilder()
             .setColor(randomColor())
             .setTitle("Google Search")
@@ -133,7 +134,9 @@ public class GoogleCog extends Cog {
         ctx.channel.sendTyping().queue();
 
         try {
-            ctx.send(cache.get(format(API_URL_BASE, key, encodedQuery))).queue();
+            ctx.send(cache.get(format(API_URL_BASE, key, encodedQuery +
+                    ((ctx.channel instanceof TextChannel && ((TextChannel) ctx.channel).isNSFW()) ?
+                            "&safe=off" : "&safe=medium")))).queue();
         } catch (ExecutionException|UncheckedExecutionException e) {
             logger.error("Failed to get results", e.getCause());
             ctx.send(FAILED_EMBED).queue();
