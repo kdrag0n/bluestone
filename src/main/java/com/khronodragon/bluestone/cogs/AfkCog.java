@@ -61,6 +61,13 @@ public class AfkCog extends Cog {
 
     @EventHandler(threaded = true)
     public void onMsg(GuildMessageReceivedEvent event) throws SQLException {
+        if (event.getAuthor().isBot()) return;
+
+        if (afkUsers.get(event.getAuthor().getIdLong())) {
+            afkUsers.clear(event.getAuthor().getIdLong());
+            dao.deleteById(event.getAuthor().getIdLong());
+        }
+        
         if (event.getMessage().getMentionedUsers().size() != 0) {
             List<User> mentioned = event.getMessage().getMentionedUsers();
             StringBuilder message = new StringBuilder(event.getAuthor().getAsMention())
@@ -92,11 +99,6 @@ public class AfkCog extends Cog {
             if (added.size() != 0) {
                 event.getChannel().sendMessage(Context.filterMessage(message.toString())).queue();
             }
-        }
-
-        if (afkUsers.get(event.getAuthor().getIdLong())) {
-            afkUsers.clear(event.getAuthor().getIdLong());
-            dao.deleteById(event.getAuthor().getIdLong());
         }
     }
 
