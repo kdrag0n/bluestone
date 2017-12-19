@@ -19,6 +19,10 @@ public class AfkMessage {
         this.message = message;
     }
 
+    public long getUserId() {
+        return userId;
+    }
+
     public String getMessage() {
         return message;
     }
