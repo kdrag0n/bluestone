@@ -93,26 +93,26 @@ public class ShardUtil {
         try {
             TableUtils.createTableIfNotExists(dbConn, BotAdmin.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create bot admin table!", e);
+            logger.error("Failed to create bot admin table!", e);
         }
 
         try {
             adminDao = DaoManager.createDao(dbConn, BotAdmin.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create bot admin DAO!", e);
+            logger.error("Failed to create bot admin DAO!", e);
         }
 
         try {
             TableUtils.createTableIfNotExists(dbConn, GuildPrefix.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create command prefix table!", e);
+            logger.error("Failed to create command prefix table!", e);
         }
 
         try {
             Dao<GuildPrefix, Long> dao = DaoManager.createDao(dbConn, GuildPrefix.class);
             prefixStore = new PrefixStore(dao, config.optString("default_prefix", "!"));
         } catch (SQLException e) {
-            logger.warn("Failed to create prefix store and/or DAO!", e);
+            logger.error("Failed to create prefix store and/or DAO!", e);
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

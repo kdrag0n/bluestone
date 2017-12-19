@@ -193,13 +193,13 @@ public class UtilityCog extends Cog {
         try {
             TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), ActivePoll.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create poll table!", e);
+            logger.error("Failed to create poll table!", e);
         }
 
         try {
             pollDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), ActivePoll.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create poll DAO!", e);
+            logger.error("Failed to create poll DAO!", e);
         }
 
         try {
@@ -220,13 +220,13 @@ public class UtilityCog extends Cog {
         try {
             TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), ContactBannedUser.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create contact banned users table!", e);
+            logger.error("Failed to create contact banned users table!", e);
         }
 
         try {
             contactBanDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), ContactBannedUser.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create contact banned users DAO!", e);
+            logger.error("Failed to create contact banned users DAO!", e);
         }
     }
 

@@ -33,13 +33,13 @@ public class ReminderCog extends Cog {
         try {
             TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), Reminder.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create reminder table!", e);
+            logger.error("Failed to create reminder table!", e);
         }
 
         try {
             dao = DaoManager.createDao(bot.getShardUtil().getDatabase(), Reminder.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create reminder DAO!", e);
+            logger.error("Failed to create reminder DAO!", e);
         }
 
         if (bot.getShardNum() == 1) {

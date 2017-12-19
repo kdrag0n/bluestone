@@ -96,37 +96,37 @@ public class StarboardCog extends Cog {
         try {
             TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), Starboard.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create starboard table!", e);
+            logger.error("Failed to create starboard table!", e);
         }
 
         try {
             dao = DaoManager.createDao(bot.getShardUtil().getDatabase(), Starboard.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create starboard DAO!", e);
+            logger.error("Failed to create starboard DAO!", e);
         }
 
         try {
             TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), StarboardEntry.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create starboard entry table!", e);
+            logger.error("Failed to create starboard entry table!", e);
         }
 
         try {
             entryDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), StarboardEntry.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create starboard entry DAO!", e);
+            logger.error("Failed to create starboard entry DAO!", e);
         }
 
         try {
             TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), Starrer.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create starboard user table!", e);
+            logger.error("Failed to create starboard user table!", e);
         }
 
         try {
             starrerDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), Starrer.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create starboard user DAO!", e);
+            logger.error("Failed to create starboard user DAO!", e);
         }
     }
 

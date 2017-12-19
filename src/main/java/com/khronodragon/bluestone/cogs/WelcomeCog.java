@@ -66,13 +66,13 @@ public class WelcomeCog extends Cog {
         try {
             TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), GuildWelcomeMessages.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create welcome message table!", e);
+            logger.error("Failed to create welcome message table!", e);
         }
 
         try {
             messageDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), GuildWelcomeMessages.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create welcome message DAO!", e);
+            logger.error("Failed to create welcome message DAO!", e);
         }
     }
 
@@ -400,7 +400,7 @@ public class WelcomeCog extends Cog {
             messageDao.createOrUpdate(new GuildWelcomeMessages(event.getGuild().getIdLong(),
                     "[default]", "[default]", true, true));
         } catch (SQLException e) {
-            logger.warn("Failed to create WelcomeMessages for guild {}", event.getGuild().getId(), e);
+            logger.error("Failed to create WelcomeMessages for guild {}", event.getGuild().getId(), e);
         }
     }
 

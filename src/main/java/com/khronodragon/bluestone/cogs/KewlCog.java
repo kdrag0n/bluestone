@@ -216,13 +216,13 @@ public class KewlCog extends Cog {
         try {
             TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), UserProfile.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create profile table!", e);
+            logger.error("Failed to create profile table!", e);
         }
 
         try {
             profileDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), UserProfile.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create profile DAO!", e);
+            logger.error("Failed to create profile DAO!", e);
         }
 
         if (!hasWarmedUp) {

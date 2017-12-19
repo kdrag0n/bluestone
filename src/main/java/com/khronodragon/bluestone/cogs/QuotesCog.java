@@ -49,25 +49,25 @@ public class QuotesCog extends Cog {
         try {
             TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), Quote.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create quote table!", e);
+            logger.error("Failed to create quote table!", e);
         }
 
         try {
             dao = DaoManager.createDao(bot.getShardUtil().getDatabase(), Quote.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create quote DAO!", e);
+            logger.error("Failed to create quote DAO!", e);
         }
 
         try {
             TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), QuotesBannedMember.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create quotes banned members table!", e);
+            logger.error("Failed to create quotes banned members table!", e);
         }
 
         try {
             banDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), QuotesBannedMember.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create quotes banned members DAO!", e);
+            logger.error("Failed to create quotes banned members DAO!", e);
         }
     }
 

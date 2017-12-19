@@ -71,13 +71,13 @@ public class MusicCog extends Cog {
         try {
             TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), GuildMusicSettings.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create music settings table!", e);
+            logger.error("Failed to create music settings table!", e);
         }
 
         try {
             settingsDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), GuildMusicSettings.class);
         } catch (SQLException e) {
-            logger.warn("Failed to create music settings DAO!", e);
+            logger.error("Failed to create music settings DAO!", e);
         }
     }
 
