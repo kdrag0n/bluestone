@@ -87,10 +87,10 @@ public class PokemonCog extends Cog {
         return "Gotta catch 'em all!";
     }
 
-    @Command(name = "pokémon", desc = "Get the info on a Pokémon!", thread = true,
+    @Command(name = "pokémon", desc = "Get info about a Pokémon!", thread = true,
             aliases = {"pokemon", "pokèmon", "pokedex", "pokédex"}, usage = "{name or id}")
-    public void command(Context ctx) {
-        StringBuilder url = new StringBuilder("https://pokeapi.co/api/v1/pokemon/");
+    public void command(Context ctx) { // ^ common typo if accented
+        StringBuilder url = new StringBuilder("http://127.0.0.1:8229/api/v1/pokemon/");
 
         if (ctx.rawArgs.length() < 1) {
             url.append(randint(1, ENTRY_COUNT));
@@ -125,7 +125,7 @@ public class PokemonCog extends Cog {
 
             if (e instanceof SocketTimeoutException) {
                 ctx.send(Emotes.getFailure() +
-                        " The Pokémon service is having issues right now. Try again later.").queue();
+                        " The Pokédex service is having issues right now. Try again later.").queue();
                 return;
             }
 
@@ -157,22 +157,16 @@ public class PokemonCog extends Cog {
         }
 
         String imageUrl = format("https://pokeapi.co/media/img/{0}.png", pokemon.getNationalId());
-        String stats = new StringBuilder()
-                .append("**HP**: ")
-                .append(pokemon.getHp())
-                .append('\n')
-                .append("**ATK**: ")
-                .append(pokemon.getAttack())
-                .append('\n')
-                .append("**DEF**: ")
-                .append(pokemon.getDefense())
-                .append('\n')
-                .append("**SP ATK**: ")
-                .append(pokemon.getSpecialAttack())
-                .append('\n')
-                .append("**SP DEF**: ")
-                .append(pokemon.getSpecialDefense())
-                .toString();
+        String stats = "**HP**: " +
+                pokemon.getHp() +
+                "\n**ATK**: " +
+                pokemon.getAttack() +
+                "\n**DEF**: " +
+                pokemon.getDefense() +
+                "\n**SP ATK**: " +
+                pokemon.getSpecialAttack() +
+                "\n**SP DEF**: " +
+                pokemon.getSpecialDefense();
         String evoString = Arrays.stream(pokemon.getEvolutions())
                 .map(e -> WordUtils.capitalizeFully(e.to.replace('-', ' ')))
                 .distinct()
