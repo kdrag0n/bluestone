@@ -186,7 +186,7 @@ public class ReplCog extends Cog {
                     ))
                     .match(PyScriptEngine.class, () -> {
                         engine.put("imports", PYTHON_IMPORTS);
-                        engine.eval("def print(*args): ctx.send(map(str, args).join(' ')).queue()");
+                        engine.eval("def send(*args): ctx.send(map(str, args).join(' ')).queue()");
                     })
                     .match(NashornScriptEngine.class, () -> {
                         // imports
@@ -217,7 +217,7 @@ public class ReplCog extends Cog {
             ctx.send("⚠ Engine post-init failed.\n```java\n" + Bot.renderStackTrace(e) + "```").queue();
         }
 
-        ctx.send(Emotes.getSuccess() + "**REPL started" + (untrusted ? " in untrusted mode" : "") +
+        ctx.send(Emotes.getSuccess() + " **REPL started" + (untrusted ? " in untrusted mode" : "") +
                 ".** Prefix is " + prefix).queue();
         while (true) {
             Message response;
