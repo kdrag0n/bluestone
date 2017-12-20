@@ -617,7 +617,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             }
         } else if (channel instanceof PrivateChannel &&
                 !(author.getIdLong() == owner.getIdLong() && message.getContentRaw().charAt(0) == '`')) {
-            String request = Strings.renderMessage(message, message.getGuild(), message.getContentRaw());
+            String request = Strings.renderMessage(message, null, message.getContentRaw());
 
             if (request.length() < 1) {
                 channel.sendMessage("**Hey there**! My prefix is `" + prefix + "` here.\nYou can use commands, or talk to me directly.").queue();

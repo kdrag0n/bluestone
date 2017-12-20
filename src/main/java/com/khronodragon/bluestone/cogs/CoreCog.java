@@ -229,9 +229,12 @@ public class CoreCog extends Cog {
                     StringBuilder field = new StringBuilder("`");
 
                     if (cmd.aliases.length < 1) {
-                        field.append(cmd.name);
+                        field.append(ctx.prefix)
+                                .append(cmd.name);
                     } else {
                         field.append(ctx.prefix)
+                                .append(cmd.name)
+                                .append('/')
                                 .append(String.join("/", cmd.aliases));
                     }
 

@@ -41,7 +41,7 @@ shadowJar {
 def kotlinVersion = '1.2.10'
 
 dependencies {
-    compile 'net.dv8tion:JDA:3.3.1_313'
+    compile 'net.dv8tion:JDA:3.4.0_317'
     compile 'com.sedmelluq:lavaplayer:1.2.45'
     compile 'com.squareup.okhttp3:okhttp:3.9.1'
     compile 'com.google.guava:guava:23.5-jre'

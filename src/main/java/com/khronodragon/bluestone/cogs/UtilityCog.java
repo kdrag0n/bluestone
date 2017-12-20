@@ -377,7 +377,7 @@ public class UtilityCog extends Cog {
         });
         membersText.append(Emotes.getPlus())
                 .append(" Total: ")
-                .append(ctx.guild.getMembers().size() - 1);
+                .append(ctx.guild.getMembers().size());
 
         EmbedBuilder emb = new EmbedBuilder()
                 .setColor(val(guild.getSelfMember().getColor()).or(Color.WHITE))

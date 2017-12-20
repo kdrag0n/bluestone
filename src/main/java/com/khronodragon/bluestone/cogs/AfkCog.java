@@ -67,7 +67,7 @@ public class AfkCog extends Cog {
             afkUsers.clear(event.getAuthor().getIdLong());
             dao.deleteById(event.getAuthor().getIdLong());
         }
-        
+
         if (event.getMessage().getMentionedUsers().size() != 0) {
             List<User> mentioned = event.getMessage().getMentionedUsers();
             StringBuilder message = new StringBuilder(event.getAuthor().getAsMention())
