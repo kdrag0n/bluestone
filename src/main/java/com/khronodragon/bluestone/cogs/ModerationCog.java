@@ -322,7 +322,7 @@ public class ModerationCog extends Cog {
 
         Member user = ctx.guild.getMember(ctx.message.getMentionedUsers().get(0));
         if (!ctx.guild.getSelfMember().canInteract(user)) {
-            ctx.send(Emotes.getFailure() + " I need to be higher on the role ladder to mute that user!").queue();
+            ctx.send(Emotes.getFailure() + " I need a higher-level role to mute that user, and I can't mute the owner.").queue();
             return;
         }
 
@@ -373,7 +373,7 @@ public class ModerationCog extends Cog {
 
         Member user = ctx.guild.getMember(ctx.message.getMentionedUsers().get(0));
         if (!ctx.guild.getSelfMember().canInteract(user)) {
-            ctx.send(Emotes.getFailure() + " I need to be higher on the role ladder to unmute that user!").queue();
+            ctx.send(Emotes.getFailure() + " I need a higher-level role to unmute that user, and I can't unmute the owner.").queue();
             return;
         }
 
@@ -440,7 +440,7 @@ public class ModerationCog extends Cog {
         }
 
         if (!ctx.guild.getSelfMember().canInteract(user)) {
-            ctx.send(Emotes.getFailure() + " I need to be higher on the role ladder to ban that user!").queue();
+            ctx.send(Emotes.getFailure() + " I need a higher-level role to ban that user, and I can't ban the owner.").queue();
             return;
         } else if (!ctx.guild.getSelfMember().hasPermission(Permission.BAN_MEMBERS)) {
             ctx.send(Emotes.getFailure() + " I need permission to **ban members**!").queue();
@@ -504,7 +504,7 @@ public class ModerationCog extends Cog {
         }
 
         if (!ctx.guild.getSelfMember().canInteract(user)) {
-            ctx.send(Emotes.getFailure() + " I need to be higher on the role ladder to kick that user!").queue();
+            ctx.send(Emotes.getFailure() + " I need a higher-level role to kick that user, and I can't kick the owner.").queue();
             return;
         } else if (!ctx.guild.getSelfMember().hasPermission(Permission.KICK_MEMBERS)) {
             ctx.send(Emotes.getFailure() + " I need permission to **kick members**!").queue();
@@ -614,7 +614,7 @@ public class ModerationCog extends Cog {
             ctx.send(Emotes.getFailure() + " That role is a special bot role, or is managed by an integration!").queue();
             return;
         } else if (!ctx.guild.getSelfMember().canInteract(role)) {
-            ctx.send(Emotes.getFailure() + " I need to be higher up on the role ladder to apply that role!").queue();
+            ctx.send(Emotes.getFailure() + " I need a higher-level role to apply that role, and I can't apply the owner.").queue();
             return;
         }
 
@@ -768,6 +768,7 @@ public class ModerationCog extends Cog {
                 getHistoryAfter(from, fromId, fromMsgId, oneHundred, historyChunk).complete();
                 while (historyChunk.size() > 0) {
                     getHistoryAfter(from, fromId, fromMsgId, oneHundred, historyChunk).complete();
+                    if (historyChunk.size() == 0) break;
                     fromMsgId = historyChunk.get(historyChunk.size() - 1).getId();
 
                     for (int i = historyChunk.size() - 1; i > 0; --i) {
