@@ -14,11 +14,15 @@ This is the template:
   "db_pass": "password",
   "graphite_host": "localhost",
   "graphite_port": 2003,
-  "sentry_dsn": ""
   "keys": {
     "google": "",
     "discord_bots": "",
-    "carbonitex": ""
+    "carbonitex": "",
+    "imgflip": {
+      "username": "root",
+      "password": "toor"
+    },
+    "sentry": "https://public:private@host:port/1?environment=development&servername=laptop1"
   },
   "chatengine_url": "http://my-chatengine-server.com/ask"
 }
@@ -45,6 +49,13 @@ and put it in the JSON.
 You may also provide Discord Bots and Carbonitex keys if you have valid ones.
 However, invalid or empty keys will cause errors
 whenever guild count is updated.
+
+For more reliable memes, you should also provide Imgflip account credentials.
+
+For error reporting, provide a Sentry DSN, optionally with `environment` and `servername` set.
+
+At the very least, you must have an empty `keys` object.
+If there is no `keys` object, or it is another data type, everything may explode.
 
 ### Enjoy!
 Don't forget that this project is still experimental.

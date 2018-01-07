@@ -20,7 +20,7 @@ public class Start {
 
         // init Sentry as early as possible to catch errors
         String sentryDSN;
-        if ((sentryDSN = config.optString("sentry_dsn", null)) != null) {
+        if ((sentryDSN = config.getJSONObject("keys").optString("sentry", null)) != null) {
             Sentry.init(sentryDSN);
         }
 
