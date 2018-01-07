@@ -41,7 +41,7 @@ shadowJar {
 def kotlinVersion = '1.2.10'
 
 dependencies {
-    compile 'net.dv8tion:JDA:3.4.0_317'
+    compile 'net.dv8tion:JDA:3.4.0_324'
     compile 'com.sedmelluq:lavaplayer:1.2.45'
     compile 'com.squareup.okhttp3:okhttp:3.9.1'
     compile 'com.google.guava:guava:23.5-jre'
@@ -74,6 +74,7 @@ dependencies {
     compile 'org.jsoup:jsoup:1.11.2'
     compile 'com.kotcrab.remark:remark:1.0.0'
     compile 'org.luaj:luaj-jse:3.0.1'
+    compile 'io.sentry:sentry-log4j2:1.6.3'
 
     compile "org.jetbrains.kotlin:kotlin-script-runtime:$kotlinVersion"
     compile "org.jetbrains.kotlin:kotlin-compiler:$kotlinVersion"

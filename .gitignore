@@ -204,3 +204,4 @@ store*.bson
 *.sql
 patreon.json
 /data/
+/sentrybuf/

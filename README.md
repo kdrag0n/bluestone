@@ -14,6 +14,7 @@ This is the template:
   "db_pass": "password",
   "graphite_host": "localhost",
   "graphite_port": 2003,
+  "sentry_dsn": ""
   "keys": {
     "google": "",
     "discord_bots": "",

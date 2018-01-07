@@ -352,6 +352,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     .add(watching("for raids"))
                     .add(playing("buffing before the raid"))
                     .add(streaming("this sick action", "https://www.youtube.com/watch?v=tD6KJ7QtQH8"))
+                    .add(listening("memes"))
+                    .add(watching("memes"))
+                    .add(playing("memes")) // memes
+                    .add(watching("that dank vid"))
                     .select();
 
             jda.getPresence().setGame(status);

@@ -8,6 +8,7 @@ import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -105,6 +106,18 @@ public class Command {
                 } else if (cause instanceof PermissionException) {
                     channel.sendMessage(Emotes.getFailure() + " I need the **" +
                             ((PermissionException) cause).getPermission().getName() + "** permission!").queue();
+                } else if (cause instanceof ErrorResponseException) {
+                    if (((ErrorResponseException) cause).getErrorCode() == 50013) {
+                        channel.sendMessage(Emotes.getFailure() +
+                                " I'm missing a permission! Make sure I have enough permissions to do that.").queue();
+                    } else {
+                        bot.logger.error("Command ({}) invocation error:", invoker, cause);
+                        channel.sendMessage(format(Emotes.getFailure() + " Error!```java\n{2}```This error has been reported.",
+                                prefix, invoker, Bot.vagueTrace(cause))).queue();
+
+                        if (reportErrors)
+                            bot.reportErrorToOwner(cause, event.getMessage(), this);
+                    }
                 } else if (cause instanceof SQLException) {
                     bot.logger.error("SQL error in command {}:", invoker, cause);
                     channel.sendMessage(format(Emotes.getFailure() + " A database error has occurred.```java\n{2}```This error has been reported.",

@@ -1,5 +1,6 @@
 package com.khronodragon.bluestone;
 
+import io.sentry.Sentry;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import org.json.JSONObject;
@@ -16,6 +17,12 @@ public class Start {
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         String jsonCode = new String(Files.readAllBytes(Paths.get("config.json")));
         JSONObject config = new JSONObject(jsonCode);
+
+        // init Sentry as early as possible to catch errors
+        String sentryDSN;
+        if ((sentryDSN = config.optString("sentry_dsn", null)) != null) {
+            Sentry.init(sentryDSN);
+        }
 
         String token = config.getString("token");
         int shardCount = config.optInt("shard_count", 1); // 1
