@@ -829,8 +829,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 .setEnableShutdownHook(true)
                 .setHttpClientBuilder(new OkHttpClient.Builder()
                         .retryOnConnectionFailure(true))
-                .setGame(Game.playing("something"))
-                .setReconnectQueue(new SessionReconnectQueue());
+                .setGame(Game.playing("something"));
 
         if ((System.getProperty("os.arch").startsWith("x86") ||
                 System.getProperty("os.arch").equals("amd64")) &&
