@@ -5,7 +5,7 @@ import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable(tableName = "music_settings")
 public class GuildMusicSettings {
-    @DatabaseField(id = true, canBeNull = false)
+    @DatabaseField(id = true, canBeNull = false, index = true)
     private long id;
 
     @DatabaseField(canBeNull = false)

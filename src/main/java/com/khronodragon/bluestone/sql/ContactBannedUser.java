@@ -5,7 +5,7 @@ import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable(tableName = "contact_banned_users")
 public class ContactBannedUser {
-    @DatabaseField(id = true, canBeNull = false)
+    @DatabaseField(id = true, canBeNull = false, index = true)
     public long id;
 
     public ContactBannedUser() {

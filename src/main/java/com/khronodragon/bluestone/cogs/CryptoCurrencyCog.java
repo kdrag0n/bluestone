@@ -58,7 +58,7 @@ public class CryptoCurrencyCog extends Cog {
     private static Field stringsField;
 
     static {
-        scheduledExec.scheduleAtFixedRate(CryptoCurrencyCog::update, 0, 15, TimeUnit.MINUTES);
+        scheduledExec.scheduleAtFixedRate(CryptoCurrencyCog::update, 0, 11, TimeUnit.MINUTES);
         try {
             stringsField = PaginatorBuilder.class.getDeclaredField("strings");
             stringsField.setAccessible(true);

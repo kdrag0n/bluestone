@@ -5,10 +5,10 @@ import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable(tableName = "gamedeal_dests")
 public class GameDealDestination {
-    @DatabaseField(id = true, canBeNull = false)
+    @DatabaseField(id = true, canBeNull = false, index = true)
     private long channelId;
 
-    @DatabaseField(canBeNull = false)
+    @DatabaseField(canBeNull = false, index = true)
     private long guildId = 0L;
 
     @DatabaseField(canBeNull = false)

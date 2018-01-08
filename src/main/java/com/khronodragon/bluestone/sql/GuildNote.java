@@ -7,10 +7,10 @@ import java.util.Date;
 
 @DatabaseTable(tableName = "notes")
 public class GuildNote {
-    @DatabaseField(canBeNull = false, width = 3)
+    @DatabaseField(canBeNull = false, width = 3, index = true)
     public short noteID;
 
-    @DatabaseField(canBeNull = false)
+    @DatabaseField(canBeNull = false, index = true)
     public long guildID;
 
     @DatabaseField(width = 360, canBeNull = false)

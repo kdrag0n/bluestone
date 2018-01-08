@@ -8,7 +8,7 @@ import java.util.Date;
 
 @DatabaseTable(tableName = "starboards")
 public class Starboard {
-    @DatabaseField(id = true, canBeNull = false)
+    @DatabaseField(id = true, canBeNull = false, index = true)
     private long guildId;
 
     @DatabaseField(canBeNull = false, index = true)

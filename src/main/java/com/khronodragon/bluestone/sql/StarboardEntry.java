@@ -5,7 +5,7 @@ import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable(tableName = "starboard_entries")
 public class StarboardEntry {
-    @DatabaseField(id = true, canBeNull = false, unique = true)
+    @DatabaseField(id = true, canBeNull = false, unique = true, index = true)
     private long messageId;
 
     @DatabaseField(canBeNull = false, index = true)

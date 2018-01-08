@@ -5,7 +5,7 @@ import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable(tableName = "afk_messages")
 public class AfkMessage {
-    @DatabaseField(id = true, canBeNull = false)
+    @DatabaseField(id = true, canBeNull = false, index = true)
     private long userId;
 
     @DatabaseField(width = 150, canBeNull = false)

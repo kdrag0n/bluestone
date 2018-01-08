@@ -11,7 +11,7 @@ import static com.khronodragon.bluestone.sql.GuildRoleOption.RoleConditions.*;
 
 @DatabaseTable(tableName = "role_options")
 public class GuildRoleOption {
-    @DatabaseField(id = true, canBeNull = false)
+    @DatabaseField(id = true, canBeNull = false, index = true)
     private long roleId;
 
     @DatabaseField(canBeNull = false, index = true)

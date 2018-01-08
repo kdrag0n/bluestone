@@ -11,7 +11,7 @@ import static com.khronodragon.bluestone.util.Strings.format;
 public class Quote {
     public static final String QUOTE_FORMAT = "**[{0}]** {4}\"{1}\"{4} — `{2}` (__{3,date}__)";
 
-    @DatabaseField(generatedId = true, canBeNull = false, width = 4)
+    @DatabaseField(generatedId = true, canBeNull = false, width = 4, index = true)
     private int id;
 
     @DatabaseField(width = 360, canBeNull = false)

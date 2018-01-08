@@ -5,7 +5,7 @@ import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable(tableName = "guild_welcome_msgs")
 public class GuildWelcomeMessages {
-    @DatabaseField(id = true, canBeNull = false)
+    @DatabaseField(id = true, canBeNull = false, index = true)
     private long guildId;
 
     @DatabaseField(canBeNull = false)

@@ -5,7 +5,7 @@ import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable(tableName = "guild_prefixes")
 public class GuildPrefix {
-    @DatabaseField(id = true, canBeNull = false)
+    @DatabaseField(id = true, canBeNull = false, index = true)
     private long guildId;
 
     @DatabaseField(width = 32, canBeNull = false)

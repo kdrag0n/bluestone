@@ -17,7 +17,7 @@ public class MySQLDatabaseType extends MysqlDatabaseType {
 
     @Override
     protected void appendBooleanType(StringBuilder sb, FieldType fieldType, int fieldWidth) {
-        sb.append("BOOLEAN");
+        sb.append("BOOLEAN"); // because TINYINT(1) is ugly :^)
     }
 
     @Override
