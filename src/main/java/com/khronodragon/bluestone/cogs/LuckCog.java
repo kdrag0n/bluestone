@@ -42,7 +42,7 @@ public class LuckCog extends Cog {
         if (ctx.args.size() > 1) {
             ctx.send("I choose **" + randomChoice(ctx.args) + "**").queue();
         } else {
-            ctx.send(Emotes.getFailure() + " You need at least 2 choices!").queue();
+            ctx.fail("You need at least 2 choices!");
         }
     }
 
@@ -59,7 +59,7 @@ public class LuckCog extends Cog {
     @Command(name = "8ball", desc = "A magic 8 ball!", aliases = {"8"})
     public void cmd8Ball(Context ctx) {
         if (ctx.rawArgs.length() < 1)
-            ctx.send(Emotes.getFailure() + " I need a question!").queue();
+            ctx.fail("I need a question!");
         else
             ctx.send("🔮 " + randomChoice(EIGHT_BALL_CHOICES)).queue();
     }

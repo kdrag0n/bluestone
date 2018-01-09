@@ -125,7 +125,7 @@ public class OwnerCog extends Cog {
             usage = "[message]", reportErrors = false)
     public void cmdBroadcast(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need a message to broadcast!").queue();
+            ctx.fail("I need a message to broadcast!");
             return;
         }
 
@@ -172,7 +172,7 @@ public class OwnerCog extends Cog {
             }
         }
 
-        ctx.send(Emotes.getSuccess() + " Broadcast finished, with **" + errors + "** guilds all muted.").queue();
+        ctx.success("Broadcast finished, with **" + errors + "** guilds all muted.");
     }
 
     @Perm.Owner
@@ -180,7 +180,7 @@ public class OwnerCog extends Cog {
             aliases = {"reval"}, thread = true, reportErrors = false)
     public void cmdEval(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need some code!").queue();
+            ctx.fail("I need some code!");
             return;
         }
 
@@ -250,24 +250,24 @@ public class OwnerCog extends Cog {
     @Command(name = "setavatar", desc = "Change my avatar.", aliases = {"set_avatar"})
     public void cmdSetAvatar(Context ctx) throws IOException {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send("🤔 I need a file path!").queue();
+            ctx.fail("I need a file path!");
             return;
         }
 
         ctx.jda.getSelfUser().getManager().setAvatar(Icon.from(new File(ctx.rawArgs))).queue();
-        ctx.send(Emotes.getSuccess() + " Avatar changed.").queue();
+        ctx.success("Avatar changed.");
     }
 
     @Perm.Owner
     @Command(name = "setgame", desc = "Set my game.", aliases = {"set_game"})
     public void cmdSetGame(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send("🤔 I need a game to set!").queue();
+            ctx.fail("I need a game to set!");
             return;
         }
 
         bot.getShardUtil().getShards().forEach(b -> b.getJda().getPresence().setGame(Game.playing(ctx.rawArgs)));
-        ctx.send(Emotes.getSuccess() + " Game set.").queue();
+        ctx.success("Game set.");
     }
 
     @Perm.Owner
@@ -276,9 +276,9 @@ public class OwnerCog extends Cog {
     public void cmdPatReload(Context ctx) {
         boolean success = Bot.loadPatreonData();
         if (success) {
-            ctx.send(Emotes.getSuccess() + " List reloaded.").queue();
+            ctx.success("List reloaded.");
         } else {
-            ctx.send(Emotes.getFailure() + " Failed to load list.").queue();
+            ctx.fail("Failed to load list.");
         }
     }
 }

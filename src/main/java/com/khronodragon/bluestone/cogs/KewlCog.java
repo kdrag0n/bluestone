@@ -265,7 +265,7 @@ public class KewlCog extends Cog {
     @Command(name = "correct", desc = "Correct spelling in some text.", thread = true)
     public void cmdSpellcheck(Context ctx) throws IOException {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need something to correct!").queue();
+            ctx.fail("I need something to correct!");
             return;
         }
         ctx.channel.sendTyping().queue();
@@ -346,7 +346,7 @@ public class KewlCog extends Cog {
         }
 
         if (user == null) {
-            ctx.send(Emotes.getFailure() + " I need a valid @mention, user ID, or user#discriminator!").queue();
+            ctx.fail("I need a valid @mention, user ID, or user#discriminator!");
             return;
         }
         ctx.channel.sendTyping().queue();
@@ -356,7 +356,7 @@ public class KewlCog extends Cog {
             data = profileCache.get(user);
         } catch (ExecutionException | UncheckedExecutionException e) {
             logger.warn("Error rendering profile", e);
-            ctx.send(Emotes.getFailure() + " Failed to render profile!").queue();
+            ctx.fail("Failed to render profile!");
             return;
         }
 
@@ -412,7 +412,7 @@ public class KewlCog extends Cog {
     @Command(name = "profilesetup", desc = "Set up your personal user profile.", thread = true)
     public void cmdProfileSetup(Context ctx) throws SQLException {
         if (profileSetupSessions.contains(ctx.author.getIdLong())) {
-            ctx.send(Emotes.getFailure() + " You already have a profile setup session active!").queue();
+            ctx.fail("You already have a profile setup session active!");
             return;
         }
         profileSetupSessions.add(ctx.author.getIdLong());
@@ -430,7 +430,7 @@ public class KewlCog extends Cog {
                             m.getChannel().getIdLong() == ctx.channel.getIdLong());
 
                     if (resp == null) {
-                        ctx.send(Emotes.getFailure() + " You took too long to respond. Stopping.\nIf you ever want to continue, just invoke this command again.\n**Note**: No answers were saved.").queue();
+                        ctx.fail("You took too long to respond. Stopping.\nIf you ever want to continue, just invoke this command again.\n**Note**: No answers were saved.");
                         return;
                     }
 
@@ -443,11 +443,11 @@ public class KewlCog extends Cog {
                     }
 
                     if (text.length() > (question.equals("Tell me a little bit more about yourself.") ? 250 : 100)) {
-                        ctx.send(Emotes.getFailure() + " Answer too long! Try again.").queue();
+                        ctx.fail("Answer too long! Try again.");
                         continue;
                     } else if (StringUtils.countMatches(text, '\n') >
                             (question.equals("Tell me a little bit more about yourself.") ? 10 : 2)) {
-                        ctx.send(Emotes.getFailure() + " Too many new lines! Try again.").queue();
+                        ctx.fail("Too many new lines! Try again.");
                         continue;
                     }
 
@@ -484,12 +484,12 @@ public class KewlCog extends Cog {
 
             if (path.exists()) {
                 if (path.delete()) {
-                    ctx.send(Emotes.getSuccess() + " Background set.").queue();
+                    ctx.success("Background set.");
                 } else {
-                    ctx.send(Emotes.getFailure() + " Failed to switch background!").queue();
+                    ctx.fail("Failed to switch background!");
                 }
             } else {
-                ctx.send(Emotes.getFailure() + " You're **already** using the default background!").queue();
+                ctx.fail("You're **already** using the default background!");
             }
         } else if (ctx.message.getAttachments().size() > 0 && (attachment = ctx.message.getAttachments().get(0)).isImage()) {
             ctx.channel.sendTyping().queue();
@@ -516,14 +516,14 @@ public class KewlCog extends Cog {
                         ctx.author.getIdLong() + ".png"));
                 profileCache.invalidate(ctx.author);
 
-                ctx.send(Emotes.getSuccess() + " Background set.").queue();
+                ctx.success("Background set.");
             } catch (IOException | NullPointerException | IllegalArgumentException ignored) {
-                ctx.send(Emotes.getFailure() + " Invalid image! Only GIF, PNG, and JPEG images are supported.").queue();
+                ctx.fail("Invalid image! Only GIF, PNG, and JPEG images are supported.");
             } catch (ArrayIndexOutOfBoundsException ignored) {
-                ctx.send(Emotes.getFailure() + " Your image seems to be in a weird format, or corrupted...").queue();
+                ctx.fail("Your image seems to be in a weird format, or corrupted...");
             }
         } else {
-            ctx.send(Emotes.getFailure() + " If you want to use the default background, specify `reset` or `default`. If you want to use a custom background, upload it as an attachment along with your command message. Only GIF, PNG, and JPEG image formats are supported.").queue();
+            ctx.fail("If you want to use the default background, specify `reset` or `default`. If you want to use a custom background, upload it as an attachment along with your command message. Only GIF, PNG, and JPEG image formats are supported.");
         }
     }
 
@@ -534,14 +534,14 @@ public class KewlCog extends Cog {
         User target;
 
         if (ctx.args.size() < 1) {
-            ctx.send(Emotes.getFailure() + " I need a @mention or user ID as first argument!").queue();
+            ctx.fail("I need a @mention or user ID as first argument!");
             return;
         } else if (ctx.message.getMentionedUsers().size() > 0 && Strings.isMention(ctx.args.get(0))) {
             target = ctx.message.getMentionedUsers().get(0);
         } else if (Strings.isID(ctx.args.get(0))) {
             target = ctx.jda.retrieveUserById(ctx.args.get(0)).complete();
         } else {
-            ctx.send(Emotes.getFailure() + " I need a valid @mention or user ID as first argument!").queue();
+            ctx.fail("I need a valid @mention or user ID as first argument!");
             return;
         }
 
@@ -556,22 +556,22 @@ public class KewlCog extends Cog {
         long target;
 
         if (ctx.args.size() < 1) {
-            ctx.send(Emotes.getFailure() + " I need a @mention or user ID as first argument!").queue();
+            ctx.fail("I need a @mention or user ID as first argument!");
             return;
         } else if (ctx.message.getMentionedUsers().size() > 0 && Strings.isMention(ctx.args.get(0))) {
             target = ctx.message.getMentionedUsers().get(0).getIdLong();
         } else if (Strings.isID(ctx.args.get(0))) {
             target = MiscUtil.parseSnowflake(ctx.args.get(0));
         } else {
-            ctx.send(Emotes.getFailure() + " I need a valid @mention or user ID as first argument!").queue();
+            ctx.fail("I need a valid @mention or user ID as first argument!");
             return;
         }
 
         ctx.jda.retrieveUserById(target).queue(user -> {
             profileCache.invalidate(user);
-            ctx.send(Emotes.getSuccess() + " Invalidated cached profile for user `" + target + "`.").queue();
+            ctx.success("Invalidated cached profile for user `" + target + "`.");
         }, e -> {
-            ctx.send(Emotes.getFailure() + " Error retrieving user.\n```java" + Bot.renderStackTrace(e) + "```").queue();
+            ctx.fail("Error retrieving user.\n```java" + Bot.renderStackTrace(e) + "```");
         });
     }
 }

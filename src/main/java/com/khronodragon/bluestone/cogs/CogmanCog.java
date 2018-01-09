@@ -105,13 +105,13 @@ public class CogmanCog extends Cog {
 
     private String getClassPath(Context ctx) {
         if (ctx.args.size() < 2) {
-            ctx.send(Emotes.getFailure() + " I need a cog name or class path!").queue();
+            ctx.fail("I need a cog name or class path!");
             throw new PassException();
         }
         String arg = ctx.args.get(1);
 
         if (!Strings.isPackage(arg)) {
-            ctx.send(Emotes.getFailure() + " Invalid cog name or class path!").queue();
+            ctx.fail("Invalid cog name or class path!");
             throw new PassException();
         }
 
@@ -124,7 +124,7 @@ public class CogmanCog extends Cog {
         try {
             Class.forName(path);
         } catch (ClassNotFoundException e) {
-            ctx.send(Emotes.getFailure() + " That class doesn't exist!").queue();
+            ctx.fail("That class doesn't exist!");
             throw new PassException();
         }
 
@@ -138,7 +138,7 @@ public class CogmanCog extends Cog {
         if (opt.isPresent()) {
             return opt.get();
         } else {
-            ctx.send(Emotes.getFailure() + " That cog isn't loaded!").queue();
+            ctx.fail("That cog isn't loaded!");
             throw new PassException();
         }
     }
@@ -221,7 +221,7 @@ public class CogmanCog extends Cog {
 
         if (bot.cogs.values().stream()
                 .anyMatch(c -> c.getClass().equals(clazz))) {
-            ctx.send(Emotes.getFailure() + " Cog already loaded!").queue();
+            ctx.fail("Cog already loaded!");
             return;
         }
 
@@ -229,7 +229,7 @@ public class CogmanCog extends Cog {
         bot.registerCog(cog);
         cog.load();
 
-        ctx.send(Emotes.getSuccess() + " Cog `" + clazz.getName() + "` loaded.").queue();
+        ctx.success("Cog `" + clazz.getName() + "` loaded.");
     }
 
     private void cmdUnload(Context ctx) {
@@ -237,19 +237,19 @@ public class CogmanCog extends Cog {
         Cog cog = ensureLoaded(ctx, path);
 
         bot.unregisterCog(cog);
-        ctx.send(Emotes.getSuccess() + " Cog `" + cog.getClass().getName() + "` unloaded.").queue();
+        ctx.success("Cog `" + cog.getClass().getName() + "` unloaded.");
     }
 
     private void cmdEnable(Context ctx) {
         String path = getClassPath(ctx);
 
-        ctx.send(Emotes.getFailure() + " This feature hasn't been implemented yet.").queue();
+        ctx.fail("This feature hasn't been implemented yet.");
     }
 
     private void cmdDisable(Context ctx) {
         String path = getClassPath(ctx);
 
-        ctx.send(Emotes.getFailure() + " This feature hasn't been implemented yet.").queue();
+        ctx.fail("This feature hasn't been implemented yet.");
     }
 
     private void cmdInfo(Context ctx) {

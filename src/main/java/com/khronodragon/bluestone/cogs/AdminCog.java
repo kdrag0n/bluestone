@@ -75,14 +75,14 @@ public class AdminCog extends Cog {
         if (adminList.size() > 0)
             ctx.send("**Current bot admins:**\n    \u2022 " + String.join("\n    \u2022 ", adminList)).queue();
         else
-            ctx.send(Emotes.getFailure() + " There are no admins!").queue();
+            ctx.fail("There are no admins!");
     }
 
     private void adminCmdAdd(Context ctx) throws SQLException, PermissionError {
         com.khronodragon.bluestone.Command.checkPerms(ctx, ADMIN_PERM);
 
         if (ctx.args.size() != 2) {
-            ctx.send(Emotes.getFailure() + " I need a mention or user ID!").queue();
+            ctx.fail("I need a mention or user ID!");
             return;
         }
         String input = ctx.args.get(1);
@@ -97,7 +97,7 @@ public class AdminCog extends Cog {
             try {
                 userId = MiscUtil.parseSnowflake(input);
             } catch (NumberFormatException e) {
-                ctx.send(Emotes.getFailure() + " Invalid user ID!").queue();
+                ctx.fail("Invalid user ID!");
                 return;
             }
 
@@ -109,14 +109,14 @@ public class AdminCog extends Cog {
         BotAdmin adminObj = new BotAdmin(userId, username);
         bot.getAdminDao().createOrUpdate(adminObj);
 
-        ctx.send(Emotes.getSuccess() + " User added/updated.").queue();
+        ctx.success("User added/updated.");
     }
 
     private void adminCmdRemove(Context ctx) throws SQLException, PermissionError {
         com.khronodragon.bluestone.Command.checkPerms(ctx, ADMIN_PERM);
 
         if (ctx.args.size() != 2) {
-            ctx.send(Emotes.getFailure() + " I need a mention or user ID!").queue();
+            ctx.fail("I need a mention or user ID!");
             return;
         }
         String input = ctx.args.get(1);
@@ -128,14 +128,14 @@ public class AdminCog extends Cog {
             try {
                 userId = MiscUtil.parseSnowflake(input);
             } catch (NumberFormatException e) {
-                ctx.send(Emotes.getFailure() + " Invalid user ID!").queue();
+                ctx.fail("Invalid user ID!");
                 return;
             }
         }
 
         bot.getAdminDao().deleteById(userId);
 
-        ctx.send(Emotes.getSuccess() + " User removed.").queue();
+        ctx.success("User removed.");
     }
 
     @Command(name = "prefix", desc = "Get or set the command prefix.", aliases = {"setprefix"}, guildOnly = true)
@@ -144,7 +144,7 @@ public class AdminCog extends Cog {
             com.khronodragon.bluestone.Command.checkPerms(ctx, PREFIX_MOD_PERMS);
 
             if (ctx.rawArgs.length() > 32) {
-                ctx.send(Emotes.getFailure() + " Prefix too long!").queue();
+                ctx.fail("Prefix too long!");
             } else {
                 String rawPrefix = ctx.rawArgs;
                 if (rawPrefix.equals(ctx.guild.getSelfMember().getAsMention())) {
@@ -155,7 +155,7 @@ public class AdminCog extends Cog {
                 bot.getPrefixDao().createOrUpdate(prefix);
                 bot.getShardUtil().getPrefixStore().updateCache(ctx.guild.getIdLong(), rawPrefix);
 
-                ctx.send(Emotes.getSuccess() + " Prefix set.").queue();
+                ctx.success("Prefix set.");
             }
         } else {
             ctx.send("**Prefix:** `" + ctx.prefix + "`").queue();

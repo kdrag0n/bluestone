@@ -218,10 +218,10 @@ public class MusicCog extends Cog {
     private void channelChecks(Context ctx) {
         VoiceChannel ch = ctx.member.getVoiceState().getChannel();
         if (ctx.guild.getSelfMember().getVoiceState().getChannel() == null) {
-            ctx.send(Emotes.getFailure() + " I'm not in a voice channel...").queue();
+            ctx.fail("I'm not in a voice channel...");
             throw new PassException();
         } else if (ch == null) {
-            ctx.send(Emotes.getFailure() + " You're not in a voice channel!").queue();
+            ctx.fail("You're not in a voice channel!");
             throw new PassException();
         } else if (ctx.guild.getSelfMember().getVoiceState().getChannel().getIdLong() != ch.getIdLong()) {
             ctx.send("🛑 You need to be in the same voice channel as me to do that!").queue();
@@ -233,7 +233,7 @@ public class MusicCog extends Cog {
     public void summon(Context ctx) {
         VoiceChannel channel = ctx.member.getVoiceState().getChannel();
         if (channel == null) {
-            ctx.send(Emotes.getFailure() + " You aren't in a voice channel!").queue();
+            ctx.fail("You aren't in a voice channel!");
             throw new PassException();
         }
 
@@ -243,7 +243,7 @@ public class MusicCog extends Cog {
         try {
             manager.openAudioConnection(channel);
         } catch (PermissionException e) {
-            ctx.send(Emotes.getFailure() + " I don't have permission to join that channel!").queue();
+            ctx.fail("I don't have permission to join that channel!");
             throw new PassException();
         }
     }
@@ -251,7 +251,7 @@ public class MusicCog extends Cog {
     @Command(name = "play", desc = "Play something!", usage = "[search terms / link]", guildOnly = true)
     public void cmdPlay(Context ctx) throws SQLException {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need something to play!").queue();
+            ctx.fail("I need something to play!");
             return;
         }
 
@@ -263,7 +263,7 @@ public class MusicCog extends Cog {
                 return;
             }
         } catch (NullPointerException ignored) {
-            ctx.send(Emotes.getFailure() + " We both need to be connected to a voice channel!").queue();
+            ctx.fail("We both need to be connected to a voice channel!");
             return;
         }
 
@@ -272,7 +272,7 @@ public class MusicCog extends Cog {
         int mn = isPatron ? 48 : 12;
 
         if (state.scheduler.queue.size() >= mn) {
-            ctx.send(Emotes.getFailure() + " There can only be up to " + mn + " items in the queue for you!").queue();
+            ctx.fail("There can only be up to " + mn + " items in the queue for you!");
             return;
         }
 
@@ -346,7 +346,7 @@ public class MusicCog extends Cog {
     @Command(name = "queue", desc = "Show the current queue.", guildOnly = true)
     public void cmdQueue(Context ctx) {
         if (ctx.guild.getSelfMember().getVoiceState().getChannel() == null) {
-            ctx.send(Emotes.getFailure() + " I'm not in a voice channel...").queue();
+            ctx.fail("I'm not in a voice channel...");
             return;
         }
         AudioState state = getAudioState(ctx.guild);
@@ -386,7 +386,7 @@ public class MusicCog extends Cog {
                     .setEmbed(builder.build())
                     .build()).queue();
         } catch (IllegalArgumentException e) {
-            ctx.send(Emotes.getFailure() + " Queue too long to be displayed!").queue();
+            ctx.fail("Queue too long to be displayed!");
         }
     }
 
@@ -401,7 +401,7 @@ public class MusicCog extends Cog {
 
         ExtraTrackInfo info = state.scheduler.current.getUserData(ExtraTrackInfo.class);
         if (info == null) {
-            ctx.send(Emotes.getFailure() + " The current track is missing a state!").queue();
+            ctx.fail("The current track is missing a state!");
             return;
         }
 
@@ -442,7 +442,7 @@ public class MusicCog extends Cog {
 
         ExtraTrackInfo info = state.scheduler.current.getUserData(ExtraTrackInfo.class);
         if (info == null) {
-            ctx.send(Emotes.getFailure() + " The current track is missing a state!").queue();
+            ctx.fail("The current track is missing a state!");
             return;
         }
 
@@ -498,10 +498,10 @@ public class MusicCog extends Cog {
 
         if (settings.alwaysPlayFirstResult()) {
             settings.setAlwaysPlayFirstResult(false);
-            ctx.send(Emotes.getSuccess() + " I will now give a selection of search results before playing.").queue();
+            ctx.success("I will now give a selection of search results before playing.");
         } else {
             settings.setAlwaysPlayFirstResult(true);
-            ctx.send(Emotes.getSuccess() + " I will now automatically play the first search result.").queue();
+            ctx.success("I will now automatically play the first search result.");
         }
 
         settingsDao.createOrUpdate(settings);

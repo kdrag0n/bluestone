@@ -110,7 +110,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
                         try {
                             track = tracks.get(i - 1);
                         } catch (IndexOutOfBoundsException e) {
-                            ctx.send(Emotes.getFailure() + " No such track!").queue();
+                            ctx.fail("No such track!");
                             return;
                         }
 
@@ -183,7 +183,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
             iteration += 1;
             manager.loadItem(PREFIXES[iteration] + term, this);
         } else {
-            if (canTalk) ctx.send(Emotes.getFailure() + " No matches found!").queue();
+            if (canTalk) ctx.fail("No matches found!");
             if (canReact) {
                 Cog.removeReactionIfExists(ctx.message, "⌛");
                 ctx.message.addReaction("❌").queue();

@@ -138,7 +138,7 @@ public class CoreCog extends Cog {
     @Command(name = "say", desc = "Say something! Say it!", aliases = {"echo"}, usage = "[message]")
     public void cmdSay(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need text to say!").queue();
+            ctx.fail("I need text to say!");
             return;
         }
 
@@ -309,7 +309,7 @@ public class CoreCog extends Cog {
             try {
                 ctx.message.addReaction("✅").queue();
             } catch (PermissionException ignored) {
-                ctx.send(Emotes.getSuccess() + " Check your DMs!").queue();
+                ctx.success("Check your DMs!");
             }
         }
     }

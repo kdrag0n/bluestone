@@ -182,7 +182,7 @@ public class ModerationCog extends Cog {
             usage = "[parameters]", thread = true)
     public void cmdPurge(Context ctx) {
         if (bot.isSelfbot()) {
-            ctx.send(Emotes.getFailure() + " Discord doesn't allow selfbots to purge.").queue();
+            ctx.fail("Discord doesn't allow selfbots to purge.");
             return;
         }
         if (ctx.rawArgs.length() < 1) {
@@ -209,7 +209,7 @@ public class ModerationCog extends Cog {
             try {
                 pattern = Pattern.compile(matcher.group(1));
             } catch (PatternSyntaxException e) {
-                ctx.send(Emotes.getFailure() + " Invalid regex given!").queue();
+                ctx.fail("Invalid regex given!");
                 return;
             }
         }
@@ -223,14 +223,14 @@ public class ModerationCog extends Cog {
             try {
                 limit = Integer.parseInt(matcher.group(1).trim());
             } catch (NumberFormatException e) {
-                ctx.send(Emotes.getFailure() + " Invalid number given for limit!").queue();
+                ctx.fail("Invalid number given for limit!");
                 return;
             }
         }
         args = PURGE_NUM_PATTERN.matcher(args).replaceAll(" ").trim();
 
         if (limit > 800) {
-            ctx.send(Emotes.getFailure() + " Invalid message limit!").queue();
+            ctx.fail("Invalid message limit!");
             return;
         }
         limit += 1;
@@ -272,7 +272,7 @@ public class ModerationCog extends Cog {
         }
 
         if (toDelete.isEmpty()) {
-            ctx.send(Emotes.getFailure() + " No messages match your criteria!").queue();
+            ctx.fail("No messages match your criteria!");
             return;
         }
 
@@ -310,19 +310,19 @@ public class ModerationCog extends Cog {
             usage = "[@user] {reason}")
     public void cmdMute(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need someone to mute!").queue();
+            ctx.fail("I need someone to mute!");
             return;
         } else if (!Strings.isMention(ctx.rawArgs) || ctx.message.getMentionedUsers().size() < 1) {
-            ctx.send(Emotes.getFailure() + " Invalid mention!").queue();
+            ctx.fail("Invalid mention!");
             return;
         } else if (!ctx.guild.getSelfMember().hasPermission(Permission.MANAGE_PERMISSIONS)) {
-            ctx.send(Emotes.getFailure() + " I need the **Manage Channels** permission!").queue();
+            ctx.fail("I need the **Manage Channels** permission!");
             return;
         }
 
         Member user = ctx.guild.getMember(ctx.message.getMentionedUsers().get(0));
         if (!ctx.guild.getSelfMember().canInteract(user)) {
-            ctx.send(Emotes.getFailure() + " I need a higher-level role to mute that user, and I can't mute the owner.").queue();
+            ctx.fail("I need a higher-level role to mute that user, and I can't mute the owner.");
             return;
         }
 
@@ -361,19 +361,19 @@ public class ModerationCog extends Cog {
     @Command(name = "unmute", desc = "Unmute someone in all text channels.", guildOnly = true, usage = "[@user] {reason}")
     public void cmdUnmute(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need someone to unmute!").queue();
+            ctx.fail("I need someone to unmute!");
             return;
         } else if (!Strings.isMention(ctx.rawArgs) || ctx.message.getMentionedUsers().size() < 1) {
-            ctx.send(Emotes.getFailure() + " Invalid mention!").queue();
+            ctx.fail("Invalid mention!");
             return;
         } else if (!ctx.guild.getSelfMember().hasPermission(Permission.MANAGE_PERMISSIONS)) {
-            ctx.send(Emotes.getFailure() + " I need the **Manage Channels** permission!").queue();
+            ctx.fail("I need the **Manage Channels** permission!");
             return;
         }
 
         Member user = ctx.guild.getMember(ctx.message.getMentionedUsers().get(0));
         if (!ctx.guild.getSelfMember().canInteract(user)) {
-            ctx.send(Emotes.getFailure() + " I need a higher-level role to unmute that user, and I can't unmute the owner.").queue();
+            ctx.fail("I need a higher-level role to unmute that user, and I can't unmute the owner.");
             return;
         }
 
@@ -408,11 +408,11 @@ public class ModerationCog extends Cog {
             usage = "[@user or user ID] {reason}")
     public void cmdBan(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need someone to ban!").queue();
+            ctx.fail("I need someone to ban!");
             return;
         } else if ((!MENTION_PATTERN.matcher(ctx.rawArgs).find() || ctx.message.getMentionedUsers().size() < 1) &&
                 !Strings.isID(ctx.args.get(0))) {
-            ctx.send(Emotes.getFailure() + " Invalid mention or user ID!").queue();
+            ctx.fail("Invalid mention or user ID!");
             return;
         }
 
@@ -434,16 +434,16 @@ public class ModerationCog extends Cog {
         } else {
             user = ctx.guild.getMemberById(ctx.args.get(0));
             if (user == null) {
-                ctx.send(Emotes.getFailure() + " I can't find that member!\n*hackbanning / banning by ID before an user ever joins is coming Soon™*").queue();
+                ctx.fail("I can't find that member!\n*hackbanning / banning by ID before an user ever joins is coming Soon™*");
                 return;
             }
         }
 
         if (!ctx.guild.getSelfMember().canInteract(user)) {
-            ctx.send(Emotes.getFailure() + " I need a higher-level role to ban that user, and I can't ban the owner.").queue();
+            ctx.fail("I need a higher-level role to ban that user, and I can't ban the owner.");
             return;
         } else if (!ctx.guild.getSelfMember().hasPermission(Permission.BAN_MEMBERS)) {
-            ctx.send(Emotes.getFailure() + " I need permission to **ban members**!").queue();
+            ctx.fail("I need permission to **ban members**!");
             return;
         }
 
@@ -472,11 +472,11 @@ public class ModerationCog extends Cog {
             usage = "[@user or user ID] [reason]")
     public void cmdKick(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need someone to kick!").queue();
+            ctx.fail("I need someone to kick!");
             return;
         } else if ((!MENTION_PATTERN.matcher(ctx.rawArgs).find() || ctx.message.getMentionedUsers().size() < 1) &&
                 !Strings.isID(ctx.args.get(0))) {
-            ctx.send(Emotes.getFailure() + " Invalid mention or user ID!").queue();
+            ctx.fail("Invalid mention or user ID!");
             return;
         }
 
@@ -498,16 +498,16 @@ public class ModerationCog extends Cog {
         } else {
             user = ctx.guild.getMemberById(ctx.args.get(0));
             if (user == null) {
-                ctx.send(Emotes.getFailure() + " No such member!").queue();
+                ctx.fail("No such member!");
                 return;
             }
         }
 
         if (!ctx.guild.getSelfMember().canInteract(user)) {
-            ctx.send(Emotes.getFailure() + " I need a higher-level role to kick that user, and I can't kick the owner.").queue();
+            ctx.fail("I need a higher-level role to kick that user, and I can't kick the owner.");
             return;
         } else if (!ctx.guild.getSelfMember().hasPermission(Permission.KICK_MEMBERS)) {
-            ctx.send(Emotes.getFailure() + " I need permission to **kick members**!").queue();
+            ctx.fail("I need permission to **kick members**!");
             return;
         }
 
@@ -575,7 +575,7 @@ public class ModerationCog extends Cog {
 
         if (ctx.args.size() < 2 ||
                 (role = parseRole(ctx.guild, ctx.rawArgs.substring(ctx.args.get(0).length()).trim())) == null) {
-            ctx.send(Emotes.getFailure() + " I need a role in the form of the name, @role, or ID!").queue();
+            ctx.fail("I need a role in the form of the name, @role, or ID!");
             throw new PassException();
         }
 
@@ -585,7 +585,7 @@ public class ModerationCog extends Cog {
     private void autoroleList(Context ctx) throws SQLException {
         Collection<GuildAutorole> autoroles = autorolesFor(ctx.guild.getIdLong());
         if (autoroles.size() < 1) {
-            ctx.send(Emotes.getFailure() + " There are no autoroles in this server!").queue();
+            ctx.fail("There are no autoroles in this server!");
             return;
         }
 
@@ -608,32 +608,32 @@ public class ModerationCog extends Cog {
     private void autoroleAdd(Context ctx) throws SQLException {
         Role role = requireRole(ctx);
         if (autoroleDao.idExists(role.getIdLong())) {
-            ctx.send(Emotes.getFailure() + " Role is already an autorole!").queue();
+            ctx.fail("Role is already an autorole!");
             return;
         } else if (role.isManaged()) {
-            ctx.send(Emotes.getFailure() + " That role is a special bot role, or is managed by an integration!").queue();
+            ctx.fail("That role is a special bot role, or is managed by an integration!");
             return;
         } else if (!ctx.guild.getSelfMember().canInteract(role)) {
-            ctx.send(Emotes.getFailure() + " I need a higher-level role to apply that role, and I can't apply the owner.").queue();
+            ctx.fail("I need a higher-level role to apply that role, and I can't apply the owner.");
             return;
         }
 
         GuildAutorole autorole = new GuildAutorole(role.getIdLong(), ctx.guild.getIdLong(), 0, "{}");
         autoroleDao.create(autorole);
 
-        ctx.send(Emotes.getSuccess() + " Role added to autoroles.").queue();
+        ctx.success("Role added to autoroles.");
     }
 
     private void autoroleRemove(Context ctx) throws SQLException {
         Role role = requireRole(ctx);
         if (!autoroleDao.idExists(role.getIdLong())) {
-            ctx.send(Emotes.getFailure() + " Role isn't an already autorole!").queue();
+            ctx.fail("Role isn't an already autorole!");
             return;
         }
 
         autoroleDao.deleteById(role.getIdLong());
 
-        ctx.send(Emotes.getSuccess() + " Role removed from autoroles.").queue();
+        ctx.success("Role removed from autoroles.");
     }
 
     private void autoroleClear(Context ctx) throws SQLException {
@@ -642,7 +642,7 @@ public class ModerationCog extends Cog {
                 .eq("guildId", ctx.guild.getIdLong());
         int deleted = builder.delete();
 
-        ctx.send(Emotes.getSuccess() + " Cleared " + deleted + " autoroles.").queue();
+        ctx.success("Cleared " + deleted + " autoroles.");
     }
 
     @Perm.Invite
@@ -658,7 +658,7 @@ public class ModerationCog extends Cog {
         final TextChannel ch = ((TextChannel) channel);
 
         if (!ctx.guild.getSelfMember().hasPermission(ch, Permission.CREATE_INSTANT_INVITE)) {
-            ctx.send(Emotes.getFailure() + " I need to be able to **create instant invites**!").queue();
+            ctx.fail("I need to be able to **create instant invites**!");
             return;
         }
 
@@ -671,7 +671,7 @@ public class ModerationCog extends Cog {
                     ctx.send(Emotes.getSuccess() + " Invite created to " +
                             ch.getAsMention() + ".\n" + i.getURL()).queue();
                 }, e -> {
-                    ctx.send(Emotes.getFailure() + " Failed to create invite!").queue();
+                    ctx.fail("Failed to create invite!");
                     logger.error("Invite creation error", e);
                 });
     }
@@ -687,7 +687,7 @@ public class ModerationCog extends Cog {
                     " You must specify a #channel to archive, and a destination #channel.").queue();
             return;
         } else if (archivingGuilds.contains(ctx.guild.getIdLong())) {
-            ctx.send(Emotes.getFailure() + " There is already an archival running in this server!").queue();
+            ctx.fail("There is already an archival running in this server!");
             return;
         }
 

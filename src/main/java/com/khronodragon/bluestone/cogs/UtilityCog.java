@@ -501,7 +501,7 @@ public class UtilityCog extends Cog {
             ctx.send('<' + ctx.jda.asBot().getInviteUrl(PERMS_NEEDED) + '>').queue();
         } else {
             if (!Strings.isID(ctx.rawArgs)) {
-                ctx.send(Emotes.getFailure() + " Invalid ID!").queue();
+                ctx.fail("Invalid ID!");
                 return;
             } else if (ctx.rawArgs.equals(ctx.jda.getSelfUser().getId())) {
                 ctx.send('<' + ctx.jda.asBot().getInviteUrl(PERMS_NEEDED) + '>').queue();
@@ -523,7 +523,7 @@ public class UtilityCog extends Cog {
     @Command(name = "poll", desc = "Start a poll, with reactions.", usage = "[emotes] [question] [time]", guildOnly = true)
     public void cmdPoll(Context ctx) {
         if (ctx.args.size() < 1) {
-            ctx.send(Emotes.getFailure() + " Missing question, emotes, and time (like `5 minutes`)!").queue();
+            ctx.fail("Missing question, emotes, and time (like `5 minutes`)!");
             return;
         }
 
@@ -559,7 +559,7 @@ public class UtilityCog extends Cog {
         if (customEmotes.contains(null)) {
             customEmotes.remove(null);
         } else if (unicodeEmotes.size() + customEmotes.size() < 2) {
-            ctx.send(Emotes.getFailure() + " You need at least 2 emotes to start a poll!").queue();
+            ctx.fail("You need at least 2 emotes to start a poll!");
             return;
         }
 
@@ -681,7 +681,7 @@ public class UtilityCog extends Cog {
     @Command(name = "meme", desc = "Generate a custom meme.", usage = "[meme text / [top text] | [bottom text]]")
     public void cmdMeme(Context ctx) {
         if (ctx.rawArgs.length() < 2) {
-            ctx.send(Emotes.getFailure() + " I need some text to use!").queue();
+            ctx.fail("I need some text to use!");
             return;
         }
         ctx.channel.sendTyping().queue();
@@ -763,7 +763,7 @@ public class UtilityCog extends Cog {
     @Command(name = "urban", desc = "Define something with Urban Dictionary.", aliases = {"define"})
     public void cmdUrban(Context ctx) throws UnsupportedEncodingException {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need a term!").queue();
+            ctx.fail("I need a term!");
             return;
         }
         ctx.channel.sendTyping().queue();
@@ -775,7 +775,7 @@ public class UtilityCog extends Cog {
             JSONArray results = new JSONObject(response.body().string()).getJSONArray("list");
 
             if (results.length() < 1) {
-                ctx.send(Emotes.getFailure() + " No definitions found.").queue();
+                ctx.fail("No definitions found.");
                 return;
             }
             JSONObject word = results.getJSONObject(0);
@@ -809,7 +809,7 @@ public class UtilityCog extends Cog {
             ctx.send(emb.build()).queue();
         }, e -> {
             logger.error("Urban Dictionary API error", e);
-            ctx.send(Emotes.getFailure() + " Request failed.").queue();
+            ctx.fail("Request failed.");
         }));
     }
 
@@ -839,7 +839,7 @@ public class UtilityCog extends Cog {
     @Command(name = "charinfo", desc = "Get the Unicode character info for some text.", usage = "[text]")
     public void cmdCharInfo(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need some text!").queue();
+            ctx.fail("I need some text!");
             return;
         }
 
@@ -869,7 +869,7 @@ public class UtilityCog extends Cog {
     @Command(name = "encode", desc = "Encode some text into Base65536.", usage = "[text]")
     public void cmdEncode(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need some text!").queue();
+            ctx.fail("I need some text!");
             return;
         }
 
@@ -877,7 +877,7 @@ public class UtilityCog extends Cog {
         try {
             bytes = ctx.rawArgs.getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
-            ctx.send(Emotes.getFailure() + " The bot's system doesn't support an essential encoding.").queue();
+            ctx.fail("The bot's system doesn't support an essential encoding.");
             return;
         }
 
@@ -887,7 +887,7 @@ public class UtilityCog extends Cog {
     @Command(name = "decode", desc = "Decode Base65536 into regular text.", usage = "[text]")
     public void cmdDecode(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need some text!").queue();
+            ctx.fail("I need some text!");
             return;
         }
 
@@ -903,7 +903,7 @@ public class UtilityCog extends Cog {
         try {
             decoded = new String(rawOutput, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            ctx.send(Emotes.getFailure() + " The bot's system doesn't support an essential encoding.").queue();
+            ctx.fail("The bot's system doesn't support an essential encoding.");
             return;
         }
 
@@ -915,7 +915,7 @@ public class UtilityCog extends Cog {
             usage = "[server address]", aliases = {"mc", "mcserver"}, thread = true)
     public void cmdMineServer(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need a server address or skin name!").queue();
+            ctx.fail("I need a server address or skin name!");
             return;
         }
 
@@ -940,7 +940,7 @@ public class UtilityCog extends Cog {
                         .setImage("https://use.gameapis.net/mc/images/skin/" + name + "/150/true")
                         .build()).queue();
             } else {
-                ctx.send(Emotes.getFailure() + " Invalid server address or skin name.").queue();
+                ctx.fail("Invalid server address or skin name.");
             }
 
             return;
@@ -953,7 +953,7 @@ public class UtilityCog extends Cog {
             data = new MinecraftPing().getPing(new MinecraftPingOptions().setHostname(server).setPort(port).setTimeout(5000));
         } catch (IOException e) {
             logger.error("Error connecting to Minecraft server:", e);
-            ctx.send(Emotes.getFailure() + " A network error occurred.").queue();
+            ctx.fail("A network error occurred.");
             return;
         }
 
@@ -1051,10 +1051,10 @@ public class UtilityCog extends Cog {
             thread = true)
     public void cmdContact(Context ctx) throws SQLException {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need a message!").queue();
+            ctx.fail("I need a message!");
             return;
         } else if (contactBanDao.queryForId(ctx.author.getIdLong()) != null) {
-            ctx.send(Emotes.getFailure() + " You're not allowed to contact the owner!").queue();
+            ctx.fail("You're not allowed to contact the owner!");
             return;
         }
 
@@ -1087,7 +1087,7 @@ public class UtilityCog extends Cog {
                 .setEmbed(emb.build())
                 .build()).queue();
 
-        ctx.send(Emotes.getSuccess() + " Message sent.").queue();
+        ctx.success("Message sent.");
     }
 
     @Perm.Owner
@@ -1104,7 +1104,7 @@ public class UtilityCog extends Cog {
             userId = MiscUtil.parseSnowflake(ctx.rawArgs);
             user = ctx.jda.retrieveUserById(userId).complete();
         } else {
-            ctx.send(Emotes.getFailure() + " You must @mention a user or provide their ID!").queue();
+            ctx.fail("You must @mention a user or provide their ID!");
             return;
         }
 
@@ -1123,7 +1123,7 @@ public class UtilityCog extends Cog {
                         "** (`" + q.id + "`)").collect(Collectors.joining("\n    \u2022 "));
 
         if (rendered.length() < 1) {
-            ctx.send(Emotes.getSuccess() + " Nobody is banned from contacting the owner.").queue();
+            ctx.success("Nobody is banned from contacting the owner.");
         } else {
             ctx.send("The following users are banned from contacting the owner:\n    \u2022 " + rendered).queue();
         }
@@ -1143,7 +1143,7 @@ public class UtilityCog extends Cog {
             userId = MiscUtil.parseSnowflake(ctx.rawArgs);
             user = ctx.jda.retrieveUserById(userId).complete();
         } else {
-            ctx.send(Emotes.getFailure() + " You must @mention a user or provide their ID!").queue();
+            ctx.fail("You must @mention a user or provide their ID!");
             return;
         }
 
@@ -1184,7 +1184,7 @@ public class UtilityCog extends Cog {
     @Command(name = "qrcode", desc = "Generate a QR code.", aliases = {"qr"}, thread = true)
     public void cmdQrcode(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need some text!").queue();
+            ctx.fail("I need some text!");
             return;
         }
 
@@ -1199,7 +1199,7 @@ public class UtilityCog extends Cog {
             data = stream.toByteArray();
         } catch (IllegalArgumentException|IOException e) {
             logger.error("QR code error", e);
-            ctx.send(Emotes.getFailure() + " An error occurred. Text too long?").queue();
+            ctx.fail("An error occurred. Text too long?");
             return;
         }
 
@@ -1253,7 +1253,7 @@ public class UtilityCog extends Cog {
                         .getInt("num");
             } catch (IOException e) {
                 logger.error("xkcd > latest: http error", e);
-                ctx.send(Emotes.getFailure() + " An error occurred.").queue();
+                ctx.fail("An error occurred.");
                 return;
             }
         } else if (first.equalsIgnoreCase("random")) {
@@ -1267,7 +1267,7 @@ public class UtilityCog extends Cog {
                         .getInt("num") + 1);
             } catch (IOException e) {
                 logger.error("xkcd > random: http error", e);
-                ctx.send(Emotes.getFailure() + " An error occurred.").queue();
+                ctx.fail("An error occurred.");
                 return;
             }
         } else if (((first.equalsIgnoreCase("number") || first.equalsIgnoreCase("num")) &&
@@ -1295,7 +1295,7 @@ public class UtilityCog extends Cog {
                 }
             } catch (IOException e) {
                 logger.error("xkcd > random: http error", e);
-                ctx.send(Emotes.getFailure() + " An error occurred.").queue();
+                ctx.fail("An error occurred.");
                 return;
             }
         } else {
@@ -1319,7 +1319,7 @@ public class UtilityCog extends Cog {
             comicUrl = resp.getString("img");
         } catch (IOException e) {
             logger.error("xkcd: http error", e);
-            ctx.send(Emotes.getFailure() + " An error occurred.").queue();
+            ctx.fail("An error occurred.");
             return;
         }
 
@@ -1340,7 +1340,7 @@ public class UtilityCog extends Cog {
     @Command(name = "b64encode", desc = "Encode text into Base64.")
     public void cmdB64encode(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need some text!").queue();
+            ctx.fail("I need some text!");
             return;
         }
 
@@ -1350,24 +1350,24 @@ public class UtilityCog extends Cog {
     @Command(name = "b64decode", desc = "Decode Base64 into text.")
     public void cmdB64decode(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need some text!").queue();
+            ctx.fail("I need some text!");
             return;
         }
 
         try {
             ctx.send("```" + new String(Base64.getDecoder().decode(ctx.rawArgs)) + "```").queue();
         } catch (IllegalArgumentException e) {
-            ctx.send(Emotes.getFailure() + " An error occurred: `" + e.getMessage() + "`").queue();
+            ctx.fail("An error occurred: `" + e.getMessage() + "`");
         }
     }
 
     @Command(name = "ipinfo", desc = "Get information about an IP or domain.", aliases = {"ip"}, thread = true)
     public void cmdIpInfo(Context ctx) throws Throwable {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need an IP or domain!").queue();
+            ctx.fail("I need an IP or domain!");
             return;
         } else if (!Strings.isIPorDomain(ctx.rawArgs)) {
-            ctx.send(Emotes.getFailure() + " Invalid domain, IPV4, or IPV6 address!").queue();
+            ctx.fail("Invalid domain, IPV4, or IPV6 address!");
             return;
         }
 
@@ -1379,7 +1379,7 @@ public class UtilityCog extends Cog {
         } catch (ExecutionException e) {
             if (e.getCause() instanceof IOException) {
                 logger.error("ipinfo API error", e.getCause());
-                ctx.send(Emotes.getFailure() + " Request failed.").queue();
+                ctx.fail("Request failed.");
             } else {
                 throw e.getCause();
             }
@@ -1389,7 +1389,7 @@ public class UtilityCog extends Cog {
     @Command(name = "mcskin", desc = "Get someone's Minecraft skin.", usage = "[username]")
     public void cmdMcskin(Context ctx) {
         if (!Strings.isMinecraftName(ctx.rawArgs)) {
-            ctx.send(Emotes.getFailure() + " I need a valid username!").queue();
+            ctx.fail("I need a valid username!");
             return;
         }
         final String name = ctx.rawArgs;
@@ -1404,7 +1404,7 @@ public class UtilityCog extends Cog {
     @Command(name = "mchead", desc = "Get someone's Minecraft head.", usage = "[username]")
     public void cmdMchead(Context ctx) {
         if (!Strings.isMinecraftName(ctx.rawArgs)) {
-            ctx.send(Emotes.getFailure() + " I need a valid username!").queue();
+            ctx.fail("I need a valid username!");
             return;
         }
         final String name = ctx.rawArgs;
@@ -1438,14 +1438,14 @@ public class UtilityCog extends Cog {
             ctx.send(emb.build()).queue();
         }, e -> {
             logger.error("mcapi status API error", e);
-            ctx.send(Emotes.getFailure() + " Failed to check Minecraft services.").queue();
+            ctx.fail("Failed to check Minecraft services.");
         }));
     }
 
     @Command(name = "supporters", desc = "Get a list of Patreon supporters.", aliases = {"patrons", "patreon"})
     public void cmdSupporters(Context ctx) {
         if (!(Bot.patreonData.has("rand") && Bot.patreonData.has("always"))) {
-            ctx.send(Emotes.getFailure() + " The Patreon data loaded is invalid. Contact the owner.").queue();
+            ctx.fail("The Patreon data loaded is invalid. Contact the owner.");
             return;
         }
         EmbedBuilder emb = newEmbedWithAuthor(ctx)
@@ -1478,7 +1478,7 @@ public class UtilityCog extends Cog {
     public void cmdInviteInfo(Context ctx) {
         Matcher matcher = INVITE_PATTERN.matcher(ctx.rawArgs);
         if (!matcher.find()) {
-            ctx.send(Emotes.getFailure() + " Invalid or **expired** invite link or code!").queue();
+            ctx.fail("Invalid or **expired** invite link or code!");
             return;
         }
         String code = matcher.group(1);
@@ -1536,17 +1536,17 @@ public class UtilityCog extends Cog {
             });
         }, err -> {
             logger.warn("Error fetching invite info", err);
-            ctx.send(Emotes.getFailure() + " Error fetching invite info!").queue();
+            ctx.fail("Error fetching invite info!");
         });
     }
 
     @Command(name = "weather", desc = "Get the weather for a place.", usage = "[city]")
     public void cmdWeather(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need a place to get the weather for!").queue();
+            ctx.fail("I need a place to get the weather for!");
             return;
         } else if (!bot.getKeys().has("openweathermap")) {
-            ctx.send(Emotes.getFailure() + " My owner hasn't set this feature up!").queue();
+            ctx.fail("My owner hasn't set this feature up!");
             return;
         }
 
@@ -1614,11 +1614,11 @@ public class UtilityCog extends Cog {
         long id;
         try {
             if (ctx.args.size() < 1 || (id = MiscUtil.parseSnowflake(ctx.args.get(0))) < 0) {
-                ctx.send(Emotes.getFailure() + " Invalid Snowflake ID provided!").queue();
+                ctx.fail("Invalid Snowflake ID provided!");
                 return;
             }
         } catch (NumberFormatException ignored) {
-            ctx.send(Emotes.getFailure() + " Invalid Snowflake ID provided!").queue();
+            ctx.fail("Invalid Snowflake ID provided!");
             return;
         }
 
@@ -1632,10 +1632,10 @@ public class UtilityCog extends Cog {
     @Command(name = "calculate", desc = "Evaluate a mathematical expression.", aliases = {"calc", "calculator"})
     public void cmdCalculate(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need an expression to evaluate!").queue();
+            ctx.fail("I need an expression to evaluate!");
             return;
         } else if (ctx.rawArgs.contains("while") || ctx.rawArgs.contains("for")) {
-            ctx.send(Emotes.getFailure() + " Blocked keywords found!").queue();
+            ctx.fail("Blocked keywords found!");
             return;
         }
 
@@ -1659,7 +1659,7 @@ public class UtilityCog extends Cog {
                     .eval("return calc([[" + c + "]], [[" + l + "]])"));
             _result = task.get(2, TimeUnit.SECONDS);
         } catch (TimeoutException|InterruptedException ignored) {
-            ctx.send(Emotes.getFailure() + " Your expression took too long to evaluate!").queue();
+            ctx.fail("Your expression took too long to evaluate!");
             return;
         } catch (ExecutionException _e) {
             Throwable e = _e.getCause();

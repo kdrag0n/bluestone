@@ -160,7 +160,7 @@ public class RolemanCog extends Cog {
 
         List<Role> roles = ctx.guild.getRolesByName(ctx.rawArgs, true);
         if (roles.size() < 1) {
-            ctx.send(Emotes.getFailure() + " No such role! Use no arguments or `list` to list available roles.").queue();
+            ctx.fail("No such role! Use no arguments or `list` to list available roles.");
             return;
         }
 
@@ -178,13 +178,13 @@ public class RolemanCog extends Cog {
         }
 
         if (option == null || !option.test(ctx, prof.messagesSent, prof.hasBeenMentioned, prof.hasMentionedOther)) {
-            ctx.send(Emotes.getFailure() + " You can't get that role right now!").queue();
+            ctx.fail("You can't get that role right now!");
             return;
         }
 
         ctx.guild.getController().addSingleRoleToMember(ctx.member, role).complete();
 
-        ctx.send(Emotes.getSuccess() + " Role added.").queue();
+        ctx.success("Role added.");
     }
 
     @Perm.ManageRoles

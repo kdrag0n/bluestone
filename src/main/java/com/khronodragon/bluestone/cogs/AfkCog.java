@@ -109,13 +109,13 @@ public class AfkCog extends Cog {
         AfkMessage afkMessage = dao.queryForId(ctx.author.getIdLong());
 
         if (ctx.rawArgs.length() < 1 && afkMessage == null) {
-            ctx.send(Emotes.getFailure() + "  You must specify why you're going away!").queue();
+            ctx.fail(" You must specify why you're going away!");
             return;
         } else if (ctx.rawArgs.length() > 150) {
-            ctx.send(Emotes.getFailure() + " Your AFK message can't be longer than 150 characters!").queue();
+            ctx.fail("Your AFK message can't be longer than 150 characters!");
             return;
         } else if (afkMessage != null) {
-            ctx.send(Emotes.getSuccess() + " You're no longer away.").queue();
+            ctx.success("You're no longer away.");
             return;
         }
 
@@ -123,6 +123,6 @@ public class AfkCog extends Cog {
         afkMessage = new AfkMessage(ctx.author.getIdLong(), ctx.rawArgs);
         dao.createOrUpdate(afkMessage);
 
-        ctx.send(Emotes.getSuccess() + " You're now away.").queue();
+        ctx.success("You're now away.");
     }
 }

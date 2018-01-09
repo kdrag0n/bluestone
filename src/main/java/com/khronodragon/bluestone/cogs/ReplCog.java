@@ -106,7 +106,7 @@ public class ReplCog extends Cog {
             usage = "[language] {flags}", thread=true)
     public void cmdRepl(Context ctx) throws ScriptException {
         if (ctx.args.size() < 1) {
-            ctx.send(Emotes.getFailure() + " I need a valid language!").queue();
+            ctx.fail("I need a valid language!");
             return;
         }
 
@@ -117,7 +117,7 @@ public class ReplCog extends Cog {
             untrusted = true;
 
             if (ctx.args.size() < 2) {
-                ctx.send(Emotes.getFailure() + " I need a valid language!").queue();
+                ctx.fail("I need a valid language!");
                 return;
             }
 
@@ -149,7 +149,7 @@ public class ReplCog extends Cog {
             engine = man.getEngineByName(language.toLowerCase());
 
             if (engine == null) {
-                ctx.send(Emotes.getFailure() + " No such REPL language!").queue();
+                ctx.fail("No such REPL language!");
                 return;
             }
         }
@@ -324,7 +324,7 @@ public class ReplCog extends Cog {
             }
         }
 
-        ctx.send(Emotes.getSuccess() + " REPL stopped.").queue();
+        ctx.success("REPL stopped.");
     }
 
     private Message waitForRMessage(long millis, Predicate<Message> check,

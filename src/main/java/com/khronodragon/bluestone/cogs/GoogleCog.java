@@ -112,14 +112,14 @@ public class GoogleCog extends Cog {
     @Command(name = "google", desc = "We all need Google.", usage = "[search terms]", aliases = {"search"}, thread = true)
     public void cmdGoogle(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " You need some search terms!").queue();
+            ctx.fail("You need some search terms!");
             return;
         }
 
         final String query = String.join(" ", ctx.args);
         String key = bot.getKeys().optString("google");
         if (key == null) {
-            ctx.send(Emotes.getFailure() + " The bot doesn't have a Google API key set up!").queue();
+            ctx.fail("The bot doesn't have a Google API key set up!");
             return;
         }
 
@@ -128,7 +128,7 @@ public class GoogleCog extends Cog {
             encodedQuery = URLEncoder.encode(query, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             bot.logger.error("System doesn't support UTF-8!", e);
-            ctx.send(Emotes.getFailure() + " The system this bot is running on doesn't support an essential encoding.").queue();
+            ctx.fail("The system this bot is running on doesn't support an essential encoding.");
             return;
         }
         ctx.channel.sendTyping().queue();

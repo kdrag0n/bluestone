@@ -129,10 +129,10 @@ public class CryptoCurrencyCog extends Cog {
         double amount;
 
         if (ctx.args.size() != 3) {
-            ctx.send(Emotes.getFailure() + " Usage is `[from currency] [to currency] [amount]`!").queue();
+            ctx.fail("Usage is `[from currency] [to currency] [amount]`!");
             return;
         } else if ((from = currencies.get(ctx.args.get(0))) == null) {
-            ctx.send(Emotes.getFailure() + " No such cryptocurrency `" + ctx.args.get(0) + "`!").queue();
+            ctx.fail("No such cryptocurrency `" + ctx.args.get(0) + "`!");
             return;
         }
 
@@ -141,11 +141,11 @@ public class CryptoCurrencyCog extends Cog {
         try {
             amount = Double.parseDouble(ctx.args.get(2));
         } catch (NumberFormatException ignored) {
-            ctx.send(Emotes.getFailure() + " Invalid amount!").queue();
+            ctx.fail("Invalid amount!");
             return;
         }
         if (amount <= 0.d) {
-            ctx.send(Emotes.getFailure() + " Invalid amount!").queue();
+            ctx.fail("Invalid amount!");
             return;
         }
 
@@ -159,7 +159,7 @@ public class CryptoCurrencyCog extends Cog {
         } else {
             Cryptocurrency toCurrency;
             if ((toCurrency = currencies.get(to)) == null) {
-                ctx.send(Emotes.getFailure() + " No such cryptocurrency `" + to + "`!").queue();
+                ctx.fail("No such cryptocurrency `" + to + "`!");
                 return;
             }
 
@@ -199,10 +199,10 @@ public class CryptoCurrencyCog extends Cog {
         Cryptocurrency c;
 
         if (ctx.args.size() < 1) {
-            ctx.send(Emotes.getFailure() + " I need a cryptocurrency to give information on!").queue();
+            ctx.fail("I need a cryptocurrency to give information on!");
             return;
         } else if ((c = currencies.get(ctx.args.get(0))) == null) {
-            ctx.send(Emotes.getFailure() + " No such cryptocurrency `" + ctx.args.get(0) + "`!").queue();
+            ctx.fail("No such cryptocurrency `" + ctx.args.get(0) + "`!");
             return;
         }
 
@@ -250,7 +250,7 @@ public class CryptoCurrencyCog extends Cog {
     public void cmdDclFull(Context ctx) {
         AtomicInteger index = new AtomicInteger(0);
         Consumer<Throwable> failure = ignored -> {
-            ctx.send(Emotes.getFailure() + " Error setting up list!").queue();
+            ctx.fail("Error setting up list!");
         };
 
         ctx.send(dclRenderPage(0)).queue(msg -> {
@@ -296,7 +296,7 @@ public class CryptoCurrencyCog extends Cog {
                 int max = (int) Math.ceil(rankedList.size() / 16);
 
                 if (wantedPage > max) {
-                    ctx.send(Emotes.getFailure() + " No such page! There are **" + max + "** pages.").queue();
+                    ctx.fail("No such page! There are **" + max + "** pages.");
                     return;
                 } else {
                     page = wantedPage;
@@ -349,7 +349,7 @@ public class CryptoCurrencyCog extends Cog {
             thread = true, aliases = {"currencyupdate", "cupdate", "crypto_update"})
     public void cmdCryptoUpdate(Context ctx) {
         update();
-        ctx.send(Emotes.getSuccess() + " Updated cryptocurrency data.").queue();
+        ctx.success("Updated cryptocurrency data.");
     }
 
     private static class Cryptocurrency {

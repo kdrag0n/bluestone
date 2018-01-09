@@ -418,7 +418,7 @@ public class GameDealCog extends Cog {
             GameDealDestination settings = dao.queryForId(ctx.author.getIdLong());
 
             if (settings == null) {
-                ctx.send(Emotes.getFailure() + " You aren't subscribed to GameDeal in this DM!").queue();
+                ctx.fail("You aren't subscribed to GameDeal in this DM!");
                 throw new PassException();
             } else {
                 return settings;
@@ -430,7 +430,7 @@ public class GameDealCog extends Cog {
                     .queryForFirst();
 
             if (settings == null) {
-                ctx.send(Emotes.getFailure() + " This server hasn't subscribed to GameDeal!").queue();
+                ctx.fail("This server hasn't subscribed to GameDeal!");
                 throw new PassException();
             } else {
                 return settings;
@@ -449,9 +449,9 @@ public class GameDealCog extends Cog {
                         true, true, true, (short)50);
 
                 dao.createOrUpdate(settings);
-                ctx.send(Emotes.getSuccess() + " You are now subscribed in this DM.").queue();
+                ctx.success("You are now subscribed in this DM.");
             } else {
-                ctx.send(Emotes.getFailure() + " Already subscribed in this DM!").queue();
+                ctx.fail("Already subscribed in this DM!");
             }
 
             for (Deal deal: lastCheckResult) {
@@ -463,11 +463,11 @@ public class GameDealCog extends Cog {
             if (ctx.message.getMentionedChannels().size() > 0) {
                 channel = ctx.message.getMentionedChannels().get(0);
             } else {
-                ctx.send(Emotes.getFailure() + " You must specify a #channel!").queue();
+                ctx.fail("You must specify a #channel!");
                 return;
             }
             if (!channel.canTalk()) {
-                ctx.send(Emotes.getFailure() + " I can't talk in that channel!").queue();
+                ctx.fail("I can't talk in that channel!");
                 return;
             }
 
@@ -499,7 +499,7 @@ public class GameDealCog extends Cog {
         if (ctx.args.size() < 2 || (arg2 = ctx.args.get(1)).isEmpty() ||
                 !Strings.is4Digits(arg2) || (percent = Short.parseShort(arg2)) > 100 ||
                 percent < 1) {
-            ctx.send(Emotes.getFailure() + " You must specify a valid percentage!").queue();
+            ctx.fail("You must specify a valid percentage!");
             return;
         }
 
@@ -507,7 +507,7 @@ public class GameDealCog extends Cog {
         settings.setPercentThreshold(percent);
         dao.update(settings);
 
-        ctx.send(Emotes.getSuccess() + " Minimum discount is now **" + percent + "%**.").queue();
+        ctx.success("Minimum discount is now **" + percent + "%**.");
     }
 
     private void cmdSteam(Context ctx) throws SQLException {
@@ -533,9 +533,9 @@ public class GameDealCog extends Cog {
         dao.delete(settings);
 
         if (ctx.channel instanceof PrivateChannel)
-            ctx.send(Emotes.getSuccess() + " You are no longer subscribed to GameDeal.").queue();
+            ctx.success("You are no longer subscribed to GameDeal.");
         else
-            ctx.send(Emotes.getSuccess() + " This serve is no longer subscribed to GameDeal.").queue();
+            ctx.success("This serve is no longer subscribed to GameDeal.");
     }
 
     private static class Deal {

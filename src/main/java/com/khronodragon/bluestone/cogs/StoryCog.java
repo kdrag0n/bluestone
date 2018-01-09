@@ -23,6 +23,6 @@ public class StoryCog extends Cog {
 
     @Command(name = "story", desc = "Manage this server's stories, and publish/view them.")
     public void cmdStory(Context ctx) {
-        ctx.send(Emotes.getFailure() + " WIP!").queue();
+        ctx.fail("WIP!");
     }
 }

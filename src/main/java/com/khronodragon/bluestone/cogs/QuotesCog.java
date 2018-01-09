@@ -112,10 +112,10 @@ public class QuotesCog extends Cog {
 
     private void quoteCmdAdd(Context ctx) throws SQLException {
         if (ctx.args.size() < 2) {
-            ctx.send(Emotes.getFailure() + " I need text to quote!").queue();
+            ctx.fail("I need text to quote!");
             return;
         } else if (banDao.queryForId(ctx.author.getIdLong()) != null) {
-            ctx.send(Emotes.getFailure() + " You're not allowed to write quotes!").queue();
+            ctx.fail("You're not allowed to write quotes!");
             return;
         }
 
@@ -123,7 +123,7 @@ public class QuotesCog extends Cog {
                 .replace('\n', ' '));
 
         if (text.length() > 360) {
-            ctx.send(Emotes.getFailure() + " Text too long!").queue();
+            ctx.fail("Text too long!");
             return;
         }
 
@@ -134,7 +134,7 @@ public class QuotesCog extends Cog {
 
         if (quotes >= 25 && !Permissions.check(ctx, Permissions.BOT_ADMIN) &&
                 ctx.author.getIdLong() != 219550353518100480L) {
-            ctx.send(Emotes.getFailure() + " You already have 25 quotes!").queue();
+            ctx.fail("You already have 25 quotes!");
             return;
         }
 
@@ -142,35 +142,35 @@ public class QuotesCog extends Cog {
                 ctx.author.getIdLong(), ctx.author.getName());
         dao.create(quote);
 
-        ctx.send(Emotes.getSuccess() + " Quote added with ID `" + quote.getId() + "`.").queue();
+        ctx.success("Quote added with ID `" + quote.getId() + "`.");
     }
 
     private void quoteCmdDelete(Context ctx) throws SQLException {
         if (ctx.args.size() < 2) {
-            ctx.send(Emotes.getFailure() + " I need a quote ID to delete!").queue();
+            ctx.fail("I need a quote ID to delete!");
             return;
         }
         int id;
         try {
             id = Integer.parseInt(ctx.rawArgs.substring(ctx.args.get(0).length()).trim());
         } catch (NumberFormatException ignored) {
-            ctx.send(Emotes.getFailure() + " Invalid quote ID!").queue();
+            ctx.fail("Invalid quote ID!");
             return;
         }
 
         Quote quote = dao.queryForId(id);
         if (quote == null) {
-            ctx.send(Emotes.getFailure() + " No such quote!").queue();
+            ctx.fail("No such quote!");
             return;
         } else if (quote.getAuthorId() != ctx.author.getIdLong() &&
                 ctx.author.getIdLong() != bot.owner.getIdLong() &&
                 ctx.author.getIdLong() != quote.getQuotedById()) {
-            ctx.send(Emotes.getFailure() + " You didn't write or quote that quote!").queue();
+            ctx.fail("You didn't write or quote that quote!");
             return;
         }
 
         dao.deleteById(id);
-        ctx.send(Emotes.getSuccess() + " Quote deleted.").queue();
+        ctx.success("Quote deleted.");
     }
 
     private void quoteCmdList(Context ctx) throws SQLException {
@@ -194,7 +194,7 @@ public class QuotesCog extends Cog {
                 int max = (int) Math.ceil(renderedQuotes.length / 12);
 
                 if (wantedPage > max) {
-                    ctx.send(Emotes.getFailure() + " No such page! There are **" + max + "** pages.").queue();
+                    ctx.fail("No such page! There are **" + max + "** pages.");
                     return;
                 } else {
                     page = wantedPage;
@@ -264,10 +264,10 @@ public class QuotesCog extends Cog {
 
     private void quoteCmdAddMessage(Context ctx) throws SQLException {
         if (ctx.args.size() < 2 || !Strings.isID(ctx.args.get(1))) {
-            ctx.send(Emotes.getFailure() + " I need the ID of a message to quote!").queue();
+            ctx.fail("I need the ID of a message to quote!");
             return;
         } else if (banDao.queryForId(ctx.author.getIdLong()) != null) {
-            ctx.send(Emotes.getFailure() + " You're not allowed to quote anyone!").queue();
+            ctx.fail("You're not allowed to quote anyone!");
             return;
         }
 
@@ -275,20 +275,20 @@ public class QuotesCog extends Cog {
         try {
             msg = ctx.channel.getMessageById(MiscUtil.parseSnowflake(ctx.args.get(1))).complete();
         } catch (ErrorResponseException ignored) {
-            ctx.send(Emotes.getFailure() + " No such message! (must be in this channel)").queue();
+            ctx.fail("No such message! (must be in this channel)");
             return;
         } catch (NumberFormatException ignored) {
-            ctx.send(Emotes.getFailure() + " Invalid message ID! Use Developer Mode to Copy ID.").queue();
+            ctx.fail("Invalid message ID! Use Developer Mode to Copy ID.");
             return;
         }
 
         String text = Strings.renderMessage(msg, msg.getGuild(), msg.getContentRaw().replace('\n', ' '));
 
         if (text.length() > 360) {
-            ctx.send(Emotes.getFailure() + " Text too long!").queue();
+            ctx.fail("Text too long!");
             return;
         } else if (text.length() < 1) {
-            ctx.send(Emotes.getFailure() + " That message needs to have text!").queue();
+            ctx.fail("That message needs to have text!");
             return;
         }
 
@@ -299,7 +299,7 @@ public class QuotesCog extends Cog {
 
         if (quotes >= 25 && !Permissions.check(ctx, Permissions.BOT_ADMIN) &&
                 msg.getAuthor().getIdLong() != 219550353518100480L) {
-            ctx.send(Emotes.getFailure() + " The author of that message already has 25 quotes, and you aren't an admin!").queue();
+            ctx.fail("The author of that message already has 25 quotes, and you aren't an admin!");
             return;
         }
 
@@ -308,7 +308,7 @@ public class QuotesCog extends Cog {
         quote.setQuotedById(ctx.author.getIdLong());
         dao.create(quote);
 
-        ctx.send(Emotes.getSuccess() + " Quote added with ID `" + quote.getId() + "`.").queue();
+        ctx.success("Quote added with ID `" + quote.getId() + "`.");
     }
 
     @Perm.Owner
@@ -325,7 +325,7 @@ public class QuotesCog extends Cog {
             userId = MiscUtil.parseSnowflake(ctx.rawArgs);
             user = ctx.jda.retrieveUserById(userId).complete();
         } else {
-            ctx.send(Emotes.getFailure() + " You must @mention a user or provide their ID!").queue();
+            ctx.fail("You must @mention a user or provide their ID!");
             return;
         }
 
@@ -339,7 +339,7 @@ public class QuotesCog extends Cog {
             ctx.send(Emotes.getSuccess() + " Successfully banned **" + getTag(user) +
                     "** from adding quotes. All of their **" + delN + "** quotes have been deleted.").queue();
         } else {
-            ctx.send(Emotes.getFailure() + " **" + getTag(user) + "** was already banned from adding quotes.").queue();
+            ctx.fail("**" + getTag(user) + "** was already banned from adding quotes.");
         }
     }
 
@@ -353,7 +353,7 @@ public class QuotesCog extends Cog {
                 "** (`" + q.id + "`)").collect(Collectors.joining("\n    \u2022 "));
 
         if (rendered.length() < 1) {
-            ctx.send(Emotes.getSuccess() + " Nobody is banned from adding quotes.").queue();
+            ctx.success("Nobody is banned from adding quotes.");
         } else {
             ctx.send("The following users are banned from adding quotes:\n    \u2022 " + rendered).queue();
         }
@@ -374,7 +374,7 @@ public class QuotesCog extends Cog {
             userId = MiscUtil.parseSnowflake(ctx.rawArgs);
             user = ctx.jda.retrieveUserById(userId).complete();
         } else {
-            ctx.send(Emotes.getFailure() + " You must @mention a user or provide their ID!").queue();
+            ctx.fail("You must @mention a user or provide their ID!");
             return;
         }
 
@@ -384,7 +384,7 @@ public class QuotesCog extends Cog {
             ctx.send(Emotes.getSuccess() + " Successfully unbanned **" + getTag(user) +
                     "** from adding quotes.").queue();
         } else {
-            ctx.send(Emotes.getFailure() + " **" + getTag(user) + "** isn't banned from adding quotes.").queue();
+            ctx.fail("**" + getTag(user) + "** isn't banned from adding quotes.");
         }
     }
 
@@ -392,7 +392,7 @@ public class QuotesCog extends Cog {
         Quote quote = dao.queryForId(id);
 
         if (quote == null)
-            ctx.send(Emotes.getFailure() + " No such quote!").queue();
+            ctx.fail("No such quote!");
         else
             ctx.send(quote.render()).queue();
     }

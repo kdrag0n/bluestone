@@ -87,7 +87,7 @@ public class ReminderCog extends Cog {
             usage = "[time/date] [message", aliases = {"remind", "remind_me"})
     public void cmdRemindMe(Context ctx) throws SQLException {
         if (ctx.rawArgs.length() < 2) {
-            ctx.send(Emotes.getFailure() + " I need a time/date (in any form), and message to remind you with!").queue();
+            ctx.fail("I need a time/date (in any form), and message to remind you with!");
             return;
         }
         List<DateGroup> groups = timeParser.parse(ctx.rawArgs);
@@ -107,16 +107,16 @@ public class ReminderCog extends Cog {
         msg = msg.trim();
 
         if (date == null) {
-            ctx.send(Emotes.getFailure() + " Failed to parse time/date!").queue();
+            ctx.fail("Failed to parse time/date!");
             return;
         } else if (date.getTime() < System.currentTimeMillis()) {
-            ctx.send(Emotes.getFailure() + " That time is in the past!").queue();
+            ctx.fail("That time is in the past!");
             return;
         } else if (date.getTime() > System.currentTimeMillis() + 157680000000L) {
-            ctx.send(Emotes.getFailure() + " That time is too far into the future!").queue();
+            ctx.fail("That time is too far into the future!");
             return;
         } else if (msg.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I can't remind you of nothing!").queue();
+            ctx.fail("I can't remind you of nothing!");
             return;
         }
 

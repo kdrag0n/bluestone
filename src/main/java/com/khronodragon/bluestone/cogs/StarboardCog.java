@@ -433,7 +433,7 @@ public class StarboardCog extends Cog {
         if (ctx.args.size() > 1) {
             String wantedName = ctx.args.get(1);
             if (!Strings.isChannelName(wantedName)) {
-                ctx.send(Emotes.getFailure() + " Channel name must be between 2 and 100 characters long!").queue();
+                ctx.fail("Channel name must be between 2 and 100 characters long!");
                 return;
             }
 
@@ -462,7 +462,7 @@ public class StarboardCog extends Cog {
         com.khronodragon.bluestone.Command.checkPerms(ctx, MOD_PERMS);
 
         if (ctx.rawArgs.length() < 5) {
-            ctx.send(Emotes.getFailure() + " I need an age to set, like `2 days` or `1 year`!").queue();
+            ctx.fail("I need an age to set, like `2 days` or `1 year`!");
             return;
         }
         Starboard starboard = requireStarboard(ctx);
@@ -475,7 +475,7 @@ public class StarboardCog extends Cog {
         }
 
         if (date == null) {
-            ctx.send(Emotes.getFailure() + " Invalid age! Formats like `2 days` or `1 year` will work.").queue();
+            ctx.fail("Invalid age! Formats like `2 days` or `1 year` will work.");
             return;
         }
 
@@ -490,11 +490,11 @@ public class StarboardCog extends Cog {
         Starboard starboard = requireStarboard(ctx);
 
         if (starboard.isLocked()) {
-            ctx.send(Emotes.getFailure() + " Starboard is already locked!").queue();
+            ctx.fail("Starboard is already locked!");
         } else {
             starboard.setLocked(true);
             dao.update(starboard);
-            ctx.send(Emotes.getSuccess() + " Starboard locked.").queue();
+            ctx.success("Starboard locked.");
         }
     }
 
@@ -506,9 +506,9 @@ public class StarboardCog extends Cog {
         if (starboard.isLocked()) {
             starboard.setLocked(false);
             dao.update(starboard);
-            ctx.send(Emotes.getSuccess() + " Starboard unlocked.").queue();
+            ctx.success("Starboard unlocked.");
         } else {
-            ctx.send(Emotes.getFailure() + " Starboard isn't locked!").queue();
+            ctx.fail("Starboard isn't locked!");
         }
     }
 
@@ -517,7 +517,7 @@ public class StarboardCog extends Cog {
 
         Starboard starboard = requireStarboard(ctx);
         if (ctx.args.size() < 2) {
-            ctx.send(Emotes.getFailure() + " I need a number to set the minimum star count to!").queue();
+            ctx.fail("I need a number to set the minimum star count to!");
             return;
         }
 
@@ -525,23 +525,23 @@ public class StarboardCog extends Cog {
         try {
             newThreshold = Integer.parseInt(ctx.args.get(1));
         } catch (NumberFormatException ignored) {
-            ctx.send(Emotes.getFailure() + " Invalid number!").queue();
+            ctx.fail("Invalid number!");
             return;
         }
         if (newThreshold < 1 || newThreshold > 25) {
-            ctx.send(Emotes.getFailure() + " Number must be between 1 and 25!").queue();
+            ctx.fail("Number must be between 1 and 25!");
             return;
         }
 
         starboard.setStarThreshold(newThreshold);
         dao.update(starboard);
-        ctx.send(Emotes.getSuccess() + " Minimum star count set.").queue();
+        ctx.success("Minimum star count set.");
     }
 
     private void cmdClean(Context ctx) throws SQLException {
         Starboard starboard = requireStarboard(ctx);
         if (ctx.args.size() < 2) {
-            ctx.send(Emotes.getFailure() + " I need a required star count to clean with!").queue();
+            ctx.fail("I need a required star count to clean with!");
             return;
         }
 
@@ -549,7 +549,7 @@ public class StarboardCog extends Cog {
         try {
             required = Integer.parseInt(ctx.args.get(1));
         } catch (NumberFormatException ignored) {
-            ctx.send(Emotes.getFailure() + " Invalid number!").queue();
+            ctx.fail("Invalid number!");
             return;
         }
 
@@ -567,7 +567,7 @@ public class StarboardCog extends Cog {
                 .map(e -> Long.toUnsignedString(e.getBotMessageId()))
                 .collect(Collectors.toList())).complete();
 
-        ctx.send(Emotes.getSuccess() + " Starboard cleaned.").queue();
+        ctx.success("Starboard cleaned.");
     }
 
     private void cmdRandom(Context ctx) throws Throwable {
@@ -581,7 +581,7 @@ public class StarboardCog extends Cog {
                 .query();
 
         if (entry.size() < 1)
-            ctx.send(Emotes.getFailure() + " The starboard is empty!").queue();
+            ctx.fail("The starboard is empty!");
         else {
             try {
                 ctx.send(messageCache.get(ImmutablePair.of(starboard.getChannelId(),
@@ -590,7 +590,7 @@ public class StarboardCog extends Cog {
                 Throwable e = bE.getCause();
 
                 if (e instanceof ErrorResponseException)
-                    ctx.send(Emotes.getFailure() + " Somehow...the entry's message was deleted?").queue();
+                    ctx.fail("Somehow...the entry's message was deleted?");
                 else
                     throw e;
             }
@@ -604,7 +604,7 @@ public class StarboardCog extends Cog {
         try {
             messageId = MiscUtil.parseSnowflake(ctx.args.get(1));
         } catch (NumberFormatException ignored) {
-            ctx.send(Emotes.getFailure() + " Invalid message ID!").queue();
+            ctx.fail("Invalid message ID!");
             return;
         } catch (IndexOutOfBoundsException ignored) {
             ctx.send(Emotes.getFailure() +
@@ -624,7 +624,7 @@ public class StarboardCog extends Cog {
                 .query();
 
         if (result.size() < 1) {
-            ctx.send(Emotes.getFailure() + " No such starred message, or bot message in starboard!").queue();
+            ctx.fail("No such starred message, or bot message in starboard!");
             return;
         }
 
@@ -640,7 +640,7 @@ public class StarboardCog extends Cog {
                 .query();
 
         if (starCountEntries.size() < 1) {
-            ctx.send(Emotes.getFailure() + " There needs to be at least 1 starred message here!").queue();
+            ctx.fail("There needs to be at least 1 starred message here!");
             return;
         }
 

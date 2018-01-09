@@ -85,4 +85,12 @@ public class Context {
     public RestAction<Message> send(Message msg) {
         return channel.sendMessage(msg);
     }
+
+    public void fail(String msg) {
+        send(Emotes.getFailure() + ' ' + msg).queue();
+    }
+
+    public void success(String msg) {
+        send(Emotes.getSuccess() + ' ' + msg).queue();
+    }
 }

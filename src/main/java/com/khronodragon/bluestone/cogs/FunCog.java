@@ -244,7 +244,7 @@ public class FunCog extends Cog {
     @Command(name = "emotisay", desc = "Show some text as cool block letters.", aliases = {"emotesay", "esay"}, usage = "[text]")
     public void cmdEmotisay(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " You need some text!").queue();
+            ctx.fail("You need some text!");
             return;
         }
 
@@ -309,7 +309,7 @@ public class FunCog extends Cog {
                     .build()).execute().body().string()).optString("fact", null);
 
             if (cat == null || fact == null) {
-                ctx.send(Emotes.getFailure() + " Couldn't get a cat!").queue();
+                ctx.fail("Couldn't get a cat!");
                 return;
             }
 
@@ -326,7 +326,7 @@ public class FunCog extends Cog {
                     .addField("Did You Know?", fact, false)
                     .build()).queue();
         } catch (IOException ignored) {
-            ctx.send(Emotes.getFailure() + " Failed to get a cat!").queue();
+            ctx.fail("Failed to get a cat!");
         }
     }
 
@@ -346,7 +346,7 @@ public class FunCog extends Cog {
                             .optString(0, null);
 
             if (cat == null || fact == null) {
-                ctx.send(Emotes.getFailure() + " Couldn't get a dog!").queue();
+                ctx.fail("Couldn't get a dog!");
                 return;
             }
 
@@ -363,14 +363,14 @@ public class FunCog extends Cog {
                     .addField("Did You Know?", fact, false)
                     .build()).queue();
         } catch (IOException ignored) {
-            ctx.send(Emotes.getFailure() + " Failed to get a dog!").queue();
+            ctx.fail("Failed to get a dog!");
         }
     }
 
     @Command(name = "emote", desc = "Get an emoticon, from many sources.", usage = "[emote name]")
     public void cmdEmote(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " You need to specify an emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.").queue();
+            ctx.fail("You need to specify an emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.");
             return;
         }
 
@@ -382,7 +382,7 @@ public class FunCog extends Cog {
 
         final String url = emoteProviderManager.getFirstUrl(eName);
         if (url == null) {
-            ctx.send(Emotes.getFailure() + " No such emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.").queue();
+            ctx.fail("No such emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.");
             return;
         }
         EmoteInfo info = emoteProviderManager.getFirstInfo(eName);
@@ -408,10 +408,10 @@ public class FunCog extends Cog {
             aliases = {"addemote", "emoteadd", "emote_add", "+emote", "+e"}, guildOnly = true)
     public void cmdAddEmote(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " You need to specify an emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.").queue();
+            ctx.fail("You need to specify an emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.");
             return;
         } else if (!ctx.guild.getSelfMember().hasPermission(Permission.MANAGE_EMOTES)) {
-            ctx.send(Emotes.getFailure() + " I need to be able to **manage emotes**!").queue();
+            ctx.fail("I need to be able to **manage emotes**!");
             return;
         }
 
@@ -422,7 +422,7 @@ public class FunCog extends Cog {
 
         final String url = emoteProviderManager.getFirstUrl(eName);
         if (url == null) {
-            ctx.send(Emotes.getFailure() + " No such emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.").queue();
+            ctx.fail("No such emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.");
             return;
         }
 
@@ -453,10 +453,10 @@ public class FunCog extends Cog {
         String baseName;
         Message.Attachment attachment;
         if (ctx.rawArgs.length() < 1 || !Strings.isEmoteName(baseName = ctx.args.get(0))) {
-            ctx.send(Emotes.getFailure() + " Invalid emote name! Must be between 2 and 32 characters in length.").queue();
+            ctx.fail("Invalid emote name! Must be between 2 and 32 characters in length.");
             return;
         } else if (ctx.message.getAttachments().size() < 1 || !(attachment = ctx.message.getAttachments().get(0)).isImage()) {
-            ctx.send(Emotes.getFailure() + " You must upload an image!").queue();
+            ctx.fail("You must upload an image!");
             return;
         }
 
@@ -473,10 +473,10 @@ public class FunCog extends Cog {
             try {
                 base = ImageIO.read(is);
             } catch (IOException | NullPointerException | IllegalArgumentException ignored) {
-                ctx.send(Emotes.getFailure() + " Invalid image! Only GIF, PNG, and JPEG images are supported.").queue();
+                ctx.fail("Invalid image! Only GIF, PNG, and JPEG images are supported.");
                 return;
             } catch (ArrayIndexOutOfBoundsException ignored) {
-                ctx.send(Emotes.getFailure() + " Your image seems to be in a weird format, or corrupted...").queue();
+                ctx.fail("Your image seems to be in a weird format, or corrupted...");
                 return;
             } finally {
                 IOUtils.closeQuietly(is);
@@ -573,7 +573,7 @@ public class FunCog extends Cog {
                     "```\n\nResult:\n" + renderAll.toString()).queue();
         }, e -> {
             logger.error("Error creating compound emote", e);
-            ctx.send(Emotes.getFailure() + " Failed to create compound emote.").queue();
+            ctx.fail("Failed to create compound emote.");
         }));
     }
 
@@ -616,13 +616,13 @@ public class FunCog extends Cog {
             return;
         }
         if (ctx.args.size() < 2) {
-            ctx.send(Emotes.getFailure() + " Usage is `style [style name] [text]`.").queue();
+            ctx.fail("Usage is `style [style name] [text]`.");
             return;
         }
 
         String styleName = ctx.args.get(0);
         if (!charsets.containsKey(styleName)) {
-            ctx.send(Emotes.getFailure() + " No such style! List them with the `styles` command.").queue();
+            ctx.fail("No such style! List them with the `styles` command.");
             return;
         }
 
@@ -633,7 +633,7 @@ public class FunCog extends Cog {
     @Command(name = "lmgtfy", desc = "Let me Google that for you!")
     public void cmdLmgtfy(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need some search terms!").queue();
+            ctx.fail("I need some search terms!");
             return;
         }
 
@@ -645,7 +645,7 @@ public class FunCog extends Cog {
     @Command(name = "slap", desc = "Slap someone, with passion.", aliases = {"boop", "poke", "hit"})
     public void cmdSlap(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need someone to " + ctx.invoker + "!").queue();
+            ctx.fail("I need someone to " + ctx.invoker + "!");
             return;
         }
 
@@ -656,7 +656,7 @@ public class FunCog extends Cog {
     @Command(name = "attack", desc = "Hurt someone, with determination.", aliases = {"stab", "kill", "punch", "shoot", "hurt", "fight"})
     public void cmdAttack(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need someone to " + ctx.invoker + "!").queue();
+            ctx.fail("I need someone to " + ctx.invoker + "!");
             return;
         }
         final String target = '*' + ctx.rawArgs + '*';
@@ -668,7 +668,7 @@ public class FunCog extends Cog {
     @Command(name = "charlie", desc = "Ask a question... Charlie Charlie are you there?")
     public void cmdCharlie(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " I need a question!").queue();
+            ctx.fail("I need a question!");
             return;
         }
         String question = ctx.rawArgs.endsWith("?") ? ctx.rawArgs : ctx.rawArgs + "?";
@@ -689,16 +689,16 @@ public class FunCog extends Cog {
         short n;
         try {
             if ((n = Short.parseShort(ctx.args.get(0))) < 2 || n > 10) {
-                ctx.send(Emotes.getFailure() + " You must specify between 2 and 10 bleach!").queue();
+                ctx.fail("You must specify between 2 and 10 bleach!");
                 return;
             }
         } catch (IndexOutOfBoundsException|NumberFormatException ignored) {
-            ctx.send(Emotes.getFailure() + " You must specify between 2 and 10 bleach!").queue();
+            ctx.fail("You must specify between 2 and 10 bleach!");
             return;
         }
 
         if (!ctx.guild.getSelfMember().hasPermission((TextChannel) ctx.channel, Permission.MANAGE_WEBHOOKS)) {
-            ctx.send(Emotes.getFailure() + " I need to be able to **manage webhooks** here!").queue();
+            ctx.fail("I need to be able to **manage webhooks** here!");
             return;
         }
 
@@ -734,7 +734,7 @@ public class FunCog extends Cog {
             usage = "[text]")
     public void cmdPigLatin(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.send(Emotes.getFailure() + " You must specify text to translate to Pig Latin!").queue();
+            ctx.fail("You must specify text to translate to Pig Latin!");
             return;
         }
 
@@ -988,9 +988,9 @@ public class FunCog extends Cog {
             new AkinatorGame(ctx);
         } catch (IOException e) {
             logger.error("Error contacting Akinator", e);
-            ctx.send(Emotes.getFailure() + " An error occurred contacting Akinator.").queue();
+            ctx.fail("An error occurred contacting Akinator.");
         } catch (JSONException ignored) {
-            ctx.send(Emotes.getFailure() + " Akinator seems to be having some issues right now.").queue();
+            ctx.fail("Akinator seems to be having some issues right now.");
         }
     }
 
