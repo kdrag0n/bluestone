@@ -38,6 +38,7 @@ public class Strings {
     private static final Pattern ipDomainPattern = Pattern.compile("^(?:localhost|[a-zA-Z\\-.]+\\.[a-z]{2,15}|(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|[0-9a-f:]+)(?::[0-9]{1,5})?$");
     private static final Pattern mcNamePattern = Pattern.compile("^[a-zA-Z0-9_]{1,32}$");
     private static final Pattern emoteNamePattern = Pattern.compile("^[a-zA-Z0-9]{2,32}$");
+    private static final Pattern questionPattern = Pattern.compile("(?:^(?:is|how|why|can|could)\b|\\?$)", Pattern.CASE_INSENSITIVE);
     private static final ThreadLocal<NumberFormat> numberFormat = ThreadLocal.withInitial(DecimalFormat::getNumberInstance);
     private static final ConcurrentMap<String, MessageFormat> formatCache =
             new ConcurrentHashMap<>(48, 0.75f, 8);
@@ -265,6 +266,10 @@ public class Strings {
 
     public static boolean isEmoteName(CharSequence str) {
         return emoteNamePattern.matcher(str).matches();
+    }
+
+    public static boolean isQuestion(CharSequence str) {
+        return questionPattern.matcher(str).matches();
     }
 
     public static String number(short n) {

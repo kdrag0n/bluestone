@@ -20,6 +20,7 @@ import com.khronodragon.bluestone.enums.MemberStatus;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.sql.ActivePoll;
 import com.khronodragon.bluestone.sql.ContactBannedUser;
+import com.khronodragon.bluestone.sql.UserFaqRecord;
 import com.khronodragon.bluestone.util.*;
 import com.sun.management.OperatingSystemMXBean;
 import gnu.trove.list.TIntList;
@@ -182,6 +183,7 @@ public class UtilityCog extends Cog {
 
     private final ScriptEngine calcEngine = new ScriptEngineManager().getEngineByName("lua");
     private Dao<ContactBannedUser, Long> contactBanDao;
+    private Dao<UserFaqRecord, Long> userFaqDao;
 
     private static<L, R> ImmutablePair<L, R> pair(L l, R r) {
         return ImmutablePair.of(l, r);
@@ -227,6 +229,18 @@ public class UtilityCog extends Cog {
             contactBanDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), ContactBannedUser.class);
         } catch (SQLException e) {
             logger.error("Failed to create contact banned users DAO!", e);
+        }
+
+        try {
+            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), UserFaqRecord.class);
+        } catch (SQLException e) {
+            logger.error("Failed to create user FAQ record table!", e);
+        }
+
+        try {
+            userFaqDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), UserFaqRecord.class);
+        } catch (SQLException e) {
+            logger.error("Failed to create user FAQ record DAO!", e);
         }
     }
 
@@ -1047,7 +1061,7 @@ public class UtilityCog extends Cog {
     }
 
     @Cooldown(scope = BucketType.USER, delay = 20)
-    @Command(name = "contact", desc = "Contact the bot owner with a message.", usage = "[message]",
+    @Command(name = "contact", desc = "Contact the bot owner with a message. Read the FAQ first!", usage = "[message]",
             thread = true)
     public void cmdContact(Context ctx) throws SQLException {
         if (ctx.rawArgs.length() < 1) {
@@ -1055,6 +1069,17 @@ public class UtilityCog extends Cog {
             return;
         } else if (contactBanDao.queryForId(ctx.author.getIdLong()) != null) {
             ctx.fail("You're not allowed to contact the owner!");
+            return;
+        }
+
+        UserFaqRecord faqRecord;
+        if (Strings.isQuestion(ctx.rawArgs) && ((faqRecord = userFaqDao.queryForId(ctx.author.getIdLong())) == null ||
+                faqRecord.when.before(new Date(System.currentTimeMillis() - 5184000000L)))) {
+            // user hasn't read FAQ yet
+            ctx.fail("You haven't read the FAQ yet.\nPlease read the FAQ **before** using `contact`, as it saves you, me, and everyone else a lot of time.\n" +
+                    "Link:**\u200b https://khronodragon.com/goldmine/faq \u200b**\n\n" +
+                    "Once you have read the FAQ, and it **hasn't** answered your question, simply run this command again to proceed.");
+            userFaqDao.create(new UserFaqRecord(ctx.author.getIdLong(), true, new Date()));
             return;
         }
 
@@ -1087,7 +1112,7 @@ public class UtilityCog extends Cog {
                 .setEmbed(emb.build())
                 .build()).queue();
 
-        ctx.success("Message sent.");
+        ctx.success("Message sent.\n**NOTE**: READ THE FAQ FIRST! I cannot stress that enough");
     }
 
     @Perm.Owner

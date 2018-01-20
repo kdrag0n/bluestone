@@ -28,7 +28,9 @@ public class AdminCog extends Cog {
             "\n" +
             "**__NOTE: This has nothing to do with *server* admins!__**\n" +
             "I will not help you if you try adding an admin with this, and discover that it \"doesn't work\".\n" +
-            "It shouldn't. This is for bot-wide admins that have extra powers.";
+            "It shouldn't. This is for bot-wide admins that have extra powers.\n" +
+            "**Bot owner** is the same kind of role. It's bot-wide, and it's the person who actually owns the bot.\n" +
+            "In your server, being **server owner** will automatically grant you permission to do everything in the server.";
 
     public AdminCog(Bot bot) {
         super(bot);
