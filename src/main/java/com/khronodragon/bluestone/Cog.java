@@ -1,5 +1,6 @@
 package com.khronodragon.bluestone;
 
+import com.j256.ormlite.dao.Dao;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
@@ -161,5 +162,10 @@ public abstract class Cog {
         } catch (NumberFormatException ignored) {
             return -1L;
         }
+    }
+
+    @CheckReturnValue
+    protected<C, K> Dao<C, K> setupDao(Class<C> clazz) {
+        return bot.getShardUtil().setupDao(clazz);
     }
 }

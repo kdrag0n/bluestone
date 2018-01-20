@@ -1,7 +1,9 @@
 package com.khronodragon.bluestone;
 
 import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.support.ConnectionSource;
 import com.khronodragon.bluestone.sql.GuildPrefix;
+import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.map.TLongObjectMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import org.apache.logging.log4j.LogManager;
@@ -11,31 +13,29 @@ import java.sql.SQLException;
 
 public class PrefixStore {
     private static final Logger logger = LogManager.getLogger(PrefixStore.class);
-    private String defaultPrefix = "!";
-    private Dao<GuildPrefix, Long> dao;
-    private TLongObjectMap<String> cache = new TLongObjectHashMap<>();
+    public final String defaultPrefix;
+    public final HikariDataSource pool;
+    public final TLongObjectMap<String> cache = new TLongObjectHashMap<>();
 
-    PrefixStore(Dao<GuildPrefix, Long> dao) {
-        this.dao = dao;
-    }
-
-    PrefixStore(Dao<GuildPrefix, Long> dao, String defaultPrefix) {
-        this(dao);
-        setDefaultPrefix(defaultPrefix);
+    PrefixStore(HikariDataSource pool, String defaultPrefix) {
+        this.pool = pool;
+        this.defaultPrefix = defaultPrefix;
     }
 
     public String getPrefix(long guildId) {
-        if (cache.containsKey(guildId)) {
-            return cache.get(guildId);
+        String prefix = cache.get(guildId);
+
+        if (prefix != null) {
+            return prefix;
         } else {
-            try {
+            try { // TODO: directly query using connection from pool
                 GuildPrefix result = dao.queryForId(guildId);
                 if (result == null) {
                     cache.put(guildId, defaultPrefix);
                     return defaultPrefix;
                 }
 
-                String prefix = result.getPrefix();
+                prefix = result.getPrefix();
                 cache.put(guildId, prefix);
 
                 return prefix;
@@ -44,25 +44,5 @@ public class PrefixStore {
                 return defaultPrefix;
             }
         }
-    }
-
-    public String getDefaultPrefix() {
-        return defaultPrefix;
-    }
-
-    public void setDefaultPrefix(String prefix) {
-        defaultPrefix = prefix;
-    }
-
-    public Dao<GuildPrefix, Long> getDao() {
-        return dao;
-    }
-
-    public void updateCache(long guildId, String prefix) {
-        cache.put(guildId, prefix);
-    }
-
-    public void clearCache() {
-        cache.clear();
     }
 }

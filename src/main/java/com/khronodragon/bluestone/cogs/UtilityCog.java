@@ -192,17 +192,7 @@ public class UtilityCog extends Cog {
     public UtilityCog(Bot bot) {
         super(bot);
 
-        try {
-            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), ActivePoll.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create poll table!", e);
-        }
-
-        try {
-            pollDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), ActivePoll.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create poll DAO!", e);
-        }
+        pollDao = bot.setupDao(ActivePoll.class);
 
         try {
             scheduleAllPolls();

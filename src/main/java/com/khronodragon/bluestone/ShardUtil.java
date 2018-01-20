@@ -13,6 +13,7 @@ import com.khronodragon.bluestone.cogs.MusicCog;
 import com.khronodragon.bluestone.sql.BotAdmin;
 import com.khronodragon.bluestone.sql.GuildPrefix;
 import com.khronodragon.bluestone.sql.MySQLDatabaseType;
+import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.array.TIntArrayList;
@@ -24,6 +25,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 
+import javax.annotation.CheckReturnValue;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
@@ -39,12 +41,8 @@ public class ShardUtil {
     private Map<String, AtomicInteger> commandCalls = new HashMap<>();
     private Dao<BotAdmin, Long> adminDao;
     private ConnectionSource dbConn;
+    private HikariDataSource dataSource;
     private JSONObject config;
-    private PrefixStore prefixStore;
-
-    public PrefixStore getPrefixStore() {
-        return prefixStore;
-    }
 
     public Map<String, AtomicInteger> getCommandCalls() {
         return commandCalls;
@@ -55,22 +53,24 @@ public class ShardUtil {
         this.config = config;
 
         String connectionUrl = "jdbc:" + config.optString("db_url", "h2:./database");
-        HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl(connectionUrl);
-        dataSource.setUsername(config.optString("db_user", null));
-        dataSource.setPassword(config.optString("db_pass", null));
-        dataSource.setMinimumIdle(5);
-        dataSource.setMaximumPoolSize(15);
-        dataSource.setPoolName("Bot Pool [ShardUtil]");
-        dataSource.setAllowPoolSuspension(true);
-        dataSource.setRegisterMbeans(true);
-        dataSource.setLeakDetectionThreshold(7500);
+        HikariConfig dbConfig = new HikariConfig();
+        dbConfig.setJdbcUrl(connectionUrl);
+        dbConfig.setUsername(config.optString("db_user", null));
+        dbConfig.setPassword(config.optString("db_pass", null));
+        dbConfig.setMinimumIdle(5);
+        dbConfig.setMaximumPoolSize(15);
+        dbConfig.setPoolName("Bot Pool [ShardUtil]");
+        dbConfig.setAllowPoolSuspension(true);
+        dbConfig.setRegisterMbeans(true);
+        dbConfig.setLeakDetectionThreshold(7500);
 
         if (connectionUrl.startsWith("mysql://")) {
-            dataSource.addDataSourceProperty("cachePrepStmts", "true");
-            dataSource.addDataSourceProperty("prepStmtCacheSize", "250");
-            dataSource.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+            dbConfig.addDataSourceProperty("cachePrepStmts", "true");
+            dbConfig.addDataSourceProperty("prepStmtCacheSize", "250");
+            dbConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
         }
+
+        dataSource = new HikariDataSource(dbConfig);
 
         DatabaseType dbType = DatabaseTypeUtils.createDatabaseType(connectionUrl);
         if (dbType instanceof MysqlDatabaseType)
@@ -90,29 +90,12 @@ public class ShardUtil {
             }
         }
 
-        try {
-            TableUtils.createTableIfNotExists(dbConn, BotAdmin.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create bot admin table!", e);
-        }
-
-        try {
-            adminDao = DaoManager.createDao(dbConn, BotAdmin.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create bot admin DAO!", e);
-        }
+        adminDao = setupDao(BotAdmin.class);
 
         try {
             TableUtils.createTableIfNotExists(dbConn, GuildPrefix.class);
         } catch (SQLException e) {
             logger.error("Failed to create command prefix table!", e);
-        }
-
-        try {
-            Dao<GuildPrefix, Long> dao = DaoManager.createDao(dbConn, GuildPrefix.class);
-            prefixStore = new PrefixStore(dao, config.optString("default_prefix", "!"));
-        } catch (SQLException e) {
-            logger.error("Failed to create prefix store and/or DAO!", e);
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -124,12 +107,33 @@ public class ShardUtil {
         }));
     }
 
+    @CheckReturnValue
+    public<C, K> Dao<C, K> setupDao(Class<C> clazz) { // TODO: replace all DAO+table setup with this
+        // TODO set up like: private final Dao<GuildPrefix, Long> prefixDao = bot.setupDao(GuildPrefix.class);
+        // TODO no constructor
+        try {
+            TableUtils.createTableIfNotExists(dbConn, clazz);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error creating table for " + clazz.getSimpleName() + '!', e);
+        }
+
+        try {
+            return DaoManager.createDao(dbConn, clazz);
+        } catch (SQLException e) {
+            throw new RuntimeException("Error creating DAO for " + clazz.getSimpleName() + '!', e);
+        }
+    }
+
     public Dao<BotAdmin, Long> getAdminDao() {
         return adminDao;
     }
 
     public ConnectionSource getDatabase() {
         return dbConn;
+    }
+
+    public HikariDataSource getPool() {
+        return dataSource;
     }
 
     public JSONObject getConfig() {

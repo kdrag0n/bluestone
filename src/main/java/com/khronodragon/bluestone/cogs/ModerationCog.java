@@ -103,17 +103,7 @@ public class ModerationCog extends Cog {
     public ModerationCog(Bot bot) {
         super(bot);
 
-        try {
-            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), GuildAutorole.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create autorole table!", e);
-        }
-
-        try {
-            autoroleDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), GuildAutorole.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create autorole DAO!", e);
-        }
+        autoroleDao = bot.setupDao(GuildAutorole.class);
     }
 
     public String getName() {

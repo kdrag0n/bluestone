@@ -3,6 +3,8 @@ package com.khronodragon.bluestone;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.re2j.Pattern;
 import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.dao.DaoManager;
+import com.j256.ormlite.table.TableUtils;
 import com.jagrosh.jdautilities.waiter.EventWaiter;
 import com.khronodragon.bluestone.annotations.*;
 import com.khronodragon.bluestone.errors.PassException;
@@ -91,7 +93,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     private final EventWaiter eventWaiter = new EventWaiter();
     private static Unsafe unsafe = null;
     private JDA jda;
-    private ShardUtil shardUtil;
+    private final ShardUtil shardUtil;
     public static JSONObject patreonData = new JSONObject();
     public static TLongSet patronIds = new TLongHashSet();
     private final Set<ScheduledFuture> tasks = new HashSet<>();
@@ -106,6 +108,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             .retryOnConnectionFailure(true)
             .build();
     public User owner;
+    public final PrefixStore prefixStore;
 
     static {
         ensureUnsafe();
@@ -113,10 +116,6 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     public Dao<BotAdmin, Long> getAdminDao() {
         return shardUtil.getAdminDao();
-    }
-
-    public Dao<GuildPrefix, Long> getPrefixDao() {
-        return shardUtil.getPrefixStore().getDao();
     }
 
     public JSONObject getConfig() {
@@ -131,9 +130,11 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         return eventWaiter;
     }
 
-    public Bot() {
+    public Bot(ShardUtil util) {
         super();
 
+        shardUtil = util;
+        prefixStore = new PrefixStore(shardUtil.getPool(), shardUtil.getConfig().optString("default_prefix", "!"));
         scheduledExecutor.setMaximumPoolSize(6);
         scheduledExecutor.setKeepAliveTime(16L, TimeUnit.SECONDS);
     }
@@ -154,10 +155,6 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
     public ScheduledThreadPoolExecutor getScheduledExecutor() {
         return scheduledExecutor;
-    }
-
-    public void setShardUtil(ShardUtil util) {
-        shardUtil = util;
     }
 
     public ShardUtil getShardUtil() {
@@ -559,27 +556,25 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     }
 
     @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
+    public void onMessageReceived(MessageReceivedEvent event) { // TODO: more optimization
         final JDA jda = event.getJDA();
         final User author = event.getAuthor();
 
-        if (author.isBot())
-            return;
-        if (author.getIdLong() == jda.getSelfUser().getIdLong())
+        if (author.isBot() || author.getIdLong() == jda.getSelfUser().getIdLong())
             return;
 
         final Message message = event.getMessage();
         final String prefix;
         if (message.getGuild() == null) {
-            prefix = shardUtil.getPrefixStore().getDefaultPrefix();
+            prefix = prefixStore.defaultPrefix;
         } else {
-            prefix = shardUtil.getPrefixStore().getPrefix(message.getGuild().getIdLong());
+            prefix = prefixStore.getPrefix(message.getGuild().getIdLong());
         }
         final String content = message.getContentRaw();
         final MessageChannel channel = event.getChannel();
 
         if (content.startsWith(prefix)) {
-            String[] split = content.substring(prefix.length()).split("\\s+");
+            String[] split = content.substring(prefix.length()).split("\\s+"); // TODO: inefficient, compiling regex!
             List<String> args = new ArrayList<>(split.length - 1);
 
             for (int i = 1; i < split.length; i++)
@@ -845,7 +840,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 final Logger logger = LogManager.getLogger("ShardMonitor " + shardId);
 
                 while (true) {
-                    Bot bot = new Bot();
+                    Bot bot = new Bot(shardUtil);
 
                     if (shardCount != 1) {
                         builder.useSharding(shardId, shardCount);
@@ -869,7 +864,6 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
                     bot.setJda(jda);
                     shardUtil.setShard(shardId, bot);
-                    bot.setShardUtil(shardUtil);
 
                     synchronized (bot) {
                         try {

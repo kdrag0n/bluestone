@@ -299,7 +299,7 @@ public class WelcomeCog extends Cog {
                     .map("time", () -> new Date().toString())
                     .map("date", () -> new Date().toString())
                     .map("server_name", guild::getName)
-                    .map("prefix", () -> bot.getShardUtil().getPrefixStore().getPrefix(guild.getIdLong()))
+                    .map("prefix", () -> bot.prefixStore.getPrefix(guild.getIdLong()))
                     .map("bot_owner", "Dragon5232#1841")
                     .map("rip", Emotes::getGrave)
                     .exec(m);

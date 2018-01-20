@@ -162,7 +162,7 @@ public class OwnerCog extends Cog {
                 continue;
             }
             String message = StringUtils.replace(ctx.rawArgs, "%prefix%",
-                    bot.getShardUtil().getPrefixStore().getPrefix(guild.getIdLong()));
+                    bot.prefixStore.getPrefix(guild.getIdLong()));
             TextChannel channel = defaultWritableChannel(guild.getSelfMember());
 
             if (channel != null && channel.canTalk())

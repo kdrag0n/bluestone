@@ -1,5 +1,6 @@
 package com.khronodragon.bluestone.cogs;
 
+import com.j256.ormlite.dao.Dao;
 import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.errors.PermissionError;
@@ -31,6 +32,7 @@ public class AdminCog extends Cog {
             "It shouldn't. This is for bot-wide admins that have extra powers.\n" +
             "**Bot owner** is the same kind of role. It's bot-wide, and it's the person who actually owns the bot.\n" +
             "In your server, being **server owner** will automatically grant you permission to do everything in the server.";
+    private final Dao<GuildPrefix, Long> prefixDao = bot.setupDao(GuildPrefix.class);
 
     public AdminCog(Bot bot) {
         super(bot);
@@ -154,8 +156,8 @@ public class AdminCog extends Cog {
                 }
 
                 GuildPrefix prefix = new GuildPrefix(ctx.guild.getIdLong(), rawPrefix);
-                bot.getPrefixDao().createOrUpdate(prefix);
-                bot.getShardUtil().getPrefixStore().updateCache(ctx.guild.getIdLong(), rawPrefix);
+                prefixDao.createOrUpdate(prefix);
+                bot.prefixStore.cache.put(ctx.guild.getIdLong(), rawPrefix);
 
                 ctx.success("Prefix set.");
             }

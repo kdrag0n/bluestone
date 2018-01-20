@@ -62,29 +62,8 @@ public class RolemanCog extends Cog {
     public RolemanCog(Bot bot) {
         super(bot);
 
-        try {
-            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), GuildRoleOption.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create role option table!", e);
-        }
-
-        try {
-            dao = DaoManager.createDao(bot.getShardUtil().getDatabase(), GuildRoleOption.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create role option DAO!", e);
-        }
-
-        try {
-            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), GuildMemberActions.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create member action table!", e);
-        }
-
-        try {
-            profDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), GuildMemberActions.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create member action DAO!", e);
-        }
+        dao = bot.setupDao(GuildRoleOption.class);
+        profDao = bot.setupDao(GuildMemberActions.class);
     }
 
     public String getName() {

@@ -213,17 +213,7 @@ public class KewlCog extends Cog {
     public KewlCog(Bot bot) {
         super(bot);
 
-        try {
-            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), UserProfile.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create profile table!", e);
-        }
-
-        try {
-            profileDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), UserProfile.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create profile DAO!", e);
-        }
+        profileDao = bot.setupDao(UserProfile.class);
 
         if (!hasWarmedUp) {
             hasWarmedUp = true;
