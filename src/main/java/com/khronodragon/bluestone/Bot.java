@@ -3,15 +3,13 @@ package com.khronodragon.bluestone;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.re2j.Pattern;
 import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.dao.DaoManager;
-import com.j256.ormlite.table.TableUtils;
 import com.jagrosh.jdautilities.waiter.EventWaiter;
 import com.khronodragon.bluestone.annotations.*;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.handlers.MessageWaitEventListener;
 import com.khronodragon.bluestone.handlers.RejectedExecHandlerImpl;
 import com.khronodragon.bluestone.sql.BotAdmin;
-import com.khronodragon.bluestone.sql.GuildPrefix;
+import com.khronodragon.bluestone.util.ArrayListView;
 import com.khronodragon.bluestone.util.ClassUtilities;
 import com.khronodragon.bluestone.util.RandomSelect;
 import com.khronodragon.bluestone.util.Strings;
@@ -28,7 +26,6 @@ import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
-import net.dv8tion.jda.core.requests.SessionReconnectQueue;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
@@ -575,10 +572,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
         if (content.startsWith(prefix)) {
             String[] split = content.substring(prefix.length()).split("\\s+"); // TODO: inefficient, compiling regex!
-            List<String> args = new ArrayList<>(split.length - 1);
-
-            for (int i = 1; i < split.length; i++)
-                args.add(split[i]);
+            ArrayListView(split);
 
             String cmdName = split[0].toLowerCase();
 

@@ -430,7 +430,7 @@ public class StarboardCog extends Cog {
         }
 
         String channelName = "starboard";
-        if (ctx.args.size() > 1) {
+        if (ctx.args.length > 1) {
             String wantedName = ctx.args.get(1);
             if (!Strings.isChannelName(wantedName)) {
                 ctx.fail("Channel name must be between 2 and 100 characters long!");
@@ -516,7 +516,7 @@ public class StarboardCog extends Cog {
         com.khronodragon.bluestone.Command.checkPerms(ctx, MOD_PERMS);
 
         Starboard starboard = requireStarboard(ctx);
-        if (ctx.args.size() < 2) {
+        if (ctx.args.length < 2) {
             ctx.fail("I need a number to set the minimum star count to!");
             return;
         }
@@ -540,7 +540,7 @@ public class StarboardCog extends Cog {
 
     private void cmdClean(Context ctx) throws SQLException {
         Starboard starboard = requireStarboard(ctx);
-        if (ctx.args.size() < 2) {
+        if (ctx.args.length < 2) {
             ctx.fail("I need a required star count to clean with!");
             return;
         }

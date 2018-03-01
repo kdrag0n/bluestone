@@ -85,7 +85,7 @@ public class AdminCog extends Cog {
     private void adminCmdAdd(Context ctx) throws SQLException, PermissionError {
         com.khronodragon.bluestone.Command.checkPerms(ctx, ADMIN_PERM);
 
-        if (ctx.args.size() != 2) {
+        if (ctx.args.length != 2) {
             ctx.fail("I need a mention or user ID!");
             return;
         }
@@ -119,7 +119,7 @@ public class AdminCog extends Cog {
     private void adminCmdRemove(Context ctx) throws SQLException, PermissionError {
         com.khronodragon.bluestone.Command.checkPerms(ctx, ADMIN_PERM);
 
-        if (ctx.args.size() != 2) {
+        if (ctx.args.length != 2) {
             ctx.fail("I need a mention or user ID!");
             return;
         }

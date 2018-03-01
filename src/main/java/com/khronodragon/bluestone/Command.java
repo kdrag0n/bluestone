@@ -4,6 +4,7 @@ import com.khronodragon.bluestone.errors.CheckFailure;
 import com.khronodragon.bluestone.errors.GuildOnlyError;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.errors.PermissionError;
+import com.khronodragon.bluestone.util.ArrayListView;
 import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.MessageChannel;
@@ -55,7 +56,7 @@ public class Command {
         this.requiresOwner = ArrayUtils.contains(permsRequired, "owner");
     }
 
-    public void invoke(Bot bot, MessageReceivedEvent event, List<String> args,
+    public void invoke(Bot bot, MessageReceivedEvent event, ArrayListView args,
                        String prefix, String invoker) throws IllegalAccessException, InvocationTargetException, CheckFailure {
         Context ctx = new Context(bot, event, args, prefix, invoker);
 
@@ -64,7 +65,7 @@ public class Command {
         func.invoke(cog, ctx);
     }
 
-    public void simpleInvoke(Bot bot, MessageReceivedEvent event, List<String> args,
+    public void simpleInvoke(Bot bot, MessageReceivedEvent event, ArrayListView args,
                              String prefix, String invoker) {
         if (needThread) {
             Runnable task = () -> {
@@ -81,7 +82,7 @@ public class Command {
         }
     }
 
-    public void invokeWithHandling(Bot bot, MessageReceivedEvent event, List<String> args,
+    public void invokeWithHandling(Bot bot, MessageReceivedEvent event, ArrayListView args,
                                    String prefix, String invoker) {
         MessageChannel channel = event.getChannel();
 

@@ -104,7 +104,7 @@ public class CogmanCog extends Cog {
     }
 
     private String getClassPath(Context ctx) {
-        if (ctx.args.size() < 2) {
+        if (ctx.args.length < 2) {
             ctx.fail("I need a cog name or class path!");
             throw new PassException();
         }
@@ -146,7 +146,7 @@ public class CogmanCog extends Cog {
     private void cmdList(Context ctx) {
         Reflections reflector = cogsReflector;
 
-        if (ctx.args.size() > 1 && Strings.isPackage(ctx.args.get(1)))
+        if (ctx.args.length > 1 && Strings.isPackage(ctx.args.get(1)))
             reflector = new Reflections(ctx.args.get(0));
 
         Set<Class<? extends Cog>> classes = reflector.getSubTypesOf(Cog.class);
@@ -180,7 +180,7 @@ public class CogmanCog extends Cog {
     }
 
     private void cmdLoad(Context ctx) throws ReflectiveOperationException, MalformedURLException {
-        if (ctx.args.size() < 2) {
+        if (ctx.args.length < 2) {
             ctx.send(INVALID_LOAD).queue();
             return;
         }

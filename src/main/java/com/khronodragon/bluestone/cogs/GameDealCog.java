@@ -496,7 +496,7 @@ public class GameDealCog extends Cog {
     private void cmdMin(Context ctx) throws SQLException {
         short percent;
         String arg2;
-        if (ctx.args.size() < 2 || (arg2 = ctx.args.get(1)).isEmpty() ||
+        if (ctx.args.length < 2 || (arg2 = ctx.args.get(1)).isEmpty() ||
                 !Strings.is4Digits(arg2) || (percent = Short.parseShort(arg2)) > 100 ||
                 percent < 1) {
             ctx.fail("You must specify a valid percentage!");

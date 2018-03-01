@@ -325,10 +325,10 @@ public class KewlCog extends Cog {
                     .orElse(null);
         } else if (ctx.rawArgs.length() < 1) {
             user = ctx.author;
-        } else if (ctx.args.size() > 0 && ctx.args.get(0).equalsIgnoreCase("setup")) {
+        } else if (ctx.args.length > 0 && ctx.args.get(0).equalsIgnoreCase("setup")) {
             cmdProfileSetup(ctx);
             return;
-        } else if (ctx.args.size() > 0 && ctx.args.get(0).equalsIgnoreCase("bg")) {
+        } else if (ctx.args.length > 0 && ctx.args.get(0).equalsIgnoreCase("bg")) {
             cmdSetProfileBg(ctx);
             return;
         } else {
@@ -466,7 +466,7 @@ public class KewlCog extends Cog {
             aliases = {"profilebg", "profile_bg", "setprofilebg"})
     public void cmdSetProfileBg(Context ctx) {
         String a = ctx.invoker.equalsIgnoreCase("profile") ?
-                ctx.args.get(ctx.args.size() - 1) : ctx.rawArgs;
+                ctx.args.get(ctx.args.length - 1) : ctx.rawArgs;
         Message.Attachment attachment;
 
         if (a.equalsIgnoreCase("reset") || a.equalsIgnoreCase("default")) {
@@ -484,13 +484,12 @@ public class KewlCog extends Cog {
         } else if (ctx.message.getAttachments().size() > 0 && (attachment = ctx.message.getAttachments().get(0)).isImage()) {
             ctx.channel.sendTyping().queue();
 
-            try {
-                InputStream is = Bot.http.newCall(new Request.Builder()
-                        .get()
-                        .url(attachment.getUrl())
-                        .build()).execute().body().byteStream();
+            try (InputStream is = Bot.http.newCall(new Request.Builder()
+                    .get()
+                    .url(attachment.getUrl())
+                    .build()).execute().body().byteStream()) {
+                ;
                 BufferedImage image = ImageIO.read(is);
-                IOUtils.closeQuietly(is);
 
                 if (image.getType() != BufferedImage.TYPE_INT_RGB) {
                     BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
@@ -523,7 +522,7 @@ public class KewlCog extends Cog {
     public void cmdProfileOverrideBg(Context ctx) {
         User target;
 
-        if (ctx.args.size() < 1) {
+        if (ctx.args.length < 1) {
             ctx.fail("I need a @mention or user ID as first argument!");
             return;
         } else if (ctx.message.getMentionedUsers().size() > 0 && Strings.isMention(ctx.args.get(0))) {
@@ -545,7 +544,7 @@ public class KewlCog extends Cog {
     public void cmdProfileInvalidate(Context ctx) {
         long target;
 
-        if (ctx.args.size() < 1) {
+        if (ctx.args.length < 1) {
             ctx.fail("I need a @mention or user ID as first argument!");
             return;
         } else if (ctx.message.getMentionedUsers().size() > 0 && Strings.isMention(ctx.args.get(0))) {

@@ -105,7 +105,7 @@ public class ReplCog extends Cog {
     @Command(name = "repl", desc = "A multilingual REPL, in Discord!\n\nFlags come before language in arguments.",
             usage = "[language] {flags}", thread=true)
     public void cmdRepl(Context ctx) throws ScriptException {
-        if (ctx.args.size() < 1) {
+        if (ctx.args.length < 1) {
             ctx.fail("I need a valid language!");
             return;
         }
@@ -116,7 +116,7 @@ public class ReplCog extends Cog {
         if (language.equalsIgnoreCase("untrusted")) {
             untrusted = true;
 
-            if (ctx.args.size() < 2) {
+            if (ctx.args.length < 2) {
                 ctx.fail("I need a valid language!");
                 return;
             }

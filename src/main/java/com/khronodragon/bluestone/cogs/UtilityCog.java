@@ -200,13 +200,10 @@ public class UtilityCog extends Cog {
             logger.warn("Error rescheduling previous polls", e);
         }
 
-        InputStream st = Bot.class.getClassLoader().getResourceAsStream("assets/calc.lua");
-        try {
+        try (InputStream st = Bot.class.getClassLoader().getResourceAsStream("assets/calc.lua")) {
             calcEngine.eval(IOUtils.toString(st, StandardCharsets.UTF_8));
         } catch (IOException|ScriptException e) {
             logger.error("Error evaluating calc.lua for calc command", e);
-        } finally {
-            IOUtils.closeQuietly(st);
         }
 
         try {
@@ -526,7 +523,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "poll", desc = "Start a poll, with reactions.", usage = "[emotes] [question] [time]", guildOnly = true)
     public void cmdPoll(Context ctx) {
-        if (ctx.args.size() < 1) {
+        if (ctx.args.length < 1) {
             ctx.fail("Missing question, emotes, and time (like `5 minutes`)!");
             return;
         }
@@ -1628,7 +1625,7 @@ public class UtilityCog extends Cog {
     public void cmdSnowtime(Context ctx) {
         long id;
         try {
-            if (ctx.args.size() < 1 || (id = MiscUtil.parseSnowflake(ctx.args.get(0))) < 0) {
+            if (ctx.args.length < 1 || (id = MiscUtil.parseSnowflake(ctx.args.get(0))) < 0) {
                 ctx.fail("Invalid Snowflake ID provided!");
                 return;
             }

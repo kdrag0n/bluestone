@@ -104,19 +104,21 @@ public class QuotesCog extends Cog {
         else if (Strings.is4Digits(invoked))
             quoteShowId(ctx, Integer.parseInt(invoked));
         else if (Strings.isID(invoked)) {
-            ctx.args.add(0, null); // null for memory saving, it doesnt use it
+            ctx._flag = true; // use different argument index
             quoteCmdAddMessage(ctx);
         } else
             ctx.send(NO_COMMAND).queue();
     }
 
     private void quoteCmdAdd(Context ctx) throws SQLException {
-        if (ctx.args.size() < 2) {
+        if (ctx.args.length < 2) {
             ctx.fail("I need text to quote!");
             return;
         } else if (banDao.queryForId(ctx.author.getIdLong()) != null) {
             ctx.fail("You're not allowed to write quotes!");
             return;
+        } else if (Strings.isID(ctx.args.get(1))) {
+            quoteCmdAddMessage(ctx);
         }
 
         String text = Strings.renderMessage(ctx.message, ctx.guild, ctx.rawArgs.substring(ctx.args.get(0).length()).trim()
@@ -146,7 +148,7 @@ public class QuotesCog extends Cog {
     }
 
     private void quoteCmdDelete(Context ctx) throws SQLException {
-        if (ctx.args.size() < 2) {
+        if (ctx.args.length < 2) {
             ctx.fail("I need a quote ID to delete!");
             return;
         }
@@ -188,7 +190,7 @@ public class QuotesCog extends Cog {
             renderedQuotes[i] = quotes.get(i).render();
 
         int page = 1;
-        if (ctx.args.size() > 1) {
+        if (ctx.args.length > 1) {
             if (Strings.is4Digits(ctx.args.get(1))) {
                 int wantedPage = Integer.parseInt(ctx.args.get(1));
                 int max = (int) Math.ceil(renderedQuotes.length / 12);
@@ -263,7 +265,8 @@ public class QuotesCog extends Cog {
     }
 
     private void quoteCmdAddMessage(Context ctx) throws SQLException {
-        if (ctx.args.size() < 2 || !Strings.isID(ctx.args.get(1))) {
+        final int i = ctx._flag ? 0 : 1;
+        if (ctx.args.length < 2 || !Strings.isID(ctx.args.get(i))) {
             ctx.fail("I need the ID of a message to quote!");
             return;
         } else if (banDao.queryForId(ctx.author.getIdLong()) != null) {
@@ -273,7 +276,7 @@ public class QuotesCog extends Cog {
 
         Message msg;
         try {
-            msg = ctx.channel.getMessageById(MiscUtil.parseSnowflake(ctx.args.get(1))).complete();
+            msg = ctx.channel.getMessageById(MiscUtil.parseSnowflake(ctx.args.get(i))).complete();
         } catch (ErrorResponseException ignored) {
             ctx.fail("No such message! (must be in this channel)");
             return;

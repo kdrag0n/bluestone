@@ -142,7 +142,7 @@ public class WelcomeCog extends Cog {
     }
 
     private void welcomeCmdSet(Context ctx) throws SQLException {
-        if (ctx.args.size() < 2) {
+        if (ctx.args.length < 2) {
             ctx.fail("I need a new message to set!");
             return;
         }
@@ -247,7 +247,7 @@ public class WelcomeCog extends Cog {
     }
 
     private void leaveCmdSet(Context ctx) throws SQLException {
-        if (ctx.args.size() < 2) {
+        if (ctx.args.length < 2) {
             ctx.fail("I need a new message to set!");
             return;
         }

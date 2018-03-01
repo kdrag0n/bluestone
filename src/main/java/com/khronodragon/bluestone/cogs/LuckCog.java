@@ -39,8 +39,8 @@ public class LuckCog extends Cog {
 
     @Command(name = "choose", desc = "Choose between the given choices.", aliases = {"choice"})
     public void cmdChoice(Context ctx) {
-        if (ctx.args.size() > 1) {
-            ctx.send("I choose **" + randomChoice(ctx.args) + "**").queue();
+        if (ctx.args.length > 1) {
+            ctx.send("I choose **" + randomChoice(ctx.args.array) + "**").queue();
         } else {
             ctx.fail("You need at least 2 choices!");
         }

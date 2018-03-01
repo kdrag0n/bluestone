@@ -128,7 +128,7 @@ public class CryptoCurrencyCog extends Cog {
         Cryptocurrency from;
         double amount;
 
-        if (ctx.args.size() != 3) {
+        if (ctx.args.length != 3) {
             ctx.fail("Usage is `[from currency] [to currency] [amount]`!");
             return;
         } else if ((from = currencies.get(ctx.args.get(0).toUpperCase())) == null) {
@@ -198,7 +198,7 @@ public class CryptoCurrencyCog extends Cog {
     public void cmdCurrencyInfo(Context ctx) {
         Cryptocurrency c;
 
-        if (ctx.args.size() < 1) {
+        if (ctx.args.length < 1) {
             ctx.fail("I need a cryptocurrency to give information on!");
             return;
         } else if ((c = currencies.get(ctx.args.get(0).toUpperCase())) == null) {
@@ -290,7 +290,7 @@ public class CryptoCurrencyCog extends Cog {
         }
 
         int page = 1;
-        if (ctx.args.size() > 0) {
+        if (ctx.args.length > 0) {
             if (Strings.is4Digits(ctx.args.get(0))) {
                 int wantedPage = Integer.parseInt(ctx.args.get(0));
                 int max = (int) Math.ceil(rankedList.size() / 16);

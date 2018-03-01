@@ -563,7 +563,7 @@ public class ModerationCog extends Cog {
     private Role requireRole(Context ctx) {
         Role role;
 
-        if (ctx.args.size() < 2 ||
+        if (ctx.args.length < 2 ||
                 (role = parseRole(ctx.guild, ctx.rawArgs.substring(ctx.args.get(0).length()).trim())) == null) {
             ctx.fail("I need a role in the form of the name, @role, or ID!");
             throw new PassException();

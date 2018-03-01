@@ -1,5 +1,6 @@
 package com.khronodragon.bluestone;
 
+import com.khronodragon.bluestone.util.ArrayListView;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -19,13 +20,13 @@ public class Context {
     public final Member member;
     public JDA jda;
     public final String prefix;
-    public final List<String> args;
+    public final ArrayListView args;
     public String invoker;
     public final String rawArgs;
     public final String mention;
     public boolean _flag = false;
 
-    public Context(Bot bot, MessageReceivedEvent event, List<String> args,
+    public Context(Bot bot, MessageReceivedEvent event, ArrayListView args,
                    String prefix, String invoker) {
         this.bot = bot;
         this.event = event;

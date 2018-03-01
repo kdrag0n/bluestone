@@ -195,7 +195,7 @@ public class CoreCog extends Cog {
                 .setAuthor("Bot Help", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
                 .setColor(randomColor());
 
-        if (ctx.args.size() < 1) {
+        if (ctx.args.length < 1) {
             for (com.khronodragon.bluestone.Command cmd: new HashSet<>(bot.commands.values())) {
                 if (!cmd.hidden && !(cmd.requiresOwner && !isOwner)) {
                     String cName = cmd.cog.getCosmeticName();
@@ -212,7 +212,7 @@ public class CoreCog extends Cog {
                 }
             }
         } else {
-            for (String item: ctx.args.subList(0, Math.min(24, ctx.args.size()))) {
+            for (String item: ctx.args.subList(0, Math.min(24, ctx.args.length))) {
                 String litem = item.toLowerCase();
                 boolean done = false;
 

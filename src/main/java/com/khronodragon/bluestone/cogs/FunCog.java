@@ -416,7 +416,7 @@ public class FunCog extends Cog {
         }
 
         String eName = ctx.args.get(0);
-        if (eName.equalsIgnoreCase("add") && ctx.args.size() > 1)
+        if (eName.equalsIgnoreCase("add") && ctx.args.length > 1)
             eName = ctx.args.get(1);
         final String n = eName;
 
@@ -448,8 +448,8 @@ public class FunCog extends Cog {
     @Command(name = "add_compound_emote", desc = "Add a compound emote to the server.", guildOnly = true,
             aliases = {"add_cmp_emote", "addcemote", "addcmpemote", "cmp_add", "cadd",
                     "cemote_add", "cmp_emote_add", "+ce", "+cmp", "+compound", "+cemote"},
-            usage = "[emote name] [attach an image]")
-    public void cmdAddCompoundEmote(Context ctx) {
+            usage = "[emote name] [attach an image]", hidden = true)
+    public void cmdAddCompoundEmote(Context ctx) { // TODO: fix this
         String baseName;
         Message.Attachment attachment;
         if (ctx.rawArgs.length() < 1 || !Strings.isEmoteName(baseName = ctx.args.get(0))) {
@@ -466,11 +466,10 @@ public class FunCog extends Cog {
                 .get()
                 .url(attachment.getProxyUrl())
                 .build()).enqueue(Bot.callback(resp -> {
-            InputStream is = resp.body().byteStream();
             BufferedImage base;
 
             // Load image
-            try {
+            try (InputStream is = resp.body().byteStream()) {
                 base = ImageIO.read(is);
             } catch (IOException | NullPointerException | IllegalArgumentException ignored) {
                 ctx.fail("Invalid image! Only GIF, PNG, and JPEG images are supported.");
@@ -478,8 +477,6 @@ public class FunCog extends Cog {
             } catch (ArrayIndexOutOfBoundsException ignored) {
                 ctx.fail("Your image seems to be in a weird format, or corrupted...");
                 return;
-            } finally {
-                IOUtils.closeQuietly(is);
             }
 
             // Crop to square based on smallest dimension, if not already exactly square
@@ -615,7 +612,7 @@ public class FunCog extends Cog {
                     "\nTip: *use the `styles` command to see what there is.*").queue();
             return;
         }
-        if (ctx.args.size() < 2) {
+        if (ctx.args.length < 2) {
             ctx.fail("Usage is `style [style name] [text]`.");
             return;
         }
@@ -637,15 +634,13 @@ public class FunCog extends Cog {
             return;
         }
 
-        ctx.send("<http://lmgtfy.com/?q=" + ctx.args.stream()
-                .map(s -> StringUtils.replace(s, "+", "%2B"))
-                .collect(Collectors.joining("+")) + ">").queue();
+        ctx.send("<http://lmgtfy.com/?q=" + StringUtils.replace(ctx.args.array.join('+'), "+", "%2B") + '>').queue();
     }
 
     @Command(name = "slap", desc = "Slap someone, with passion.", aliases = {"boop", "poke", "hit"})
     public void cmdSlap(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.fail("I need someone to " + ctx.invoker + "!");
+            ctx.fail("I need someone to " + ctx.invoker + '!');
             return;
         }
 
@@ -656,7 +651,7 @@ public class FunCog extends Cog {
     @Command(name = "attack", desc = "Hurt someone, with determination.", aliases = {"stab", "kill", "punch", "shoot", "hurt", "fight"})
     public void cmdAttack(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.fail("I need someone to " + ctx.invoker + "!");
+            ctx.fail("I need someone to " + ctx.invoker + '!');
             return;
         }
         final String target = '*' + ctx.rawArgs + '*';
@@ -671,7 +666,7 @@ public class FunCog extends Cog {
             ctx.fail("I need a question!");
             return;
         }
-        String question = ctx.rawArgs.endsWith("?") ? ctx.rawArgs : ctx.rawArgs + "?";
+        String question = ctx.rawArgs.endsWith("?") ? ctx.rawArgs : ctx.rawArgs + '?';
 
         ctx.send("*Charlie Charlie* " + question + "\n**" + (randint(0, 1) == 1 ? "Yes" : "No") + "**").queue();
     }
