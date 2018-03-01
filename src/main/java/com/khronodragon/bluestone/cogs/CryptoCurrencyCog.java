@@ -131,12 +131,12 @@ public class CryptoCurrencyCog extends Cog {
         if (ctx.args.size() != 3) {
             ctx.fail("Usage is `[from currency] [to currency] [amount]`!");
             return;
-        } else if ((from = currencies.get(ctx.args.get(0))) == null) {
+        } else if ((from = currencies.get(ctx.args.get(0).toUpperCase())) == null) {
             ctx.fail("No such cryptocurrency `" + ctx.args.get(0) + "`!");
             return;
         }
 
-        String to = ctx.args.get(1);
+        String to = ctx.args.get(1).toUpperCase();
 
         try {
             amount = Double.parseDouble(ctx.args.get(2));
@@ -201,8 +201,8 @@ public class CryptoCurrencyCog extends Cog {
         if (ctx.args.size() < 1) {
             ctx.fail("I need a cryptocurrency to give information on!");
             return;
-        } else if ((c = currencies.get(ctx.args.get(0))) == null) {
-            ctx.fail("No such cryptocurrency `" + ctx.args.get(0) + "`!");
+        } else if ((c = currencies.get(ctx.args.get(0).toUpperCase())) == null) {
+            ctx.fail("No such cryptocurrency `" + ctx.args.get(0).toUpperCase() + "`!");
             return;
         }
 
