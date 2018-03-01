@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/bluestone.iml" filepath="$PROJECT_DIR$/.idea/modules/bluestone.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/bluestone_main.iml" filepath="$PROJECT_DIR$/.idea/modules/bluestone_main.iml" group="bluestone" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/bluestone_test.iml" filepath="$PROJECT_DIR$/.idea/modules/bluestone_test.iml" group="bluestone" />
+      <module fileurl="file://$PROJECT_DIR$/bluestone.iml" filepath="$PROJECT_DIR$/bluestone.iml" />
     </modules>
   </component>
 </project>
