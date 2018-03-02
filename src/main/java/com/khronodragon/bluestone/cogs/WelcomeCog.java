@@ -62,17 +62,7 @@ public class WelcomeCog extends Cog {
     public WelcomeCog(Bot bot) {
         super(bot);
 
-        try {
-            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), GuildWelcomeMessages.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create welcome message table!", e);
-        }
-
-        try {
-            messageDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), GuildWelcomeMessages.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create welcome message DAO!", e);
-        }
+        messageDao = setupDao(GuildWelcomeMessages.class);
     }
 
     public String getName() {

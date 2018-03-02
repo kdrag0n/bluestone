@@ -93,41 +93,9 @@ public class StarboardCog extends Cog {
     public StarboardCog(Bot bot) {
         super(bot);
 
-        try {
-            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), Starboard.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create starboard table!", e);
-        }
-
-        try {
-            dao = DaoManager.createDao(bot.getShardUtil().getDatabase(), Starboard.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create starboard DAO!", e);
-        }
-
-        try {
-            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), StarboardEntry.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create starboard entry table!", e);
-        }
-
-        try {
-            entryDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), StarboardEntry.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create starboard entry DAO!", e);
-        }
-
-        try {
-            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), Starrer.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create starboard user table!", e);
-        }
-
-        try {
-            starrerDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), Starrer.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create starboard user DAO!", e);
-        }
+        dao = setupDao(Starboard.class);
+        entryDao = setupDao(StarboardEntry.class);
+        starrerDao = setupDao(Starrer.class);
     }
 
     public String getName() {

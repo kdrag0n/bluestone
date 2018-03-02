@@ -67,17 +67,7 @@ public class MusicCog extends Cog {
         playerManager.registerSourceManager(new TwitchStreamAudioSourceManager());
         bgExecutor.scheduleWithFixedDelay(this::doCleanup, 5, 5, TimeUnit.MINUTES);
 
-        try {
-            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), GuildMusicSettings.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create music settings table!", e);
-        }
-
-        try {
-            settingsDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), GuildMusicSettings.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create music settings DAO!", e);
-        }
+        settingsDao = setupDao(GuildMusicSettings.class);
     }
 
     public String getName() {

@@ -86,7 +86,6 @@ public class StatReporterCog extends Cog {
                 put("bot.channels", shardUtil.getChannelCount());
                 put("bot.voice_channels", shardUtil.getVoiceChannelCount());
                 put("bot.text_channels", shardUtil.getTextChannelCount());
-                put("bot.requests", shardUtil.getRequestCount());
                 put("bot.users", shardUtil.getUserCount());
                 put("bot.shards", shardUtil.getShardCount());
                 put("bot.cpu_usage", UtilityCog.systemBean.getProcessCpuLoad());
@@ -101,10 +100,6 @@ public class StatReporterCog extends Cog {
                 put("system.cpu_usage", UtilityCog.systemBean.getSystemCpuLoad());
                 put("system.memory_free", UtilityCog.systemBean.getFreePhysicalMemorySize());
                 put("system.memory_used", runtime.totalMemory() - runtime.freeMemory());
-
-                for (Map.Entry<String, AtomicInteger> entry : shardUtil.getCommandCalls().entrySet()) {
-                    put("bot.command." + entry.getKey() + ".requests", entry.getValue().get());
-                }
             }});
         } catch (Exception e) {
             logger.error("Error reporting stats to Graphite", e);

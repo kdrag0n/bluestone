@@ -37,15 +37,10 @@ public class ShardUtil {
     private final Map<Integer, Bot> shards = new LinkedHashMap<>();
     public final Date startTime = new Date();
     private int shardCount;
-    private Map<String, AtomicInteger> commandCalls = new HashMap<>();
     private Dao<BotAdmin, Long> adminDao;
     private ConnectionSource dbConn;
     private HikariDataSource dataSource;
     private JSONObject config;
-
-    public Map<String, AtomicInteger> getCommandCalls() {
-        return commandCalls;
-    }
 
     ShardUtil(int shardCount, JSONObject config) {
         this.shardCount = shardCount;
@@ -106,9 +101,7 @@ public class ShardUtil {
     }
 
     @CheckReturnValue
-    public<C, K> Dao<C, K> setupDao(Class<C> clazz) { // TODO: replace all DAO+table setup with this
-        // TODO set up like: private final Dao<GuildPrefix, Long> prefixDao = setupDao(GuildPrefix.class);
-        // TODO no constructor
+    public<C, K> Dao<C, K> setupDao(Class<C> clazz) {
         try {
             TableUtils.createTableIfNotExists(dbConn, clazz);
         } catch (SQLException e) {
@@ -172,10 +165,6 @@ public class ShardUtil {
 
     public int getUserCount() {
         return sumJda(j -> j.getUserMap().size());
-    }
-
-    public int getRequestCount() {
-        return commandCalls.values().stream().mapToInt(AtomicInteger::get).sum();
     }
 
     public int getEmoteCount() {

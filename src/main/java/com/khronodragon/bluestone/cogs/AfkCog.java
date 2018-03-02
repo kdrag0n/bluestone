@@ -28,17 +28,7 @@ public class AfkCog extends Cog {
     public AfkCog(Bot bot) {
         super(bot);
 
-        try {
-            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), AfkMessage.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create AFK message table!", e);
-        }
-
-        try {
-            dao = DaoManager.createDao(bot.getShardUtil().getDatabase(), AfkMessage.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create AFK message DAO!", e);
-        }
+        dao = setupDao(AfkMessage.class);
 
         try {
             for (AfkMessage afkMessage : dao.queryForAll()) {

@@ -108,29 +108,8 @@ public class GameDealCog extends Cog {
     public GameDealCog(Bot bot) {
         super(bot);
 
-        try {
-            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), GameDealDestination.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create game deal table!", e);
-        }
-
-        try {
-            dao = DaoManager.createDao(bot.getShardUtil().getDatabase(), GameDealDestination.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create game deal DAO!", e);
-        }
-
-        try {
-            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), BroadcastedDeal.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create broadcasted game deal table!", e);
-        }
-
-        try {
-            dealDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), BroadcastedDeal.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create broadcasted game deal DAO!", e);
-        }
+        dao = setupDao(GameDealDestination.class);
+        dealDao = setupDao(BroadcastedDeal.class);
 
         if (!hasScheduled.getAndSet(true)) {
             schedule();

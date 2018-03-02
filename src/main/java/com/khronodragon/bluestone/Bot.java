@@ -70,7 +70,8 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public static final JSONObject EMPTY_JSON_OBJECT = new JSONObject();
     public static final JSONArray EMPTY_JSON_ARRAY = new JSONArray();
     private static final Pattern GENERAL_MENTION_PATTERN = Pattern.compile("^<@[!&]?[0-9]{17,20}>\\s*");
-    public Logger logger = defLog;
+    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
+    public final Logger logger;
     private final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(6, new ThreadFactoryBuilder()
             .setDaemon(true)
             .setNameFormat("Bot BG-Task Thread %d")
@@ -87,7 +88,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             .build(), new RejectedExecHandlerImpl("Command-Exec"));
     private final EventWaiter eventWaiter = new EventWaiter();
     private static Unsafe unsafe = null;
-    private JDA jda;
+    private final JDA jda;
     private final ShardUtil shardUtil;
     public static JSONObject patreonData = new JSONObject();
     public static TLongSet patronIds = new TLongHashSet();
@@ -103,6 +104,9 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             .retryOnConnectionFailure(true)
             .build();
     public User owner;
+    private static long ourId;
+    private static String ourMention;
+    private static String ourGuildMention;
     public final PrefixStore prefixStore;
 
     static {
@@ -125,23 +129,19 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         return eventWaiter;
     }
 
-    public Bot(ShardUtil util) {
+    public Bot(ShardUtil util, JDA jda) {
         super();
 
         shardUtil = util;
         prefixStore = new PrefixStore(shardUtil.getPool(), shardUtil.getConfig().optString("default_prefix", "!"));
         scheduledExecutor.setMaximumPoolSize(6);
         scheduledExecutor.setKeepAliveTime(16L, TimeUnit.SECONDS);
-    }
 
-    private void setJda(JDA jda) {
         this.jda = jda;
-        jda.addEventListener(eventWaiter);
-        final ShardInfo sInfo = jda.getShardInfo();
+        jda.addEventListener(this, eventWaiter);
 
-        if (sInfo != null) {
-            logger = LogManager.getLogger("Bot [" + sInfo.getShardString() + ']');
-        }
+        final ShardInfo sInfo = jda.getShardInfo();
+        logger = LogManager.getLogger("Bot" + (sInfo == null ? "" : " [" + sInfo.getShardString() + ']'));
     }
 
     public JDA getJda() {
@@ -276,10 +276,12 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public void onReady(ReadyEvent event) {
         JDA jda = event.getJDA();
         jda.getPresence().setStatus(OnlineStatus.ONLINE);
-        long uid = jda.getSelfUser().getIdLong();
+        ourId = jda.getSelfUser().getIdLong();
+        ourMention = jda.getSelfUser().getAsMention();
+        ourGuildMention = "<@!" + ourId + '>';
 
         updateOwner();
-        logger.info("Ready - ID {}", uid);
+        logger.info("Ready - ID {}", ourId);
 
         if (jda.getGuildById(110373943822540800L) != null)
             Emotes.setHasDbots();
@@ -326,6 +328,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     .add(listening("the poor neutrons"))
                     .add(listening("trigger-happy players"))
                     .add(playing("Discord Hacker v39.2"))
+                    .add(playing("Discord Hacker v42.0"))
                     .add(listening("Discordians"))
                     .add(streaming("donations", "https://patreon.com/kdragon"))
                     .add(streaming("You should totally donate!", "https://patreon.com/kdragon"))
@@ -336,7 +339,6 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                     .add(watching("stars combust"))
                     .add(watching("your demise"))
                     .add(streaming("the supernova", "https://www.youtube.com/watch?v=5WXyCJ1w3Ks"))
-                    .add(watching("aliens die"))
                     .add(listening("something"))
                     .add(streaming("something", "https://www.youtube.com/watch?v=FM7MFYoylVs"))
                     .add(watching("I am Cow"))
@@ -551,11 +553,11 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     }
 
     @Override
-    public void onMessageReceived(MessageReceivedEvent event) { // TODO: more optimization
+    public void onMessageReceived(MessageReceivedEvent event) {
         final JDA jda = event.getJDA();
         final User author = event.getAuthor();
 
-        if (author.isBot() || author.getIdLong() == jda.getSelfUser().getIdLong())
+        if (author.isBot() || author.getIdLong() == ourId)
             return;
 
         final Message message = event.getMessage();
@@ -569,46 +571,35 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         final MessageChannel channel = event.getChannel();
 
         if (content.startsWith(prefix)) {
-            String[] split = content.substring(prefix.length()).split("\\s+"); // TODO: inefficient, compiling regex!
-            ArrayListView args = new ArrayListView(split);
+            final String[] split = WHITESPACE_PATTERN.split(content.substring(prefix.length()), 0);
+            final ArrayListView args = new ArrayListView(split);
 
-            String cmdName = split[0].toLowerCase();
+            final String cmdName = split[0].toLowerCase();
 
             if (commands.containsKey(cmdName)) {
-                Command command = commands.get(cmdName);
+                final Command command = commands.get(cmdName);
 
                 command.simpleInvoke(this, event, args, prefix, cmdName);
-
-                try {
-                    shardUtil.getCommandCalls().get(command.name).incrementAndGet();
-                } catch (NullPointerException ignored) {
-                    shardUtil.getCommandCalls().put(command.name, new AtomicInteger(1));
-                }
             }
-        } else if (message.isMentioned(jda.getSelfUser())) {
-            String mention = message.getGuild() == null ?
-                    jda.getSelfUser().getAsMention() : message.getGuild().getSelfMember().getAsMention();
+        } else if (content.startsWith(ourMention) || content.startsWith(ourGuildMention)) {
+            final String request = Strings.renderMessage(message, message.getGuild(),
+                    GENERAL_MENTION_PATTERN.matcher(message.getContentRaw()).replaceFirst(""));
 
-            if (content.startsWith(mention) || content.startsWith("<@&")) {
-                String request = Strings.renderMessage(message, message.getGuild(),
-                        GENERAL_MENTION_PATTERN.matcher(message.getContentRaw()).replaceFirst(""));
+            if (request.equalsIgnoreCase("prefix")) {
+                channel.sendMessage("My prefix here is `" + prefix + "`.").queue();
+            } else if (request.length() > 0) {
+                chatResponse(channel, "bs_GMdbot2-" + author.getId(), request, null);
+            } else {
+                final String tag = Cog.getTag(jda.getSelfUser());
 
-                if (request.equalsIgnoreCase("prefix")) {
-                    channel.sendMessage("My prefix here is `" + prefix + "`.").queue();
-                } else if (request.length() > 0) {
-                    chatResponse(channel, "bs_GMdbot2-" + author.getId(), request, null);
-                } else {
-                    String tag = Cog.getTag(jda.getSelfUser());
-
-                    channel.sendMessage("Hey there! You can talk to me like `@" + tag +
-                            " [message]`. And if you want my prefix, say `@" + tag +
-                            " prefix`!\nCurrent prefix: `" + prefix +
-                            "` \u2022 Help command: `" + prefix + "help`").queue();
-                }
+                channel.sendMessage("Hey there! You can talk to me like `@" + tag +
+                        " [message]`. And if you want my prefix, say `@" + tag +
+                        " prefix`!\nCurrent prefix: `" + prefix +
+                        "` \u2022 Help command: `" + prefix + "help`").queue();
             }
-        } else if (channel instanceof PrivateChannel &&
-                !(author.getIdLong() == owner.getIdLong() && message.getContentRaw().charAt(0) == '`')) {
-            String request = Strings.renderMessage(message, null, message.getContentRaw());
+        } else if (channel instanceof PrivateChannel && author.getIdLong() != owner.getIdLong() &&
+                message.getContentRaw().charAt(0) == '`') {
+            final String request = Strings.renderMessage(message, null, message.getContentRaw());
 
             if (request.length() < 1) {
                 channel.sendMessage("**Hey there**! My prefix is `" + prefix + "` here.\nYou can use commands, or talk to me directly.").queue();
@@ -830,29 +821,24 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 final Logger logger = LogManager.getLogger("ShardMonitor " + shardId);
 
                 while (true) {
-                    Bot bot = new Bot(shardUtil);
-
                     if (shardCount != 1) {
                         builder.useSharding(shardId, shardCount);
                     }
-                    builder.addEventListener(bot);
 
                     JDA jda;
                     try {
                         jda = builder.buildAsync();
                     } catch (Exception e) {
-                        logger.error("Failed to log in.", e);
+                        logger.error("Failed to initialize JDA", e);
                         if (shardCount == 1)
                             System.exit(1);
                         try {
                             Thread.sleep(1000);
                         } catch (InterruptedException ignored) {}
                         continue;
-                    } finally {
-                        builder.removeEventListener(bot);
                     }
 
-                    bot.setJda(jda);
+                    Bot bot = new Bot(shardUtil, jda);
                     shardUtil.setShard(shardId, bot);
 
                     synchronized (bot) {

@@ -40,6 +40,7 @@ import net.dv8tion.jda.core.entities.impl.GuildImpl;
 import net.dv8tion.jda.core.entities.impl.UserImpl;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.utils.MiscUtil;
+import net.fortuna.ical4j.model.property.Contact;
 import okhttp3.*;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.io.IOUtils;
@@ -207,29 +208,8 @@ public class UtilityCog extends Cog {
             logger.error("Error evaluating calc.lua for calc command", e);
         }
 
-        try {
-            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), ContactBannedUser.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create contact banned users table!", e);
-        }
-
-        try {
-            contactBanDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), ContactBannedUser.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create contact banned users DAO!", e);
-        }
-
-        try {
-            TableUtils.createTableIfNotExists(bot.getShardUtil().getDatabase(), UserFaqRecord.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create user FAQ record table!", e);
-        }
-
-        try {
-            userFaqDao = DaoManager.createDao(bot.getShardUtil().getDatabase(), UserFaqRecord.class);
-        } catch (SQLException e) {
-            logger.error("Failed to create user FAQ record DAO!", e);
-        }
+        contactBanDao = setupDao(ContactBannedUser.class);
+        userFaqDao = setupDao(UserFaqRecord.class);
     }
 
     public String getName() {
@@ -422,16 +402,12 @@ public class UtilityCog extends Cog {
                         "\nFor more *statistical* information, use the `xstats` command.")
                 .addField("Servers", str(shardUtil.getGuildCount()), true)
                 .addField("Uptime", bot.formatUptime(), true)
-                .addField("Requests", str(shardUtil.getRequestCount()), true)
                 .addField("Threads", str(Thread.activeCount()), true)
                 .addField("Memory Used", Bot.formatMemory(), true)
-                .addField("CPU Usage", format("{0}% - system {1}%",
-                        (int) Math.ceil(systemBean.getProcessCpuLoad() * 100),
-                        (int) Math.ceil(systemBean.getSystemCpuLoad() * 100)), true)
+                .addField("CPU Usage", str((int) (systemBean.getProcessCpuLoad() * 100)) + '%', true)
                 .addField("Load Average", loadAvg, true)
                 .addField("Users", str(shardUtil.getUserCount()), true)
                 .addField("Channels", str(shardUtil.getChannelCount()), true)
-                .addField("Commands", str(new HashSet<>(bot.commands.values()).size()), true)
                 .addField("Music Tracks Loaded", str(shardUtil.getTrackCount()), true)
                 .addField("Playing Music in", shardUtil.getStreamCount() + " channels", true)
                 .addField("Links", StringUtils.replace(INFO_LINKS, "[invite]", ctx.jda.asBot().getInviteUrl(PERMS_NEEDED)), false)
