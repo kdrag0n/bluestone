@@ -163,12 +163,12 @@ public class CoreCog extends Cog {
     }
 
     @Command(name = "faq", desc = "Get the Frequently Asked Questions list.")
-    public void cmdFaq(Context ctx) { // :\
+    public void cmdFaq(Context ctx) {
         ctx.send("You can find the FAQ at <https://khronodragon.com/goldmine/faq>.").queue();
     }
 
     @Command(name = "owner", desc = "Become the bot owner.", aliases = {"bot_owner"})
-    public void cmdOwnerInfo(Context ctx) { // too many idiots
+    public void cmdOwnerInfo(Context ctx) {
         ctx.send("My owner is **" + getTag(bot.owner) +
                 "**. The bot owner is a role that applies globally to the entire bot, and is the person who owns the actual bot, **not** the owner of a server or anything like that.\n" +
         "**No**, you may not have bot owner, because it allows full bot control. In your server, being **server owner** is sufficient, and grants you permission to perform all the actions you will need to, automatically.\n\n" +

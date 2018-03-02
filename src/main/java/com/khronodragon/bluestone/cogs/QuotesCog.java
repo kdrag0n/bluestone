@@ -90,8 +90,8 @@ public class QuotesCog extends Cog {
     }
 
     private void quoteCmdAdd(Context ctx) throws SQLException {
-        if (ctx.args.length < 2) {
-            ctx.fail("I need text to quote!");
+        if (ctx.args.length < 8) {
+            ctx.fail("I need valid text to quote!");
             return;
         } else if (banDao.queryForId(ctx.author.getIdLong()) != null) {
             ctx.fail("You're not allowed to write quotes!");
@@ -270,8 +270,8 @@ public class QuotesCog extends Cog {
         if (text.length() > 360) {
             ctx.fail("Text too long!");
             return;
-        } else if (text.length() < 1) {
-            ctx.fail("That message needs to have text!");
+        } else if (text.length() < 8) {
+            ctx.fail("That message needs to have valid text!");
             return;
         }
 

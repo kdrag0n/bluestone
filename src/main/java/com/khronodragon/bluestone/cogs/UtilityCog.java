@@ -6,9 +6,8 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.dao.DaoManager;
-import com.j256.ormlite.table.TableUtils;
 import com.joestelmach.natty.DateGroup;
 import com.joestelmach.natty.Parser;
 import com.khronodragon.bluestone.*;
@@ -18,6 +17,7 @@ import com.khronodragon.bluestone.emotes.DiscordEmoteProvider;
 import com.khronodragon.bluestone.enums.BucketType;
 import com.khronodragon.bluestone.enums.MemberStatus;
 import com.khronodragon.bluestone.errors.PassException;
+import com.khronodragon.bluestone.handlers.RejectedExecHandlerImpl;
 import com.khronodragon.bluestone.sql.ActivePoll;
 import com.khronodragon.bluestone.sql.ContactBannedUser;
 import com.khronodragon.bluestone.sql.UserFaqRecord;
@@ -40,7 +40,6 @@ import net.dv8tion.jda.core.entities.impl.GuildImpl;
 import net.dv8tion.jda.core.entities.impl.UserImpl;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.utils.MiscUtil;
-import net.fortuna.ical4j.model.property.Contact;
 import okhttp3.*;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.io.IOUtils;
@@ -184,6 +183,11 @@ public class UtilityCog extends Cog {
             .collect(Collectors.toList());
 
     private final ScriptEngine calcEngine = new ScriptEngineManager().getEngineByName("lua");
+    private static final ThreadPoolExecutor calcExecutor = new ThreadPoolExecutor(1, 2, 5, TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(5), new ThreadFactoryBuilder()
+            .setDaemon(true)
+            .setNameFormat("Bot Calculation Thread %d")
+            .build(), new RejectedExecHandlerImpl("Calculation"));
     private Dao<ContactBannedUser, Long> contactBanDao;
     private Dao<UserFaqRecord, Long> userFaqDao;
 
@@ -1033,7 +1037,7 @@ public class UtilityCog extends Cog {
     @Command(name = "contact", desc = "Contact the bot owner with a message. Read the FAQ first!", usage = "[message]",
             thread = true)
     public void cmdContact(Context ctx) throws SQLException {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.rawArgs.length() < 6) {
             ctx.fail("I need a message!");
             return;
         } else if (contactBanDao.queryForId(ctx.author.getIdLong()) != null) {
@@ -1645,6 +1649,7 @@ public class UtilityCog extends Cog {
 
             FutureTask<Object> task = new FutureTask<>(() -> calcEngine
                     .eval("return calc([[" + c + "]], [[" + l + "]])"));
+            calcExecutor.execute(task);
             _result = task.get(2, TimeUnit.SECONDS);
         } catch (TimeoutException|InterruptedException ignored) {
             ctx.fail("Your expression took too long to evaluate!");
