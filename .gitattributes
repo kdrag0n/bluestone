@@ -1,5 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text eol=lf
+*.bat text eol=crlf
 
 # Custom for Visual Studio
 *.cs     diff=csharp
@@ -32,3 +33,5 @@
 *.mp3 binary
 *.m4a binary
 *.mp4 binary
+*.jar binary
+
