@@ -49,6 +49,28 @@ If there are errors, open an issue on GitHub or join the Discord [support server
 
 # Configuration
 You will need to create `config.json` for the bot to be able to start.
+
+## Simple
+Paste this into the `config.json` file:
+```json
+{
+  "token": "[token here]"
+}
+```
+
+Replace `[token here]` with your bot token.
+You can obtain a token by going to the Discord [developers page](https://discordapp.com/developers/applications/me) and creating a new app. Fill in the details.
+
+After that, simply click "Create a Bot User" as shown here: ![Create a Bot User](https://user-images.githubusercontent.com/7930239/36882728-66599c4e-1d8a-11e8-969c-e9904aac2268.png)
+Confirm the action by clicking "Yes, do it!" in the popup.
+
+Now click `click to reveal` which is after `Token:`, as shown: ![Click to Reveal Token](https://user-images.githubusercontent.com/7930239/36882771-b4e0fe3e-1d8a-11e8-9232-21bbfe34befc.png)
+
+**DO NOT SHOW THE TOKEN TO __ANYONE__!** Keep this secret just like it's your Discord account's password.
+
+Copy the token as shown, and paste it into the `config.json` file described above. ![Copy Token](https://user-images.githubusercontent.com/7930239/36882814-fb2eccae-1d8a-11e8-830c-a5d568aba1ed.png)
+
+## Advanced
 This is the template:
 ```json
 {
@@ -73,7 +95,7 @@ This is the template:
   "chatengine_url": "http://my-chatengine-server.com/ask"
 }
 ```
-If you aren't filling in a value, **delete the line**! Empty values will cause errors.
+### If you aren't filling in a value, **delete the line**! Empty values will cause errors.
 
 Put your token in for the `token` key.
 Then, choose the number of shards you want to use.

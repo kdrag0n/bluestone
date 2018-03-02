@@ -12,9 +12,10 @@ import java.nio.file.Paths;
 class Start {
     private static final String[] dirInit = {"data/profiles/bg"};
 
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
+    public static void main(String[] args) throws IOException {
         String jsonCode = new String(Files.readAllBytes(Paths.get("config.json")));
         JSONObject config = new JSONObject(jsonCode);
+        if (!config.has("keys")) config.put("keys", new JSONObject());
 
         // init Sentry as early as possible to catch errors
         String sentryDSN;
