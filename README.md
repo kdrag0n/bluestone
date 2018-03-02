@@ -1,7 +1,53 @@
-# Project Bluestone
+# Project Bluestone (Goldmine)
 
 This is Project Bluestone, the rewrite of Goldmine in Java.
 
+# Installation and Setup
+I won't go into *huge* detail here, refer to other guilds such as JDA's for that.
+
+**Make sure Java 8 or 9 is installed before proceeding!**
+You can download Java [here](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
+Select the JDK instead of JRE or Server JRE.
+
+Have patience, the first build will take a while.
+
+## Windows
+Run the following commands in a new instance of `cmd.exe` (Start -> cmd). Administrator is not required.
+```bat
+cd [DRAG bluestone FOLDER INTO WINDOW]
+gradlew shadowJar
+```
+**Success!**
+If everything went right and `BUILD SUCCESSFUL` is displayed, you're good to go.
+Proceed to [Configuration](#configuration) to complete the setup.
+
+If there are errors, open an issue on GitHub or join the Discord [support server](https://discord.gg/sYkwfxA).
+
+## macOS
+Run the following commands in a new instance of Terminal (Applications -> Utilities -> Terminal).
+```bash
+cd [DRAG bluestone FOLDER INTO WINDOW]
+./gradlew shadowJar
+```
+**Success!**
+If everything went right and `BUILD SUCCESSFUL` is displayed, you're good to go.
+Proceed to [Configuration](#configuration) to complete the setup.
+
+If there are errors, open an issue on GitHub or join the Discord [support server](https://discord.gg/sYkwfxA).
+
+## Linux
+Run the following commands in a new terminal window of your choice.
+```bash
+cd [path to bluestone folder]
+./gradlew shadowJar
+```
+**Success!**
+If everything went right and `BUILD SUCCESSFUL` is displayed, you're good to go.
+Proceed to [Configuration](#configuration) to complete the setup.
+
+If there are errors, open an issue on GitHub or join the Discord [support server](https://discord.gg/sYkwfxA).
+
+# Configuration
 You will need to create `config.json` for the bot to be able to start.
 This is the template:
 ```json
@@ -57,8 +103,18 @@ For error reporting, provide a Sentry DSN, optionally with `environment` and `se
 At the very least, you must have an empty `keys` object.
 If there is no `keys` object, or it is another data type, everything may explode.
 
-### Enjoy!
-Don't forget that this project is still experimental.
+**Finished?** Proceed to [Running](#running) to start the bot.
 
-#Credits
+# Running
+You can start the bot in two ways:
+  - Double-clicking the `jar` file found in `[bluestone folder]/build/libs/bluestone-1.0-SNAPSHOT-all.jar`
+  - Opening a terminal, navigating to the `bluestone` folder, and typing `java -jar build/libs/bluestone-1.0-SNAPSHOT-all.jar`
+
+Feel free to automate the process however you want.
+
+# Support
+Is something not working?
+[Open](https://github.com/kdrag0n/bluestone/issues/new) a GitHub issue describing your problem, or ask in our Discord [support server](https://discord.gg/sYkwfxA).
+
+# Credits
  - The `Strftime` class from Apache Tomcat is included under the Apache 2.0 License.
