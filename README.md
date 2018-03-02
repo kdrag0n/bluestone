@@ -73,10 +73,12 @@ This is the template:
   "chatengine_url": "http://my-chatengine-server.com/ask"
 }
 ```
+If you aren't filling in a value, **delete the line**! Empty values will cause errors.
+
 Put your token in for the `token` key.
 Then, choose the number of shards you want to use.
 This is typically unnecessary, and serves no benefit,
-unless you have 750 guilds or more the bot is serving in.
+unless you have 2,500 guilds or more the bot is serving in.
 
 The `db_url` key is for the database connection.
 If you don't want to use a server, `h2` is probably the best choice.
