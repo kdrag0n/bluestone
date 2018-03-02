@@ -328,7 +328,7 @@ public class WelcomeCog extends Cog {
     }
 
     @EventHandler(threaded = true)
-    private void onGuildMemberJoin(GuildMemberJoinEvent event) {
+    public void onGuildMemberJoin(GuildMemberJoinEvent event) {
         if (event.getMember().getUser().getIdLong() == bot.getJda().getSelfUser().getIdLong())
             return;
 
@@ -370,7 +370,7 @@ public class WelcomeCog extends Cog {
     }
 
     @EventHandler(threaded = true)
-    private void onGuildMemberLeave(GuildMemberLeaveEvent event) {
+    public void onGuildMemberLeave(GuildMemberLeaveEvent event) {
         if (event.getMember().getUser().getIdLong() == bot.getJda().getSelfUser().getIdLong())
             return;
 

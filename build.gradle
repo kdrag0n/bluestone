@@ -4,8 +4,6 @@ buildscript {
     }
 }
 
-import de.sebastianboegl.gradle.plugins.shadow.transformers.Log4j2PluginsFileTransformer
-
 plugins {
     id 'java'
     id 'idea'
@@ -21,6 +19,7 @@ archivesBaseName = 'bluestone'
 mainClassName = 'com.khronodragon.bluestone.Start'
 
 apply plugin: 'com.github.johnrengelman.shadow'
+import de.sebastianboegl.gradle.plugins.shadow.transformers.Log4j2PluginsFileTransformer
 
 repositories {
     mavenCentral()

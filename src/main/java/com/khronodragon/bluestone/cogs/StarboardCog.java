@@ -182,7 +182,7 @@ public class StarboardCog extends Cog {
     }
 
     @EventHandler
-    private void onChannelDelete(TextChannelDeleteEvent event) throws SQLException {
+    public void onChannelDelete(TextChannelDeleteEvent event) throws SQLException {
         if (dao.idExists(event.getGuild().getIdLong())) {
             dao.deleteById(event.getGuild().getIdLong());
 
