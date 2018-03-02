@@ -23,7 +23,6 @@ import gnu.trove.map.TLongObjectMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
-import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.GuildVoiceState;
 import net.dv8tion.jda.core.entities.Member;
@@ -231,7 +230,7 @@ public class MusicCog extends Cog {
     }
 
     //@Command(name = "summon", desc = "Summon me to your voice channel.", guildOnly = true)
-    public void summon(Context ctx) {
+    private void summon(Context ctx) {
         VoiceChannel channel = ctx.member.getVoiceState().getChannel();
         if (channel == null) {
             ctx.fail("You aren't in a voice channel!");

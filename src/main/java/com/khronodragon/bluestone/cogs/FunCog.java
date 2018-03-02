@@ -24,7 +24,6 @@ import net.dv8tion.jda.webhook.WebhookClientBuilder;
 import net.dv8tion.jda.webhook.WebhookMessage;
 import net.dv8tion.jda.webhook.WebhookMessageBuilder;
 import okhttp3.*;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -77,6 +76,7 @@ public class FunCog extends Cog {
     }};
     private static final int[] normalChars = {97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 126, 32, 96, 33, 64, 35, 36, 37, 94, 38, 42, 40, 41, 45, 95, 61, 43, 91, 93, 123, 125, 124, 59, 58, 39, 34, 44, 60, 46, 62, 47, 63};
     private static final TShortObjectMap<WebhookMessage> numToBleachMsg = new TShortObjectHashMap<>();
+    @SuppressWarnings("ExternalizableWithoutPublicNoArgConstructor")
     private static final TCharObjectMap<String> alphabetToEmote = new TCharObjectHashMap<>() {{
         put(' ', "    ");
         put('#', "#⃣");
@@ -406,7 +406,7 @@ public class FunCog extends Cog {
     @Perm.ManageEmotes
     @Command(name = "add_emote", desc = "Add an emote to the server.", usage = "[emote name]",
             aliases = {"addemote", "emoteadd", "emote_add", "+emote", "+e"}, guildOnly = true)
-    public void cmdAddEmote(Context ctx) {
+    private void cmdAddEmote(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.fail("You need to specify an emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.");
             return;
@@ -1284,7 +1284,7 @@ public class FunCog extends Cog {
                 return ranking;
             }
 
-            public String getId() {
+            String getId() {
                 return id;
             }
 

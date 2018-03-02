@@ -64,7 +64,7 @@ public final class QrSegment {
 	 * @throws NullPointerException if the string is {@code null}
 	 * @throws IllegalArgumentException if the string contains non-digit characters
 	 */
-	public static QrSegment makeNumeric(String digits) {
+	private static QrSegment makeNumeric(String digits) {
 		Objects.requireNonNull(digits);
 		if (!NUMERIC_REGEX.matcher(digits).matches())
 			throw new IllegalArgumentException("String contains non-numeric characters");
@@ -89,7 +89,7 @@ public final class QrSegment {
 	 * @throws NullPointerException if the string is {@code null}
 	 * @throws IllegalArgumentException if the string contains non-encodable characters
 	 */
-	public static QrSegment makeAlphanumeric(String text) {
+	private static QrSegment makeAlphanumeric(String text) {
 		Objects.requireNonNull(text);
 		if (!ALPHANUMERIC_REGEX.matcher(text).matches())
 			throw new IllegalArgumentException("String contains unencodable characters in alphanumeric mode");
@@ -114,6 +114,7 @@ public final class QrSegment {
 	 * @return a list of segments containing the text
 	 * @throws NullPointerException if the text is {@code null}
 	 */
+	@SuppressWarnings("StatementWithEmptyBody")
 	public static List<QrSegment> makeSegments(String text) {
 		Objects.requireNonNull(text);
 		
@@ -162,7 +163,7 @@ public final class QrSegment {
 	/** The length of this segment's unencoded data, measured in characters. Always zero or positive. */
 	public final int numChars;
 	
-	/** The data bits of this segment. Accessed through {@link getBits()}. Not {@code null}. */
+	/** The data bits of this segment. Not {@code null}. */
 	final BitBuffer data;
 	
 	
@@ -176,7 +177,7 @@ public final class QrSegment {
 	 * @throws NullPointerException if the mode or bit buffer is {@code null}
 	 * @throws IllegalArgumentException if the character count is negative
 	 */
-	public QrSegment(Mode md, int numCh, BitBuffer data) {
+    private QrSegment(Mode md, int numCh, BitBuffer data) {
 		Objects.requireNonNull(md);
 		Objects.requireNonNull(data);
 		if (numCh < 0)
@@ -222,10 +223,10 @@ public final class QrSegment {
 	/*---- Constants ----*/
 	
 	/** Can test whether a string is encodable in numeric mode (such as by using {@link #makeNumeric(String)}). */
-	public static final Pattern NUMERIC_REGEX = Pattern.compile("[0-9]*");
+	private static final Pattern NUMERIC_REGEX = Pattern.compile("[0-9]*");
 	
 	/** Can test whether a string is encodable in alphanumeric mode (such as by using {@link #makeAlphanumeric(String)}). */
-	public static final Pattern ALPHANUMERIC_REGEX = Pattern.compile("[A-Z0-9 $%*+./:-]*");
+	private static final Pattern ALPHANUMERIC_REGEX = Pattern.compile("[A-Z0-9 $%*+./:-]*");
 	
 	/** The set of all legal characters in alphanumeric mode, where each character value maps to the index in the string. */
 	private static final String ALPHANUMERIC_CHARSET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";

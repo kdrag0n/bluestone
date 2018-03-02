@@ -32,7 +32,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class MinecraftPingUtil {
+class MinecraftPingUtil {
 
     public static byte PACKET_HANDSHAKE = 0x00, PACKET_STATUSREQUEST = 0x00,
             PACKET_PING = 0x01;

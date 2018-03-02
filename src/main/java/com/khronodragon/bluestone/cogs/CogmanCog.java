@@ -78,29 +78,39 @@ public class CogmanCog extends Cog {
 
     @Perm.Owner
     @Command(name = "cog", desc = "Manage all the cogs.", aliases = {"cogs"}, reportErrors = false)
-    public void mainCmd(Context ctx) throws ReflectiveOperationException, MalformedURLException {
+    private void mainCmd(Context ctx) throws ReflectiveOperationException, MalformedURLException {
         if (ctx.rawArgs.length() < 1) {
             ctx.send(NO_COMMAND).queue();
             return;
         }
         String invoked = ctx.args.get(0);
 
-        if (invoked.equals("list"))
-            cmdList(ctx);
-        else if (invoked.equals("reload"))
-            cmdReload(ctx);
-        else if (invoked.equals("load"))
-            cmdLoad(ctx);
-        else if (invoked.equals("unload"))
-            cmdUnload(ctx);
-        else if (invoked.equals("enable"))
-            cmdEnable(ctx);
-        else if (invoked.equals("disable"))
-            cmdDisable(ctx);
-        else if (invoked.equals("info"))
-            cmdInfo(ctx);
-        else
-            ctx.send(NO_COMMAND).queue();
+        switch (invoked) {
+            case "list":
+                cmdList(ctx);
+                break;
+            case "reload":
+                cmdReload(ctx);
+                break;
+            case "load":
+                cmdLoad(ctx);
+                break;
+            case "unload":
+                cmdUnload(ctx);
+                break;
+            case "enable":
+                cmdEnable(ctx);
+                break;
+            case "disable":
+                cmdDisable(ctx);
+                break;
+            case "info":
+                cmdInfo(ctx);
+                break;
+            default:
+                ctx.send(NO_COMMAND).queue();
+                break;
+        }
     }
 
     private String getClassPath(Context ctx) {

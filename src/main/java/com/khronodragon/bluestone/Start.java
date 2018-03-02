@@ -2,16 +2,14 @@ package com.khronodragon.bluestone;
 
 import io.sentry.Sentry;
 import net.dv8tion.jda.core.AccountType;
-import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import org.json.JSONObject;
 
-import javax.security.auth.login.LoginException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-public class Start {
+class Start {
     private static final String[] dirInit = {"data/profiles/bg"};
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
@@ -29,13 +27,17 @@ public class Start {
         String type = config.optString("type"); // "bot"
 
         AccountType accountType;
-        if ("bot".equals(type)) {
-            accountType = AccountType.BOT;
-        } else if ("user".equals(type)) {
-            accountType = AccountType.CLIENT;
-        } else {
-            System.out.println("Warning: unrecognized account type! Use either 'client' (user) or 'bot' (bot). Assuming bot.");
-            accountType = AccountType.BOT;
+        switch (type) {
+            case "bot":
+                accountType = AccountType.BOT;
+                break;
+            case "user":
+                accountType = AccountType.CLIENT;
+                break;
+            default:
+                System.out.println("Warning: unrecognized account type! Use either 'client' (user) or 'bot' (bot). Assuming bot.");
+                accountType = AccountType.BOT;
+                break;
         }
 
         for (String path: dirInit) {

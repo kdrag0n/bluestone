@@ -24,7 +24,7 @@ public class IDMapTrie extends IDTrie {
     }
 
     /** Constructor with given size. */
-    public IDMapTrie(int size) {
+    private IDMapTrie(int size) {
         super(size);
     }
 
@@ -120,7 +120,7 @@ public class IDMapTrie extends IDTrie {
                 long bitPos = 1L << (key >>> (i * 6));
                 int childIdx = Long.bitCount(bitMap & (bitPos - 1));
 
-                int newNodeIdx = 0;
+                int newNodeIdx;
                 int size = Long.bitCount(bitMap);
                 if ((bitMap & bitPos) == 0) {
                     // insert
@@ -284,7 +284,7 @@ public class IDMapTrie extends IDTrie {
             }
 
             if (remove)
-                root = KNOWN_EMPTY_NODE | (generation << 32);
+                root = (generation << 32);
             else
                 root = childValue;
 
@@ -345,7 +345,7 @@ public class IDMapTrie extends IDTrie {
     }
 
     @Override
-    public IDTrieCursor cursor() {
+    protected IDTrieCursor cursor() {
         return new IDMapTrieCursor(this);
     }
 
@@ -364,12 +364,12 @@ public class IDMapTrie extends IDTrie {
          * Constructor with -1 as end of list key.
          * Does <code>IDMapTrieCursor(bst, -1)</code>.
          */
-        public IDMapTrieCursor(IDMapTrie bst) {
+        IDMapTrieCursor(IDMapTrie bst) {
             this(bst, -1);
         }
 
         /** Constructor. */
-        public IDMapTrieCursor(IDMapTrie bst, long endKey) {
+        IDMapTrieCursor(IDMapTrie bst, long endKey) {
             this.bst = bst;
             this.endKey = endKey;
         }
@@ -512,7 +512,7 @@ public class IDMapTrie extends IDTrie {
 
     /** Collections implementation. uses a live view of the Map. */
     public Map<Long, Long> getMap() {
-        return new Map<Long, Long>() {
+        return new Map<>() {
             @Override
             public int size() {
                 return IDMapTrie.this.size();
@@ -525,7 +525,7 @@ public class IDMapTrie extends IDTrie {
 
             @Override
             public boolean containsKey(Object key) {
-                long l = IDMapTrie.this.get((Long)key, -1l);
+                long l = IDMapTrie.this.get((Long) key, -1L);
                 return l != -1;
             }
 
@@ -536,19 +536,19 @@ public class IDMapTrie extends IDTrie {
 
             @Override
             public Long get(Object key) {
-                long l = IDMapTrie.this.get((Long)key, -1l);
+                long l = IDMapTrie.this.get((Long) key, -1L);
                 return l == -1 ? null : l;
             }
 
             @Override
             public Long put(Long key, Long value) {
-                long l = IDMapTrie.this.put(key, value, -1l);
+                long l = IDMapTrie.this.put(key, value, -1L);
                 return l == -1 ? null : l;
             }
 
             @Override
             public Long remove(Object key) {
-                long l = IDMapTrie.this.clear((Long) key, -1l);
+                long l = IDMapTrie.this.clear((Long) key, -1L);
                 return l == -1 ? null : l;
             }
 
@@ -565,7 +565,7 @@ public class IDMapTrie extends IDTrie {
 
             @Override
             public Set<Long> keySet() {
-                return new Set<Long>() {
+                return new Set<>() {
                     @Override
                     public int size() {
                         return IDMapTrie.this.size();
@@ -578,7 +578,7 @@ public class IDMapTrie extends IDTrie {
 
                     @Override
                     public boolean contains(Object key) {
-                        long l = IDMapTrie.this.get((Long)key, -1l);
+                        long l = IDMapTrie.this.get((Long) key, -1L);
                         return l != -1;
                     }
 
@@ -641,7 +641,7 @@ public class IDMapTrie extends IDTrie {
 
             @Override
             public Set<Entry<Long, Long>> entrySet() {
-                return new Set<Entry<Long, Long>>() {
+                return new Set<>() {
                     @Override
                     public int size() {
                         return IDMapTrie.this.size();
@@ -659,7 +659,7 @@ public class IDMapTrie extends IDTrie {
 
                     @Override
                     public Iterator<Entry<Long, Long>> iterator() {
-                        return new Iterator<Entry<Long, Long>>() {
+                        return new Iterator<>() {
 
                             IDTrie.IDTrieCursor tcursor = IDMapTrie.this.cursor();
                             long next = tcursor.first();
@@ -671,9 +671,10 @@ public class IDMapTrie extends IDTrie {
 
                             @Override
                             public Entry<Long, Long> next() {
-                                Map.Entry<Long, Long>e = new Map.Entry<Long, Long>() {
+                                Map.Entry<Long, Long> e = new Map.Entry<>() {
                                     long k = next;
                                     long v = tcursor.getValue();
+
                                     @Override
                                     public Long getKey() {
                                         return k;

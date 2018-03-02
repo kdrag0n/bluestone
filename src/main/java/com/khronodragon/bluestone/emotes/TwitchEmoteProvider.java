@@ -10,10 +10,9 @@ import org.json.JSONObject;
 import static com.khronodragon.bluestone.util.Strings.str;
 
 public class TwitchEmoteProvider implements EmoteProvider {
-    public JSONObject emotes = new JSONObject();
+    private JSONObject emotes = new JSONObject();
 
     public TwitchEmoteProvider(OkHttpClient client) {
-        emotes = new JSONObject();
         client.newCall(new Request.Builder()
                 .get()
                 .url("https://twitchemotes.com/api_cache/v3/global.json")

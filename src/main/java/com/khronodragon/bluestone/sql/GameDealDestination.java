@@ -43,6 +43,7 @@ public class GameDealDestination {
         this.steam = steam;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isHumbleBundle() {
         return humbleBundle;
     }

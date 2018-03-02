@@ -6,7 +6,7 @@ package com.zanox.lib.simplegraphiteclient;
  * @author Helmut Zechmann
  *
  */
-public class GraphiteException extends RuntimeException {
+class GraphiteException extends RuntimeException {
 	
 	private static final long serialVersionUID = 1L;
 

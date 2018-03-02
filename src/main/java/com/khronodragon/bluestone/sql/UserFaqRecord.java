@@ -8,10 +8,10 @@ import java.util.Date;
 @DatabaseTable(tableName = "user_faq_records")
 public class UserFaqRecord {
     @DatabaseField(id = true, canBeNull = false)
-    public long userId;
+    private long userId;
 
     @DatabaseField(canBeNull = false)
-    public boolean hasReadFaq;
+    private boolean hasReadFaq;
 
     @DatabaseField(canBeNull = false)
     public Date when;

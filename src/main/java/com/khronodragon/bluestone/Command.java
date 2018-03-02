@@ -16,8 +16,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Predicate;
 
 import static com.khronodragon.bluestone.util.Strings.format;
@@ -27,14 +25,14 @@ public class Command {
     public final String description;
     public final String usage;
     public final boolean hidden;
-    public final Permission[] permsRequired;
-    public final boolean guildOnly;
+    private final Permission[] permsRequired;
+    private final boolean guildOnly;
     public final String[] aliases;
-    public final String cogName;
-    public final boolean needThread;
-    public final boolean reportErrors;
+    private final String cogName;
+    private final boolean needThread;
+    private final boolean reportErrors;
     public final boolean requiresOwner;
-    private List<Predicate<Context>> checks = new ArrayList<>(1);
+    // private List<Predicate<Context>> checks = new ArrayList<>(1);
     private final Method func;
     public final Cog cog;
 
@@ -56,11 +54,11 @@ public class Command {
         this.requiresOwner = ArrayUtils.contains(permsRequired, "owner");
     }
 
-    public void invoke(Bot bot, MessageReceivedEvent event, ArrayListView args,
-                       String prefix, String invoker) throws IllegalAccessException, InvocationTargetException, CheckFailure {
+    private void invoke(Bot bot, MessageReceivedEvent event, ArrayListView args,
+                        String prefix, String invoker) throws IllegalAccessException, InvocationTargetException, CheckFailure {
         Context ctx = new Context(bot, event, args, prefix, invoker);
 
-        runChecks(ctx);
+        // runChecks(ctx); // checks aren't implemented yet
 
         func.invoke(cog, ctx);
     }
@@ -68,9 +66,7 @@ public class Command {
     public void simpleInvoke(Bot bot, MessageReceivedEvent event, ArrayListView args,
                              String prefix, String invoker) {
         if (needThread) {
-            Runnable task = () -> {
-                invokeWithHandling(bot, event, args, prefix, invoker);
-            };
+            Runnable task = () -> invokeWithHandling(bot, event, args, prefix, invoker);
 
             if (bot.threadExecutor.getActiveCount() >= bot.threadExecutor.getMaximumPoolSize()) {
                 event.getChannel().sendMessage(
@@ -82,8 +78,8 @@ public class Command {
         }
     }
 
-    public void invokeWithHandling(Bot bot, MessageReceivedEvent event, ArrayListView args,
-                                   String prefix, String invoker) {
+    private void invokeWithHandling(Bot bot, MessageReceivedEvent event, ArrayListView args,
+                                    String prefix, String invoker) {
         MessageChannel channel = event.getChannel();
 
         try {
@@ -98,7 +94,8 @@ public class Command {
                 if (cause == null) {
                     bot.logger.error("Unknown command ({}) invocation error:", invoker, e);
                     channel.sendMessage(Emotes.getFailure() + " An unknown internal error occurred.").queue();
-                } else if (cause instanceof PassException) {
+                } else //noinspection StatementWithEmptyBody
+                    if (cause instanceof PassException) {
                     // assume error has already been sent
                 } else if (cause instanceof PermissionError) {
                     channel.sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.",
@@ -151,6 +148,7 @@ public class Command {
         } catch (PermissionException ignored) {}
     }
 
+    /*
     private boolean runChecks(Context ctx) throws CheckFailure {
         if (guildOnly && ctx.guild == null) {
             throw new GuildOnlyError("Command only works in a guild");
@@ -173,6 +171,7 @@ public class Command {
         }
         return true;
     }
+    */
 
     private void checkPerms(Context ctx) throws PermissionError {
         if (!Permissions.check(ctx, permsRequired))

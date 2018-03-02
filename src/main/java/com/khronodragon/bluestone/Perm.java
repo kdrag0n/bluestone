@@ -90,7 +90,7 @@ public class Perm {
         Permission value() default Permission.VIEW_AUDIT_LOGS;
     }
 
-    public static class Message {
+    private static class Message {
         @Retention(RetentionPolicy.RUNTIME)
         @Target(ElementType.METHOD)
         public @interface Read {

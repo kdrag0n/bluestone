@@ -16,7 +16,6 @@ import com.khronodragon.bluestone.sql.MySQLDatabaseType;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.list.TIntList;
-import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.list.linked.TIntLinkedList;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.impl.GuildImpl;
@@ -208,7 +207,7 @@ public class ShardUtil {
         return shards.values().stream().flatMap(b -> ((JDAImpl) b.getJda()).getGuildMap().valueCollection().stream());
     }
 
-    public int sumBot(ObjectFunctionInt<Bot> fn) {
+    private int sumBot(ObjectFunctionInt<Bot> fn) {
         int total = 0;
 
         for (Bot shard: shards.values()) {
@@ -218,7 +217,7 @@ public class ShardUtil {
         return total;
     }
 
-    public int sumJda(ObjectFunctionInt<JDAImpl> fn) {
+    private int sumJda(ObjectFunctionInt<JDAImpl> fn) {
         int total = 0;
 
         for (Bot shard: shards.values()) {

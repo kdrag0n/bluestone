@@ -28,7 +28,6 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.TemporalAmount;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -150,20 +149,25 @@ public class CryptoCurrencyCog extends Cog {
         }
 
         double converted;
-        if (to.equals("USD")) {
-            converted = from.priceUSD * amount;
-        } else if (to.equals("EUR")) {
-            converted = from.priceEUR * amount;
-        } else if (to.equals("BTC")) {
-            converted = from.priceBTC * amount;
-        } else {
-            Cryptocurrency toCurrency;
-            if ((toCurrency = currencies.get(to)) == null) {
-                ctx.fail("No such cryptocurrency `" + to + "`!");
-                return;
-            }
+        switch (to) {
+            case "USD":
+                converted = from.priceUSD * amount;
+                break;
+            case "EUR":
+                converted = from.priceEUR * amount;
+                break;
+            case "BTC":
+                converted = from.priceBTC * amount;
+                break;
+            default:
+                Cryptocurrency toCurrency;
+                if ((toCurrency = currencies.get(to)) == null) {
+                    ctx.fail("No such cryptocurrency `" + to + "`!");
+                    return;
+                }
 
-            converted = (from.priceBTC * amount) / toCurrency.priceBTC;
+                converted = (from.priceBTC * amount) / toCurrency.priceBTC;
+                break;
         }
 
         ctx.send(format("{0,number} {1} = **{2,number} {3}**", amount, from.symbol, converted, to)).queue();
@@ -224,16 +228,21 @@ public class CryptoCurrencyCog extends Cog {
         }, e -> {
             String emote = e.getReactionEmote().getName();
 
-            if (emote.equals("◀")) {
-                if (index.get() > 0)
-                    index.decrementAndGet();
-            } else if (emote.equals("⏹")) {
-                stop.run();
-            } else if (emote.equals("▶")) {
-                if (index.get() < currencyArray.length - 1)
-                    index.incrementAndGet();
-            } else {
-                stop.run();
+            switch (emote) {
+                case "◀":
+                    if (index.get() > 0)
+                        index.decrementAndGet();
+                    break;
+                case "⏹":
+                    stop.run();
+                    break;
+                case "▶":
+                    if (index.get() < currencyArray.length - 1)
+                        index.incrementAndGet();
+                    break;
+                default:
+                    stop.run();
+                    break;
             }
 
             msg.editMessage(dclRenderPage(index.get())).queue();
@@ -249,31 +258,23 @@ public class CryptoCurrencyCog extends Cog {
             usage = "{page #}")
     public void cmdDclFull(Context ctx) {
         AtomicInteger index = new AtomicInteger(0);
-        Consumer<Throwable> failure = ignored -> {
-            ctx.fail("Error setting up list!");
-        };
+        Consumer<Throwable> failure = ignored -> ctx.fail("Error setting up list!");
 
-        ctx.send(dclRenderPage(0)).queue(msg -> {
-            msg.addReaction("◀").queue(v1 -> {
-                msg.addReaction("⏹").queue(v2 -> {
-                    msg.addReaction("▶").queue(v3 -> {
-                        Runnable stop = () -> {
+        ctx.send(dclRenderPage(0)).queue(msg -> msg.addReaction("◀").queue(v1 -> msg.addReaction("⏹").queue(v2 -> msg.addReaction("▶").queue(v3 -> {
+                    Runnable stop = () -> {
+                        try {
+                            msg.clearReactions().queue();
+                        } catch (PermissionException|IllegalStateException ignored) {
                             try {
-                                msg.clearReactions().queue();
-                            } catch (PermissionException|IllegalStateException ignored) {
-                                try {
-                                    for (MessageReaction r: msg.getReactions()) {
-                                        r.removeReaction().queue();
-                                    }
-                                } catch (PermissionException i) {}
-                            }
-                        };
+                                for (MessageReaction r: msg.getReactions()) {
+                                    r.removeReaction().queue();
+                                }
+                            } catch (PermissionException _ignored) {}
+                        }
+                    };
 
-                        dclStep(ctx.author.getIdLong(), index, msg, stop);
-                    }, failure);
-                }, failure);
-            }, failure);
-        }, failure);
+                    dclStep(ctx.author.getIdLong(), index, msg, stop);
+                }, failure), failure), failure), failure);
     }
 
     @Command(name = "currencies", desc = "List all cryptocurrencies (paginated), sorted by market cap.",
@@ -331,7 +332,7 @@ public class CryptoCurrencyCog extends Cog {
                                 r.removeReaction().queue();
                                 r.removeReaction(ctx.author).queue();
                             }
-                        } catch (PermissionException i) {}
+                        } catch (PermissionException _ignored) {}
                     }
                 })
                 .setEventWaiter(bot.getEventWaiter())
@@ -353,33 +354,33 @@ public class CryptoCurrencyCog extends Cog {
     }
 
     private static class Cryptocurrency {
-        public String id;
-        public String name;
-        public String symbol;
-        public short rank;
+        String id;
+        String name;
+        String symbol;
+        short rank;
         @SerializedName("price_usd")
-        public double priceUSD;
+        double priceUSD;
         @SerializedName("price_btc")
-        public double priceBTC;
+        double priceBTC;
         @SerializedName("price_eur")
-        public double priceEUR;
+        double priceEUR;
         @SerializedName("24h_volume_usd")
-        public double volume24hUSD;
+        double volume24hUSD;
         @SerializedName("24h_volume_eur")
-        public double volume24hEUR;
+        double volume24hEUR;
         @SerializedName("market_cap_usd")
-        public double marketCapUSD;
+        double marketCapUSD;
         @SerializedName("market_cap_eur")
-        public double marketCapEUR;
-        public double availableSupply;
-        public double totalSupply;
+        double marketCapEUR;
+        double availableSupply;
+        double totalSupply;
         @SerializedName("percent_change_1h")
-        public float percentChange1h;
+        float percentChange1h;
         @SerializedName("percent_change_24h")
-        public float percentChange24h;
+        float percentChange24h;
         @SerializedName("percent_change_7d")
-        public float percentChange7d;
-        public long lastUpdated;
-        public Instant updateTime;
+        float percentChange7d;
+        long lastUpdated;
+        Instant updateTime;
     }
 }

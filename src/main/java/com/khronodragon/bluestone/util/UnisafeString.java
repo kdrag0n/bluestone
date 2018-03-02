@@ -15,7 +15,7 @@ public class UnisafeString {
         length = data.codePointCount(0, data.length());
     }
 
-    public int length() {
+    private int length() {
         return length;
     }
 
@@ -106,10 +106,8 @@ public class UnisafeString {
     public boolean equals(Object object) {
         if (object instanceof UnisafeString)
             return ((UnisafeString) object).data.equals(data);
-        else if (object instanceof String)
-            return object.equals(data);
         else
-            return false;
+            return object instanceof String && object.equals(data);
     }
 
     public int hashCode() {

@@ -19,7 +19,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl;
-import org.luaj.vm2.LuaError;
 import org.luaj.vm2.script.LuaScriptEngine;
 import org.python.jsr223.PyScriptEngine;
 
@@ -32,6 +31,7 @@ import java.util.regex.Pattern;
 
 import static com.khronodragon.bluestone.util.Strings.format;
 
+@SuppressWarnings("SameParameterValue")
 public class ReplCog extends Cog {
     private static final Logger logger = LogManager.getLogger(ReplCog.class);
     private static final String[] NASHORN_ARGS = {"--language=es6", "-scripting"};

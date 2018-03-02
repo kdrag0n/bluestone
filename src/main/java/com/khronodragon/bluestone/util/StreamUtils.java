@@ -22,7 +22,7 @@ public class StreamUtils {
      * @param <T> the element type
      * @return a stream sourcing from the iterator
      */
-    public static<T> Stream<T> asStream(Iterator<T> sourceIterator, boolean parallel) {
+    private static<T> Stream<T> asStream(Iterator<T> sourceIterator, boolean parallel) {
         Iterable<T> iterable = () -> sourceIterator;
         return StreamSupport.stream(iterable.spliterator(), parallel);
     }
@@ -44,7 +44,7 @@ public class StreamUtils {
      * @param <T> the element type
      * @return a stream sourcing from the iterable
      */
-    public static<T> Stream<T> asStream(Iterable<T> source, boolean parallel) {
+    private static<T> Stream<T> asStream(Iterable<T> source, boolean parallel) {
         return StreamSupport.stream(source.spliterator(), parallel);
     }
 }

@@ -4,7 +4,7 @@ import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable(tableName = "GuildNotesBannedMember")
-public class GuildNotesBannedMember {
+class GuildNotesBannedMember {
     @DatabaseField(id = true, canBeNull = false, index = true)
     private long id;
 

@@ -29,7 +29,7 @@ public class Paginator {
         currentPage.add(line);
     }
 
-    public void closePage() {
+    private void closePage() {
         pages.add(String.join("\n", currentPage));
         currentPage = new ArrayList<>();
         count = 0;

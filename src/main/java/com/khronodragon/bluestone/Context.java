@@ -8,7 +8,6 @@ import net.dv8tion.jda.core.requests.RestAction;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.CheckReturnValue;
-import java.util.List;
 
 public class Context {
     public Bot bot;
@@ -47,7 +46,7 @@ public class Context {
         return truncate(msg, "**...too long**");
     }
 
-    public static String truncate(String msg, String truncateString) {
+    private static String truncate(String msg, @SuppressWarnings("SameParameterValue") String truncateString) {
         if (msg.length() > 2000) {
             msg = msg.substring(0, 2000);
             if (StringUtils.countMatches(msg, "```") % 2 == 1) {

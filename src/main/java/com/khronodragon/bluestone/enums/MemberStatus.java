@@ -13,7 +13,7 @@ public enum MemberStatus {
     OFFLINE,
     UNKNOWN;
 
-    public static MemberStatus from(OnlineStatus status) {
+    private static MemberStatus from(OnlineStatus status) {
         switch (status) {
             case ONLINE: return ONLINE;
             case IDLE: return IDLE;

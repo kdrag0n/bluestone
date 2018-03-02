@@ -1,8 +1,5 @@
 package com.khronodragon.bluestone.util;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.linked.TIntLinkedList;
 import net.dv8tion.jda.core.entities.*;
@@ -74,7 +71,7 @@ public class Strings {
         return smartJoin(list, "and");
     }
 
-    public static String smartJoin(String[] array, String sep) {
+    private static String smartJoin(String[] array, String sep) {
         if (array.length == 2)
             return array[0] + ' ' + sep + ' ' + array[1];
 
@@ -256,6 +253,7 @@ public class Strings {
         return channelNamePattern.matcher(str).matches();
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean isIPorDomain(CharSequence str) {
         return ipDomainPattern.matcher(str).matches();
     }
@@ -272,7 +270,7 @@ public class Strings {
         return questionPattern.matcher(str).matches();
     }
 
-    public static String number(short n) {
+    private static String number(short n) {
         return numberFormat.get().format((long) n);
     }
 
@@ -280,7 +278,7 @@ public class Strings {
         return numberFormat.get().format((long) n);
     }
 
-    public static String number(long n) {
+    private static String number(long n) {
         return numberFormat.get().format(n);
     }
 
@@ -288,16 +286,12 @@ public class Strings {
         return numberFormat.get().format((double) n);
     }
 
-    public static String number(double n) {
+    private static String number(double n) {
         return numberFormat.get().format(n);
     }
 
     public static String format(@Nonnull String pattern, @Nullable Object... args) {
-        MessageFormat f = formatCache.get(pattern);
-        if (f == null) {
-            f = new MessageFormat(pattern);
-            formatCache.put(pattern, f);
-        }
+        MessageFormat f = formatCache.computeIfAbsent(pattern, MessageFormat::new);
 
         if (formatCache.size() > 128) {
             formatCache.clear();

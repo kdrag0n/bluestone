@@ -236,12 +236,13 @@ public class QuotesCog extends Cog {
                     try {
                         msg.clearReactions().queue();
                     } catch (PermissionException|IllegalStateException ignored) {
+                        //noinspection EmptyCatchBlock
                         try {
                             for (MessageReaction r: msg.getReactions()) {
                                 r.removeReaction().queue();
                                 r.removeReaction(ctx.author).queue();
                             }
-                        } catch (PermissionException i) {}
+                        } catch (PermissionException _ignored) {}
                     }
                 })
                 .setEventWaiter(bot.getEventWaiter())

@@ -8,7 +8,6 @@ import net.dv8tion.jda.core.entities.impl.GuildImpl;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
-import org.apache.logging.log4j.LogManager;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
@@ -47,7 +46,7 @@ public abstract class Cog {
         return false;
     }
 
-    public static Color randomColor() { // 255**3 = 16581375
+    protected static Color randomColor() { // 255**3 = 16581375
         return new Color(randint(0, 16581375));
     }
 
@@ -69,6 +68,7 @@ public abstract class Cog {
                 .setAuthor(name, null, iconUrl);
     }
 
+    @SuppressWarnings("SameParameterValue")
     protected static EmbedBuilder newEmbedWithAuthor(Context ctx, String url) {
         String name;
         String iconUrl;
@@ -124,6 +124,7 @@ public abstract class Cog {
         return array[randint(0, array.length)];
     }
 
+    @SuppressWarnings("SameParameterValue")
     protected static <T> T randomChoice(List<T> list) {
         return list.get(randint(0, list.size()));
     }

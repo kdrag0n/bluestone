@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 public class MinecraftUtil {
-    private static final Map<String, String> FORMAT_KEYS = new HashMap<String, String>() {{
+    private static final Map<String, String> FORMAT_KEYS = new HashMap<>() {{
         put("bold", "**");
         put("italic", "*");
         put("underlined", "__");
@@ -22,15 +22,16 @@ public class MinecraftUtil {
         for (Object elem: data.getJSONArray("extra")) {
             JSONObject element = (JSONObject) elem;
 
-            String item = element.optString("text", "");
+            StringBuilder item = new StringBuilder(element.optString("text", ""));
             for (String fkey: FORMAT_KEYS.keySet()) {
                 if (element.optBoolean(fkey, false)) {
                     String intKey = "{F" + fkey + '}';
-                    item = intKey + item + intKey;
+                    item.insert(0, intKey)
+                            .append(intKey);
                 }
             }
 
-            segments.add(item);
+            segments.add(item.toString());
         }
 
         StringBuilder textBuilder = new StringBuilder();

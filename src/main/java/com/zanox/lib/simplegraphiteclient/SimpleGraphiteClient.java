@@ -45,7 +45,7 @@ public class SimpleGraphiteClient {
 	 * @param metrics the metrics as key-value-pairs
 	 * @param timeStamp the timestamp
 	 */
-	public void sendMetrics(Map<String, Number> metrics, long timeStamp) {
+    private void sendMetrics(Map<String, Number> metrics, long timeStamp) {
 		try {
 			Socket socket = createSocket();
 			OutputStream s = socket.getOutputStream();
@@ -84,13 +84,13 @@ public class SimpleGraphiteClient {
 	 * @throws GraphiteException if writing to graphite fails 
 	 */
 	@SuppressWarnings("serial")
-	public void sendMetric(final String key, final Number value, long timeStamp) {
-		sendMetrics(new HashMap<String, Number>() {{
-			put(key, value);
-		}}, timeStamp);
+    private void sendMetric(final String key, final Number value, long timeStamp) {
+		sendMetrics(new HashMap<>() {{
+            put(key, value);
+        }}, timeStamp);
 	}
 	
-	protected Socket createSocket() throws IOException {
+	private Socket createSocket() throws IOException {
 		return new Socket(graphiteHost, graphitePort);
 	}
 	 
@@ -99,7 +99,7 @@ public class SimpleGraphiteClient {
 	 * 
 	 * @return Seconds passed since 1.1.1970
 	 */
-	protected long getCurrentTimestamp() {
+    private long getCurrentTimestamp() {
 		return System.currentTimeMillis() / 1000;
 	}
 }

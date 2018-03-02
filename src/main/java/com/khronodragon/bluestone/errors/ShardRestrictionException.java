@@ -1,6 +1,6 @@
 package com.khronodragon.bluestone.errors;
 
-public class ShardRestrictionException extends IllegalStateException {
+class ShardRestrictionException extends IllegalStateException {
     public ShardRestrictionException() {}
 
     public ShardRestrictionException(String message) {

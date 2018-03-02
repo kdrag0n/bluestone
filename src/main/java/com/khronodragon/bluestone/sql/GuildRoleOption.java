@@ -123,34 +123,33 @@ public class GuildRoleOption {
         }
 
         if ((conditions & IS_PATRON) == IS_PATRON) {
-            if (!Permissions.check(ctx, Permissions.PATREON_SUPPORTER))
-                return false;
+            return Permissions.check(ctx, Permissions.PATREON_SUPPORTER);
         }
 
         return true;
     }
 
-    public class RoleConditions {
+    class RoleConditions {
         // Join time
-        public static final int JOIN_1_MINUTE = 1<<1;
-        public static final int JOIN_5_MINUTES = 1<<2;
-        public static final int JOIN_10_MINUTES = 1<<3;
-        public static final int JOIN_15_MINUTES = 1<<4;
+        static final int JOIN_1_MINUTE = 1<<1;
+        static final int JOIN_5_MINUTES = 1<<2;
+        static final int JOIN_10_MINUTES = 1<<3;
+        static final int JOIN_15_MINUTES = 1<<4;
 
         // Sending messages
-        public static final int SEND_1_MESSAGE = 1<<5;
-        public static final int SEND_2_MESSAGES = 1<<6;
-        public static final int SEND_5_MESSAGES = 1<<7;
-        public static final int SEND_10_MESSAGES = 1<<8;
+        static final int SEND_1_MESSAGE = 1<<5;
+        static final int SEND_2_MESSAGES = 1<<6;
+        static final int SEND_5_MESSAGES = 1<<7;
+        static final int SEND_10_MESSAGES = 1<<8;
 
         // Special
-        public static final int HAS_BEEN_MENTIONED = 1<<9;
-        public static final int HAS_MENTIONED_OTHER = 1<<10;
-        public static final int HAS_CUSTOM_AVATAR = 1<<11;
+        static final int HAS_BEEN_MENTIONED = 1<<9;
+        static final int HAS_MENTIONED_OTHER = 1<<10;
+        static final int HAS_CUSTOM_AVATAR = 1<<11;
 
         // Ranks
-        public static final int IS_BOT_OWNER = 1<<12;
-        public static final int IS_BOT_ADMIN = 1<<13;
-        public static final int IS_PATRON = 1<<14;
+        static final int IS_BOT_OWNER = 1<<12;
+        static final int IS_BOT_ADMIN = 1<<13;
+        static final int IS_PATRON = 1<<14;
     }
 }

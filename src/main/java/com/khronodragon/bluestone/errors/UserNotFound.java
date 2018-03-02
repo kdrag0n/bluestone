@@ -1,6 +1,6 @@
 package com.khronodragon.bluestone.errors;
 
-public class UserNotFound extends MessageException {
+class UserNotFound extends MessageException {
     public UserNotFound() {
         super("**User not found! Mention, name, nickname, tag, or ID will work.**");
     }

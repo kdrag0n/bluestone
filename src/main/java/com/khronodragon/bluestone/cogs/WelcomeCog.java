@@ -8,7 +8,6 @@ import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.sql.GuildWelcomeMessages;
 import com.khronodragon.bluestone.util.Strings;
-import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.TextChannel;
@@ -96,22 +95,32 @@ public class WelcomeCog extends Cog {
         String invoked = ctx.args.get(0);
 
         try {
-            if (invoked.equals("status"))
-                welcomeCmdStatus(ctx);
-            else if (invoked.equals("show"))
-                welcomeCmdShow(ctx);
-            else if (invoked.equals("set"))
-                welcomeCmdSet(ctx);
-            else if (invoked.equals("toggle"))
-                welcomeCmdToggle(ctx);
-            else if (invoked.equals("preview"))
-                welcomeCmdPreview(ctx);
-            else if (invoked.equals("channel"))
-                controlCmdChannel(ctx);
-            else if (invoked.equals("tags"))
-                allCmdHelp(ctx);
-            else
-                ctx.send(NO_COMMAND).queue();
+            switch (invoked) {
+                case "status":
+                    welcomeCmdStatus(ctx);
+                    break;
+                case "show":
+                    welcomeCmdShow(ctx);
+                    break;
+                case "set":
+                    welcomeCmdSet(ctx);
+                    break;
+                case "toggle":
+                    welcomeCmdToggle(ctx);
+                    break;
+                case "preview":
+                    welcomeCmdPreview(ctx);
+                    break;
+                case "channel":
+                    controlCmdChannel(ctx);
+                    break;
+                case "tags":
+                    allCmdHelp(ctx);
+                    break;
+                default:
+                    ctx.send(NO_COMMAND).queue();
+                    break;
+            }
         } catch (NullPointerException e) {
             ctx.fail("Something's not right with this server's message settings. Let me try to fix that...");
 
@@ -200,22 +209,32 @@ public class WelcomeCog extends Cog {
         String invoked = ctx.args.get(0);
 
         try {
-            if (invoked.equals("status"))
-                leaveCmdStatus(ctx);
-            else if (invoked.equals("show"))
-                leaveCmdShow(ctx);
-            else if (invoked.equals("set"))
-                leaveCmdSet(ctx);
-            else if (invoked.equals("toggle"))
-                leaveCmdToggle(ctx);
-            else if (invoked.equals("preview"))
-                leaveCmdPreview(ctx);
-            else if (invoked.equals("channel"))
-                controlCmdChannel(ctx);
-            else if (invoked.equals("tags"))
-                allCmdHelp(ctx);
-            else
-                ctx.send(NO_COMMAND).queue();
+            switch (invoked) {
+                case "status":
+                    leaveCmdStatus(ctx);
+                    break;
+                case "show":
+                    leaveCmdShow(ctx);
+                    break;
+                case "set":
+                    leaveCmdSet(ctx);
+                    break;
+                case "toggle":
+                    leaveCmdToggle(ctx);
+                    break;
+                case "preview":
+                    leaveCmdPreview(ctx);
+                    break;
+                case "channel":
+                    controlCmdChannel(ctx);
+                    break;
+                case "tags":
+                    allCmdHelp(ctx);
+                    break;
+                default:
+                    ctx.send(NO_COMMAND).queue();
+                    break;
+            }
         } catch (NullPointerException e) {
             logger.warn("Message control: NPE", e);
             ctx.fail("Something's not right with this server's message settings. Let me try to fix that...");
@@ -283,27 +302,25 @@ public class WelcomeCog extends Cog {
     }
 
     private String formatMessage(String msg, Guild guild, Member member, String def) {
-        return Strings.replace(StringUtils.replace(msg, "[default]", def), SUB_REGEX, m -> {
-            return Strings.createMap()
-                    .map("mention", member::getAsMention)
-                    .map("member_name", member::getEffectiveName)
-                    .map("member_tag", () -> getTag(member.getUser()))
-                    .map("member_discrim", member.getUser()::getDiscriminator)
-                    .map("member_id", member.getUser()::getId)
-                    .map("server", guild::getName)
-                    .map("server_icon", guild::getIconUrl)
-                    .map("server_id", guild::getId)
-                    .map("server_owner", guild.getOwner()::getEffectiveName)
-                    .map("member", member::getAsMention)
-                    .map("member_mention", member::getAsMention)
-                    .map("time", () -> new Date().toString())
-                    .map("date", () -> new Date().toString())
-                    .map("server_name", guild::getName)
-                    .map("prefix", () -> bot.prefixStore.getPrefix(guild.getIdLong()))
-                    .map("bot_owner", "Dragon5232#1841")
-                    .map("rip", Emotes::getGrave)
-                    .exec(m);
-        });
+        return Strings.replace(StringUtils.replace(msg, "[default]", def), SUB_REGEX, m -> Strings.createMap()
+                .map("mention", member::getAsMention)
+                .map("member_name", member::getEffectiveName)
+                .map("member_tag", () -> getTag(member.getUser()))
+                .map("member_discrim", member.getUser()::getDiscriminator)
+                .map("member_id", member.getUser()::getId)
+                .map("server", guild::getName)
+                .map("server_icon", guild::getIconUrl)
+                .map("server_id", guild::getId)
+                .map("server_owner", guild.getOwner()::getEffectiveName)
+                .map("member", member::getAsMention)
+                .map("member_mention", member::getAsMention)
+                .map("time", () -> new Date().toString())
+                .map("date", () -> new Date().toString())
+                .map("server_name", guild::getName)
+                .map("prefix", () -> bot.prefixStore.getPrefix(guild.getIdLong()))
+                .map("bot_owner", "Dragon5232#1841")
+                .map("rip", Emotes::getGrave)
+                .exec(m));
     }
 
     private void allCmdHelp(Context ctx) {
@@ -311,7 +328,7 @@ public class WelcomeCog extends Cog {
     }
 
     @EventHandler(threaded = true)
-    public void onGuildMemberJoin(GuildMemberJoinEvent event) {
+    private void onGuildMemberJoin(GuildMemberJoinEvent event) {
         if (event.getMember().getUser().getIdLong() == bot.getJda().getSelfUser().getIdLong())
             return;
 
@@ -353,7 +370,7 @@ public class WelcomeCog extends Cog {
     }
 
     @EventHandler(threaded = true)
-    public void onGuildMemberLeave(GuildMemberLeaveEvent event) {
+    private void onGuildMemberLeave(GuildMemberLeaveEvent event) {
         if (event.getMember().getUser().getIdLong() == bot.getJda().getSelfUser().getIdLong())
             return;
 

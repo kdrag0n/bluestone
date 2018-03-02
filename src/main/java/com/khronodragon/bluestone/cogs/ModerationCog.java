@@ -1,9 +1,7 @@
 package com.khronodragon.bluestone.cogs;
 
 import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.stmt.DeleteBuilder;
-import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.Cooldown;
@@ -202,9 +200,7 @@ public class ModerationCog extends Cog {
             }
         }
 
-        args = match(PURGE_MENTION_PATTERN, args, m -> {
-            userIds.add(MiscUtil.parseSnowflake(m.group(1)));
-        });
+        args = match(PURGE_MENTION_PATTERN, args, m -> userIds.add(MiscUtil.parseSnowflake(m.group(1))));
 
         matcher = PURGE_NUM_PATTERN.matcher(args);
         if (matcher.find()) {
@@ -975,7 +971,7 @@ public class ModerationCog extends Cog {
 
                                 try {
                                     Thread.sleep(50);
-                                } catch (InterruptedException ign) {}
+                                } catch (InterruptedException ignored) {}
                             } finally {
                                 embedQueue.clear();
                             }

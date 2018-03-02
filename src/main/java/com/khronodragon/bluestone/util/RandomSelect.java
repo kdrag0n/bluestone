@@ -11,7 +11,7 @@ public class RandomSelect<T> {
     /**
      * Construct a new {@link RandomSelect} instance with 16 function slots pre-allocated.
      */
-    public RandomSelect() {
+    private RandomSelect() {
         this(16);
     }
 

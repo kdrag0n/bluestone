@@ -123,7 +123,7 @@ public class OwnerCog extends Cog {
     @Cooldown(scope = BucketType.GLOBAL, delay = 10)
     @Command(name = "broadcast", desc = "Broadcast a message to all available guilds.",
             usage = "[message]", reportErrors = false)
-    public void cmdBroadcast(Context ctx) {
+    private void cmdBroadcast(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
             ctx.fail("I need a message to broadcast!");
             return;
@@ -239,9 +239,7 @@ public class OwnerCog extends Cog {
         bot.getShardUtil().getCommandCalls().entrySet().stream()
                 .sorted(Map.Entry.comparingByValue(Collections.reverseOrder(Comparator.comparingInt(AtomicInteger::get))))
                 .limit(24)
-                .forEach(entry -> {
-                    emb.addField(entry.getKey(), str(entry.getValue().get()), true);
-                });
+                .forEach(entry -> emb.addField(entry.getKey(), str(entry.getValue().get()), true));
 
         ctx.send(emb.build()).queue();
     }

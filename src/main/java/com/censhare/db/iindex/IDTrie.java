@@ -21,41 +21,41 @@ public abstract class IDTrie {
 
     // Note: shift only takes the lowest bits, (1L << (key & 0x3F)) can be written as (1L << key)
 
-    final protected static int HEADER_SIZE = 2;
-    final protected static int FREE_LISTS_SIZE = 64 + 2; // 0..65
-    final protected static int KNOWN_EMPTY_NODE = 0;
-    final protected static int MIN_SIZE = HEADER_SIZE + 22; // one key
+    private final static int HEADER_SIZE = 2;
+    private final static int FREE_LISTS_SIZE = 64 + 2; // 0..65
+    private final static int KNOWN_EMPTY_NODE = 0;
+    final static int MIN_SIZE = HEADER_SIZE + 22; // one key
 
     /** Heap. */
-    protected long[] mem;
+    long[] mem;
 
     /** Number of entries. */
-    protected int count;
+    int count;
 
     /** Index to unused space at end of heap. */
-    protected int freeIdx;
+    private int freeIdx;
 
     /** Amount of free memory (replaced nodes). */
-    protected int freeCount;
+    private int freeCount;
 
     /** Generation. */
-    protected long generation;
+    long generation;
 
     /** Index and generation of current root. */
-    protected long root;
+    long root;
 
     /** Stack used for updates. */
-    protected long[] nodeIdxs = new long[10+1];
+    long[] nodeIdxs = new long[10+1];
     
     /** Linked lists of free space (if enabled). */
-    protected int[] freeLists;
+    private int[] freeLists;
 
     // performance metrics
 //    public static int metricExpands;
 //    public static int metricCompacts;
 
     /** Constructor with given size. */
-    protected IDTrie(int size) {
+    IDTrie(int size) {
         if (size < MIN_SIZE)
             size = MIN_SIZE;
 
@@ -74,7 +74,7 @@ public abstract class IDTrie {
     }
 
     /** Return copy for performing updates increasing generation number. */
-    protected IDTrie(IDTrie bst) {
+    IDTrie(IDTrie bst) {
         mem = bst.mem;
         root = bst.root;
         count = bst.count;
@@ -160,20 +160,20 @@ public abstract class IDTrie {
     abstract public long last();
 
     /** Create cursor on Trie. */
-    abstract public IDTrieCursor cursor();
+    protected abstract IDTrieCursor cursor();
 
     /** Returns number of keys. */
-    public int size() {
+    int size() {
         return count;
     }
 
     /** Returns used memory size in number of longs. */
-    public int sizeUsed() {
+    private int sizeUsed() {
         return freeIdx - freeCount;
     }
 
     /** Returns memory size in number of longs. */
-    public int sizeAllocated() {
+    private int sizeAllocated() {
         return mem.length;
     }
 
@@ -182,7 +182,7 @@ public abstract class IDTrie {
      * @param size requested size
      * @param compactAllowed if true, will perform compact instead of expansion which changes indexes of all nodes however
      */
-    protected int allocate(int size, boolean compactAllowed) {
+    int allocate(int size, boolean compactAllowed) {
         int currSize = mem.length;
         int sizeUsed = sizeUsed();
 
@@ -234,7 +234,7 @@ public abstract class IDTrie {
     }
 
     /** Memory deallocation. */
-    public void deallocate(boolean isThisGeneration, int idx, int size) {
+    void deallocate(boolean isThisGeneration, int idx, int size) {
         if (idx == 0)
             return; // keep our known empty node
 
@@ -248,7 +248,7 @@ public abstract class IDTrie {
     }
 
     /** Compact this instance. */
-    protected void compactThis(int newSize) {
+    private void compactThis(int newSize) {
         IDTrie bst = compact(newSize);
         this.freeCount = bst.freeCount;
         this.freeIdx = bst.freeIdx;
@@ -270,7 +270,7 @@ public abstract class IDTrie {
     }
 
     /** Return compacted copy with given heap size. */
-    public IDTrie compact(int newSize) {
+    private IDTrie compact(int newSize) {
         IDTrie bst = createInstance(newSize);
         int rootIdx = (int) root;
         bst.root = copy(10, rootIdx, bst);
@@ -284,7 +284,7 @@ public abstract class IDTrie {
     abstract protected int copy(int level, int nodeIdx, IDTrie bst);
 
         /** Helper for compact. */
-    protected int copy(int level, int endLevel, int nodeIdx, IDTrie bst) {
+        int copy(int level, int endLevel, int nodeIdx, IDTrie bst) {
         // local references for performance
         long[] mem = this.mem;
         long[] mem2 = bst.mem;
@@ -311,33 +311,28 @@ public abstract class IDTrie {
         return newNodeIdx;
     }
 
-    public Iterable<Long> getKeys() {
+    Iterable<Long> getKeys() {
         final IDTrie.IDTrieCursor cursor = cursor();
 
-        return new Iterable<Long>() {
+        return () -> new Iterator<>() {
+
+            long next = cursor.first();
+
             @Override
-            public Iterator<Long> iterator() {
-                return new Iterator<Long>() {
+            public boolean hasNext() {
+                return next != -1;
+            }
 
-                    long next = cursor.first();
+            @Override
+            public Long next() {
+                long r = next;
+                next = cursor.next();
+                return r;
+            }
 
-                    @Override
-                    public boolean hasNext() {
-                        return next != -1;
-                    }
-
-                    @Override
-                    public Long next() {
-                        long r = next;
-                        next = cursor.next();
-                        return r;
-                    }
-
-                    @Override
-                    public void remove() {
-                        throw new UnsupportedOperationException();
-                    }
-                };
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
             }
         };
 

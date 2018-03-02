@@ -12,13 +12,13 @@ import java.util.function.Function;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
-public class DynamicClassLoader extends ClassLoader {
+class DynamicClassLoader extends ClassLoader {
     private static final ClassLoader parent = DynamicClassLoader.class.getClassLoader();
     private final Set<String> loadedClasses = new HashSet<>();
     private final Set<String> unavailableClasses = new HashSet<>();
     private Function<String, byte[]> loader;
 
-    public DynamicClassLoader(String... paths) {
+    private DynamicClassLoader(String... paths) {
         for (String strPath: paths) {
             Path path = Paths.get(strPath);
 

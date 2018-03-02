@@ -6,21 +6,21 @@ import com.j256.ormlite.table.DatabaseTable;
 import java.util.Date;
 
 @DatabaseTable(tableName = "notes")
-public class GuildNote {
+class GuildNote {
     @DatabaseField(canBeNull = false, width = 3, index = true)
-    public short noteID;
+    private short noteID;
 
     @DatabaseField(canBeNull = false, index = true)
-    public long guildID;
+    private long guildID;
 
     @DatabaseField(width = 360, canBeNull = false)
-    public String text;
+    private String text;
 
     @DatabaseField(canBeNull = false)
-    public Date creationTime;
+    private Date creationTime;
 
     @DatabaseField(canBeNull = false, index = true)
-    public long authorID;
+    private long authorID;
 
     public GuildNote() {
     }

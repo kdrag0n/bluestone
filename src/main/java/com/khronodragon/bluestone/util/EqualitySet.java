@@ -3,7 +3,7 @@ package com.khronodragon.bluestone.util;
 import javax.annotation.Nonnull;
 import java.util.*;
 
-public class EqualitySet<T>
+class EqualitySet<T>
         extends AbstractSet<T>
         implements Set<T> {
     private transient List<T> list = new LinkedList<>();

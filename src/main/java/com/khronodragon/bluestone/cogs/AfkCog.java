@@ -1,6 +1,5 @@
 package com.khronodragon.bluestone.cogs;
 
-import com.censhare.db.iindex.IDMapTrie;
 import com.censhare.db.iindex.IDSetTrie;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
@@ -8,7 +7,6 @@ import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
-import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.sql.AfkMessage;

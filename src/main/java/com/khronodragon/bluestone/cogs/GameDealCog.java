@@ -399,18 +399,27 @@ public class GameDealCog extends Cog {
         }
         String invoked = ctx.args.get(0);
 
-        if (invoked.equals("subscribe") || invoked.equals("set"))
-            cmdCSubSet(ctx);
-        else if (invoked.equals("min"))
-            cmdMin(ctx);
-        else if (invoked.equals("steam"))
-            cmdSteam(ctx);
-        else if (invoked.equals("humble"))
-            cmdHumble(ctx);
-        else if (invoked.equals("disable"))
-            cmdDisable(ctx);
-        else
-            ctx.send(NO_COMMAND).queue();
+        switch (invoked) {
+            case "subscribe":
+            case "set":
+                cmdCSubSet(ctx);
+                break;
+            case "min":
+                cmdMin(ctx);
+                break;
+            case "steam":
+                cmdSteam(ctx);
+                break;
+            case "humble":
+                cmdHumble(ctx);
+                break;
+            case "disable":
+                cmdDisable(ctx);
+                break;
+            default:
+                ctx.send(NO_COMMAND).queue();
+                break;
+        }
     }
 
     private GameDealDestination getSettings(Context ctx) throws SQLException, PassException {
@@ -572,7 +581,7 @@ public class GameDealCog extends Cog {
         @DatabaseField(id = true, canBeNull = false)
         private int hashCode;
 
-        public BroadcastedDeal() {}
+        BroadcastedDeal() {}
 
         private BroadcastedDeal(int h) {
             hashCode = h;

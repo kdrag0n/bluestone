@@ -15,7 +15,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.text.MessageFormat;
 import java.util.HashMap;
@@ -79,7 +78,7 @@ public class StatReporterCog extends Cog {
 
     private void graphiteReport() {
         try {
-            graphiteClient.sendMetrics(new HashMap<String, Number>() {{
+            graphiteClient.sendMetrics(new HashMap<>() {{
                 ShardUtil shardUtil = bot.getShardUtil();
                 Runtime runtime = Runtime.getRuntime();
 
@@ -103,7 +102,7 @@ public class StatReporterCog extends Cog {
                 put("system.memory_free", UtilityCog.systemBean.getFreePhysicalMemorySize());
                 put("system.memory_used", runtime.totalMemory() - runtime.freeMemory());
 
-                for (Map.Entry<String, AtomicInteger> entry: shardUtil.getCommandCalls().entrySet()) {
+                for (Map.Entry<String, AtomicInteger> entry : shardUtil.getCommandCalls().entrySet()) {
                     put("bot.command." + entry.getKey() + ".requests", entry.getValue().get());
                 }
             }});

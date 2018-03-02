@@ -9,8 +9,8 @@ public class Emotes {
     private static boolean hasDbots = false;
     private static boolean hasParadise = false;
 
-    static void setHasDbots(boolean hasDbots) {
-        Emotes.hasDbots = hasDbots;
+    static void setHasDbots() {
+        Emotes.hasDbots = true;
     }
 
     static void setHasParadise(boolean hasParadise) {

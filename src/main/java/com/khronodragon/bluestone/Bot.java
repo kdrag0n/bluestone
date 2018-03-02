@@ -24,7 +24,6 @@ import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
@@ -36,7 +35,6 @@ import org.json.JSONObject;
 import org.reflections.Reflections;
 import sun.misc.Unsafe;
 
-import javax.security.auth.login.LoginException;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -136,7 +134,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         scheduledExecutor.setKeepAliveTime(16L, TimeUnit.SECONDS);
     }
 
-    public void setJda(JDA jda) {
+    private void setJda(JDA jda) {
         this.jda = jda;
         jda.addEventListener(eventWaiter);
         final ShardInfo sInfo = jda.getShardInfo();
@@ -284,7 +282,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         logger.info("Ready - ID {}", uid);
 
         if (jda.getGuildById(110373943822540800L) != null)
-            Emotes.setHasDbots(true);
+            Emotes.setHasDbots();
 
         if (jda.getGuildById(250780048943087618L) != null)
             Emotes.setHasParadise(true);
@@ -848,7 +846,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                             System.exit(1);
                         try {
                             Thread.sleep(1000);
-                        } catch (InterruptedException ex) {}
+                        } catch (InterruptedException ignored) {}
                         continue;
                     } finally {
                         builder.removeEventListener(bot);
@@ -864,7 +862,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                             while (jda.getStatus() == JDA.Status.CONNECTED) {
                                 try {
                                     Thread.sleep(25);
-                                } catch (InterruptedException ex) {}
+                                } catch (InterruptedException ignored) {}
                             }
                         }
                     }
@@ -885,7 +883,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             monThread.start();
             try {
                 Thread.sleep(5000);
-            } catch (InterruptedException e) {}
+            } catch (InterruptedException ignored) {}
         }
 
         return 0;

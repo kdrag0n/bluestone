@@ -102,7 +102,7 @@ public class IDSetTrie extends IDTrie {
                 long bitPos = 1L << (key >>> (i * 6));
                 int childIdx = Long.bitCount(bitMap & (bitPos - 1));
 
-                int newNodeIdx = 0;
+                int newNodeIdx;
                 int size = Long.bitCount(bitMap);
                 if ((bitMap & bitPos) == 0) {
                     // insert
@@ -264,7 +264,7 @@ public class IDSetTrie extends IDTrie {
             }
 
             if (remove)
-                root = KNOWN_EMPTY_NODE | (generation << 32);
+                root = (generation << 32);
             else
                 root = childValue;
 
@@ -347,12 +347,12 @@ public class IDSetTrie extends IDTrie {
          * Constructor with -1 as end of list key.
          * Does <code>IDSetTrieCursor(bst, -1)</code>.
          */
-        public IDSetTrieCursor(IDSetTrie bst) {
+        IDSetTrieCursor(IDSetTrie bst) {
             this(bst, -1);
         }
 
         /** Constructor. */
-        public IDSetTrieCursor(IDSetTrie bst, long endKey) {
+        IDSetTrieCursor(IDSetTrie bst, long endKey) {
             this.bst = bst;
             this.endKey = endKey;
         }

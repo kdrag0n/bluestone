@@ -16,7 +16,7 @@ public class Permissions {
     public static final Permission BOT_OWNER;
     public static final Permission BOT_ADMIN;
     public static final Permission PATREON_SUPPORTER;
-    public static final Permission COMPOUND;
+    private static final Permission COMPOUND;
     public static final Map<Permission, Permission[]> compoundMap =
             new ConcurrentHashMap<>(128, 0.85f, 8);
 
@@ -75,7 +75,6 @@ public class Permissions {
         outerLoop:
         for (Permission perm: permsAccepted) {
             if (perm == BOT_OWNER) {
-                continue;
             } else if (perm == BOT_ADMIN) {
                 try {
                     if (ctx.bot.getAdminDao().idExists(ctx.author.getIdLong()))

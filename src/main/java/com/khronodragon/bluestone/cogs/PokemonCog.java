@@ -137,10 +137,8 @@ public class PokemonCog extends Cog {
             return;
         }
 
-        String descUrl = BASE_URI + Arrays.stream(pokemon.getDescriptions())
-                .sorted(Collections.reverseOrder(Comparator.comparingInt(d ->
-                        Integer.parseInt(StringUtils.split(d.name, '_')[2]))))
-                .findFirst()
+        String descUrl = BASE_URI + Arrays.stream(pokemon.getDescriptions()).min(Collections.reverseOrder(Comparator.comparingInt(d ->
+                Integer.parseInt(StringUtils.split(d.name, '_')[2]))))
                 .orElse(new Description()).resourceUri;
         String desc;
 

@@ -1,24 +1,24 @@
 package com.khronodragon.bluestone.errors;
 
-public class MessageException extends RuntimeException {
-    public MessageException() {
+class MessageException extends RuntimeException {
+    MessageException() {
         super("Command was ended due to an error.");
     }
 
-    public MessageException(String msg) {
+    MessageException(String msg) {
         super(msg);
     }
 
-    public MessageException(Throwable cause) {
+    MessageException(Throwable cause) {
         super(cause);
     }
 
-    public MessageException(String msg, Throwable cause) {
+    MessageException(String msg, Throwable cause) {
         super(msg, cause);
     }
 
-    public MessageException(String msg, Throwable cause,
-                        boolean enableSuppression, boolean writableStackTrace) {
+    MessageException(String msg, Throwable cause,
+                     boolean enableSuppression, boolean writableStackTrace) {
         super(msg, cause, enableSuppression, writableStackTrace);
     }
 }

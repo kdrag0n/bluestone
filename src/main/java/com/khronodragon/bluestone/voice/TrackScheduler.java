@@ -20,7 +20,7 @@ public class TrackScheduler extends AudioEventAdapter {
     public final Queue<AudioTrack> queue = new LinkedList<>();
     private AudioTrack lastTrack;
     public AudioTrack current;
-    public AudioState state;
+    private AudioState state;
 
     public boolean isEmptyPaused() {
         return emptyPaused;
@@ -43,7 +43,7 @@ public class TrackScheduler extends AudioEventAdapter {
         this.state = state;
     }
 
-    public void queue(AudioTrack track) {
+    private void queue(AudioTrack track) {
         if (!player.startTrack(track, true))
             queue.offer(track);
     }
@@ -53,7 +53,7 @@ public class TrackScheduler extends AudioEventAdapter {
         queue(track);
     }
 
-    public void nextTrack() {
+    private void nextTrack() {
         if (queue.size() > 0) {
             player.startTrack(queue.poll(), false);
         } else {

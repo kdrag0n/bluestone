@@ -6,10 +6,10 @@ import com.j256.ormlite.table.DatabaseTable;
 @DatabaseTable(tableName = "member_actions")
 public class GuildMemberActions {
     @DatabaseField(canBeNull = false, index = true)
-    public long userId;
+    private long userId;
 
     @DatabaseField(canBeNull = false, index = true)
-    public long guildId;
+    private long guildId;
 
     @DatabaseField
     public short messagesSent = 0;

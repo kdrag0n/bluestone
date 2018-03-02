@@ -5,8 +5,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.dao.DaoManager;
-import com.j256.ormlite.table.TableUtils;
 import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.Cooldown;
@@ -25,14 +23,11 @@ import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.entities.impl.GuildImpl;
-import net.dv8tion.jda.core.entities.impl.JDAImpl;
-import net.dv8tion.jda.core.entities.impl.UserImpl;
 import net.dv8tion.jda.core.events.user.UserAvatarUpdateEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
@@ -44,7 +39,6 @@ import org.languagetool.language.AmericanEnglish;
 import org.languagetool.rules.RuleMatch;
 
 import javax.annotation.Nonnull;
-import javax.annotation.ParametersAreNonnullByDefault;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.font.TextAttribute;
@@ -401,7 +395,7 @@ public class KewlCog extends Cog {
     }
 
     @Command(name = "profilesetup", desc = "Set up your personal user profile.", thread = true)
-    public void cmdProfileSetup(Context ctx) throws SQLException {
+    private void cmdProfileSetup(Context ctx) throws SQLException {
         if (profileSetupSessions.contains(ctx.author.getIdLong())) {
             ctx.fail("You already have a profile setup session active!");
             return;
@@ -465,7 +459,7 @@ public class KewlCog extends Cog {
     @Command(name = "set_profile_bg", desc = "Set your profile background.",
             usage = "{\"reset\" or \"default\" to reset to default}", thread = true,
             aliases = {"profilebg", "profile_bg", "setprofilebg"})
-    public void cmdSetProfileBg(Context ctx) {
+    private void cmdSetProfileBg(Context ctx) {
         String a = ctx.invoker.equalsIgnoreCase("profile") ?
                 ctx.args.get(ctx.args.length - 1) : ctx.rawArgs;
         Message.Attachment attachment;

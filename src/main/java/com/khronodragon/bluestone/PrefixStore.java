@@ -1,8 +1,5 @@
 package com.khronodragon.bluestone;
 
-import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.support.ConnectionSource;
-import com.khronodragon.bluestone.sql.GuildPrefix;
 import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.map.TLongObjectMap;
 import gnu.trove.map.hash.TLongObjectHashMap;

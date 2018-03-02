@@ -9,8 +9,8 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class RegexUtils {
-    public static Iterable<MatchResult> iterMatches(final Pattern p, final CharSequence input) {
-        return () -> new Iterator<MatchResult>() {
+    private static Iterable<MatchResult> iterMatches(final Pattern p, final CharSequence input) {
+        return () -> new Iterator<>() {
             // Use a matcher internally.
             final Matcher matcher = p.matcher(input);
             // Keep a match around that supports any interleaving of hasNext/next calls.
@@ -28,14 +28,18 @@ public class RegexUtils {
             public MatchResult next() {
                 // Fill pending if necessary (as when clients call next() without
                 // checking hasNext()), throw if not possible.
-                if (!hasNext()) { throw new NoSuchElementException(); }
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
                 // Consume pending so next call to hasNext() does a find().
                 MatchResult next = pending;
                 pending = null;
                 return next;
             }
 
-            public void remove() { throw new UnsupportedOperationException(); }
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
         };
     }
 

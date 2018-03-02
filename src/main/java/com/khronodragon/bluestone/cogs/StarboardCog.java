@@ -173,8 +173,8 @@ public class StarboardCog extends Cog {
         Pair.of(event.getChannel().getIdLong(), event.getMessageIdLong()))
                 .getAuthor().getIdLong();
 
-        for (int i = 0; i < users.size(); i++) {
-            if (users.get(i).getIdLong() != messageAuthor)
+        for (User user : users) {
+            if (user.getIdLong() != messageAuthor)
                 c++;
         }
 
@@ -182,7 +182,7 @@ public class StarboardCog extends Cog {
     }
 
     @EventHandler
-    public void onChannelDelete(TextChannelDeleteEvent event) throws SQLException {
+    private void onChannelDelete(TextChannelDeleteEvent event) throws SQLException {
         if (dao.idExists(event.getGuild().getIdLong())) {
             dao.deleteById(event.getGuild().getIdLong());
 

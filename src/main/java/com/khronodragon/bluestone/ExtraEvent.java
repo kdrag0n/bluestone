@@ -2,7 +2,7 @@ package com.khronodragon.bluestone;
 
 import java.lang.reflect.Method;
 
-public class ExtraEvent {
+class ExtraEvent {
     private Method method;
     private boolean threaded;
     private Cog parent;
