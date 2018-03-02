@@ -10,8 +10,6 @@ plugins {
     id 'java'
     id 'idea'
     id 'application'
-    id 'com.github.johnrengelman.shadow' version '2.0.2'
-//    id 'com.sedmelluq.jdaction' version '1.0.2'
     id 'com.github.ben-manes.versions' version '0.17.0'
 }
 
@@ -21,6 +19,8 @@ version '1.0-SNAPSHOT'
 sourceCompatibility = 1.9
 archivesBaseName = 'bluestone'
 mainClassName = 'com.khronodragon.bluestone.Start'
+
+apply plugin: 'com.github.johnrengelman.shadow'
 
 repositories {
     mavenCentral()
