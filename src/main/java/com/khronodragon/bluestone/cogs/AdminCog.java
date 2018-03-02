@@ -32,7 +32,7 @@ public class AdminCog extends Cog {
             "It shouldn't. This is for bot-wide admins that have extra powers.\n" +
             "**Bot owner** is the same kind of role. It's bot-wide, and it's the person who actually owns the bot.\n" +
             "In your server, being **server owner** will automatically grant you permission to do everything in the server.";
-    private final Dao<GuildPrefix, Long> prefixDao = bot.setupDao(GuildPrefix.class);
+    private final Dao<GuildPrefix, Long> prefixDao = setupDao(GuildPrefix.class);
 
     public AdminCog(Bot bot) {
         super(bot);
@@ -54,16 +54,23 @@ public class AdminCog extends Cog {
         }
         String invoked = ctx.args.get(0);
 
-        if (invoked.equals("list"))
-            adminCmdList(ctx);
-        else if (invoked.equals("add"))
-            adminCmdAdd(ctx);
-        else if (invoked.equals("remove"))
-            adminCmdRemove(ctx);
-        else if (invoked.equals("test"))
-            adminCmdTest(ctx);
-        else
-            ctx.send(ADMIN_NO_COMMAND).queue();
+        switch (invoked) {
+            case "list":
+                adminCmdList(ctx);
+                break;
+            case "add":
+                adminCmdAdd(ctx);
+                break;
+            case "remove":
+                adminCmdRemove(ctx);
+                break;
+            case "test":
+                adminCmdTest(ctx);
+                break;
+            default:
+                ctx.send(ADMIN_NO_COMMAND).queue();
+                break;
+        }
     }
 
     private void adminCmdTest(Context ctx) throws SQLException {

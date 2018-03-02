@@ -30,13 +30,9 @@ public abstract class Cog {
         return getName();
     }
 
-    public void load() {
-        LogManager.getLogger(this.getClass()).info("Cog loaded.", getName());
-    }
+    public void load() {}
 
-    public void unload() {
-        LogManager.getLogger(this.getClass()).info("Cog unloaded.", getName());
-    }
+    public void unload() {}
 
     protected static int randint(int min, int max) {
         return ThreadLocalRandom.current().nextInt(min, max);
@@ -154,7 +150,6 @@ public abstract class Cog {
                 .findFirst().orElse(null);
     }
 
-    @Nullable
     @CheckReturnValue
     protected static long parseSnowflake(String input) {
         try {

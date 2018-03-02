@@ -19,6 +19,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -42,7 +43,7 @@ public class GoogleCog extends Cog {
             .expireAfterAccess(24, TimeUnit.HOURS)
             .build(new CacheLoader<String, MessageEmbed>() {
                 @Override
-                public MessageEmbed load(String key) throws IOException {
+                public MessageEmbed load(@Nonnull String key) throws IOException {
                     JSONObject resp = new JSONObject(Bot.http.newCall(new Request.Builder()
                             .get()
                             .url(key)
@@ -116,7 +117,7 @@ public class GoogleCog extends Cog {
             return;
         }
 
-        final String query = String.join(" ", ctx.args);
+        final String query = ctx.args.join(' ');
         String key = bot.getKeys().optString("google");
         if (key == null) {
             ctx.fail("The bot doesn't have a Google API key set up!");

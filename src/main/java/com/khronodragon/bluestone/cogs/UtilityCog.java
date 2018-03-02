@@ -54,6 +54,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.ocpsoft.prettytime.PrettyTime;
 
+import javax.annotation.Nonnull;
 import javax.imageio.ImageIO;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -121,7 +122,7 @@ public class UtilityCog extends Cog {
             .expireAfterAccess(6, TimeUnit.HOURS)
             .build(new CacheLoader<String, EmbedBuilder>() {
                 @Override
-                public EmbedBuilder load(String key) throws IOException {
+                public EmbedBuilder load(@Nonnull String key) throws IOException {
                     String uri = "https://freegeoip.net/json/" + key;
                     JSONObject data = new JSONObject(Bot.http.newCall(new Request.Builder()
                             .get()
@@ -192,7 +193,7 @@ public class UtilityCog extends Cog {
     public UtilityCog(Bot bot) {
         super(bot);
 
-        pollDao = bot.setupDao(ActivePoll.class);
+        pollDao = setupDao(ActivePoll.class);
 
         try {
             scheduleAllPolls();
@@ -380,6 +381,8 @@ public class UtilityCog extends Cog {
                 .append(" Total: ")
                 .append(ctx.guild.getMembers().size());
 
+        TextChannel memberChan = defaultReadableChannel(ctx.member);
+
         EmbedBuilder emb = new EmbedBuilder()
                 .setColor(val(guild.getSelfMember().getColor()).or(Color.WHITE))
                 .setAuthor(guild.getName(), null,
@@ -392,7 +395,7 @@ public class UtilityCog extends Cog {
                 .addField("Emotes", str(guild.getEmoteMap().size()), true)
                 .addField("Region", guild.getRegion().getName(), true)
                 .addField("Owner", guild.getOwner().getAsMention(), true)
-                .addField("Default Channel (for you)", defaultReadableChannel(ctx.member).getAsMention(), true)
+                .addField("Default Channel (for you)", memberChan == null ? "None" : memberChan.getAsMention(), true)
                 .addField("Admins Need 2FA?", guild.getRequiredMFALevel().getKey() == 1 ? "Yes" : "No", true)
                 .addField("Content Scan Level", guild.getExplicitContentLevel().getDescription(), true)
                 .addField("Verification Level", WordUtils.capitalize(guild.getVerificationLevel().name().toLowerCase()
@@ -518,7 +521,8 @@ public class UtilityCog extends Cog {
         ctx.send("**Website**: <https://khronodragon.com/goldmine>\n" +
                 "**Forums**: <https://forums.khronodragon.com>\n" +
                 "**Support Server**: <https://discord.gg/sYkwfxA>\n" +
-                "**Patreon**: <https://patreon.com/kdragon>").queue();
+                "**Patreon**: <https://patreon.com/kdragon>" +
+                "**GitHub**: <https://github.com/kdrag0n>").queue();
     }
 
     @Command(name = "poll", desc = "Start a poll, with reactions.", usage = "[emotes] [question] [time]", guildOnly = true)
@@ -674,7 +678,9 @@ public class UtilityCog extends Cog {
             } finally {
                 try {
                     pollDao.delete(poll);
-                } catch (SQLException e) {}
+                } catch (SQLException e) {
+                    logger.error("Error deleting poll", e);
+                }
             }
         }, calculatedTime, TimeUnit.MILLISECONDS);
     }
@@ -1084,13 +1090,12 @@ public class UtilityCog extends Cog {
 
         if (ctx.guild != null) {
             GuildImpl guild = (GuildImpl) ctx.guild;
-            emb.addField("Guild", new StringBuilder("**")
-                    .append(guild.getName())
-                    .append("**\nID: `")
-                    .append(guild.getId())
-                    .append("`\nMembers: ")
-                    .append(guild.getMembersMap().size())
-                    .toString(), true);
+            emb.addField("Guild", "**" +
+                    guild.getName() +
+                    "**\nID: `" +
+                    guild.getId() +
+                    "`\nMembers: " +
+                    guild.getMembersMap().size(), true);
         }
 
         PrivateChannel ownerChannel = bot.owner.openPrivateChannel().complete(); // one-time and fast enough
@@ -1099,7 +1104,7 @@ public class UtilityCog extends Cog {
                 .setEmbed(emb.build())
                 .build()).queue();
 
-        ctx.success("Message sent.\n**NOTE**: READ THE FAQ FIRST! I cannot stress that enough");
+        ctx.success("Message sent.\n**NOTE**: READ THE FAQ FIRST! I cannot stress that enough.");
     }
 
     @Perm.Owner
@@ -1244,10 +1249,8 @@ public class UtilityCog extends Cog {
         }
 
         String first = ctx.args.get(0);
-        String second = "";
-        try {
-            second = ctx.args.get(1);
-        } catch (IndexOutOfBoundsException e) {}
+        String second = ctx.args.get(1);
+        if (second == null) second = "";
 
         String comicTitle;
         String comicUrl;
@@ -1542,11 +1545,8 @@ public class UtilityCog extends Cog {
             ctx.send(emb.build()).queue();
         };
 
-        Invite.resolve(ctx.jda, code).queue(inv -> {
-            inv.expand().queue(processor, ignored -> {
-                processor.accept(inv);
-            });
-        }, err -> {
+        Invite.resolve(ctx.jda, code)
+                .queue(inv -> inv.expand().queue(processor, ignored -> processor.accept(inv)), err -> {
             logger.warn("Error fetching invite info", err);
             ctx.fail("Error fetching invite info!");
         });

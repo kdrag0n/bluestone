@@ -79,8 +79,7 @@ public class ShardUtil {
         try {
             dbConn = new DataSourceConnectionSource(dataSource, dbType);
         } catch (SQLException e) {
-            logger.error("Failed to connect to database!", e);
-            logger.warn("Using an in-memory database.");
+            logger.error("Failed to connect to database! Falling back to in-memory.", e);
 
             try {
                 dbConn = new JdbcConnectionSource("jdbc:h2:mem:bluestone-db");
@@ -109,7 +108,7 @@ public class ShardUtil {
 
     @CheckReturnValue
     public<C, K> Dao<C, K> setupDao(Class<C> clazz) { // TODO: replace all DAO+table setup with this
-        // TODO set up like: private final Dao<GuildPrefix, Long> prefixDao = bot.setupDao(GuildPrefix.class);
+        // TODO set up like: private final Dao<GuildPrefix, Long> prefixDao = setupDao(GuildPrefix.class);
         // TODO no constructor
         try {
             TableUtils.createTableIfNotExists(dbConn, clazz);

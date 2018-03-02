@@ -43,6 +43,7 @@ import org.languagetool.Language;
 import org.languagetool.language.AmericanEnglish;
 import org.languagetool.rules.RuleMatch;
 
+import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -86,7 +87,7 @@ public class KewlCog extends Cog {
             .expireAfterWrite(12, TimeUnit.HOURS)
             .build(new CacheLoader<User, byte[]>() {
                 @Override
-                public byte[] load(@ParametersAreNonnullByDefault User user) throws Exception {
+                public byte[] load(@Nonnull User user) throws Exception {
                     ResponseBody imgBody = Bot.http.newCall(new Request.Builder().get()
                             .url(user.getEffectiveAvatarUrl() + "?size=256").build()).execute().body();
                     BufferedImage avatar = ImageIO.read(imgBody.byteStream());
@@ -213,7 +214,7 @@ public class KewlCog extends Cog {
     public KewlCog(Bot bot) {
         super(bot);
 
-        profileDao = bot.setupDao(UserProfile.class);
+        profileDao = setupDao(UserProfile.class);
 
         if (!hasWarmedUp) {
             hasWarmedUp = true;
@@ -290,7 +291,7 @@ public class KewlCog extends Cog {
     }
 
     @Command(name = "profile", desc = "Display a user's profile.", usage = "[user / \"setup\" / \"bg\"]", thread = true)
-    public void cmdProfile(Context ctx) throws SQLException, IOException {
+    public void cmdProfile(Context ctx) throws SQLException {
         User user;
         if (Strings.isMention(ctx.rawArgs) && ctx.message.getMentionedUsers().size() > 0)
             user = ctx.message.getMentionedUsers().get(0);
@@ -488,7 +489,6 @@ public class KewlCog extends Cog {
                     .get()
                     .url(attachment.getUrl())
                     .build()).execute().body().byteStream()) {
-                ;
                 BufferedImage image = ImageIO.read(is);
 
                 if (image.getType() != BufferedImage.TYPE_INT_RGB) {
@@ -559,8 +559,6 @@ public class KewlCog extends Cog {
         ctx.jda.retrieveUserById(target).queue(user -> {
             profileCache.invalidate(user);
             ctx.success("Invalidated cached profile for user `" + target + "`.");
-        }, e -> {
-            ctx.fail("Error retrieving user.\n```java" + Bot.renderStackTrace(e) + "```");
-        });
+        }, e -> ctx.fail("Error retrieving user.\n```java" + Bot.renderStackTrace(e) + "```"));
     }
 }

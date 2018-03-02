@@ -103,7 +103,7 @@ public class ModerationCog extends Cog {
     public ModerationCog(Bot bot) {
         super(bot);
 
-        autoroleDao = bot.setupDao(GuildAutorole.class);
+        autoroleDao = setupDao(GuildAutorole.class);
     }
 
     public String getName() {
@@ -119,7 +119,7 @@ public class ModerationCog extends Cog {
         if (!event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_ROLES))
             return;
 
-        List<Role> toAdd = null;
+        List<Role> toAdd;
         List<GuildAutorole> autoroles = autorolesFor(event.getGuild().getIdLong());
         if (autoroles.size() > 0)
             toAdd = new ArrayList<>(autoroles.size());
@@ -190,9 +190,7 @@ public class ModerationCog extends Cog {
         TextChannel channel = ctx.event.getTextChannel();
 
         // match all the params
-        args = match(PURGE_QUOTE_PATTERN, args, m -> {
-            substrings.add(m.group(1).toLowerCase().trim());
-        });
+        args = match(PURGE_QUOTE_PATTERN, args, m -> substrings.add(m.group(1).toLowerCase().trim()));
 
         matcher = PURGE_REGEX_PATTERN.matcher(args);
         if (matcher.find()) {
@@ -283,15 +281,14 @@ public class ModerationCog extends Cog {
         }
 
         ctx.send(Emotes.getSuccess() + " Deleted **" + toDelete.size() +
-                "** messages!" + twoWeekWarn).queue(msg -> {
-            msg.delete().queueAfter(2, TimeUnit.SECONDS, null, exp -> {
-                if (exp instanceof ErrorResponseException) {
-                    if (((ErrorResponseException) exp).getErrorCode() != 10008) {
-                        RestAction.DEFAULT_FAILURE.accept(exp);
+                "** messages!" + twoWeekWarn).queue(
+                        msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS, null, exp -> {
+                    if (exp instanceof ErrorResponseException) {
+                        if (((ErrorResponseException) exp).getErrorCode() != 10008) {
+                            RestAction.DEFAULT_FAILURE.accept(exp);
+                        }
                     }
-                }
-            });
-        });
+                }));
     }
 
     @Perm.ManageRoles
@@ -531,16 +528,23 @@ public class ModerationCog extends Cog {
         }
         String invoked = ctx.args.get(0);
 
-        if (invoked.equals("list"))
-            autoroleList(ctx);
-        else if (invoked.equals("add"))
-            autoroleAdd(ctx);
-        else if (invoked.equals("remove"))
-            autoroleRemove(ctx);
-        else if (invoked.equals("clear"))
-            autoroleClear(ctx);
-        else
-            ctx.send(NO_COMMAND).queue();
+        switch (invoked) {
+            case "list":
+                autoroleList(ctx);
+                break;
+            case "add":
+                autoroleAdd(ctx);
+                break;
+            case "remove":
+                autoroleRemove(ctx);
+                break;
+            case "clear":
+                autoroleClear(ctx);
+                break;
+            default:
+                ctx.send(NO_COMMAND).queue();
+                break;
+        }
     }
 
     private Role parseRole(Guild guild, String roleArg) {
@@ -657,10 +661,8 @@ public class ModerationCog extends Cog {
                 .setTemporary(false)
                 .setMaxAge(0)
                 .setMaxUses(0)
-                .queue(i -> {
-                    ctx.send(Emotes.getSuccess() + " Invite created to " +
-                            ch.getAsMention() + ".\n" + i.getURL()).queue();
-                }, e -> {
+                .queue(i -> ctx.send(Emotes.getSuccess() + " Invite created to " +
+                        ch.getAsMention() + ".\n" + i.getURL()).queue(), e -> {
                     ctx.fail("Failed to create invite!");
                     logger.error("Invite creation error", e);
                 });
@@ -973,8 +975,7 @@ public class ModerationCog extends Cog {
 
                                 try {
                                     Thread.sleep(50);
-                                } catch (InterruptedException ign) {
-                                }
+                                } catch (InterruptedException ign) {}
                             } finally {
                                 embedQueue.clear();
                             }

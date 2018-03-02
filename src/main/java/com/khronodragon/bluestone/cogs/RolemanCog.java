@@ -20,6 +20,7 @@ import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nonnull;
 import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
@@ -48,7 +49,7 @@ public class RolemanCog extends Cog {
             .expireAfterAccess(10, TimeUnit.MINUTES)
             .build(new CacheLoader<Long, Object>() {
                 @Override
-                public Object load(Long key) throws SQLException {
+                public Object load(@Nonnull Long key) throws SQLException {
                     return dao.queryBuilder()
                             .where()
                             .eq("guildId", key)
@@ -62,8 +63,8 @@ public class RolemanCog extends Cog {
     public RolemanCog(Bot bot) {
         super(bot);
 
-        dao = bot.setupDao(GuildRoleOption.class);
-        profDao = bot.setupDao(GuildMemberActions.class);
+        dao = setupDao(GuildRoleOption.class);
+        profDao = setupDao(GuildMemberActions.class);
     }
 
     public String getName() {

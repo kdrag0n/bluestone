@@ -142,6 +142,7 @@ public class MusicCog extends Cog {
                 state.scheduler.setEmptyPauseTime(new Date());
                 state.scheduler.setEmptyPaused(true);
 
+                /*
                 ExtraTrackInfo info;
                 if (state.scheduler.current == null) {
                     info = null;
@@ -149,7 +150,7 @@ public class MusicCog extends Cog {
                     info = state.scheduler.current.getUserData(ExtraTrackInfo.class);
                 }
 
-                /*if (info != null) {
+                if (info != null) {
                     info.textChannel.sendMessage("Voice channel empty - player paused.").queue();
                 }*/
             }
@@ -276,7 +277,7 @@ public class MusicCog extends Cog {
             return;
         }
 
-        final String term = String.join(" ", ctx.args);
+        final String term = ctx.args.join(' ');
         ctx.message.addReaction("⌛").queue();
 
         GuildMusicSettings settings = settingsDao.queryForId(ctx.guild.getIdLong());
@@ -336,10 +337,10 @@ public class MusicCog extends Cog {
     private String renderInfo(AudioTrackInfo info) {
         StringBuilder builder = new StringBuilder();
         if (info.author != null) {
-            builder.append("Uploader: *" + info.author + "*\n");
+            builder.append("Uploader: *").append(info.author).append("*\n");
         }
 
-        builder.append("Length: *" + Bot.formatDuration(info.length / 1000) + '*');
+        builder.append("Length: *").append(Bot.formatDuration(info.length / 1000)).append('*');
         return builder.toString();
     }
 

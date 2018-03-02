@@ -16,6 +16,8 @@ public class UserFaqRecord {
     @DatabaseField(canBeNull = false)
     public Date when;
 
+    public UserFaqRecord() {}
+
     public UserFaqRecord(long userId, boolean hasReadFaq, Date when) {
         this.userId = userId;
         this.hasReadFaq = hasReadFaq;

@@ -54,7 +54,7 @@ import static com.khronodragon.bluestone.util.Strings.format;
 
 public class FunCog extends Cog {
     private static final Logger logger = LogManager.getLogger(FunCog.class);
-    private static final Map<String, UnisafeString> charsets = new HashMap<String, UnisafeString>() {{
+    private static final Map<String, UnisafeString> charsets = new HashMap<>() {{
         put("normal", uniString("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~ `!@#$%^&*()-_=+[]{}|;:'\",<.>/?"));
         put("fullwidth", uniString("ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ０１２３４５６７８９～ ｀！＠＃＄％＾＆＊（）－＿＝＋［］｛｝|；：＇＂,＜．＞/？"));
         put("circled", uniString("ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓜⓝⓞⓟⓠⓡⓢⓣⓤⓥⓦⓧⓨⓩⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ0①②③④⑤⑥⑦⑧⑨~ `!@#$%^&⊛()⊖_⊜⊕[]{}⦶;:'\",⧀⨀⧁⊘?⦸"));
@@ -214,7 +214,7 @@ public class FunCog extends Cog {
         }
     }
 
-    private static final UnisafeString uniString(String javaString) {
+    private static UnisafeString uniString(String javaString) {
         return new UnisafeString(javaString);
     }
 
@@ -500,7 +500,6 @@ public class FunCog extends Cog {
 
             int targetDim = emoteImageDim * emoteDim;
             base = GraphicsUtils.resizeImage(base, targetDim, targetDim);
-            dim = targetDim;
 
             // Init some variables
             List<byte[]> results = new ArrayList<>(emoteDim * emoteDim);
@@ -546,9 +545,7 @@ public class FunCog extends Cog {
             StringBuilder renderAll = new StringBuilder((baseName.length() + 25) * finalEmotes.size() + emoteDim);
 
             int ix = 1;
-            for (int i = 0; i < finalEmotes.size(); i++) {
-                Emote emote = finalEmotes.get(i);
-
+            for (Emote emote : finalEmotes) {
                 // add to usageAll
                 usageAll.append(':')
                         .append(emote.getName())
@@ -634,7 +631,7 @@ public class FunCog extends Cog {
             return;
         }
 
-        ctx.send("<http://lmgtfy.com/?q=" + StringUtils.replace(ctx.args.array.join('+'), "+", "%2B") + '>').queue();
+        ctx.send("<http://lmgtfy.com/?q=" + StringUtils.replace(ctx.args.join('+'), "+", "%2B") + '>').queue();
     }
 
     @Command(name = "slap", desc = "Slap someone, with passion.", aliases = {"boop", "poke", "hit"})
@@ -705,9 +702,8 @@ public class FunCog extends Cog {
 
             if (hook == null) {
                 ((TextChannel) ctx.channel).createWebhook("multibleach for #" + ctx.channel.getName())
-                        .queue(h -> {
-                            mb2(h, n);
-                        }, e -> ctx.send(Emotes.getFailure() + " Failed to create webhook."));
+                        .queue(h -> mb2(h, n),
+                                e -> ctx.send(Emotes.getFailure() + " Failed to create webhook.").queue());
                 return;
             }
 
@@ -847,10 +843,9 @@ public class FunCog extends Cog {
         }
 
         private void scheduleEventWait(Context ctx) {
-            bot.getEventWaiter().waitForEvent(MessageReactionAddEvent.class, ev -> {
-                return ev.getChannel().getIdLong() == channel.getIdLong() &&
-                        ev.getMessageIdLong() == message.getIdLong() && ev.getUser().getIdLong() == userId;
-            }, ev -> {
+            bot.getEventWaiter().waitForEvent(MessageReactionAddEvent.class,
+                    ev -> ev.getChannel().getIdLong() == channel.getIdLong() &&
+                    ev.getMessageIdLong() == message.getIdLong() && ev.getUser().getIdLong() == userId, ev -> {
                 if (!isActive) return;
 
                 byte answer = (byte) ArrayUtils.indexOf(REACTIONS, ev.getReactionEmote().getName());
@@ -1070,10 +1065,9 @@ public class FunCog extends Cog {
         }
 
         private void scheduleEventWait(Context ctx) {
-            bot.getEventWaiter().waitForEvent(MessageReactionAddEvent.class, ev -> {
-                return ev.getChannel().getIdLong() == channel.getIdLong() &&
-                        ev.getMessageIdLong() == message.getIdLong() && ev.getUser().getIdLong() == userId;
-            }, ev -> {
+            bot.getEventWaiter().waitForEvent(MessageReactionAddEvent.class,
+                    ev -> ev.getChannel().getIdLong() == channel.getIdLong() &&
+                    ev.getMessageIdLong() == message.getIdLong() && ev.getUser().getIdLong() == userId, ev -> {
                 if (!isActive) return;
 
                 byte answer = (byte) ArrayUtils.indexOf(REACTIONS, ev.getReactionEmote().getName());
@@ -1122,7 +1116,7 @@ public class FunCog extends Cog {
             lastQuestionWasGuess = false;
         }
 
-        private void presentGuess() throws IOException {
+        private void presentGuess() {
             try {
                 guess = new Guess();
             } catch (JSONException|IOException ignored) {
@@ -1274,7 +1268,7 @@ public class FunCog extends Cog {
                 return desc;
             }
 
-            public String getImgPath() {
+            String getImgPath() {
                 return imgPath;
             }
 

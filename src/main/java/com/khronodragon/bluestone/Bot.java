@@ -176,7 +176,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
     }
 
-    protected static StringBuilder addVagueElement(StringBuilder builder, StackTraceElement elem) {
+    private static StringBuilder addVagueElement(StringBuilder builder, StackTraceElement elem) {
         return builder.append("> ")
                 .append(StringUtils.replaceOnce(StringUtils.replaceOnce(elem.getClassName(),
                         "java.base/java.util", "stdlib"),
@@ -572,7 +572,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
         if (content.startsWith(prefix)) {
             String[] split = content.substring(prefix.length()).split("\\s+"); // TODO: inefficient, compiling regex!
-            ArrayListView(split);
+            ArrayListView args = new ArrayListView(split);
 
             String cmdName = split[0].toLowerCase();
 
@@ -598,7 +598,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 if (request.equalsIgnoreCase("prefix")) {
                     channel.sendMessage("My prefix here is `" + prefix + "`.").queue();
                 } else if (request.length() > 0) {
-                    chatengineResponse(channel, "bs_GMdbot2-" + author.getId(), request, null);
+                    chatResponse(channel, "bs_GMdbot2-" + author.getId(), request, null);
                 } else {
                     String tag = Cog.getTag(jda.getSelfUser());
 
@@ -615,12 +615,12 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             if (request.length() < 1) {
                 channel.sendMessage("**Hey there**! My prefix is `" + prefix + "` here.\nYou can use commands, or talk to me directly.").queue();
             } else {
-                chatengineResponse(channel, "bs_GMdbot2-" + author.getId(), request, "💬 ");
+                chatResponse(channel, "bs_GMdbot2-" + author.getId(), request, "💬 ");
             }
         }
     }
 
-    public void chatengineResponse(MessageChannel channel, String sessionID, String query, String respPrefix) {
+    private void chatResponse(MessageChannel channel, String sessionID, String query, String respPrefix) {
         String reqDest = getConfig().optString("chatengine_url", null);
         if (reqDest == null) {
             channel.sendMessage("My owner hasn't set up ChatEngine yet.").queue();
@@ -660,9 +660,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     public void reportErrorToOwner(Throwable e, Message msg, Command cmd) {
         if (jda.getGuilds().size() < 100) return;
 
-        owner.openPrivateChannel().queue(ch -> {
-            ch.sendMessage(errorEmbed(e, msg, cmd)).queue();
-        });
+        owner.openPrivateChannel().queue(ch -> ch.sendMessage(errorEmbed(e, msg, cmd)).queue());
     }
 
     public static String briefSqlError(SQLException e) {
@@ -794,11 +792,11 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         return true;
     }
 
-    public static int start(String token, int shardCount, AccountType accountType, JSONObject config) throws LoginException, RateLimitedException {
+    public static int start(String token, int shardCount, AccountType accountType, JSONObject config) {
         System.out.println("Starting...");
 
         if (shardCount < 1) {
-            System.out.println("There needs to be at least 1 shard, or how will the bot work?");
+            System.out.println("How will the bot work with no shards?");
             return 1;
         } else if (shardCount == 2) {
             System.out.println("2 shards is very buggy and doesn't work well. Use either 1 or 3+ shards.");

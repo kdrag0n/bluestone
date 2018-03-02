@@ -30,4 +30,20 @@ public class ArrayListView {
         }
         return false;
     }
+
+    public String join(char sep) {
+        // fast paths
+        switch (length) {
+            case 2: return array[1];
+            case 3: return array[2] + sep + array[3];
+            case 4: return array[2] + sep + array[3] + sep + array[4];
+            case 5: return array[2] + sep + array[3] + sep + array[4] + sep + array[5];
+            case 6: return array[2] + sep + array[3] + sep + array[4] + sep + array[5] + sep + array[6];
+            default:
+                StringBuilder sb = new StringBuilder(32);
+                for (int i = 1; i < array.length; i++)
+                    sb.append(array[i]);
+                return sb.toString();
+        }
+    }
 }

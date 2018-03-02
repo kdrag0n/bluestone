@@ -100,7 +100,7 @@ public class CoreCog extends Cog {
                         bot.getShardUtil().getGuildCount(), bot.getShardUtil().getChannelCount());
 
                 channel.sendMessage(m).queue(null, this::f);
-            } while (false); // totally not dirty code but I don't want code dupe down there
+            } while (false); // for breaks
 
             scheduleAniv();
         }, ctime.toInstant().toEpochMilli() - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
@@ -155,12 +155,11 @@ public class CoreCog extends Cog {
         String msg = "🏓 WebSockets: " + ctx.jda.getPing() + "ms";
         long beforeTime = System.currentTimeMillis();
 
-        ctx.send(msg).queue(message1 -> {
-            message1.editMessage(msg + ", message: calculating...").queue(message2 -> {
-                double msgPing = (System.currentTimeMillis() - beforeTime) / 2.0;
-                message2.editMessage(msg + ", message: " + msgPing + "ms").queue();
-            });
-        });
+        ctx.send(msg).queue(
+                message1 -> message1.editMessage(msg + ", message: calculating...").queue(message2 -> {
+            double msgPing = (System.currentTimeMillis() - beforeTime) / 2.0;
+            message2.editMessage(msg + ", message: " + msgPing + "ms").queue();
+        }));
     }
 
     @Command(name = "faq", desc = "Get the Frequently Asked Questions list.")
@@ -212,7 +211,8 @@ public class CoreCog extends Cog {
                 }
             }
         } else {
-            for (String item: ctx.args.subList(0, Math.min(24, ctx.args.length))) {
+            for (int i = 0; i < ctx.args.length && i < 24; i++) {
+                String item = ctx.args.get(i);
                 String litem = item.toLowerCase();
                 boolean done = false;
 
@@ -346,9 +346,8 @@ public class CoreCog extends Cog {
         TextChannel defChan = defaultWritableChannel(event.getGuild().getSelfMember());
 
         if (defChan == null || !defChan.canTalk()) {
-            event.getGuild().getOwner().getUser().openPrivateChannel().queue(ch -> {
-                ch.sendMessage(JOIN_MESSAGE).queue();
-            });
+            event.getGuild().getOwner().getUser().openPrivateChannel()
+                    .queue(ch -> ch.sendMessage(JOIN_MESSAGE).queue());
         } else {
             defChan.sendMessage(JOIN_MESSAGE).queue();
         }

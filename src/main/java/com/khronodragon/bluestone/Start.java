@@ -42,10 +42,6 @@ public class Start {
             new File(path).mkdirs();
         }
 
-        try {
-            Bot.start(token, shardCount, accountType, config);
-        } catch (LoginException|RateLimitedException e) {
-            e.printStackTrace();
-        }
+        Bot.start(token, shardCount, accountType, config);
     }
 }
