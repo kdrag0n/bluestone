@@ -149,7 +149,7 @@ public class AdminCog extends Cog {
         ctx.success("User removed.");
     }
 
-    @Command(name = "prefix", desc = "Get or set the command prefix.", aliases = {"setprefix"}, guildOnly = true)
+    @Command(name = "prefix", desc = "Get or set the command prefix.", aliases = {"setprefix", "pset"}, guildOnly = true)
     public void cmdPrefix(Context ctx) throws SQLException, PermissionError {
         if (ctx.rawArgs.length() > 0) {
             com.khronodragon.bluestone.Command.checkPerms(ctx, PREFIX_MOD_PERMS);

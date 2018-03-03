@@ -1038,7 +1038,7 @@ public class UtilityCog extends Cog {
             thread = true)
     public void cmdContact(Context ctx) throws SQLException {
         if (ctx.rawArgs.length() < 6) {
-            ctx.fail("I need a message!");
+            ctx.fail("I need a valid message!");
             return;
         } else if (contactBanDao.queryForId(ctx.author.getIdLong()) != null) {
             ctx.fail("You're not allowed to contact the owner!");
@@ -1046,7 +1046,7 @@ public class UtilityCog extends Cog {
         }
 
         UserFaqRecord faqRecord;
-        if (Strings.isQuestion(ctx.rawArgs) && ((faqRecord = userFaqDao.queryForId(ctx.author.getIdLong())) == null ||
+        if (/*Strings.isQuestion(ctx.rawArgs) &&*/ ((faqRecord = userFaqDao.queryForId(ctx.author.getIdLong())) == null ||
                 faqRecord.when.before(new Date(System.currentTimeMillis() - 5184000000L)))) {
             // user hasn't read FAQ yet
             ctx.fail("You haven't read the FAQ yet.\nPlease read the FAQ **before** using `contact`, as it saves you, me, and everyone else a lot of time.\n" +
@@ -1084,7 +1084,7 @@ public class UtilityCog extends Cog {
                 .setEmbed(emb.build())
                 .build()).queue();
 
-        ctx.success("Message sent.\n**NOTE**: READ THE FAQ FIRST! I cannot stress that enough.");
+        ctx.success("Message sent.");
     }
 
     @Perm.Owner
