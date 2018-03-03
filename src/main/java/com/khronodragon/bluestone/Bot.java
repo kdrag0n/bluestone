@@ -3,7 +3,7 @@ package com.khronodragon.bluestone;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.re2j.Pattern;
 import com.j256.ormlite.dao.Dao;
-import com.jagrosh.jdautilities.waiter.EventWaiter;
+import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 import com.khronodragon.bluestone.annotations.*;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.handlers.MessageWaitEventListener;

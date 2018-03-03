@@ -34,10 +34,6 @@ import org.apache.commons.text.WordUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
-import org.languagetool.JLanguageTool;
-import org.languagetool.Language;
-import org.languagetool.language.AmericanEnglish;
-import org.languagetool.rules.RuleMatch;
 
 import javax.annotation.Nonnull;
 import javax.imageio.ImageIO;
@@ -52,7 +48,6 @@ import java.sql.SQLException;
 import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -62,8 +57,6 @@ import java.util.stream.Collectors;
 public class KewlCog extends Cog {
     private static final Logger logger = LogManager.getLogger(KewlCog.class);
     private static final Pattern DATE_WEEKDAY_PATTERN = Pattern.compile("^The date [0-9 a-zA-Z]+ is not a ([MTWFS][a-z]+), but a ([MTWFS][a-z]+)\\.$");
-    private static final Language language = new AmericanEnglish();
-    private final JLanguageTool langTool = new JLanguageTool(language);
 
     private static final int PROFILE_WIDTH = 1600;
     private static final int PROFILE_HEIGHT = 1000;
@@ -242,44 +235,6 @@ public class KewlCog extends Cog {
 
     public String getDescription() {
         return "All the kewl extensions belong here.";
-    }
-
-    @Cooldown(scope = BucketType.USER, delay = 5)
-    @Command(name = "correct", desc = "Correct spelling in some text.", thread = true)
-    public void cmdSpellcheck(Context ctx) throws IOException {
-        if (ctx.rawArgs.length() < 1) {
-            ctx.fail("I need something to correct!");
-            return;
-        }
-        ctx.channel.sendTyping().queue();
-
-        final String text = ctx.rawArgs;
-        StringBuilder result = new StringBuilder(text);
-
-        List<RuleMatch> matches;
-        synchronized (langTool) {
-            matches = langTool.check(text);
-        }
-        Collections.reverse(matches);
-
-        for (RuleMatch match: matches) {
-            if (match.getSuggestedReplacements().size() > 0) {
-                result.replace(match.getFromPos(), match.getToPos(), match.getSuggestedReplacements().get(0));
-            } else if (match.getRule().getId().equals("DATE_WEEKDAY")) {
-                Matcher m = DATE_WEEKDAY_PATTERN.matcher(match.getMessage());
-                if (!m.find()) continue;
-
-                String wrongWeekday = m.group(1);
-                String correctWeekday = m.group(2);
-
-                result.replace(match.getFromPos(), match.getToPos(),
-                        StringUtils.replace(result.substring(match.getFromPos(), match.getToPos()),
-                               wrongWeekday, correctWeekday));
-            }
-        }
-        String finalResult = StringUtils.replace(result.toString(), ".M..", "M.");
-
-        ctx.send("Result: `" + finalResult + "`").queue();
     }
 
     @Command(name = "profile", desc = "Display a user's profile.", usage = "[user / \"setup\" / \"bg\"]", thread = true)

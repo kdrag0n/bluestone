@@ -5,7 +5,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
-import com.jagrosh.jdautilities.menu.pagination.PaginatorBuilder;
+import com.jagrosh.jdautilities.menu.Paginator;
 import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.util.Strings;
@@ -59,7 +59,7 @@ public class CryptoCurrencyCog extends Cog {
     static {
         scheduledExec.scheduleAtFixedRate(CryptoCurrencyCog::update, 0, 11, TimeUnit.MINUTES);
         try {
-            stringsField = PaginatorBuilder.class.getDeclaredField("strings");
+            stringsField = Paginator.Builder.class.getDeclaredField("strings");
             stringsField.setAccessible(true);
         } catch (Exception e) {
             logger.error("Error getting strings field of PaginatorBuilder", e);
@@ -305,7 +305,7 @@ public class CryptoCurrencyCog extends Cog {
             }
         }
 
-        PaginatorBuilder builder = new PaginatorBuilder()
+        Paginator.Builder builder = new Paginator.Builder()
                 .setColumns(1)
                 .useNumberedItems(false)
                 .setItemsPerPage(16)

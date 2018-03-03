@@ -1,10 +1,8 @@
 package com.khronodragon.bluestone.cogs;
 
 import com.j256.ormlite.dao.Dao;
-import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.stmt.DeleteBuilder;
-import com.j256.ormlite.table.TableUtils;
-import com.jagrosh.jdautilities.menu.pagination.PaginatorBuilder;
+import com.jagrosh.jdautilities.menu.Paginator;
 import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.sql.Quote;
@@ -193,7 +191,7 @@ public class QuotesCog extends Cog {
             name = ctx.member.getEffectiveName();
         }
 
-        PaginatorBuilder builder = new PaginatorBuilder()
+        Paginator.Builder builder = new Paginator.Builder()
                 .setColumns(1)
                 .useNumberedItems(false)
                 .setItemsPerPage(12)

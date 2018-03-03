@@ -18,7 +18,7 @@ sourceCompatibility = 1.9
 archivesBaseName = 'bluestone'
 mainClassName = 'com.khronodragon.bluestone.Start'
 
-apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'com.github.johnrengelman.shadow' // work around bug
 import de.sebastianboegl.gradle.plugins.shadow.transformers.Log4j2PluginsFileTransformer
 
 repositories {
@@ -34,7 +34,6 @@ shadowJar {
     transform(Log4j2PluginsFileTransformer)
     mergeServiceFiles()
     zip64 true
-    //mainClassName 'com.khronodragon.bluestone.Start'
 }
 
 dependencies {
@@ -57,16 +56,14 @@ dependencies {
     compile 'com.sedmelluq:jda-nas:1.0.6'
     compile 'com.zaxxer:HikariCP:2.7.8'
     compile 'com.google.code.gson:gson:2.8.2'
-    compile 'org.languagetool:language-en:4.0'
     compile 'mysql:mysql-connector-java:8.0.9-rc'
     compile 'net.sf.trove4j:trove4j:3.0.3'
-    compile 'com.jagrosh:JDA-Utilities:1.9'
+    compile 'com.jagrosh:jda-utilities-menu:2.1'
+    compile 'com.jagrosh:jda-utilities-commons:2.1'
     compile 'org.ocpsoft.prettytime:prettytime:4.0.1.Final'
     compile 'com.joestelmach:natty:0.13'
     compile 'com.twelvemonkeys.imageio:imageio-core:3.3.2'
     compile 'com.google.re2j:re2j:1.1'
-    compile 'org.jsoup:jsoup:1.11.2'
-    compile 'com.kotcrab.remark:remark:1.0.0'
     compile 'org.luaj:luaj-jse:3.0.1'
     compile 'io.sentry:sentry-log4j2:1.7.0'
 }

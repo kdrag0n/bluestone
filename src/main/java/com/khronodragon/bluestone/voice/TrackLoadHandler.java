@@ -1,7 +1,6 @@
 package com.khronodragon.bluestone.voice;
 
-import com.jagrosh.jdautilities.menu.orderedmenu.OrderedMenuBuilder;
-import com.khronodragon.bluestone.Bot;
+import com.jagrosh.jdautilities.menu.OrderedMenu;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.Emotes;
@@ -102,7 +101,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
         }
 
         ctx.send("⌛ Pick a search result.").queue(msg -> {
-            OrderedMenuBuilder builder = new OrderedMenuBuilder()
+            OrderedMenu.Builder builder = new OrderedMenu.Builder()
                     .allowTextInput(true)
                     .useCancelButton(true)
                     .useNumbers()
