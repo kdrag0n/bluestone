@@ -13,6 +13,7 @@ import com.khronodragon.bluestone.enums.BucketType;
 import com.khronodragon.bluestone.enums.ProfileFlags;
 import com.khronodragon.bluestone.sql.UserProfile;
 import com.khronodragon.bluestone.util.GraphicsUtils;
+import com.khronodragon.bluestone.util.StackUtil;
 import com.khronodragon.bluestone.util.Strings;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TIntList;
@@ -212,10 +213,9 @@ public class KewlCog extends Cog {
 
         if (!hasWarmedUp) {
             hasWarmedUp = true;
-            logger.info("Warming up JIT for profiles...");
 
             Thread thread = new Thread(() -> {
-                User user = bot.getJda().getSelfUser();
+                User user = bot.jda.getSelfUser();
 
                 for (short i = 0; i < 8; i++) {
                     profileCache.invalidate(user);
@@ -224,8 +224,6 @@ public class KewlCog extends Cog {
                         profileCache.get(user);
                     } catch (Exception ignored) {}
                 }
-
-                logger.info("Finished warming up JIT for profile rendering.");
             });
 
             thread.setName("Profile Render JIT Warm-up Thread");
@@ -553,6 +551,6 @@ public class KewlCog extends Cog {
         ctx.jda.retrieveUserById(target).queue(user -> {
             profileCache.invalidate(user);
             ctx.success("Invalidated cached profile for user `" + target + "`.");
-        }, e -> ctx.fail("Error retrieving user.\n```java" + Bot.renderStackTrace(e) + "```"));
+        }, e -> ctx.fail("Error retrieving user.\n```java" + StackUtil.renderStackTrace(e) + "```"));
     }
 }

@@ -193,7 +193,7 @@ public class ShardUtil {
 
     @Deprecated
     public Stream<Guild> getGuildStream() {
-        return shards.values().stream().flatMap(b -> ((JDAImpl) b.getJda()).getGuildMap().valueCollection().stream());
+        return shards.values().stream().flatMap(b -> ((JDAImpl) b.jda).getGuildMap().valueCollection().stream());
     }
 
     private int sumBot(ObjectFunctionInt<Bot> fn) {
@@ -210,7 +210,7 @@ public class ShardUtil {
         int total = 0;
 
         for (Bot shard: shards.values()) {
-            total += fn.apply((JDAImpl) shard.getJda());
+            total += fn.apply((JDAImpl) shard.jda);
         }
 
         return total;
@@ -220,7 +220,7 @@ public class ShardUtil {
         TIntList l = new TIntLinkedList();
 
         for (Bot shard: shards.values()) {
-            for (Guild guild: shard.getJda().getGuildCache()) {
+            for (Guild guild: shard.jda.getGuildCache()) {
                 l.add(fn.apply((GuildImpl) guild));
             }
         }
@@ -232,7 +232,7 @@ public class ShardUtil {
         int c = 0;
 
         for (Bot shard: shards.values()) {
-            for (Guild guild: shard.getJda().getGuildCache()) {
+            for (Guild guild: shard.jda.getGuildCache()) {
                 if (fn.apply((GuildImpl) guild))
                     c++;
             }

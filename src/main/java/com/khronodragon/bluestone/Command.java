@@ -5,6 +5,7 @@ import com.khronodragon.bluestone.errors.GuildOnlyError;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.errors.PermissionError;
 import com.khronodragon.bluestone.util.ArrayListView;
+import com.khronodragon.bluestone.util.StackUtil;
 import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.MessageChannel;
@@ -111,7 +112,7 @@ public class Command {
                     } else {
                         bot.logger.error("Command ({}) invocation error:", invoker, cause);
                         channel.sendMessage(format(Emotes.getFailure() + " Error!```java\n{2}```This error has been reported.",
-                                prefix, invoker, Bot.vagueTrace(cause))).queue();
+                                prefix, invoker, StackUtil.vagueTrace(cause))).queue();
 
                         if (reportErrors)
                             bot.reportErrorToOwner(cause, event.getMessage(), this);
@@ -119,13 +120,13 @@ public class Command {
                 } else if (cause instanceof SQLException) {
                     bot.logger.error("SQL error in command {}:", invoker, cause);
                     channel.sendMessage(format(Emotes.getFailure() + " A database error has occurred.```java\n{2}```This error has been reported.",
-                            prefix, invoker, Bot.briefSqlError(((SQLException) cause)))).queue();
+                            prefix, invoker, StackUtil.briefSqlError(((SQLException) cause)))).queue();
 
                     bot.reportErrorToOwner(cause, event.getMessage(), this);
                 } else {
                     bot.logger.error("Command ({}) invocation error:", invoker, cause);
                     channel.sendMessage(format(Emotes.getFailure() + " Error!```java\n{2}```This error has been reported.",
-                            prefix, invoker, Bot.vagueTrace(cause))).queue();
+                            prefix, invoker, StackUtil.vagueTrace(cause))).queue();
 
                     if (reportErrors)
                         bot.reportErrorToOwner(cause, event.getMessage(), this);

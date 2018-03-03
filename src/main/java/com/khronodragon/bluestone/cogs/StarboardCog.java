@@ -80,7 +80,7 @@ public class StarboardCog extends Cog {
                 @Override
                 public Message load(Pair<Long, Long> ids) {
                     try {
-                        return bot.getJda().getTextChannelById(ids.getLeft()).getMessageById(ids.getRight()).complete();
+                        return bot.jda.getTextChannelById(ids.getLeft()).getMessageById(ids.getRight()).complete();
                     } catch (ErrorResponseException ignored) {
                         return null;
                     }

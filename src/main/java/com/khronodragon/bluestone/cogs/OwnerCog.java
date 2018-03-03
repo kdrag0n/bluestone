@@ -71,7 +71,7 @@ public class OwnerCog extends Cog {
                 msg.getContentRaw().equalsIgnoreCase("yes"));
         if (resp != null) {
             logger.info("Shard {} shutting down...", n);
-            ctx.bot.getShardUtil().getShard(n).getJda().shutdown();
+            ctx.bot.shardUtil.getShard(n).jda.shutdown();
         }
     }
 
@@ -81,17 +81,17 @@ public class OwnerCog extends Cog {
         MessageBuilder result = new MessageBuilder()
                 .append("```css\n");
 
-        for (Bot shard: ctx.bot.getShardUtil().getShards()) {
+        for (Bot shard: ctx.bot.shardUtil.getShards()) {
             result.append('[')
                     .append(bot.getShardNum() == shard.getShardNum() ? '*' : ' ')
                     .append("] Shard ")
                     .append(shard.getShardNum() - 1)
                     .append(" | [")
-                    .append(shard.getJda().getStatus().name())
+                    .append(shard.jda.getStatus().name())
                     .append("] | Guilds: ")
-                    .append(shard.getJda().getGuilds().size())
+                    .append(shard.jda.getGuilds().size())
                     .append(" | Users: ")
-                    .append(shard.getJda().getUsers().size());
+                    .append(shard.jda.getUsers().size());
 
             MusicCog musicCog = (MusicCog) shard.cogs.get("Music");
             if (musicCog != null)
@@ -101,7 +101,7 @@ public class OwnerCog extends Cog {
                         .append(musicCog.getTracksLoaded());
 
             result.append(" | WSPing: ")
-                    .append(shard.getJda().getPing())
+                    .append(shard.jda.getPing())
                     .append('\n');
         }
         result.append("\nTotal: ")
@@ -136,19 +136,19 @@ public class OwnerCog extends Cog {
             if (!ctx._flag) {
                 ctx._flag = true;
 
-                Collection<Bot> shards = bot.getShardUtil().getShards();
+                Collection<Bot> shards = bot.shardUtil.getShards();
                 shards.remove(ctx.bot);
 
                 for (Bot b: shards) {
                     if (b.cogs.containsKey("Owner")) {
                         ctx.bot = b;
-                        ctx.jda = b.getJda();
+                        ctx.jda = b.jda;
                         ((OwnerCog) b.cogs.get("Owner")).cmdBroadcast(ctx);
                     }
                 }
             }
         }
-        ctx.jda = bot.getJda();
+        ctx.jda = bot.jda;
         ctx.bot = bot;
 
         ctx.send(ss + "Starting broadcast...").queue();
@@ -245,7 +245,7 @@ public class OwnerCog extends Cog {
             return;
         }
 
-        bot.getShardUtil().getShards().forEach(b -> b.getJda().getPresence().setGame(Game.playing(ctx.rawArgs)));
+        bot.shardUtil.getShards().forEach(b -> b.jda.getPresence().setGame(Game.playing(ctx.rawArgs)));
         ctx.success("Game set.");
     }
 

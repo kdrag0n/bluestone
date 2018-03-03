@@ -224,7 +224,7 @@ public class QuotesCog extends Cog {
                         } catch (PermissionException _ignored) {}
                     }
                 })
-                .setEventWaiter(bot.getEventWaiter())
+                .setEventWaiter(bot.eventWaiter)
                 .setTimeout(2, TimeUnit.MINUTES)
                 .addUsers(ctx.author);
 

@@ -9,10 +9,7 @@ import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.handlers.MessageWaitEventListener;
 import com.khronodragon.bluestone.handlers.RejectedExecHandlerImpl;
 import com.khronodragon.bluestone.sql.BotAdmin;
-import com.khronodragon.bluestone.util.ArrayListView;
-import com.khronodragon.bluestone.util.ClassUtilities;
-import com.khronodragon.bluestone.util.RandomSelect;
-import com.khronodragon.bluestone.util.Strings;
+import com.khronodragon.bluestone.util.*;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import gnu.trove.set.TLongSet;
@@ -24,9 +21,8 @@ import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.core.hooks.EventListener;
 import okhttp3.*;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,13 +40,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.SQLException;
-import java.text.NumberFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
@@ -62,7 +55,7 @@ import static net.dv8tion.jda.core.entities.Game.listening;
 import static net.dv8tion.jda.core.entities.Game.streaming;
 import static net.dv8tion.jda.core.entities.Game.watching;
 
-public class Bot extends ListenerAdapter implements ClassUtilities {
+public class Bot implements EventListener, ClassUtilities {
     private static final Logger defLog = LogManager.getLogger(Bot.class);
     public static final String NAME = "Goldmine";
 
@@ -72,7 +65,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     private static final Pattern GENERAL_MENTION_PATTERN = Pattern.compile("^<@[!&]?[0-9]{17,20}>\\s*");
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
     public final Logger logger;
-    private final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(6, new ThreadFactoryBuilder()
+    public final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(6, new ThreadFactoryBuilder()
             .setDaemon(true)
             .setNameFormat("Bot BG-Task Thread %d")
             .build());
@@ -86,10 +79,10 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
             .setDaemon(true)
             .setNameFormat("Bot Command-Exec Pool Thread %d")
             .build(), new RejectedExecHandlerImpl("Command-Exec"));
-    private final EventWaiter eventWaiter = new EventWaiter();
+    public final EventWaiter eventWaiter = new EventWaiter();
     private static Unsafe unsafe = null;
-    private final JDA jda;
-    private final ShardUtil shardUtil;
+    public final JDA jda;
+    public final ShardUtil shardUtil;
     public static JSONObject patreonData = new JSONObject();
     public static TLongSet patronIds = new TLongHashSet();
     private final Set<ScheduledFuture> tasks = new HashSet<>();
@@ -125,10 +118,6 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         return getConfig().getJSONObject("keys");
     }
 
-    public EventWaiter getEventWaiter() {
-        return eventWaiter;
-    }
-
     public Bot(ShardUtil util, JDA jda) {
         super();
 
@@ -142,18 +131,6 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
 
         final ShardInfo sInfo = jda.getShardInfo();
         logger = LogManager.getLogger("Bot" + (sInfo == null ? "" : " [" + sInfo.getShardString() + ']'));
-    }
-
-    public JDA getJda() {
-        return jda;
-    }
-
-    public ScheduledThreadPoolExecutor getScheduledExecutor() {
-        return scheduledExecutor;
-    }
-
-    public ShardUtil getShardUtil() {
-        return shardUtil;
     }
 
     public int getShardNum() {
@@ -174,63 +151,20 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
     }
 
-    private static StringBuilder addVagueElement(StringBuilder builder, StackTraceElement elem) {
-        return builder.append("> ")
-                .append(StringUtils.replaceOnce(StringUtils.replaceOnce(elem.getClassName(),
-                        "java.base/java.util", "stdlib"),
-                        "com.khronodragon.bluestone", "bot"))
-                .append('.')
-                .append(elem.getMethodName())
-                .append(elem.isNativeMethod() ? "(native)" : "(" + elem.getLineNumber() + ")");
-    }
-
-    public static String vagueTrace(Throwable e) {
-        StackTraceElement[] elements = e.getStackTrace();
-        StackTraceElement[] limitedElems = {elements[0], elements[1]};
-        StringBuilder stack = new StringBuilder(e.getClass().getSimpleName())
-                .append(": ")
-                .append(e.getMessage());
-
-        for (StackTraceElement elem: limitedElems) {
-            stack.append("\n\u2007\u2007");
-            addVagueElement(stack, elem);
-        }
-
-        if (stack.indexOf("> bot.cogs") == -1) {
-            for (StackTraceElement elem: elements) {
-                if (elem.getClassName().startsWith("com.khronodragon.bluestone.cogs.")) {
-                    stack.append("\n\n\u2007\u2007");
-                    addVagueElement(stack, elem);
-                    break;
-                }
-            }
-        }
-
-        return stack.toString();
-    }
-
-    public static String renderStackTrace(Throwable e) {
-        return renderStackTrace(e, "    ", "at ");
-    }
-
-    public static String renderStackTrace(Throwable e, String joinSpaces, String elemPrefix) {
-        StackTraceElement[] elements = e.getStackTrace();
-        StringBuilder stack = new StringBuilder(e.getClass().getSimpleName())
-                .append(": ")
-                .append(e.getMessage());
-
-        for (StackTraceElement elem: elements) {
-            stack.append('\n')
-                    .append(joinSpaces)
-                    .append(elemPrefix)
-                    .append(elem);
-        }
-
-        return stack.toString();
-    }
-
     @Override
-    public void onGenericEvent(Event event) {
+    public void onEvent(Event event) {
+        if (event instanceof MessageReceivedEvent) {
+            onMessageReceived((MessageReceivedEvent) event);
+        } else if (event instanceof ReadyEvent) {
+            onReady();
+        } else if (event instanceof ShutdownEvent) {
+            onShutdown();
+        }
+
+        dispatchCogEvent(event);
+    }
+
+    private void dispatchCogEvent(Event event) {
         for (Map.Entry<Class<? extends Event>, List<ExtraEvent>> entry: extraEvents.entrySet()) {
             Class<? extends Event> eventClass = entry.getKey();
 
@@ -272,9 +206,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
     }
 
-    @Override
-    public void onReady(ReadyEvent event) {
-        JDA jda = event.getJDA();
+    private void onReady() {
         jda.getPresence().setStatus(OnlineStatus.ONLINE);
         ourId = jda.getSelfUser().getIdLong();
         ourMention = jda.getSelfUser().getAsMention();
@@ -393,25 +325,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                         perms.add(Permissions.BOT_ADMIN);
                     } else if (type == Perm.Patron.class) {
                         perms.add(Permissions.PATREON_SUPPORTER);
-                    } /*else if (type == Perm.All.class) {
-                        try {
-                            perms.add(((Permission[]) type.getDeclaredMethod("value").invoke(a))[0]);
-                                    // need to add AND + multi
-                        } catch (ReflectiveOperationException e) {
-                            throw new RuntimeException(e);
-                        }
-                    } else if (type == Perm.PermAnds.class) {
-                        try {
-                            Perm.All[] alls = (Perm.All[]) type.getDeclaredMethod("value").invoke(a);
-
-                            for (Perm.All all: alls) {
-                                perms.add(all.value()[0]); // need to add AND + multi
-                            }
-                        } catch (ReflectiveOperationException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }*/
-                    else {
+                    } else {
                         Method valueMethod;
                         try {
                             valueMethod = type.getDeclaredMethod("value");
@@ -522,38 +436,13 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         }
     }
 
-    @Override
-    public void onResume(ResumedEvent event) {
-        logger.info("WebSocket resumed.");
-        updateOwner();
-    }
-
-    @Override
-    public void onReconnect(ReconnectedEvent event) {
-        logger.info("Reconnected.");
-        updateOwner();
-    }
-
-    @Override
-    public void onShutdown(ShutdownEvent event) {
-        logger.info("Shutting down...");
+    private void onShutdown() {
         synchronized (this) {
             notifyAll();
         }
     }
 
-    @Override
-    public void onException(ExceptionEvent event) {
-        if (event.getCause() instanceof OutOfMemoryError) {
-            logger.fatal("OUT OF MEMORY! Exiting.");
-            Runtime.getRuntime().halt(2);
-        }
-
-        logger.error("Error", event.getCause());
-    }
-
-    @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
+    private void onMessageReceived(MessageReceivedEvent event) {
         final JDA jda = event.getJDA();
         final User author = event.getAuthor();
 
@@ -652,15 +541,6 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
         owner.openPrivateChannel().queue(ch -> ch.sendMessage(errorEmbed(e, msg, cmd)).queue());
     }
 
-    public static String briefSqlError(SQLException e) {
-        String result = e.getMessage();
-        if (e.getCause() != null) {
-            result = result + "\n\u2007\u2007> " + e.getCause().getMessage();
-        }
-
-        return result;
-    }
-
     public static Unsafe getUnsafe() {
         if (unsafe == null) {
             ensureUnsafe();
@@ -671,7 +551,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     }
 
     private MessageEmbed errorEmbed(Throwable e, Message msg, Command cmd) {
-        String stack = renderStackTrace(e, "\u3000", "> ");
+        String stack = StackUtil.renderStackTrace(e, "\u3000", "> ");
 
         EmbedBuilder emb = new EmbedBuilder()
                 .setAuthor(Cog.getTag(msg.getAuthor()), null, msg.getAuthor().getEffectiveAvatarUrl())
@@ -682,7 +562,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
                 .appendDescription("```");
 
         if (e.getCause() != null) {
-            String causeStack = renderStackTrace(e, "\u3000", "> ");
+            String causeStack = StackUtil.renderStackTrace(e, "\u3000", "> ");
             emb.addField("Caused by", "```java\n" +
                     causeStack.substring(0, Math.min(causeStack.length(), 1013)) + "```", false);
         }
@@ -735,30 +615,7 @@ public class Bot extends ListenerAdapter implements ClassUtilities {
     }
 
     public String formatUptime() {
-        return formatDuration(getUptimeMillis() / 1000L);
-    }
-
-    public static String formatMemory() {
-        Runtime runtime = Runtime.getRuntime();
-        NumberFormat format = NumberFormat.getInstance();
-        return format.format((runtime.totalMemory() - runtime.freeMemory()) / 1048576.0f) + " MB";
-    }
-
-    public static String formatDuration(long duration) {
-        if (duration == 9223372036854775L) { // Long.MAX_VALUE / 1000L
-            return "[unknown]";
-        }
-
-        long h = duration / 3600;
-        long m = (duration % 3600) / 60;
-        long s = duration % 60;
-        long d = h / 24;
-        h = h % 24;
-        String sd = (d > 0 ? String.valueOf(d) + " day" + (d == 1 ? "" : "s") : "");
-        String sh = (h > 0 ? String.valueOf(h) + " hr" : "");
-        String sm = (m < 10 && m > 0 && h > 0 ? "0" : "") + (m > 0 ? (h > 0 && s == 0 ? String.valueOf(m) : String.valueOf(m) + " min") : "");
-        String ss = (s == 0 && (h > 0 || m > 0) ? "" : (s < 10 && (h > 0 || m > 0) ? "0" : "") + String.valueOf(s) + " sec");
-        return sd + (d > 0 ? " " : "") + sh + (h > 0 ? " " : "") + sm + (m > 0 ? " " : "") + ss;
+        return Strings.formatDuration(getUptimeMillis() / 1000L);
     }
 
     public static boolean loadPatreonData() {

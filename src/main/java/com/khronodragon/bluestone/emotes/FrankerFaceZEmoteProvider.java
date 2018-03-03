@@ -35,7 +35,6 @@ public class FrankerFaceZEmoteProvider implements EmoteProvider {
                 tempEmotes.put(name, realEmote);
             }
             emotes = tempEmotes;
-            LogManager.getLogger(FrankerFaceZEmoteProvider.class).info("Data loaded.");
         }, e -> LogManager.getLogger(FrankerFaceZEmoteProvider.class).error("Failed to get data", e)));
     }
 

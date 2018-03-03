@@ -32,8 +32,6 @@ public class BetterTTVEmoteProvider implements EmoteProvider {
             }
             emotes = tempEmotes;
             template = "https:" + StringUtils.replaceOnce(data.getString("urlTemplate"), "{{image}}", "2x");
-
-            LogManager.getLogger(BetterTTVEmoteProvider.class).info("Data loaded.");
         }, e -> LogManager.getLogger(BetterTTVEmoteProvider.class).error("Failed to get data", e)));
     }
 

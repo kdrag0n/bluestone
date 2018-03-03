@@ -10,6 +10,7 @@ import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.sql.GuildMusicSettings;
+import com.khronodragon.bluestone.util.Strings;
 import com.khronodragon.bluestone.voice.*;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.bandcamp.BandcampAudioSourceManager;
@@ -329,7 +330,7 @@ public class MusicCog extends Cog {
             builder.append("Uploader: *").append(info.author).append("*\n");
         }
 
-        builder.append("Length: *").append(Bot.formatDuration(info.length / 1000)).append('*');
+        builder.append("Length: *").append(Strings.formatDuration(info.length / 1000)).append('*');
         return builder.toString();
     }
 
@@ -451,7 +452,7 @@ public class MusicCog extends Cog {
             ctx.send("There's no current track.").queue();
         else {
             AudioTrackInfo info = state.scheduler.current.getInfo();
-            ctx.send("▶ **" + info.title + "**, length **" + Bot.formatDuration(info.length / 1000) + "**").queue();
+            ctx.send("▶ **" + info.title + "**, length **" + Strings.formatDuration(info.length / 1000) + "**").queue();
         }
     }
 

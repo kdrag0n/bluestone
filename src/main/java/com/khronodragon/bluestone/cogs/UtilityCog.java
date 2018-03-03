@@ -26,8 +26,6 @@ import com.sun.management.OperatingSystemMXBean;
 import gnu.trove.list.TIntList;
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
-import io.codearte.jfairy.Fairy;
-import io.codearte.jfairy.producer.person.Person;
 import io.nayuki.qrcodegen.QrCode;
 import net.dv8tion.jda.client.entities.Group;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -107,7 +105,6 @@ public class UtilityCog extends Cog {
     static final OperatingSystemMXBean systemBean = (OperatingSystemMXBean)
             ManagementFactory.getOperatingSystemMXBean();
 
-    private static final Fairy fairy = Fairy.create();
     private final PrettyTime prettyTime = new PrettyTime();
     private final Parser timeParser = new Parser();
 
@@ -392,7 +389,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "info", desc = "Get some info about me.", aliases = {"about", "stats", "statistics", "status"})
     public void cmdInfo(Context ctx) {
-        ShardUtil shardUtil = bot.getShardUtil();
+        ShardUtil shardUtil = bot.shardUtil;
         double load = systemBean.getSystemLoadAverage();
         String loadAvg;
         if (load == -1.0d)
@@ -407,7 +404,7 @@ public class UtilityCog extends Cog {
                 .addField("Servers", str(shardUtil.getGuildCount()), true)
                 .addField("Uptime", bot.formatUptime(), true)
                 .addField("Threads", str(Thread.activeCount()), true)
-                .addField("Memory Used", Bot.formatMemory(), true)
+                .addField("Memory Used", Strings.formatMemory(), true)
                 .addField("CPU Usage", str((int) (systemBean.getProcessCpuLoad() * 100)) + '%', true)
                 .addField("Load Average", loadAvg, true)
                 .addField("Users", str(shardUtil.getUserCount()), true)
@@ -435,7 +432,7 @@ public class UtilityCog extends Cog {
     @Command(name = "xstats", desc = "Get a lot of extended statistics about me.", aliases = {"xstatistics", "xinfo"})
     public void cmdXInfo(Context ctx) {
         ctx.channel.sendTyping().queue();
-        ShardUtil shardUtil = bot.getShardUtil();
+        ShardUtil shardUtil = bot.shardUtil;
 
         Map<String, TIntList> stats = new LinkedHashMap<>() {{
             put("Members per Server", shardUtil.guildNums(g -> g.getMembersMap().size()));
@@ -586,7 +583,7 @@ public class UtilityCog extends Cog {
 
             schedulePoll(poll);
 
-            bot.getScheduledExecutor().schedule(() ->
+            bot.scheduledExecutor.schedule(() ->
                             msg.editMessage(embed.build()).queue(),
                     (unicodeEmotes.size() + customEmotes.size()) * (int) (ctx.jda.getPing() * 1.92),
                     TimeUnit.MILLISECONDS);
@@ -596,11 +593,11 @@ public class UtilityCog extends Cog {
     private void schedulePoll(final ActivePoll poll) {
         long calculatedTime = poll.getEndTime().getTime() - System.currentTimeMillis();
 
-        if (bot.getJda().getTextChannelById(poll.getChannelId()) == null)
+        if (bot.jda.getTextChannelById(poll.getChannelId()) == null)
             return;
 
-        bot.getScheduledExecutor().schedule(() -> {
-            TextChannel channel = bot.getJda().getTextChannelById(poll.getChannelId());
+        bot.scheduledExecutor.schedule(() -> {
+            TextChannel channel = bot.jda.getTextChannelById(poll.getChannelId());
 
             try {
                 if (channel == null)
@@ -616,7 +613,7 @@ public class UtilityCog extends Cog {
                 if (message == null)
                     return;
 
-                long ourId = bot.getJda().getSelfUser().getIdLong();
+                long ourId = bot.jda.getSelfUser().getIdLong();
                 Map<ReactionEmote, Integer> resultTable = message.getReactions().stream()
                         .map(r -> ImmutablePair.of(r, (int) r.getUsers()
                                 .complete()
@@ -974,7 +971,7 @@ public class UtilityCog extends Cog {
 
         if (val(dataPlayers.optJSONArray("sample")).or(EMPTY_JSON_ARRAY).length() > 0) {
             String content = MC_COLOR_PATTERN.matcher(
-                    smartJoin(StreamUtils.asStream(dataPlayers.getJSONArray("sample").iterator())
+                    smartJoin(StreamUtil.asStream(dataPlayers.getJSONArray("sample").iterator())
                             .map(elem ->
                                     ((JSONObject) elem).getString("name")
                             )
@@ -996,7 +993,7 @@ public class UtilityCog extends Cog {
         if (data.has("modinfo")) {
             JSONObject modinfo = data.getJSONObject("modinfo");
             if (modinfo.has("modList") && modinfo.getJSONArray("modList").length() > 0) {
-                String content = smartJoin(StreamUtils.asStream(modinfo.getJSONArray("modList").iterator())
+                String content = smartJoin(StreamUtil.asStream(modinfo.getJSONArray("modList").iterator())
                         .map(elem -> {
                             JSONObject mod = (JSONObject) elem;
 
@@ -1153,29 +1150,6 @@ public class UtilityCog extends Cog {
             ctx.send(Emotes.getFailure() + " **" + getTag(user) + "** isn't banned from contacting the owner.")
                     .queue();
         }
-    }
-
-    @Command(name = "rprofile", desc = "Generate a random person.", aliases = {"rperson"})
-    public void cmdRprofile(Context ctx) {
-        Person person = fairy.person();
-
-        EmbedBuilder emb = new EmbedBuilder()
-                .setColor(randomColor())
-                .setAuthor(person.getFirstName(), null, "https://discordapp.com/assets/" + randomChoice(UserImpl.DefaultAvatar.values()).toString() + ".png")
-                .addField("Full Name", person.getFullName(), false)
-                .addField("Age", str(person.getAge()), true)
-                .addField("Email", person.getEmail(), true)
-                .addField("Date of Birth", person.getDateOfBirth().toString("MM/dd/yyyy"), true)
-                .addField("Phone Number", person.getTelephoneNumber(), true)
-                .addField("Address", person.getAddress().toString(), true)
-                .addField("Company", person.getCompany().getName(), true)
-                .addField("Username", person.getUsername(), true)
-                .addField("Gender", WordUtils.capitalizeFully(person.getSex().name()), true)
-                .addField("Passport Number", person.getPassportNumber(), true)
-                .setFooter("Fake profiles FTW!", null)
-                .setTimestamp(Instant.now());
-
-        ctx.send(emb.build()).queue();
     }
 
     @Command(name = "qrcode", desc = "Generate a QR code.", aliases = {"qr"}, thread = true)

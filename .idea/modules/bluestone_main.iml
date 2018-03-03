@@ -26,7 +26,6 @@
     <orderEntry type="library" name="Gradle: com.optimaize.languagedetector:language-detector:0.6" level="project" />
     <orderEntry type="library" name="Gradle: com.google.guava:guava:24.0-jre" level="project" />
     <orderEntry type="library" name="Gradle: org.json:json:20180130" level="project" />
-    <orderEntry type="library" name="Gradle: org.python:jython-standalone:2.7.1" level="project" />
     <orderEntry type="library" name="Gradle: org.codehaus.groovy:groovy-jsr223:3.0.0-alpha-1" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-text:1.2" level="project" />
     <orderEntry type="library" name="Gradle: com.kotcrab.remark:remark:1.0.0" level="project" />
@@ -35,7 +34,6 @@
     <orderEntry type="library" name="Gradle: io.sentry:sentry-log4j2:1.7.0" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.logging.log4j:log4j-core:2.10.0" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.logging.log4j:log4j-api:2.10.0" level="project" />
-    <orderEntry type="library" name="Gradle: com.sparkjava:spark-core:2.7.1" level="project" />
     <orderEntry type="library" name="Gradle: com.j2html:j2html:1.2.2" level="project" />
     <orderEntry type="library" name="Gradle: com.j256.ormlite:ormlite-jdbc:5.1" level="project" />
     <orderEntry type="library" name="Gradle: com.j256.ormlite:ormlite-core:5.1" level="project" />
@@ -52,13 +50,6 @@
     <orderEntry type="library" name="Gradle: com.google.re2j:re2j:1.1" level="project" />
     <orderEntry type="library" name="Gradle: org.jsoup:jsoup:1.11.2" level="project" />
     <orderEntry type="library" name="Gradle: org.luaj:luaj-jse:3.0.1" level="project" />
-    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-compiler:1.2.21" level="project" />
-    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-script-util:1.2.21" level="project" />
-    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-script-runtime:1.2.21" level="project" />
-    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-reflect:1.2.21" level="project" />
-    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jre8:1.2.21" level="project" />
-    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jre7:1.2.21" level="project" />
-    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.2.21" level="project" />
     <orderEntry type="library" name="Gradle: com.google.code.findbugs:jsr305:3.0.2" level="project" />
     <orderEntry type="library" name="Gradle: com.sedmelluq:udp-queue:1.0.6" level="project" />
     <orderEntry type="library" name="Gradle: io.sentry:sentry:1.7.0" level="project" />
@@ -79,12 +70,6 @@
     <orderEntry type="library" name="Gradle: org.codehaus.mojo:animal-sniffer-annotations:1.14" level="project" />
     <orderEntry type="library" name="Gradle: org.javassist:javassist:3.21.0-GA" level="project" />
     <orderEntry type="library" name="Gradle: org.codehaus.groovy:groovy:3.0.0-alpha-1" level="project" />
-    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-webapp:9.4.6.v20170531" level="project" />
-    <orderEntry type="library" name="Gradle: org.eclipse.jetty.websocket:websocket-server:9.4.6.v20170531" level="project" />
-    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-servlet:9.4.6.v20170531" level="project" />
-    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-security:9.4.6.v20170531" level="project" />
-    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-server:9.4.6.v20170531" level="project" />
-    <orderEntry type="library" name="Gradle: org.eclipse.jetty.websocket:websocket-servlet:9.4.6.v20170531" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.commons:commons-math3:3.6.1" level="project" />
     <orderEntry type="library" name="Gradle: org.yaml:snakeyaml:1.18" level="project" />
     <orderEntry type="library" name="Gradle: joda-time:joda-time:2.9.9" level="project" />
@@ -98,21 +83,11 @@
     <orderEntry type="library" name="Gradle: com.twelvemonkeys.common:common-image:3.3.2" level="project" />
     <orderEntry type="library" name="Gradle: com.twelvemonkeys.common:common-io:3.3.2" level="project" />
     <orderEntry type="library" name="Gradle: com.twelvemonkeys.common:common-lang:3.3.2" level="project" />
-    <orderEntry type="library" name="Gradle: org.jetbrains:annotations:13.0" level="project" />
-    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-daemon-client:1.2.21" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.httpcomponents:httpcore:4.4.9" level="project" />
     <orderEntry type="library" name="Gradle: net.loomchild:segment:2.0.0" level="project" />
     <orderEntry type="library" name="Gradle: commons-logging:commons-logging:1.2" level="project" />
     <orderEntry type="library" name="Gradle: commons-codec:commons-codec:1.10" level="project" />
     <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.9.0" level="project" />
-    <orderEntry type="library" name="Gradle: javax.servlet:javax.servlet-api:3.1.0" level="project" />
-    <orderEntry type="library" name="Gradle: org.eclipse.jetty.websocket:websocket-client:9.4.6.v20170531" level="project" />
-    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-client:9.4.6.v20170531" level="project" />
-    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-http:9.4.6.v20170531" level="project" />
-    <orderEntry type="library" name="Gradle: org.eclipse.jetty.websocket:websocket-common:9.4.6.v20170531" level="project" />
-    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-io:9.4.6.v20170531" level="project" />
-    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-xml:9.4.6.v20170531" level="project" />
-    <orderEntry type="library" name="Gradle: org.eclipse.jetty.websocket:websocket-api:9.4.6.v20170531" level="project" />
     <orderEntry type="library" name="Gradle: javax.inject:javax.inject:1" level="project" />
     <orderEntry type="library" name="Gradle: aopalliance:aopalliance:1.0" level="project" />
     <orderEntry type="library" name="Gradle: org.carrot2:morfologik-fsa-builders:2.1.4" level="project" />
@@ -127,7 +102,6 @@
     <orderEntry type="library" name="Gradle: javax.xml.bind:jaxb-api:2.3.0" level="project" />
     <orderEntry type="library" name="Gradle: commons-lang:commons-lang:2.6" level="project" />
     <orderEntry type="library" name="Gradle: backport-util-concurrent:backport-util-concurrent:3.1" level="project" />
-    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-util:9.4.6.v20170531" level="project" />
     <orderEntry type="library" name="Gradle: net.arnx:jsonic:1.2.11" level="project" />
     <orderEntry type="library" name="Gradle: com.squareup.okio:okio:1.14.0" level="project" />
   </component>

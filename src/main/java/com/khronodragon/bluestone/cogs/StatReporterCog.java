@@ -59,7 +59,7 @@ public class StatReporterCog extends Cog {
                 bot.getConfig().has("graphite_port")) {
             graphiteClient = new SimpleGraphiteClient(bot.getConfig().getString("graphite_host"),
                     bot.getConfig().getInt("graphite_port"));
-            bot.getScheduledExecutor().scheduleAtFixedRate(this::graphiteReport, 2, 15, TimeUnit.SECONDS);
+            bot.scheduledExecutor.scheduleAtFixedRate(this::graphiteReport, 2, 15, TimeUnit.SECONDS);
         }
     }
 
@@ -79,7 +79,7 @@ public class StatReporterCog extends Cog {
     private void graphiteReport() {
         try {
             graphiteClient.sendMetrics(new HashMap<>() {{
-                ShardUtil shardUtil = bot.getShardUtil();
+                ShardUtil shardUtil = bot.shardUtil;
                 Runtime runtime = Runtime.getRuntime();
 
                 put("bot.guilds", shardUtil.getGuildCount());
@@ -151,19 +151,19 @@ public class StatReporterCog extends Cog {
 
     private void reportDiscordBots(String key) {
         JSONObject json = new JSONObject();
-        if (bot.getJda().getShardInfo() != null) {
-            JDA.ShardInfo sInfo = bot.getJda().getShardInfo();
+        if (bot.jda.getShardInfo() != null) {
+            JDA.ShardInfo sInfo = bot.jda.getShardInfo();
 
             json.put("shard_id", sInfo.getShardId())
                     .put("shard_count", sInfo.getShardTotal())
-                    .put("server_count", bot.getJda().getGuilds().size());
+                    .put("server_count", bot.jda.getGuilds().size());
         } else {
-            json.put("server_count", bot.getJda().getGuilds().size());
+            json.put("server_count", bot.jda.getGuilds().size());
         }
 
         Bot.http.newCall(new Request.Builder()
                 .post(RequestBody.create(JSON_MEDIA_TYPE, json.toString()))
-                .url(Endpoints.DISCORD_BOTS.format(bot.getJda().getSelfUser().getId()))
+                .url(Endpoints.DISCORD_BOTS.format(bot.jda.getSelfUser().getId()))
                 .header("Authorization", key)
                 .build()).enqueue(Bot.callback(response -> {
             if (!response.isSuccessful()) {
@@ -183,7 +183,7 @@ public class StatReporterCog extends Cog {
         Bot.http.newCall(new Request.Builder()
                 .post(new FormBody.Builder()
                         .add("key", key)
-                        .add("servercount", str(bot.getShardUtil().getGuildCount()))
+                        .add("servercount", str(bot.shardUtil.getGuildCount()))
                         .build())
                 .url(Endpoints.CARBONITEX.getUrl())
                 .build()).enqueue(Bot.callback(response -> {
@@ -202,19 +202,19 @@ public class StatReporterCog extends Cog {
 
     private void reportDiscordBotsOrg(String key) {
         JSONObject json = new JSONObject();
-        if (bot.getJda().getShardInfo() != null) {
-            JDA.ShardInfo sInfo = bot.getJda().getShardInfo();
+        if (bot.jda.getShardInfo() != null) {
+            JDA.ShardInfo sInfo = bot.jda.getShardInfo();
 
             json.put("shard_id", sInfo.getShardId())
                     .put("shard_count", sInfo.getShardTotal())
-                    .put("server_count", bot.getJda().getGuilds().size());
+                    .put("server_count", bot.jda.getGuilds().size());
         } else {
-            json.put("server_count", bot.getJda().getGuilds().size());
+            json.put("server_count", bot.jda.getGuilds().size());
         }
 
         Bot.http.newCall(new Request.Builder()
                 .post(RequestBody.create(JSON_MEDIA_TYPE, json.toString()))
-                .url(Endpoints.DISCORD_BOTS_ORG.format(bot.getJda().getSelfUser().getId()))
+                .url(Endpoints.DISCORD_BOTS_ORG.format(bot.jda.getSelfUser().getId()))
                 .header("Authorization", key)
                 .build()).enqueue(Bot.callback(response -> {
             if (!response.isSuccessful())  {

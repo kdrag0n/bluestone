@@ -47,7 +47,6 @@ public class GameDealCog extends Cog {
     private static final Logger logger = LogManager.getLogger(GameDealCog.class);
     private static final String USER_AGENT =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36";
-    private static final String HUMBLE_HOME = "https://www.humblebundle.com/";
     private static final String STEAM_FEATURED = "http://store.steampowered.com/api/featured/";
     private static final Pattern IMAGE_PATTERN = Pattern.compile("!\\[Image]\\([a-zA-Z/0-9?=:.]+\\)");
     private static final Pattern MULTI_NEWLINE_PATTERN = Pattern.compile("\\R{3,}");
@@ -83,7 +82,6 @@ public class GameDealCog extends Cog {
             "    \u2022 `subscribe [#channel]` - set the GameDeal channel for this server\n" +
             "    \u2022 `min [1-100]` - set the minimum discount percent (default: 50%)\n" +
             "    \u2022 `steam` - toggle Steam deals\n" +
-            "    \u2022 `humble` - toggle Humble Bundle deals\n" +
             "    \u2022 `disable` - disable GameDeal for this server or user (DM)\n" +
             "\n" +
             "You can also sign up for GameDeal in DMs, so the bot will DM you deals!\n" +
@@ -125,11 +123,6 @@ public class GameDealCog extends Cog {
                 if (steamDeals != null)
                     dealsNow.addAll(steamDeals);
 
-                List<Deal> humbleDeals = new ArrayList<>(0);//checkHumbleBundle();
-                // TODO: update humble bundle deal checker for Store and new home layout
-                if (humbleDeals != null)
-                    dealsNow.addAll(humbleDeals);
-
                 for (Deal deal: dealsNow) {
                     int dHash = deal.hashCode();
 
@@ -155,7 +148,7 @@ public class GameDealCog extends Cog {
     }
 
     public String getDescription() {
-        return "Never miss the best free deals on Steam and Humble Bundle again!";
+        return "Never miss the best free deals on Steam!";
     }
 
     public void unload() {
@@ -222,68 +215,6 @@ public class GameDealCog extends Cog {
                 .build()).execute().body().string();
     }
 
-    private List<Deal> checkHumbleBundle() {
-        List<Deal> deals = new LinkedList<>();
-
-        String rawResponse;
-        try {
-            rawResponse = webFetch(HUMBLE_HOME);
-        } catch (IOException e) {
-            logger.error("Error fetching Humble Bundle home", e);
-            return null;
-        }
-
-        Document home = Jsoup.parse(rawResponse, HUMBLE_HOME);
-        try {
-            List<Deal> homeDeals = humbleFindDeals(home);
-            if (homeDeals != null)
-                deals.addAll(homeDeals);
-
-            Elements otherBundleLinks = home.getElementById("subtab-container").getElementsByClass("subtab-button");
-            for (Element link: otherBundleLinks) {
-                if (link.classNames().contains("active"))
-                    continue;
-
-                String url = link.attr("abs:href");
-                try {
-                    List<Deal> pageDeals = humbleFindDeals(Jsoup.parse(webFetch(url), url));
-
-                    if (pageDeals != null)
-                        deals.addAll(pageDeals);
-                } catch (Exception e) {
-                    logger.error("Error fetching Humble Bundle linked page {}", url, e);
-                }
-            }
-        } catch (NullPointerException e) {
-            logger.error("Error parsing Humble Bundle home, something's missing", e);
-        }
-
-        return deals;
-    }
-
-    private List<Deal> humbleFindDeals(Document page) {
-        List<Deal> deals = new LinkedList<>();
-
-        for (Element row: page.getElementsByClass("fi-row")) {
-            Element block = row.getElementsByClass("fi-content").first();
-            Element header = row.getElementsByClass("fi-content").first();
-
-            Element body = block.getElementsByClass("fi-content-body").first();
-            Element title = body.getElementsByTag("p").first();
-            Element desc = body.getElementsByTag("span").first();
-            Element image = row.getElementsByClass("fi-image").first().getElementsByTag("img").first();
-
-            deals.add(new Deal(DealSource.HUMBLE_BUNDLE, header.text().contains("FREE"), title.text(),
-                    remark.convertFragment(desc.html(), page.baseUri()),
-                    page.baseUri(), image.absUrl("data-retina-src"), 0.f, (short)100));
-        }
-
-        if (deals.isEmpty())
-            return null;
-        else
-            return deals;
-    }
-
     private static MessageEmbed renderDeal(Deal deal) {
         return new EmbedBuilder()
                 .setAuthor(deal.free ? "New FREE" : "New" + " deal on " + deal.source.name + '!', deal.link, deal.source.icon)
@@ -301,9 +232,6 @@ public class GameDealCog extends Cog {
             case STEAM:
                 if (!dest.isSteam()) return false;
                 break;
-            case HUMBLE_BUNDLE:
-                if (!dest.isHumbleBundle()) return false;
-                break;
             case ORIGIN:
                 if (!dest.isOrigin()) return false;
                 break;
@@ -320,7 +248,7 @@ public class GameDealCog extends Cog {
 
                 MessageChannel channel;
                 if (dest.getGuildId() == 0L) {
-                    User user = bot.getJda().getUserById(dest.getChannelId());
+                    User user = bot.jda.getUserById(dest.getChannelId());
                     if (user == null) {
                         dao.delete(dest);
                         continue;
@@ -328,7 +256,7 @@ public class GameDealCog extends Cog {
 
                     channel = user.openPrivateChannel().complete();
                 } else {
-                    channel = bot.getJda().getTextChannelById(dest.getChannelId());
+                    channel = bot.jda.getTextChannelById(dest.getChannelId());
                     if (channel == null) {
                         dao.delete(dest);
                         continue;
@@ -363,8 +291,6 @@ public class GameDealCog extends Cog {
 
         for (Deal deal: checkSteam())
             ctx.send(deal.rendered).queue();
-        for (Deal deal: checkHumbleBundle())
-            ctx.send(deal.rendered).queue();
 
         ctx.send("Done.").queue();
     }
@@ -388,9 +314,6 @@ public class GameDealCog extends Cog {
                 break;
             case "steam":
                 cmdSteam(ctx);
-                break;
-            case "humble":
-                cmdHumble(ctx);
                 break;
             case "disable":
                 cmdDisable(ctx);
@@ -507,15 +430,6 @@ public class GameDealCog extends Cog {
                 "**.").queue();
     }
 
-    private void cmdHumble(Context ctx) throws SQLException {
-        GameDealDestination settings = getSettings(ctx);
-        settings.setHumbleBundle(!settings.isHumbleBundle());
-        dao.update(settings);
-
-        ctx.send(Emotes.getSuccess() + " Humble Bundle deals are now **" + (settings.isSteam() ? "on": "off") +
-                "**.").queue();
-    }
-
     private void cmdDisable(Context ctx) throws SQLException {
         GameDealDestination settings = getSettings(ctx);
         dao.delete(settings);
@@ -569,7 +483,6 @@ public class GameDealCog extends Cog {
 
     private enum DealSource {
         STEAM("Steam", "http://www.freeiconspng.com/uploads/steam-logo-icon-7.png"),
-        HUMBLE_BUNDLE("Humble Bundle", "https://humblebundle-a.akamaihd.net/static/hashed/46cf2ed85a0641bfdc052121786440c70da77d75.png"),
         ORIGIN("Origin", "https://seeklogo.com/images/O/origin-logo-BF01A5BFBA-seeklogo.com.png"),
         REDDIT("Reddit", "https://www.redditstatic.com/icon.png");
 

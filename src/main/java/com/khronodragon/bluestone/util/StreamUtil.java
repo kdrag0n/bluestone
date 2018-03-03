@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public class StreamUtils {
+public class StreamUtil {
     /**
      * Return a stream which uses the given {@link Iterator}
      * @param sourceIterator the iterator to use

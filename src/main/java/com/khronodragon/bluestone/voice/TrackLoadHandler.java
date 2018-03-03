@@ -6,6 +6,7 @@ import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.sql.GuildMusicSettings;
+import com.khronodragon.bluestone.util.Strings;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
@@ -71,7 +72,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
             AudioTrackInfo info = track.getInfo();
 
             if (canTalk) ctx.send(Emotes.getSuccess() + " Queued **" + info.title + "** by **" + info.author +
-                    "**, length **" + Bot.formatDuration(info.length / 1000L) + "**").queue();
+                    "**, length **" + Strings.formatDuration(info.length / 1000L) + "**").queue();
             if (canReact) {
                 Cog.removeReactionIfExists(ctx.message, "⌛");
                 ctx.message.addReaction("✅").queue();
@@ -119,7 +120,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
                     .setText("⌛ Pick a search result.")
                     .setCancel(cmsg -> cmsg.delete().queue())
                     .setUsers(ctx.author)
-                    .setEventWaiter(ctx.bot.getEventWaiter())
+                    .setEventWaiter(ctx.bot.eventWaiter)
                     .setTimeout(20, TimeUnit.SECONDS);
 
             for (int i = 0; i < 5 && i < tracks.size(); i++) {
@@ -170,7 +171,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
         }
 
         if (canTalk) ctx.send(Emotes.getSuccess() + " Queued playlist **" + playlist.getName() + "**, length **" +
-                Bot.formatDuration(duration / 1000L) + "**").queue();
+                Strings.formatDuration(duration / 1000L) + "**").queue();
         if (canReact) {
             Cog.removeReactionIfExists(ctx.message, "⌛");
             ctx.message.addReaction("✅").queue();

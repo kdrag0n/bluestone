@@ -2,6 +2,7 @@ package com.khronodragon.bluestone.voice;
 
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Emotes;
+import com.khronodragon.bluestone.util.Strings;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
@@ -76,7 +77,7 @@ public class TrackScheduler extends AudioEventAdapter {
                 AudioTrackInfo info = track.getInfo();
                 track.getUserData(ExtraTrackInfo.class).textChannel
                         .sendMessage("➡ **" + mentionClean(info.title) + "**, length **" +
-                                Bot.formatDuration(info.length / 1000L) + "**").queue();
+                                Strings.formatDuration(info.length / 1000L) + "**").queue();
             }
         } catch (PermissionException ignored) {}
     }

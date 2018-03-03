@@ -65,12 +65,12 @@ public class CogmanCog extends Cog {
     @Command(name = "cogall", desc = "Manage all the cogs - run on ALL shards.", aliases = {"cogsall"},
             reportErrors = false)
     public void mainCmdAll(Context ctx) throws ReflectiveOperationException, MalformedURLException {
-        for (Bot shard: bot.getShardUtil().getShards()) {
+        for (Bot shard: bot.shardUtil.getShards()) {
             CogmanCog cog = (CogmanCog) shard.cogs.getOrDefault("Cogman", null);
 
             if (cog != null) {
                 ctx.bot = shard;
-                ctx.jda = shard.getJda();
+                ctx.jda = shard.jda;
                 cog.mainCmd(ctx);
             }
         }

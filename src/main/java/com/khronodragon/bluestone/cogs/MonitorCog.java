@@ -3,6 +3,7 @@ package com.khronodragon.bluestone.cogs;
 import com.khronodragon.bluestone.Bot;
 import com.khronodragon.bluestone.Cog;
 import com.khronodragon.bluestone.annotations.EventHandler;
+import com.khronodragon.bluestone.util.StackUtil;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
@@ -41,7 +42,7 @@ public class MonitorCog extends Cog {
     public MonitorCog(Bot bot) {
         super(bot);
 
-        if (bot.getJda().getTextChannelById(consoleChannelId) != null) {
+        if (bot.jda.getTextChannelById(consoleChannelId) != null) {
             queueSender = new LogMessageQueueSender();
             messageQueue = new LinkedList<>();
 
@@ -74,13 +75,13 @@ public class MonitorCog extends Cog {
 
         if (!guild.isAvailable()) {
             channel.sendMessage("<:plus:331224997362139136> __**Guild Unavailable**__ | ? members | `" +
-                    guild.getId() + "` | Current Total: " + bot.getShardUtil().getGuildCount()).queue();
+                    guild.getId() + "` | Current Total: " + bot.shardUtil.getGuildCount()).queue();
             return;
         }
 
         channel.sendMessage("<:plus:331224997362139136> __**" + guild.getName() + "**__ - " +
                 guild.getMembersMap().size() + " members | `" + guild.getId() + "` | Current Total: " +
-                bot.getShardUtil().getGuildCount()).queue();
+                bot.shardUtil.getGuildCount()).queue();
     }
 
     @EventHandler
@@ -90,23 +91,23 @@ public class MonitorCog extends Cog {
 
         if (!guild.isAvailable()) {
             channel.sendMessage("<:minus:331225043445088258> __**Guild Unavailable**__ | ? members | `" +
-                    guild.getId() + "` | Current Total: " + bot.getShardUtil().getGuildCount()).queue();
+                    guild.getId() + "` | Current Total: " + bot.shardUtil.getGuildCount()).queue();
             return;
         }
 
         channel.sendMessage("<:minus:331225043445088258> __**" + guild.getName() + "**__ - " +
                 guild.getMembersMap().size() + " members | `" + guild.getId() + "` | Current Total: " +
-                bot.getShardUtil().getGuildCount()).queue();
+                bot.shardUtil.getGuildCount()).queue();
     }
 
     private TextChannel findChannel(long channelId) {
         int shardId = (int) ((monitorGuildId >> 22) % bot.getShardTotal());
 
-        return bot.getShardUtil().getShard(shardId).getJda().getTextChannelById(channelId);
+        return bot.shardUtil.getShard(shardId).jda.getTextChannelById(channelId);
     }
 
     private TextChannel getConsoleChannel() {
-        return bot.getJda().getTextChannelById(consoleChannelId);
+        return bot.jda.getTextChannelById(consoleChannelId);
     }
 
     private class LogMessageQueueSender extends Thread {
@@ -192,7 +193,7 @@ public class MonitorCog extends Cog {
 
         @Override
         public void append(LogEvent e) {
-            TextChannel channel = bot.getJda().getTextChannelById(consoleChannelId);
+            TextChannel channel = bot.jda.getTextChannelById(consoleChannelId);
             if (channel == null || !channel.canTalk())
                 return;
 
@@ -200,7 +201,7 @@ public class MonitorCog extends Cog {
             if (!isValid(message)) return;
 
             if (e.getThrown() != null) {
-                message += '\n' + Bot.renderStackTrace(e.getThrown(), "    ", "at ");
+                message += '\n' + StackUtil.renderStackTrace(e.getThrown(), "    ", "at ");
             }
 
             StringBuilder clockNum = new StringBuilder();

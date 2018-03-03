@@ -715,7 +715,7 @@ public class FunCog extends Cog {
         WebhookClient client = new WebhookClientBuilder(hook)
                 .setHttpClient(Bot.http)
                 .setDaemon(true)
-                .setExecutorService(bot.getScheduledExecutor())
+                .setExecutorService(bot.scheduledExecutor)
                 .build();
         client.send(numToBleachMsg.get(n));
         client.close();
@@ -843,7 +843,7 @@ public class FunCog extends Cog {
         }
 
         private void scheduleEventWait(Context ctx) {
-            bot.getEventWaiter().waitForEvent(MessageReactionAddEvent.class,
+            bot.eventWaiter.waitForEvent(MessageReactionAddEvent.class,
                     ev -> ev.getChannel().getIdLong() == channel.getIdLong() &&
                     ev.getMessageIdLong() == message.getIdLong() && ev.getUser().getIdLong() == userId, ev -> {
                 if (!isActive) return;
@@ -1065,7 +1065,7 @@ public class FunCog extends Cog {
         }
 
         private void scheduleEventWait(Context ctx) {
-            bot.getEventWaiter().waitForEvent(MessageReactionAddEvent.class,
+            bot.eventWaiter.waitForEvent(MessageReactionAddEvent.class,
                     ev -> ev.getChannel().getIdLong() == channel.getIdLong() &&
                     ev.getMessageIdLong() == message.getIdLong() && ev.getUser().getIdLong() == userId, ev -> {
                 if (!isActive) return;

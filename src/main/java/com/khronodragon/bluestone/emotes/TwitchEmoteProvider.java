@@ -18,7 +18,6 @@ public class TwitchEmoteProvider implements EmoteProvider {
                 .url("https://twitchemotes.com/api_cache/v3/global.json")
                 .build()).enqueue(Bot.callback(response -> {
             JSONUtils.addAllTo(emotes, new JSONObject(response.body().string()));
-            LogManager.getLogger(TwitchEmoteProvider.class).info("Main emotes loaded.");
         }, e -> LogManager.getLogger(TwitchEmoteProvider.class).error("Failed to get main emotes", e)));
 
         client.newCall(new Request.Builder()
@@ -35,8 +34,6 @@ public class TwitchEmoteProvider implements EmoteProvider {
                     emotes.put(obj.getString("code"), obj);
                 }
             }
-
-            LogManager.getLogger(TwitchEmoteProvider.class).info("Subscriber emotes loaded.");
         }, e -> LogManager.getLogger(TwitchEmoteProvider.class).error("Failed to get subscriber emotes", e)));
     }
 

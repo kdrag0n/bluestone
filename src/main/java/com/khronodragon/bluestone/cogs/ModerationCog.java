@@ -712,7 +712,6 @@ public class ModerationCog extends Cog {
             try {
                 statusMsg.pin().queue(null, f -> {});
             } catch (Throwable ignored) {}
-            // TODO: in embed msg, add image to embed for the link to image in msg
 
             String b = "(Temp) Archival to #";
             Webhook hook = to.createWebhook(b +
@@ -729,7 +728,7 @@ public class ModerationCog extends Cog {
             try (WebhookClient client = new WebhookClientBuilder(hook)
                     .setHttpClient(Bot.http)
                     .setDaemon(true)
-                    .setExecutorService(bot.getScheduledExecutor())
+                    .setExecutorService(bot.scheduledExecutor)
                     .build()) {
 
                 // webhook setup
@@ -1025,7 +1024,7 @@ public class ModerationCog extends Cog {
         Route.CompiledRoute route = Route.Messages.GET_MESSAGE_HISTORY.compile(channelId)
                 .withQueryParams("limit", Short.toString(limit), "after", messageId);
 
-        return new RestAction<>(bot.getJda(), route) {
+        return new RestAction<>(bot.jda, route) {
             @Override
             protected void handleResponse(Response response, Request<List<Message>> request) {
                 if (!response.isOk()) {

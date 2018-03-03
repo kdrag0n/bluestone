@@ -61,23 +61,23 @@ public class CoreCog extends Cog {
     public CoreCog(Bot bot) {
         super(bot);
 
-        if (bot.getJda().getSelfUser().getIdLong() == PRODUCTION_USER_ID &&
-                !Bot.NAME.equals(bot.getJda().getSelfUser().getName()) &&
+        if (bot.jda.getSelfUser().getIdLong() == PRODUCTION_USER_ID &&
+                !Bot.NAME.equals(bot.jda.getSelfUser().getName()) &&
                 bot.getShardNum() == 1) {
-            bot.getJda().getSelfUser().getManager().setName(Bot.NAME).queue();
+            bot.jda.getSelfUser().getManager().setName(Bot.NAME).queue();
         }
 
         /*
-        if (bot.getJda().getGuildById(HOME_GUILD_ID) != null &&
-                bot.getJda().getSelfUser().getIdLong() == PRODUCTION_USER_ID &&
-                bot.getJda().getTextChannelById(ANNOUNCEMENT_CHANNEL) != null) {
+        if (bot.jda.getGuildById(HOME_GUILD_ID) != null &&
+                bot.jda.getSelfUser().getIdLong() == PRODUCTION_USER_ID &&
+                bot.jda.getTextChannelById(ANNOUNCEMENT_CHANNEL) != null) {
             scheduleAniv();
         }
         */
     }
 
     private void scheduleAniv() {
-        OffsetDateTime ctime = bot.getJda().getSelfUser().getCreationTime();
+        OffsetDateTime ctime = bot.jda.getSelfUser().getCreationTime();
 
         Calendar now = Calendar.getInstance();
         int year = now.get(Calendar.YEAR);
@@ -85,9 +85,9 @@ public class CoreCog extends Cog {
 
         ctime.plusYears(yearDiff);
 
-        bot.getScheduledExecutor().schedule(() -> {
+        bot.scheduledExecutor.schedule(() -> {
             do {
-                TextChannel channel = bot.getJda().getTextChannelById(ANNOUNCEMENT_CHANNEL);
+                TextChannel channel = bot.jda.getTextChannelById(ANNOUNCEMENT_CHANNEL);
                 if (channel == null) {
                     logger.error("Couldn't find #announcements channel in home guild!");
                     break;
@@ -97,7 +97,7 @@ public class CoreCog extends Cog {
                 }
 
                 String m = Strings.format(ANNIVERSARY_MESSAGE, yearDiff, yearDiff == 1 ? "" : "s",
-                        bot.getShardUtil().getGuildCount(), bot.getShardUtil().getChannelCount());
+                        bot.shardUtil.getGuildCount(), bot.shardUtil.getChannelCount());
 
                 channel.sendMessage(m).queue(null, this::f);
             } while (false); // for breaks
@@ -116,16 +116,16 @@ public class CoreCog extends Cog {
         }
         sTries++;
 
-        OffsetDateTime ctime = bot.getJda().getSelfUser().getCreationTime();
+        OffsetDateTime ctime = bot.jda.getSelfUser().getCreationTime();
 
         Calendar now = Calendar.getInstance();
         int year = now.get(Calendar.YEAR);
         int yearDiff = year - ctime.getYear();
 
-        bot.getJda().getTextChannelById(ANNOUNCEMENT_CHANNEL)
+        bot.jda.getTextChannelById(ANNOUNCEMENT_CHANNEL)
                 .sendMessage(Strings.format(ANNIVERSARY_MESSAGE, yearDiff, yearDiff == 1 ? "" : "s",
-                        bot.getShardUtil().getGuildCount(),
-                        bot.getShardUtil().getChannelCount())).queue(null, this::f);
+                        bot.shardUtil.getGuildCount(),
+                        bot.shardUtil.getChannelCount())).queue(null, this::f);
     }
 
     public String getName() {
@@ -338,7 +338,7 @@ public class CoreCog extends Cog {
     @Command(name = "uptime", desc = "Get my uptime and memory usage.", aliases = {"memory", "ram"})
     public void cmdUptime(Context ctx) {
         ctx.send("I've been up for **" + bot.formatUptime() +
-                "**, and am using **" + Bot.formatMemory() + "** of memory.").queue();
+                "**, and am using **" + Strings.formatMemory() + "** of memory.").queue();
     }
 
     @EventHandler

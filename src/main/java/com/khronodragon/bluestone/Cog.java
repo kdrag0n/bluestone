@@ -162,6 +162,6 @@ public abstract class Cog {
 
     @CheckReturnValue
     protected<C, K> Dao<C, K> setupDao(Class<C> clazz) {
-        return bot.getShardUtil().setupDao(clazz);
+        return bot.shardUtil.setupDao(clazz);
     }
 }

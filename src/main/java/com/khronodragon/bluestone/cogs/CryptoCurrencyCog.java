@@ -220,7 +220,7 @@ public class CryptoCurrencyCog extends Cog {
     }
 
     private void dclStep(long authorId, AtomicInteger index, Message msg, Runnable stop) {
-        bot.getEventWaiter().waitForEvent(MessageReactionAddEvent.class, e -> {
+        bot.eventWaiter.waitForEvent(MessageReactionAddEvent.class, e -> {
             String emote = e.getReactionEmote().getName();
             return e.getMessageIdLong() == msg.getIdLong() &&
                     (emote.equals("◀") || emote.equals("⏹") || emote.equals("▶")) &&
@@ -335,7 +335,7 @@ public class CryptoCurrencyCog extends Cog {
                         } catch (PermissionException _ignored) {}
                     }
                 })
-                .setEventWaiter(bot.getEventWaiter())
+                .setEventWaiter(bot.eventWaiter)
                 .setTimeout(2, TimeUnit.MINUTES)
                 .addUsers(ctx.author);
 

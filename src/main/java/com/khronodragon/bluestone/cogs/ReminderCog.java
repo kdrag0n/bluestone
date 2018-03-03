@@ -56,14 +56,14 @@ public class ReminderCog extends Cog {
     }
 
     private void schedule(Reminder reminder) {
-        bot.getScheduledExecutor().schedule(() -> {
+        bot.scheduledExecutor.schedule(() -> {
             try {
                 dao.delete(reminder);
             } catch (SQLException ignored) {}
 
-            bot.getJda().getUserById(reminder.getUserId()).openPrivateChannel().queue(channel ->
+            bot.jda.getUserById(reminder.getUserId()).openPrivateChannel().queue(channel ->
                     channel.sendMessage(new EmbedBuilder()
-                            .setAuthor("Reminder", null, bot.getJda().getSelfUser().getEffectiveAvatarUrl())
+                            .setAuthor("Reminder", null, bot.jda.getSelfUser().getEffectiveAvatarUrl())
                             .setDescription(reminder.getMessage())
                             .setFooter("You asked me to remind you of this at", null)
                             .setColor(randomColor())
