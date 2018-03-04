@@ -963,7 +963,7 @@ public class UtilityCog extends Cog {
 
         EmbedBuilder emb = new EmbedBuilder()
                 .setTitle(server + ':' + port)
-                .setDescription(desc)
+                .setDescription('\u200b' + desc)
                 .setColor(randomColor())
                 .setFooter(getEffectiveName(ctx), ctx.jda.getSelfUser().getEffectiveAvatarUrl())
                 .setTimestamp(Instant.now())
