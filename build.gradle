@@ -19,7 +19,7 @@ archivesBaseName = 'bluestone'
 mainClassName = 'com.khronodragon.bluestone.Start'
 applicationDefaultJvmArgs = [
         '-Xms1000M',
-        '-XX:MaxDirectMemorySize=10M',
+        '-XX:MaxDirectMemorySize=15M',
         '-XX:MaxMetaspaceSize=95800K',
         '-XX:ReservedCodeCacheSize=240M',
         '-Xss1M',
