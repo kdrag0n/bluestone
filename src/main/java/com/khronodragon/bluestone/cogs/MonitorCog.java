@@ -10,6 +10,9 @@ import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.impl.GuildImpl;
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
+import net.dv8tion.jda.core.exceptions.ErrorResponseException;
+import net.dv8tion.jda.core.requests.ErrorResponse;
+import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -202,6 +205,16 @@ public class MonitorCog extends Cog {
 
             if (e.getThrown() != null) {
                 message += '\n' + StackUtil.renderStackTrace(e.getThrown(), "    ", "at ");
+
+                if (e.getThrown() instanceof ErrorResponseException) {
+                    ErrorResponseException exp = (ErrorResponseException) e.getThrown();
+                    Request req = exp.getResponse().getRawResponse().request();
+
+                    bot.jda.getTextChannelById(419703542102622228L)
+                            .sendMessage("ERE: " + exp.getErrorCode() + " " + exp.getMeaning() +
+                                    "\n`" + req.method() + ' ' + req.url().toString() + "`\nresponse " +
+                                    exp.getResponse().getRawResponse().code()).queue();
+                }
             }
 
             StringBuilder clockNum = new StringBuilder();
