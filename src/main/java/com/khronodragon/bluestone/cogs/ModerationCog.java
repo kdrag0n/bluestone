@@ -261,30 +261,33 @@ public class ModerationCog extends Cog {
         }
 
         if (toDelete.size() == 1) {
-            toDelete.get(0).delete().reason("Purge command - deleting a single message").complete();
+            try {
+                toDelete.get(0).delete().reason("Purge command - deleting a single message").complete();
+            } catch (ErrorResponseException ignored) {}
         } else if (toDelete.size() <= 100) {
-            channel.deleteMessages(toDelete).complete();
+            try {
+                channel.deleteMessages(toDelete).complete();
+            } catch (ErrorResponseException ignored) {}
         } else {
             for (int i = 0; i <= toDelete.size(); i += 99) {
                 List<Message> list = toDelete.subList(i, Math.min(i + 99, toDelete.size()));
                 if (list.isEmpty()) break;
 
                 if (list.size() == 1)
-                    toDelete.get(0).delete().reason("Purge command - deleting a single message").complete();
+                    try {
+                        toDelete.get(0).delete().reason("Purge command - deleting a single message").complete();
+                    } catch (ErrorResponseException ignored) {}
                 else
-                    channel.deleteMessages(list).complete();
+                    try {
+                        channel.deleteMessages(list).complete();
+                    } catch (ErrorResponseException ignored) {}
             }
         }
 
+        String k = toDelete.size() == 1 ? "" : "s";
         ctx.send(Emotes.getSuccess() + " Deleted **" + toDelete.size() +
-                "** messages!" + twoWeekWarn).queue(
-                        msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS, null, exp -> {
-                    if (exp instanceof ErrorResponseException) {
-                        if (((ErrorResponseException) exp).getErrorCode() != 10008) {
-                            RestAction.DEFAULT_FAILURE.accept(exp);
-                        }
-                    }
-                }));
+                "** message" + k + '!' + twoWeekWarn).queue(
+                        msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS, null, exp -> {}));
     }
 
     @Perm.ManageRoles

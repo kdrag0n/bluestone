@@ -528,10 +528,10 @@ public class Bot implements EventListener, ClassUtilities {
             else
                 toSend = respPrefix + resp.getString("response");
 
-            channel.sendMessage(toSend).queue();
+            channel.sendMessage(toSend).queue(null, e -> {});
         }, e -> {
             logger.error("Error getting ChatEngine response", e);
-            channel.sendMessage(Emotes.getFailure() + " My brain isn't really working right now.").queue();
+            channel.sendMessage(Emotes.getFailure() + " Try again later.").queue(null, ex -> {});
         }));
     }
 
