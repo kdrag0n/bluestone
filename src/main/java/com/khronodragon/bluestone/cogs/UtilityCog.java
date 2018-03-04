@@ -723,7 +723,6 @@ public class UtilityCog extends Cog {
         }
         data.add("text0", topText);
         data.add("text1", bottomText);
-        ctx.send(data.build().toString()).queue();
 
         Bot.http.newCall(new Request.Builder()
                 .post(data.build())
