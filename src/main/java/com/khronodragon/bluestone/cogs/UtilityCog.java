@@ -713,7 +713,7 @@ public class UtilityCog extends Cog {
             }
         }
 
-        data.add("template_id", str(template));
+        data.add("template_id", Integer.toUnsignedString(template));
         try {
             data.add("username", bot.getKeys().getJSONObject("imgflip").getString("username"));
             data.add("password", bot.getKeys().getJSONObject("imgflip").getString("password"));
@@ -723,6 +723,7 @@ public class UtilityCog extends Cog {
         }
         data.add("text0", topText);
         data.add("text1", bottomText);
+        ctx.send(data.build().toString()).queue();
 
         Bot.http.newCall(new Request.Builder()
                 .post(data.build())
