@@ -13,6 +13,7 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import org.apache.commons.lang3.ArrayUtils;
+import org.json.JSONException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -52,7 +53,7 @@ public class Command {
         this.cogName = cogInstance.getName();
         this.needThread = needThread;
         this.reportErrors = reportErrors;
-        this.requiresOwner = ArrayUtils.contains(permsRequired, "owner");
+        this.requiresOwner = ArrayUtils.contains(permsRequired, Permissions.BOT_OWNER);
     }
 
     private void invoke(Bot bot, MessageReceivedEvent event, ArrayListView args,
@@ -60,6 +61,13 @@ public class Command {
         Context ctx = new Context(bot, event, args, prefix, invoker);
 
         // runChecks(ctx); // checks aren't implemented yet
+        if (guildOnly && ctx.guild == null) {
+            throw new GuildOnlyError("Command only works in a guild");
+        }
+
+        if (permsRequired.length > 0) {
+            checkPerms(ctx);
+        }
 
         func.invoke(cog, ctx);
     }
@@ -123,6 +131,9 @@ public class Command {
                             prefix, invoker, StackUtil.briefSqlError(((SQLException) cause)))).queue();
 
                     bot.reportErrorToOwner(cause, event.getMessage(), this);
+                } else if (cause instanceof JSONException) {
+                    bot.logger.error("Command {}: Invalid JSON received", invoker);
+                    channel.sendMessage(Emotes.getFailure() + " The service responded with invalid data. Try again later.").queue();
                 } else {
                     bot.logger.error("Command ({}) invocation error:", invoker, cause);
                     channel.sendMessage(format(Emotes.getFailure() + " Error!```java\n{2}```This error has been reported.",

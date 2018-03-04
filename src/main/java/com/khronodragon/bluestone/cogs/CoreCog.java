@@ -147,10 +147,10 @@ public class CoreCog extends Cog {
 
     @Command(name = "test", desc = "Make sure I work.")
     public void cmdTest(Context ctx) {
-        ctx.send(ctx.mention + " Everything is looking good! 😄").queue();
+        ctx.message.addReaction("\uD83D\uDC4D").queue();
     }
 
-    @Command(name = "ping", desc = "Ping, pong!")
+    @Command(name = "ping", desc = "Pong!")
     public void cmdPing(Context ctx) {
         String msg = "🏓 WebSockets: " + ctx.jda.getPing() + "ms";
         long beforeTime = System.currentTimeMillis();
@@ -176,12 +176,13 @@ public class CoreCog extends Cog {
     }
 
     @Command(name = "help", desc = "Because we all need help.", usage = "{commands and/or cogs}",
-            aliases = {"phelp", "halp", "commands", "usage"}, thread = true)
+            aliases = {"phelp", "halp", "commands"}, thread = true)
     public void cmdHelp(Context ctx) {
         int charLimit = ctx.jda.getSelfUser().isBot() ? MessageEmbed.EMBED_MAX_LENGTH_BOT : MessageEmbed.EMBED_MAX_LENGTH_CLIENT;
         boolean sendPublic = false;
         boolean isOwner = ctx.author.getIdLong() == bot.owner.getIdLong();
-        if (ctx.invoker.startsWith("p") && Permissions.check(ctx,
+
+        if (ctx.invoker.charAt(0) == 'p' && Permissions.check(ctx,
                 Permission.MANAGE_CHANNEL, Permission.MANAGE_PERMISSIONS,
                 Permission.MESSAGE_MANAGE, Permission.MANAGE_SERVER)) {
             sendPublic = true;
@@ -335,7 +336,7 @@ public class CoreCog extends Cog {
         }
     }
 
-    @Command(name = "uptime", desc = "Get my uptime and memory usage.", aliases = {"memory", "ram"})
+    @Command(name = "uptime", desc = "Get how long I've been running.", aliases = {"memory", "ram"})
     public void cmdUptime(Context ctx) {
         ctx.send("I've been up for **" + bot.formatUptime() +
                 "**, and am using **" + Strings.formatMemory() + "** of memory.").queue();

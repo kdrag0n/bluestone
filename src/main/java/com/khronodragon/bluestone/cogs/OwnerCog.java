@@ -213,7 +213,7 @@ public class OwnerCog extends Cog {
     }
 
     @Perm.Owner
-    @Command(name = "sendfile", desc = "Upload a local file here.",
+    @Command(name = "sendfile", desc = "Upload a file.",
             usage = "[file path]", reportErrors = false)
     public void cmdSendfile(Context ctx) throws IOException {
         if (ctx.rawArgs.length() < 1) {

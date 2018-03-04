@@ -11,21 +11,21 @@ import java.util.List;
 public class ArrayListView {
     public final String[] array;
     public final int length;
-    private final int lenL1;
+    private final int realLength;
 
     public ArrayListView(String[] array) {
         this.array = array;
-        this.length = array.length;
-        this.lenL1 = array.length - 1;
+        this.length = array.length - 1;
+        this.realLength = array.length;
     }
 
     public String get(int i) {
-        if (i < lenL1) return array[i + 1];
+        if (i < length) return array[i + 1];
         else return null;
     }
 
     public boolean contains(String obj) {
-        for (int i = 1; i < length; i++) {
+        for (int i = 1; i < realLength; i++) {
             if (array[i].equals(obj)) return true;
         }
         return false;
@@ -34,11 +34,11 @@ public class ArrayListView {
     public String join(char sep) {
         // fast paths
         switch (length) {
-            case 2: return array[1];
-            case 3: return array[1] + sep + array[2];
-            case 4: return array[1] + sep + array[2] + sep + array[3];
-            case 5: return array[1] + sep + array[2] + sep + array[3] + sep + array[4];
-            case 6: return array[1] + sep + array[2] + sep + array[3] + sep + array[4] + sep + array[5];
+            case 1: return array[1];
+            case 2: return array[1] + sep + array[2];
+            case 3: return array[1] + sep + array[2] + sep + array[3];
+            case 4: return array[1] + sep + array[2] + sep + array[3] + sep + array[4];
+            case 5: return array[1] + sep + array[2] + sep + array[3] + sep + array[4] + sep + array[5];
             default:
                 StringBuilder sb = new StringBuilder(32);
                 for (int i = 1; i < array.length; i++)

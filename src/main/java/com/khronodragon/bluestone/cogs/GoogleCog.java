@@ -83,14 +83,19 @@ public class GoogleCog extends Cog {
                         } else {
                             emb.setDescription("No results.");
                         }
+                    } else if (resp.has("error") && resp.getJSONObject("error").getJSONArray("errors")
+                            .getJSONObject(0).getString("reason")
+                            .startsWith("This API requires billing to be enabled on the project.")) {
+                        emb.setDescription("⚠ I've searched too many times today.");
+                    } else if (resp.has("searchInformation") &&
+                            resp.getJSONObject("searchInformation").getInt("totalResults") < 1) {
+                        emb.setDescription("No results.");
                     } else if (resp.has("error")) {
                         logger.error("Google returned an error: {}", resp.getJSONObject("error"));
-                        emb.setDescription("⚠ An error occurred, probably because I've searched too many times today.");
-                    } else if (resp.has("searchInformation") && resp.getJSONObject("searchInformation").getInt("totalResults") < 1) {
-                        emb.setDescription("No results.");
+                        emb.setDescription("⚠ Google returned an error.");
                     } else {
                         logger.info("Weird response from Google: {}", resp);
-                        emb.setDescription("⚠ The response seems to have been invalid. Try again later?");
+                        emb.setDescription("⚠ Google responded unexpectedly. Try again later.");
                     }
 
                     return emb.build();
