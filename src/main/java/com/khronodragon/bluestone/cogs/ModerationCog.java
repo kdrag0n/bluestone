@@ -707,7 +707,7 @@ public class ModerationCog extends Cog {
             Message statusMsg = ctx.send(statusEmb.build()).complete();
 
             int sz = 0; // number of messages
-            short oneHundred = (short) 100;
+            short oneHundred = 100;
 
             try {
                 statusMsg.pin().queue(null, f -> {});

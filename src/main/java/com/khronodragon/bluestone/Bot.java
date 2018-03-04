@@ -101,6 +101,7 @@ public class Bot implements EventListener, ClassUtilities {
     private static String ourMention;
     private static String ourGuildMention;
     public final PrefixStore prefixStore;
+    private static boolean shouldReportErrors = !Start.hasSentry;
 
     static {
         ensureUnsafe();
@@ -214,6 +215,9 @@ public class Bot implements EventListener, ClassUtilities {
 
         updateOwner();
         logger.info("Ready - ID {}", ourId);
+
+        if (jda.getGuilds().size() < 100)
+            shouldReportErrors = false;
 
         if (jda.getGuildById(110373943822540800L) != null)
             Emotes.setHasDbots();
@@ -477,21 +481,17 @@ public class Bot implements EventListener, ClassUtilities {
             if (request.equalsIgnoreCase("prefix")) {
                 channel.sendMessage("My prefix here is `" + prefix + "`.").queue();
             } else if (request.length() > 0) {
-                chatResponse(channel, "bs_GMdbot2-" + author.getId(), request, null);
+                chatResponse(channel, "gbot_" + author.getId(), request, null);
             } else {
-                final String tag = Cog.getTag(jda.getSelfUser());
-
-                channel.sendMessage("Hey there! You can talk to me like `@" + tag +
-                        " [message]`. And if you want my prefix, say `@" + tag +
-                        " prefix`!\nCurrent prefix: `" + prefix +
-                        "` \u2022 Help command: `" + prefix + "help`").queue();
+                channel.sendMessage("To talk, start your message with `@Goldmine`.\n" +
+                        "Prefix: `" + Context.filterMessage(prefix) + '`').queue();
             }
         } else if (channel instanceof PrivateChannel && author.getIdLong() != owner.getIdLong() &&
                 message.getContentRaw().charAt(0) == '`') {
             final String request = Strings.renderMessage(message, null, message.getContentRaw());
 
             if (request.length() < 1) {
-                channel.sendMessage("**Hey there**! My prefix is `" + prefix + "` here.\nYou can use commands, or talk to me directly.").queue();
+                channel.sendMessage("**Hey there**! My prefix is `" + prefix + "`.\nYou can use commands, or talk to me directly.").queue();
             } else {
                 chatResponse(channel, "bs_GMdbot2-" + author.getId(), request, "💬 ");
             }
@@ -536,7 +536,7 @@ public class Bot implements EventListener, ClassUtilities {
     }
 
     public void reportErrorToOwner(Throwable e, Message msg, Command cmd) {
-        if (jda.getGuilds().size() < 100) return;
+        if (!shouldReportErrors) return;
 
         owner.openPrivateChannel().queue(ch -> ch.sendMessage(errorEmbed(e, msg, cmd)).queue());
     }

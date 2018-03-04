@@ -205,3 +205,4 @@ store*.bson
 patreon.json
 /data/
 /sentrybuf/
+/poke/

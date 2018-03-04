@@ -10,7 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 class Start {
-    private static final String[] dirInit = {"data/profiles/bg"};
+    private static final String[] dirInit = {"data/profiles/bg", "data/http_cache"};
+    public static boolean hasSentry = false;
 
     public static void main(String[] args) throws IOException {
         String jsonCode = new String(Files.readAllBytes(Paths.get("config.json")));
@@ -21,6 +22,7 @@ class Start {
         String sentryDSN;
         if ((sentryDSN = config.getJSONObject("keys").optString("sentry", null)) != null) {
             Sentry.init(sentryDSN);
+            hasSentry = true;
         }
 
         String token = config.getString("token");

@@ -142,7 +142,7 @@ public class Command {
                         event.getAuthor().getAsMention(), prefix, invoker)).queue();
             } catch (Exception e) {
                 bot.logger.error("Unknown command ({}) error:", invoker, e);
-                channel.sendMessage(Emotes.getFailure() + " A severe internal error occurred. The error has been reported.").queue();
+                channel.sendMessage(Emotes.getFailure() + " An internal error occurred. It has been reported.").queue();
 
                 bot.reportErrorToOwner(e, event.getMessage(), this);
             }
