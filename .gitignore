@@ -206,3 +206,7 @@ patreon.json
 /data/
 /sentrybuf/
 /poke/
+/javacore*.txt
+/jdebug*
+/jitdump*.dmp
+/Snap*.trc
