@@ -32,7 +32,7 @@ applicationDefaultJvmArgs = [
         '-Xgc:targetPauseTime=75',
         '-Xgc:targetUtilization=92',
         '-Xcodecachetotal400M',
-        '-Xjit:optLevel=hot'
+        '-Xjit:optLevel=warm'
         ,'-Xcompressedrefs','-Xnoagent'
 ]
 

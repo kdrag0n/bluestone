@@ -121,9 +121,6 @@ public class ReplCog extends Cog {
                 language.equalsIgnoreCase("js") ||
                 language.equalsIgnoreCase("javascript")) {
             engine = new NashornScriptEngineFactory().getScriptEngine(NASHORN_ARGS);
-        } else if (language.equalsIgnoreCase("kotlin") || language.equalsIgnoreCase("kt") ||
-                language.equalsIgnoreCase("kts")) {
-            engine = man.getEngineByExtension("kts"); // hacky workaround for Kotlin JSR-223 being ech
         } else {
             engine = man.getEngineByName(language.toLowerCase());
 
