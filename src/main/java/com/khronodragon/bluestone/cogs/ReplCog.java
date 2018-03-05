@@ -37,6 +37,7 @@ public class ReplCog extends Cog {
     private static final String[] NASHORN_ARGS = {"--language=es6", "-scripting"};
     private static final Pattern JS_OBJECT_PATTERN = Pattern.compile("^\\[object [A-Z][a-z0-9]*]$");
     private static final Pattern CODE_TYPE_PATTERN = Pattern.compile("```(?:js|javascript|java|groovy|lua)\n?");
+    private final String token;
     static final String GROOVY_PRE_INJECT = "import net.dv8tion.jda.core.entities.*\n" +
             "import net.dv8tion.jda.core.*\n" +
             "import net.dv8tion.jda.core.entities.impl.*\n" +
@@ -63,6 +64,8 @@ public class ReplCog extends Cog {
 
     public ReplCog(Bot bot) {
         super(bot);
+
+        token = bot.getConfig().getString("token");
     }
 
     public String getName() {
@@ -282,11 +285,13 @@ public class ReplCog extends Cog {
                         }
                     }
 
+                    strResult = StringUtils.replace(strResult, token, "");
                     ctx.send("```java\n" + strResult + "```").queue();
                 } catch (Exception e) {
                     logger.warn("Error sending result", e);
                     try {
-                        ctx.send("```java\n" + StackUtil.renderStackTrace(e) + "```").queue();
+                        ctx.send("```java\n" +
+                                StringUtils.replace(StackUtil.renderStackTrace(e), token, "") + "```").queue();
                     } catch (Exception ex) {
                         logger.error("Error sending send error", ex);
                     }

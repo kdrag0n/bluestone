@@ -28,9 +28,12 @@ import static com.khronodragon.bluestone.util.Strings.str;
 public class OwnerCog extends Cog {
     private static final Logger logger = LogManager.getLogger(OwnerCog.class);
     private ScriptEngine evalEngine = new ScriptEngineManager().getEngineByName("groovy");
+    private final String token;
 
     public OwnerCog(Bot bot) {
         super(bot);
+
+        token = bot.getConfig().getString("token");
         evalEngine.put("last", null);
         evalEngine.put("bot", bot);
         evalEngine.put("test", "Test right back at ya!");
@@ -176,11 +179,11 @@ public class OwnerCog extends Cog {
     }
 
     @Perm.Owner
-    @Command(name = "eval", desc = "Evaluate some Groovy code.", usage = "[code]",
+    @Command(name = "eval", desc = "Evaluate code.", usage = "[code]",
             aliases = {"reval"}, thread = true, reportErrors = false)
     public void cmdEval(Context ctx) {
         if (ctx.rawArgs.length() < 1) {
-            ctx.fail("I need some code!");
+            ctx.fail("I need code!");
             return;
         }
 
@@ -209,7 +212,7 @@ public class OwnerCog extends Cog {
         if (result == null)
             ctx.message.addReaction("✅").queue();
         else
-            ctx.send("```java\n" + result.toString() + "```").queue();
+            ctx.send("```java\n" + StringUtils.replace(result.toString(), token, "") + "```").queue();
     }
 
     @Perm.Owner

@@ -20,14 +20,20 @@ archivesBaseName = 'bluestone'
 mainClassName = 'com.khronodragon.bluestone.Start'
 applicationDefaultJvmArgs = [
         '-Xms1000M',
-        '-XX:MaxDirectMemorySize=15M',
+        '-XX:MaxDirectMemorySize=64M',
         '-XX:MaxMetaspaceSize=95800K',
         '-XX:ReservedCodeCacheSize=240M',
         '-Xss1M',
         '-Xmx3641799K',
         '-XX:MaxInlineSize=64',
         '-Xverify:none',
-        '-Djava.lang.invoke.stringConcat=MH_INLINE_SIZED_EXACT'
+        '-Djava.lang.invoke.stringConcat=MH_INLINE_SIZED_EXACT',
+        '-Xgcpolicy:metronome',
+        '-Xgc:targetPauseTime=75',
+        '-Xgc:targetUtilization=92',
+        '-Xcodecachetotal400M',
+        '-Xjit:optLevel=hot'
+        ,'-Xcompressedrefs','-Xnoagent'
 ]
 
 apply plugin: 'com.github.johnrengelman.shadow' // work around bug
