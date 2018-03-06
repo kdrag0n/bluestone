@@ -197,7 +197,7 @@ public class KewlCog extends Cog {
                 }
             });
     private static final TLongSet profileSetupSessions = new TLongHashSet();
-    private Dao<UserProfile, Long> profileDao;
+    private final Dao<UserProfile, Long> profileDao;
 
     public KewlCog(Bot bot) {
         super(bot);

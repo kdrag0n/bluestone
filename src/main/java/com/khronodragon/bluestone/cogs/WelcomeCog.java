@@ -55,7 +55,7 @@ public class WelcomeCog extends Cog {
             "Example message:```\n" +
             "[mention] Hey there, and welcome to [server]! The owner here is [server_owner]. You joined at [time]. " +
             "To use this bot, try [prefix]help. It was made by [bot_owner]. Have fun!```";
-    private Dao<GuildWelcomeMessages, Long> messageDao;
+    private final Dao<GuildWelcomeMessages, Long> messageDao;
 
     public WelcomeCog(Bot bot) {
         super(bot);

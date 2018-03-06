@@ -48,10 +48,8 @@ public class MusicCog extends Cog {
             .setNameFormat("Music Cog Cleanup Thread %d")
             .build());
     private final DefaultAudioPlayerManager playerManager = new DefaultAudioPlayerManager();
-    private Dao<GuildMusicSettings, Long> settingsDao;
-
-    @VisibleForTesting
-    public TLongObjectMap<AudioState> audioStates = new TLongObjectHashMap<>();
+    private final Dao<GuildMusicSettings, Long> settingsDao;
+    public final TLongObjectMap<AudioState> audioStates = new TLongObjectHashMap<>();
 
     public MusicCog(Bot bot) {
         super(bot);

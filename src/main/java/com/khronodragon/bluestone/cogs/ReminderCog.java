@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 public class ReminderCog extends Cog {
     private static final Logger logger = LogManager.getLogger(ReminderCog.class);
     private final Parser timeParser = new Parser();
-    private Dao<Reminder, Integer> dao;
+    private final Dao<Reminder, Integer> dao;
 
     public ReminderCog(Bot bot) {
         super(bot);

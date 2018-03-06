@@ -84,7 +84,7 @@ public class ModerationCog extends Cog {
     private static final Field embFields;
     private static final Field embDescription;
     private final TLongSet archivingGuilds = new TLongHashSet();
-    private Dao<GuildAutorole, Long> autoroleDao;
+    private final Dao<GuildAutorole, Long> autoroleDao;
 
     static {
         try {

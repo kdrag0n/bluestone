@@ -84,9 +84,9 @@ public class StarboardCog extends Cog {
                     }
                 }
             });
-    private Dao<Starboard, Long> dao;
-    private Dao<StarboardEntry, Long> entryDao;
-    private Dao<Starrer, Integer> starrerDao;
+    private final Dao<Starboard, Long> dao;
+    private final Dao<StarboardEntry, Long> entryDao;
+    private final Dao<Starrer, Integer> starrerDao;
 
     public StarboardCog(Bot bot) {
         super(bot);

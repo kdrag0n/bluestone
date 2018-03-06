@@ -151,7 +151,7 @@ public class UtilityCog extends Cog {
                                     SHRUG, true);
                 }
             });
-    private Dao<ActivePoll, Long> pollDao;
+    private final Dao<ActivePoll, Long> pollDao;
 
     private static final List<ImmutablePair<Pattern, Integer>> MEME_PATTERNS = ImmutableList.of(
             pair("(one does not simply) (.*)", 61579),
@@ -185,8 +185,8 @@ public class UtilityCog extends Cog {
             .setDaemon(true)
             .setNameFormat("Bot Calculation Thread %d")
             .build(), new RejectedExecHandlerImpl("Calculation"));
-    private Dao<ContactBannedUser, Long> contactBanDao;
-    private Dao<UserFaqRecord, Long> userFaqDao;
+    private final Dao<ContactBannedUser, Long> contactBanDao;
+    private final Dao<UserFaqRecord, Long> userFaqDao;
 
     private static<L, R> ImmutablePair<L, R> pair(L l, R r) {
         return ImmutablePair.of(l, r);

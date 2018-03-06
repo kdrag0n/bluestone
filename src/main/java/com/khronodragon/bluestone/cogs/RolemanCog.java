@@ -55,8 +55,8 @@ public class RolemanCog extends Cog {
                             .size() > 0 ? TRUE : FALSE;
                 }
             });
-    private Dao<GuildRoleOption, Long> dao;
-    private Dao<GuildMemberActions, Integer> profDao;
+    private final Dao<GuildRoleOption, Long> dao;
+    private final Dao<GuildMemberActions, Integer> profDao;
 
     public RolemanCog(Bot bot) {
         super(bot);

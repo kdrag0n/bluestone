@@ -38,8 +38,8 @@ public class QuotesCog extends Cog {
             "    \u2022 `message [message id]` - quote a message by its ID\n" +
             "\n" +
             "Aliases: [create, new, remove], [del, rm], [rand], [num], [addmsg, madd, msg]";
-    private Dao<Quote, Integer> dao;
-    private Dao<QuotesBannedMember, Long> banDao;
+    private final Dao<Quote, Integer> dao;
+    private final Dao<QuotesBannedMember, Long> banDao;
 
     public QuotesCog(Bot bot) {
         super(bot);

@@ -21,7 +21,7 @@ import java.util.List;
 public class AfkCog extends Cog {
     private static final Logger logger = LogManager.getLogger(AfkCog.class);
     private static final IDSetTrie afkUsers = new IDSetTrie(48);
-    private Dao<AfkMessage, Long> dao;
+    private final Dao<AfkMessage, Long> dao;
 
     public AfkCog(Bot bot) {
         super(bot);

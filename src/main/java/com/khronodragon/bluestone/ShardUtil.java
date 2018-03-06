@@ -37,7 +37,7 @@ public class ShardUtil {
     private final Map<Integer, Bot> shards = new LinkedHashMap<>();
     public final Date startTime = new Date();
     private int shardCount;
-    private Dao<BotAdmin, Long> adminDao;
+    private final Dao<BotAdmin, Long> adminDao;
     private ConnectionSource dbConn;
     private HikariDataSource dataSource;
     private JSONObject config;
