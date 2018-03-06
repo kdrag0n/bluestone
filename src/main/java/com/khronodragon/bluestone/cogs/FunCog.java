@@ -243,7 +243,7 @@ public class FunCog extends Cog {
 
     @Command(name = "emotisay", desc = "Show some text as cool block letters.", aliases = {"emotesay", "esay"}, usage = "[text]")
     public void cmdEmotisay(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("You need some text!");
             return;
         }
@@ -369,7 +369,7 @@ public class FunCog extends Cog {
 
     @Command(name = "emote", desc = "Get an emoticon, from many sources.", usage = "[emote name]")
     public void cmdEmote(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("You need to specify an emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.");
             return;
         }
@@ -407,7 +407,7 @@ public class FunCog extends Cog {
     @Command(name = "add_emote", desc = "Add an emote to the server.", usage = "[emote name]",
             aliases = {"addemote", "emoteadd", "emote_add", "+emote", "+e"}, guildOnly = true)
     private void cmdAddEmote(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("You need to specify an emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.");
             return;
         } else if (!ctx.guild.getSelfMember().hasPermission(Permission.MANAGE_EMOTES)) {
@@ -452,7 +452,7 @@ public class FunCog extends Cog {
     public void cmdAddCompoundEmote(Context ctx) { // TODO: fix this
         String baseName;
         Message.Attachment attachment;
-        if (ctx.rawArgs.length() < 1 || !Strings.isEmoteName(baseName = ctx.args.get(0))) {
+        if (ctx.args.empty || !Strings.isEmoteName(baseName = ctx.args.get(0))) {
             ctx.fail("Invalid emote name! Must be between 2 and 32 characters in length.");
             return;
         } else if (ctx.message.getAttachments().size() < 1 || !(attachment = ctx.message.getAttachments().get(0)).isImage()) {
@@ -604,7 +604,7 @@ public class FunCog extends Cog {
 
     @Command(name = "style", desc = "Apply a style to some text.", aliases = {"font"})
     public void cmdStyle(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.send(Emotes.getFailure() + " Usage is `style [style name] [text]`.\n" +
                     "\nTip: *use the `styles` command to see what there is.*").queue();
             return;
@@ -626,7 +626,7 @@ public class FunCog extends Cog {
 
     @Command(name = "lmgtfy", desc = "Let me Google that for you!")
     public void cmdLmgtfy(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need some search terms!");
             return;
         }
@@ -636,7 +636,7 @@ public class FunCog extends Cog {
 
     @Command(name = "slap", desc = "Slap someone, with passion.", aliases = {"boop", "poke", "hit"})
     public void cmdSlap(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need someone to " + ctx.invoker + '!');
             return;
         }
@@ -647,7 +647,7 @@ public class FunCog extends Cog {
 
     @Command(name = "attack", desc = "Hurt someone, with determination.", aliases = {"stab", "kill", "punch", "shoot", "hurt", "fight"})
     public void cmdAttack(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need someone to " + ctx.invoker + '!');
             return;
         }
@@ -659,7 +659,7 @@ public class FunCog extends Cog {
 
     @Command(name = "charlie", desc = "Ask a question... Charlie Charlie are you there?")
     public void cmdCharlie(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need a question!");
             return;
         }
@@ -724,7 +724,7 @@ public class FunCog extends Cog {
     @Command(name = "pig_latin", desc = "Translate some text into Pig Latin.", aliases = {"pl", "piglatin", "pig"},
             usage = "[text]")
     public void cmdPigLatin(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("You must specify text to translate to Pig Latin!");
             return;
         }

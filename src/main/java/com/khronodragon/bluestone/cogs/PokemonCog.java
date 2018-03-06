@@ -42,7 +42,7 @@ public class PokemonCog extends Cog {
     public void command(Context ctx) throws SQLException {
         byte mode; // 0 = id, 1 = name, 2 = random
 
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             mode = 2;
         } else if (DIGIT3_PATTERN.matcher(ctx.rawArgs).matches()) {
             mode = 0;

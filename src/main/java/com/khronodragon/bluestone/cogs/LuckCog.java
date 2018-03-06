@@ -57,7 +57,7 @@ public class LuckCog extends Cog {
 
     @Command(name = "8ball", desc = "A magic 8 ball!", aliases = {"8"})
     public void cmd8Ball(Context ctx) {
-        if (ctx.rawArgs.length() < 1)
+        if (ctx.args.empty)
             ctx.fail("I need a question!");
         else
             ctx.send("🔮 " + randomChoice(EIGHT_BALL_CHOICES)).queue();

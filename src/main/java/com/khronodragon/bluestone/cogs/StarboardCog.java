@@ -342,7 +342,7 @@ public class StarboardCog extends Cog {
     @Command(name = "star", desc = "Master starboard management command.", aliases = {"stars", "starboard", "starman"},
             thread = true, guildOnly = true)
     public void managementCommand(Context ctx) throws Throwable {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.send(NO_COMMAND).queue();
             return;
         }

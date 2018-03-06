@@ -224,7 +224,7 @@ public class MusicCog extends Cog {
 
     @Command(name = "play", desc = "Play something!", usage = "[search terms / link]", guildOnly = true)
     public void cmdPlay(Context ctx) throws SQLException {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need something to play!");
             return;
         }

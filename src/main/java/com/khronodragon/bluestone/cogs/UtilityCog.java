@@ -264,7 +264,7 @@ public class UtilityCog extends Cog {
                     .filter(u -> getTag(u).contentEquals(ctx.rawArgs))
                     .findFirst()
                     .orElse(null);
-        } else if (ctx.rawArgs.length() < 1)
+        } else if (ctx.args.empty)
             user = ctx.author;
         else
             user = null;
@@ -478,7 +478,7 @@ public class UtilityCog extends Cog {
     @Command(name = "invite", desc = "Generate an invite link for myself or another bot.", aliases = {"addbot", "join"},
             usage = "{bot ID (default: me)}")
     public void cmdInvite(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.send('<' + ctx.jda.asBot().getInviteUrl(PERMS_NEEDED) + '>').queue();
         } else {
             if (!Strings.isID(ctx.rawArgs)) {
@@ -746,7 +746,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "urban", desc = "Define something with Urban Dictionary.", aliases = {"define"})
     public void cmdUrban(Context ctx) throws UnsupportedEncodingException {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need a term!");
             return;
         }
@@ -822,7 +822,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "charinfo", desc = "Get the Unicode character info for some text.", usage = "[text]")
     public void cmdCharInfo(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need some text!");
             return;
         }
@@ -852,7 +852,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "encode", desc = "Encode some text into Base65536.", usage = "[text]")
     public void cmdEncode(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need some text!");
             return;
         }
@@ -870,7 +870,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "decode", desc = "Decode Base65536 into regular text.", usage = "[text]")
     public void cmdDecode(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need some text!");
             return;
         }
@@ -898,7 +898,7 @@ public class UtilityCog extends Cog {
     @Command(name = "minecraft", desc = "Get information about a Minecraft server.",
             usage = "[server address]", aliases = {"mc", "mcserver"}, thread = true)
     public void cmdMineServer(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need a server address or skin name!");
             return;
         }
@@ -1154,7 +1154,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "qrcode", desc = "Generate a QR code.", aliases = {"qr"}, thread = true)
     public void cmdQrcode(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need some text!");
             return;
         }
@@ -1192,7 +1192,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "xkcd", desc = "All that xkcd goodness!", thread = true)
     public void cmdXkcd(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.send("🤔 **You need to specify what to get!**\n" +
                     "The following are valid:\n" +
                     "    \u2022 `latest`\n" +
@@ -1308,7 +1308,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "b64encode", desc = "Encode text into Base64.")
     public void cmdB64encode(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need some text!");
             return;
         }
@@ -1318,7 +1318,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "b64decode", desc = "Decode Base64 into text.")
     public void cmdB64decode(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need some text!");
             return;
         }
@@ -1332,7 +1332,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "ipinfo", desc = "Get information about an IP or domain.", aliases = {"ip"}, thread = true)
     public void cmdIpInfo(Context ctx) throws Throwable {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need an IP or domain!");
             return;
         } else if (!Strings.isIPorDomain(ctx.rawArgs)) {
@@ -1508,7 +1508,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "weather", desc = "Get the weather for a place.", usage = "[city]")
     public void cmdWeather(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need a place to get the weather for!");
             return;
         } else if (!bot.getKeys().has("openweathermap")) {
@@ -1597,7 +1597,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "calculate", desc = "Evaluate a mathematical expression.", aliases = {"calc", "calculator"})
     public void cmdCalculate(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need an expression to evaluate!");
             return;
         } else if (ctx.rawArgs.contains("while") || ctx.rawArgs.contains("for")) {
@@ -1653,7 +1653,7 @@ public class UtilityCog extends Cog {
             desc = "Apply a strikethrough effect to any text, works anywhere without special formatting.",
             aliases = {"strike", "st", "unistrike"})
     public void cmdStrikethrough(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need text to strikethrough!");
             return;
         }

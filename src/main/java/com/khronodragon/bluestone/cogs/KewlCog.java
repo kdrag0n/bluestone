@@ -271,7 +271,7 @@ public class KewlCog extends Cog {
                     .filter(u -> getTag(u).contentEquals(ctx.rawArgs))
                     .findFirst()
                     .orElse(null);
-        } else if (ctx.rawArgs.length() < 1) {
+        } else if (ctx.args.empty) {
             user = ctx.author;
         } else if (ctx.args.length > 0 && ctx.args.get(0).equalsIgnoreCase("setup")) {
             cmdProfileSetup(ctx);

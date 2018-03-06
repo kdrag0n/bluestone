@@ -137,7 +137,7 @@ public class CoreCog extends Cog {
 
     @Command(name = "say", desc = "Say something! Say it!", aliases = {"echo"}, usage = "[message]")
     public void cmdSay(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need text to say!");
             return;
         }

@@ -103,7 +103,7 @@ public class RolemanCog extends Cog {
     @Command(name = "role", desc = "Get or remove a role.", aliases = {"rank"}, usage = "[role name]",
             thread = true, guildOnly = true)
     public void cmdRole(Context ctx) throws SQLException {
-        if (ctx.rawArgs.length() < 1 || ctx.rawArgs.equals("list")) {
+        if (ctx.args.empty || ctx.rawArgs.equals("list")) {
             List<GuildRoleOption> options = dao.queryBuilder()
                     .where()
                     .eq("guildId", ctx.guild.getIdLong())

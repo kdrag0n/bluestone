@@ -59,7 +59,7 @@ public class QuotesCog extends Cog {
     @Command(name = "quote", desc = "Add, create, or view a quote!", thread = true,
             usage = "[action / id] {args?...}", aliases = {"quotes", "q"})
     public void cmdQuote(Context ctx) throws SQLException {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.send(NO_COMMAND).queue();
             return;
         }

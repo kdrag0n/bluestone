@@ -12,11 +12,13 @@ public class ArrayListView {
     public final String[] array;
     public final int length;
     private final int realLength;
+    public final boolean empty;
 
     public ArrayListView(String[] array) {
         this.array = array;
         this.length = array.length - 1;
         this.realLength = array.length;
+        this.empty = array.length == 1;
     }
 
     public String get(int i) {

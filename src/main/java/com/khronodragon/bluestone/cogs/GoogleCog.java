@@ -116,7 +116,7 @@ public class GoogleCog extends Cog {
 
     @Command(name = "google", desc = "We all need Google.", usage = "[search terms]", aliases = {"search"}, thread = true)
     public void cmdGoogle(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("You need some search terms!");
             return;
         }

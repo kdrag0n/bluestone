@@ -48,7 +48,7 @@ public class AdminCog extends Cog {
 
     @Command(name = "admin", desc = "Manage bot admins.", aliases = {"admins"}, thread = true)
     public void groupAdmin(Context ctx) throws SQLException, PermissionError {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.send(ADMIN_NO_COMMAND).queue();
             return;
         }
@@ -151,7 +151,7 @@ public class AdminCog extends Cog {
 
     @Command(name = "prefix", desc = "Get or set the command prefix.", aliases = {"setprefix", "pset"}, guildOnly = true)
     public void cmdPrefix(Context ctx) throws SQLException, PermissionError {
-        if (ctx.rawArgs.length() > 0) {
+        if (!ctx.args.empty) {
             com.khronodragon.bluestone.Command.checkPerms(ctx, PREFIX_MOD_PERMS);
 
             if (ctx.rawArgs.length() > 32) {

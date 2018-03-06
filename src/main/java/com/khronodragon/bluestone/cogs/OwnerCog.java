@@ -65,9 +65,10 @@ public class OwnerCog extends Cog {
     }
 
     @Perm.Owner
-    @Command(name = "stopshard", desc = "Stop the current shard.", aliases = {"restart"}, thread = true)
+    @Command(name = "stopshard", desc = "Stop the current shard.", aliases = {"restart"}, thread = true,
+            usage = "{shard}")
     public void cmdStopShard(Context ctx) {
-        final Integer n = ctx.rawArgs.length() > 0 ? Integer.valueOf(ctx.rawArgs) : ctx.bot.getShardNum() - 1;
+        final Integer n = ctx.args.empty ? ctx.bot.getShardNum() - 1 : Integer.valueOf(ctx.rawArgs);
         ctx.send(Emotes.getFailure() + " Are you **sure** you want to stop (restart) shard " + n + "? Type `yes` to continue.").complete();
         Message resp = bot.waitForMessage(7000, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
                 msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
@@ -127,7 +128,7 @@ public class OwnerCog extends Cog {
     @Command(name = "broadcast", desc = "Broadcast a message to all available guilds.",
             usage = "[message]", reportErrors = false)
     private void cmdBroadcast(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need a message to broadcast!");
             return;
         }
@@ -182,7 +183,7 @@ public class OwnerCog extends Cog {
     @Command(name = "eval", desc = "Evaluate code.", usage = "[code]",
             aliases = {"reval"}, thread = true, reportErrors = false)
     public void cmdEval(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need code!");
             return;
         }
@@ -219,7 +220,7 @@ public class OwnerCog extends Cog {
     @Command(name = "sendfile", desc = "Upload a file.",
             usage = "[file path]", reportErrors = false)
     public void cmdSendfile(Context ctx) throws IOException {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.send("🤔 I need a file path!").queue();
             return;
         }
@@ -231,7 +232,7 @@ public class OwnerCog extends Cog {
     @Perm.Owner
     @Command(name = "setavatar", desc = "Change my avatar.", aliases = {"set_avatar"})
     public void cmdSetAvatar(Context ctx) throws IOException {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need a file path!");
             return;
         }
@@ -243,7 +244,7 @@ public class OwnerCog extends Cog {
     @Perm.Owner
     @Command(name = "setgame", desc = "Set my game.", aliases = {"set_game"})
     public void cmdSetGame(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need a game to set!");
             return;
         }

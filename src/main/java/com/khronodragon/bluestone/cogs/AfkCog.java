@@ -94,7 +94,7 @@ public class AfkCog extends Cog {
     public void cmdAfk(Context ctx) throws SQLException {
         AfkMessage afkMessage = dao.queryForId(ctx.author.getIdLong());
 
-        if (ctx.rawArgs.length() < 1 && afkMessage == null) {
+        if (ctx.args.empty && afkMessage == null) {
             ctx.fail(" You must specify why you're going away!");
             return;
         } else if (ctx.rawArgs.length() > 150) {

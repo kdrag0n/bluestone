@@ -173,7 +173,7 @@ public class ModerationCog extends Cog {
             ctx.fail("Discord doesn't allow selfbots to purge.");
             return;
         }
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.send(PURGE_NO_PARAMS).queue();
             return;
         }
@@ -295,7 +295,7 @@ public class ModerationCog extends Cog {
     @Command(name = "mute", desc = "Mute someone in all text channels.", guildOnly = true,
             usage = "[@user] {reason}")
     public void cmdMute(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need someone to mute!");
             return;
         } else if (!Strings.isMention(ctx.rawArgs) || ctx.message.getMentionedUsers().size() < 1) {
@@ -346,7 +346,7 @@ public class ModerationCog extends Cog {
     @Perm.ManageChannels
     @Command(name = "unmute", desc = "Unmute someone in all text channels.", guildOnly = true, usage = "[@user] {reason}")
     public void cmdUnmute(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need someone to unmute!");
             return;
         } else if (!Strings.isMention(ctx.rawArgs) || ctx.message.getMentionedUsers().size() < 1) {
@@ -393,7 +393,7 @@ public class ModerationCog extends Cog {
     @Command(name = "ban", desc = "Swing the ban hammer on someone.", guildOnly = true,
             usage = "[@user or user ID] {reason}")
     public void cmdBan(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need someone to ban!");
             return;
         } else if ((!MENTION_PATTERN.matcher(ctx.rawArgs).find() || ctx.message.getMentionedUsers().size() < 1) &&
@@ -457,7 +457,7 @@ public class ModerationCog extends Cog {
     @Command(name = "kick", desc = "Kick a member of the server.", guildOnly = true,
             usage = "[@user or user ID] [reason]")
     public void cmdKick(Context ctx) {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.fail("I need someone to kick!");
             return;
         } else if ((!MENTION_PATTERN.matcher(ctx.rawArgs).find() || ctx.message.getMentionedUsers().size() < 1) &&
@@ -521,7 +521,7 @@ public class ModerationCog extends Cog {
     @Command(name = "autorole", desc = "Manage autoroles in this server.", guildOnly = true,
             usage = "[action] {role}", aliases = {"autoroles", "ar"}, thread = true)
     public void cmdAutorole(Context ctx) throws SQLException {
-        if (ctx.rawArgs.length() < 1) {
+        if (ctx.args.empty) {
             ctx.send(NO_COMMAND).queue();
             return;
         }
