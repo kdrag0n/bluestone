@@ -25,9 +25,9 @@ applicationDefaultJvmArgs = [
         '-XX:ReservedCodeCacheSize=240M',
         '-Xss1M',
         '-Xmx3641799K',
-        '-XX:MaxInlineSize=64',
         '-Xverify:none',
         '-Djava.lang.invoke.stringConcat=MH_INLINE_SIZED_EXACT',
+
         '-Xgcpolicy:metronome',
         '-Xgc:targetPauseTime=75',
         '-Xgc:targetUtilization=92',
@@ -55,7 +55,7 @@ shadowJar {
 }
 
 dependencies {
-    compile 'net.dv8tion:JDA:3.5.1_344'
+    compile 'net.dv8tion:JDA:3.5.1_345'
     compile 'com.sedmelluq:lavaplayer:1.2.56'
     compile 'com.squareup.okhttp3:okhttp:3.10.0'
     compile 'com.google.guava:guava:24.0-jre'

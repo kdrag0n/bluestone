@@ -1648,4 +1648,23 @@ public class UtilityCog extends Cog {
 
         ctx.send("```lua\n" + result + "```").queue();
     }
+
+    @Command(name = "strikethrough",
+            desc = "Apply a strikethrough effect to any text, works anywhere without special formatting.",
+            aliases = {"strike", "st", "unistrike"})
+    public void cmdStrikethrough(Context ctx) {
+        if (ctx.rawArgs.length() < 1) {
+            ctx.fail("I need text to strikethrough!");
+            return;
+        }
+
+        StringBuilder result = new StringBuilder(ctx.rawArgs.length() * 2);
+
+        for (int i = 0; i < ctx.rawArgs.length(); i++) {
+            result.append(ctx.rawArgs.charAt(i))
+                    .append('\u0336');
+        }
+
+        ctx.send(result.toString()).queue();
+    }
 }
