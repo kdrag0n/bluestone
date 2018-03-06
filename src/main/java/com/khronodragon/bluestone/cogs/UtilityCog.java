@@ -1418,28 +1418,32 @@ public class UtilityCog extends Cog {
             return;
         }
         EmbedBuilder emb = newEmbedWithAuthor(ctx)
-                .setColor(randomColor())
+                .setColor(val(ctx.guild.getSelfMember().getColor()).or(Cog::randomColor))
                 .setDescription("Support me at <https://patreon.com/kdragon>!")
                 .setFooter("If you ❤ " + Bot.NAME + ", please become a Patron.", null);
-        StringBuilder randBuilder = new StringBuilder();
-        StringBuilder alwaysBuilder = new StringBuilder();
+        StringBuilder builder = new StringBuilder(120);
         List<Object> randList = Bot.patreonData.getJSONArray("rand").toList();
         Collections.shuffle(randList);
 
         for (int i = 0; i < randList.size() && i < 10; i++) {
-            randBuilder.append("\u2022 ")
+            builder.append("    \u2022 ")
                     .append((String) randList.get(i))
                     .append('\n');
         }
-        emb.addField("Some Supporters", randBuilder.toString(), false);
 
         for (Object name: Bot.patreonData.getJSONArray("always")) {
-            alwaysBuilder.append("\u2022 ")
+            builder.append("    \u2022 ")
                     .append((String) name)
                     .append('\n');
         }
-        emb.addField("More Supporters", alwaysBuilder.toString(), false);
 
+        if (randList.size() > 10) {
+            builder.append("\u2022 ... and ")
+                    .append(str(randList.size() - 10))
+                    .append(" more!");
+        }
+
+        emb.addField("Supporters", builder.toString(), false);
         ctx.send(emb.build()).queue();
     }
 
