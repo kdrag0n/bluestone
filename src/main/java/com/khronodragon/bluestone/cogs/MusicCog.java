@@ -18,6 +18,7 @@ import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
+import gnu.trove.impl.sync.TSynchronizedLongObjectMap;
 import gnu.trove.map.TLongObjectMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -49,7 +50,7 @@ public class MusicCog extends Cog {
             .build());
     private final DefaultAudioPlayerManager playerManager = new DefaultAudioPlayerManager();
     private final Dao<GuildMusicSettings, Long> settingsDao;
-    public final TLongObjectMap<AudioState> audioStates = new TLongObjectHashMap<>();
+    public final TLongObjectMap<AudioState> audioStates = new TSynchronizedLongObjectMap<>(new TLongObjectHashMap<>());
 
     public MusicCog(Bot bot) {
         super(bot);
