@@ -43,8 +43,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class MusicCog extends Cog {
-    private static final Logger logger = LogManager.getLogger(MusicCog.class);
-    private ScheduledThreadPoolExecutor bgExecutor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder()
+    private ScheduledThreadPoolExecutor bgExecutor = new ScheduledThreadPoolExecutor(2, new ThreadFactoryBuilder()
             .setDaemon(true)
             .setNameFormat("Music Cog Cleanup Thread %d")
             .build());
@@ -73,7 +72,7 @@ public class MusicCog extends Cog {
         return "Music";
     }
     public String getDescription() {
-        return "Listen to some sick beats with your friends!";
+        return "Listen to those beats together!";
     }
 
     public void unload() {
@@ -129,18 +128,6 @@ public class MusicCog extends Cog {
                 state.scheduler.player.setPaused(true);
                 state.scheduler.setEmptyPauseTime(new Date());
                 state.scheduler.setEmptyPaused(true);
-
-                /*
-                ExtraTrackInfo info;
-                if (state.scheduler.current == null) {
-                    info = null;
-                } else {
-                    info = state.scheduler.current.getUserData(ExtraTrackInfo.class);
-                }
-
-                if (info != null) {
-                    info.textChannel.sendMessage("Voice channel empty - player paused.").queue();
-                }*/
             }
         }
     }
@@ -218,7 +205,6 @@ public class MusicCog extends Cog {
         }
     }
 
-    //@Command(name = "summon", desc = "Summon me to your voice channel.", guildOnly = true)
     private void summon(Context ctx) {
         VoiceChannel channel = ctx.member.getVoiceState().getChannel();
         if (channel == null) {

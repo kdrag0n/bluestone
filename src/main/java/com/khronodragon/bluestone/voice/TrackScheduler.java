@@ -14,12 +14,12 @@ import net.dv8tion.jda.core.exceptions.PermissionException;
 import java.util.*;
 
 public class TrackScheduler extends AudioEventAdapter {
+    private static final DummySendHandler dummyHandler = new DummySendHandler();
     private boolean repeating = false;
     private boolean emptyPaused = false;
     private Date emptyPauseTime = new Date();
     public final AudioPlayer player;
     public final Queue<AudioTrack> queue = new LinkedList<>();
-    private AudioTrack lastTrack;
     public AudioTrack current;
     private AudioState state;
 
@@ -59,8 +59,9 @@ public class TrackScheduler extends AudioEventAdapter {
             player.startTrack(queue.poll(), false);
         } else {
             player.destroy();
-            state.guild.getAudioManager().closeAudioConnection();
-            state.guild.getAudioManager().setSendingHandler(new DummySendHandler());
+
+            Bot.threadExecutor.execute(state.guild.getAudioManager()::closeAudioConnection);
+            state.guild.getAudioManager().setSendingHandler(dummyHandler);
             state.parent.audioStates.remove(state.guild.getIdLong());
         }
     }
@@ -84,7 +85,6 @@ public class TrackScheduler extends AudioEventAdapter {
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-        lastTrack = track;
         current = null;
 
         try {

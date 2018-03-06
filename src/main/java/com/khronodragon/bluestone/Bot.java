@@ -65,16 +65,16 @@ public class Bot implements EventListener, ClassUtilities {
     private static final Pattern GENERAL_MENTION_PATTERN = Pattern.compile("^<@[!&]?[0-9]{17,20}>\\s*");
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
     public final Logger logger;
-    public final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(6, new ThreadFactoryBuilder()
+    public static final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(6, new ThreadFactoryBuilder()
             .setDaemon(true)
             .setNameFormat("Bot BG-Task Thread %d")
             .build());
-    private final ThreadPoolExecutor cogEventExecutor = new ThreadPoolExecutor(4, 32, 10, TimeUnit.SECONDS,
+    private static final ThreadPoolExecutor cogEventExecutor = new ThreadPoolExecutor(4, 32, 10, TimeUnit.SECONDS,
             new ArrayBlockingQueue<>(64), new ThreadFactoryBuilder()
             .setDaemon(true)
             .setNameFormat("Bot Cog-Event Pool Thread %d")
             .build(), new RejectedExecHandlerImpl("Cog-Event"));
-    public final ThreadPoolExecutor threadExecutor = new ThreadPoolExecutor(4, 85, 10, TimeUnit.SECONDS,
+    public static final ThreadPoolExecutor threadExecutor = new ThreadPoolExecutor(4, 85, 10, TimeUnit.SECONDS,
             new ArrayBlockingQueue<>(72), new ThreadFactoryBuilder()
             .setDaemon(true)
             .setNameFormat("Bot Command-Exec Pool Thread %d")
@@ -104,6 +104,9 @@ public class Bot implements EventListener, ClassUtilities {
     private static boolean shouldReportErrors = !Start.hasSentry;
 
     static {
+        scheduledExecutor.setMaximumPoolSize(6);
+        scheduledExecutor.setKeepAliveTime(16L, TimeUnit.SECONDS);
+
         ensureUnsafe();
     }
 
@@ -124,8 +127,6 @@ public class Bot implements EventListener, ClassUtilities {
 
         shardUtil = util;
         prefixStore = new PrefixStore(shardUtil.getPool(), shardUtil.getConfig().optString("default_prefix", "!"));
-        scheduledExecutor.setMaximumPoolSize(6);
-        scheduledExecutor.setKeepAliveTime(16L, TimeUnit.SECONDS);
 
         this.jda = jda;
         jda.addEventListener(this, eventWaiter);
