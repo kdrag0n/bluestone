@@ -292,6 +292,7 @@ public class ModerationCog extends Cog {
 
     @Perm.ManageRoles
     @Perm.ManageChannels
+    @Perm.ManagePermissions
     @Command(name = "mute", desc = "Mute someone in all text channels.", guildOnly = true,
             usage = "[@user] {reason}")
     public void cmdMute(Context ctx) {
