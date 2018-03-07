@@ -35,10 +35,8 @@ public class CoreCog extends Cog {
                     "*If you like " + Bot.NAME + ", please help keep it alive by donating here: <https://patreon.com/kdragon>.\n" +
                     "Any amount is appreciated.*";
 
-    // load of IDs
-    private static final long ANNOUNCEMENT_CHANNEL = 256647384656904192L;
+    // IDs
     private static final long PRODUCTION_USER_ID = 239775420470394897L;
-    private static final long HOME_GUILD_ID = 239772188649979904L;
 
     private static volatile int sTries = 0;
 
