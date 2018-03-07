@@ -22,6 +22,7 @@ import net.dv8tion.jda.core.events.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.EventListener;
+import net.dv8tion.jda.core.requests.RestAction;
 import okhttp3.*;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
@@ -487,6 +488,8 @@ public class Bot implements EventListener, ClassUtilities {
                 channel.sendMessage("To talk, start your message with `@Goldmine`.\n" +
                         "Prefix: `" + Context.filterMessage(prefix) + '`').queue();
             }
+
+            RestAction.DEFAULT_FAILURE
         } else if (channel instanceof PrivateChannel && author.getIdLong() != owner.getIdLong() &&
                 content.length() != 0 && content.charAt(0) == '`') {
             final String request = Strings.renderMessage(message, null, message.getContentRaw());

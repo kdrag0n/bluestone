@@ -771,6 +771,8 @@ public class UtilityCog extends Cog {
 
             String definition = word.getString("definition");
             if (definition.length() > 0) {
+                if (definition.length() > 2997) definition = definition.substring(0, 2997) + "...";
+
                 for (String page: embedFieldPages(definition)) {
                     emb.addField("Definition", page, false);
                 }
@@ -780,6 +782,8 @@ public class UtilityCog extends Cog {
 
             String example = word.getString("example");
             if (example.length() > 0) {
+                if (example.length() > 2997) example = example.substring(0, 2997) + "...";
+
                 for (String page: embedFieldPages(example)) {
                     emb.addField("Example", page, false);
                 }
