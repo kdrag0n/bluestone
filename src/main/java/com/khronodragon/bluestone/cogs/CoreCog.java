@@ -105,7 +105,7 @@ public class CoreCog extends Cog {
 
             scheduleAniv();
         }, ctime.toInstant().toEpochMilli() - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
-    }*/
+    }
 
     private void f(Throwable e) {
         logger.error("Error sending anniversary announcement in <#" + ANNOUNCEMENT_CHANNEL + ">, retrying", e);
@@ -127,7 +127,7 @@ public class CoreCog extends Cog {
                 .sendMessage(Strings.format(ANNIVERSARY_MESSAGE, yearDiff, yearDiff == 1 ? "" : "s",
                         bot.shardUtil.getGuildCount(),
                         bot.shardUtil.getChannelCount())).queue(null, this::f);
-    }
+    }*/
 
     public String getName() {
         return "Core";
