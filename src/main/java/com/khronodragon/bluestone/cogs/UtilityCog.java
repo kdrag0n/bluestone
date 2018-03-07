@@ -409,6 +409,7 @@ public class UtilityCog extends Cog {
                 .addField("Load Average", loadAvg, true)
                 .addField("Users", str(shardUtil.getUserCount()), true)
                 .addField("Channels", str(shardUtil.getChannelCount()), true)
+                .addField("Revision", BuildConfig.GIT_SHORT_COMMIT, true)
                 .addField("Music Tracks Loaded", str(shardUtil.getTrackCount()), true)
                 .addField("Playing Music in", shardUtil.getStreamCount() + " channels", true)
                 .addField("Links", StringUtils.replace(INFO_LINKS, "[invite]", ctx.jda.asBot().getInviteUrl(PERMS_NEEDED)), false)
