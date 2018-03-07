@@ -34,22 +34,6 @@ public class CoreCog extends Cog {
                     "\n" +
                     "*If you like " + Bot.NAME + ", please help keep it alive by donating here: <https://patreon.com/kdragon>.\n" +
                     "Any amount is appreciated.*";
-    private static final String ANNIVERSARY_MESSAGE =
-            "👏 Hey @everyone! Today, right now, is a very special moment.\n" +
-            "**Exactly {0} year{1} ago**, in :two::zero::one::six:, " + Bot.NAME +
-                    " was created. At exactly October 23, 8:41:55 AM in Pacific time.\n" +
-            "This means a lot to me. It''s been a great, long journey with plenty of road bumps, but it was worth it.\n" +
-            "Right now, " + Bot.NAME + " is serving **{2} servers** and **{3} channels**. {0} year{1} ago, I never imagined this may happen.\n" +
-            Bot.NAME + " is helping moderators and owners alike, while providing fun and music to others.\n" +
-            "When I first created " + Bot.NAME + ", I expected nothing. I expected it to fail, and die. Become a test bot.\n" +
-            "What happened? It came alive! Slowly but steadily, it was gaining servers. It completely exceeded my expectations.\n" +
-            "And for this, **thank you**. Thank you all. Without your support, this would have never happened.\n" +
-            "\n" +
-            "**If you love " + Bot.NAME + ", please donate. Even $1 is appreciated.**\n" +
-            "Your continued support ensures " + Bot.NAME + " stays alive.\n" +
-            "**Patreon: <https://patreon.com/kdragon>**\n" +
-            "\n" +
-            "**__Enjoy the bot, and the anniversary!__**";
 
     // load of IDs
     private static final long ANNOUNCEMENT_CHANNEL = 256647384656904192L;
@@ -66,68 +50,7 @@ public class CoreCog extends Cog {
                 bot.getShardNum() == 1) {
             bot.jda.getSelfUser().getManager().setName(Bot.NAME).queue();
         }
-
-        /*
-        if (bot.jda.getGuildById(HOME_GUILD_ID) != null &&
-                bot.jda.getSelfUser().getIdLong() == PRODUCTION_USER_ID &&
-                bot.jda.getTextChannelById(ANNOUNCEMENT_CHANNEL) != null) {
-            scheduleAniv();
-        }
-        */
     }
-
-    /*
-    private void scheduleAniv() {
-        OffsetDateTime ctime = bot.jda.getSelfUser().getCreationTime();
-
-        Calendar now = Calendar.getInstance();
-        int year = now.get(Calendar.YEAR);
-        int yearDiff = year - ctime.getYear();
-
-        ctime.plusYears(yearDiff);
-
-        Bot.scheduledExecutor.schedule(() -> {
-            do {
-                TextChannel channel = bot.jda.getTextChannelById(ANNOUNCEMENT_CHANNEL);
-                if (channel == null) {
-                    logger.error("Couldn't find #announcements channel in home guild!");
-                    break;
-                } else if (!channel.canTalk()) {
-                    logger.error("Can't talk in <#256647384656904192> in home guild!");
-                    break;
-                }
-
-                String m = Strings.format(ANNIVERSARY_MESSAGE, yearDiff, yearDiff == 1 ? "" : "s",
-                        bot.shardUtil.getGuildCount(), bot.shardUtil.getChannelCount());
-
-                channel.sendMessage(m).queue(null, this::f);
-            } while (false); // for breaks
-
-            scheduleAniv();
-        }, ctime.toInstant().toEpochMilli() - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
-    }
-
-    private void f(Throwable e) {
-        logger.error("Error sending anniversary announcement in <#" + ANNOUNCEMENT_CHANNEL + ">, retrying", e);
-
-        if (sTries >= 10) {
-            logger.fatal("Failed to send anniversary announcement 10 times. Not retrying", e);
-            sTries = 0;
-            return;
-        }
-        sTries++;
-
-        OffsetDateTime ctime = bot.jda.getSelfUser().getCreationTime();
-
-        Calendar now = Calendar.getInstance();
-        int year = now.get(Calendar.YEAR);
-        int yearDiff = year - ctime.getYear();
-
-        bot.jda.getTextChannelById(ANNOUNCEMENT_CHANNEL)
-                .sendMessage(Strings.format(ANNIVERSARY_MESSAGE, yearDiff, yearDiff == 1 ? "" : "s",
-                        bot.shardUtil.getGuildCount(),
-                        bot.shardUtil.getChannelCount())).queue(null, this::f);
-    }*/
 
     public String getName() {
         return "Core";
