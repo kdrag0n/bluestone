@@ -488,7 +488,7 @@ public class Bot implements EventListener, ClassUtilities {
                         "Prefix: `" + Context.filterMessage(prefix) + '`').queue();
             }
         } else if (channel instanceof PrivateChannel && author.getIdLong() != owner.getIdLong() &&
-                message.getContentRaw().charAt(0) == '`') {
+                content.length() != 0 && content.charAt(0) == '`') {
             final String request = Strings.renderMessage(message, null, message.getContentRaw());
 
             if (request.length() < 1) {
