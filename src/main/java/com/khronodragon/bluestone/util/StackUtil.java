@@ -17,6 +17,8 @@ public class StackUtil {
 
     public static String vagueTrace(Throwable e) {
         StackTraceElement[] elements = e.getStackTrace();
+        if (elements.length == 0) return "";
+
         StackTraceElement[] limitedElems = {elements[0], elements[1]};
         StringBuilder stack = new StringBuilder(e.getClass().getSimpleName())
                 .append(": ")
