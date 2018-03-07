@@ -448,7 +448,6 @@ public class Bot implements EventListener, ClassUtilities {
     }
 
     private void onMessageReceived(MessageReceivedEvent event) {
-        final JDA jda = event.getJDA();
         final User author = event.getAuthor();
 
         if (author.isBot() || author.getIdLong() == ourId)
@@ -466,6 +465,7 @@ public class Bot implements EventListener, ClassUtilities {
 
         if (content.startsWith(prefix)) {
             final String[] split = WHITESPACE_PATTERN.split(content.substring(prefix.length()), 0);
+            if (split.length == 0) return;
             final ArrayListView args = new ArrayListView(split);
 
             final String cmdName = split[0].toLowerCase();
