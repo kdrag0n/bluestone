@@ -21,6 +21,9 @@ class Start {
         // init Sentry as early as possible to catch errors
         String sentryDSN;
         if ((sentryDSN = config.getJSONObject("keys").optString("sentry", null)) != null) {
+            System.setProperty("sentry.release", BuildConfig.GIT_COMMIT);
+            System.setProperty("sentry.tags", "jvm:" + System.getProperty("java.vm.name") +
+                    ",heap:" + (Runtime.getRuntime().maxMemory() / 1000000) + "mb");
             Sentry.init(sentryDSN);
             hasSentry = true;
         }
