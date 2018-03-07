@@ -127,7 +127,7 @@ public class OwnerCog extends Cog {
     @Cooldown(scope = BucketType.GLOBAL, delay = 10)
     @Command(name = "broadcast", desc = "Broadcast a message to all available guilds.",
             usage = "[message]", reportErrors = false)
-    private void cmdBroadcast(Context ctx) {
+    public void cmdBroadcast(Context ctx) {
         if (ctx.args.empty) {
             ctx.fail("I need a message to broadcast!");
             return;

@@ -412,7 +412,7 @@ public class KewlCog extends Cog {
     @Command(name = "set_profile_bg", desc = "Set your profile background.",
             usage = "{\"reset\" or \"default\" to reset to default}", thread = true,
             aliases = {"profilebg", "profile_bg", "setprofilebg"})
-    private void cmdSetProfileBg(Context ctx) {
+    public void cmdSetProfileBg(Context ctx) {
         String a = ctx.invoker.equalsIgnoreCase("profile") ?
                 ctx.args.get(ctx.args.length - 1) : ctx.rawArgs;
         Message.Attachment attachment;

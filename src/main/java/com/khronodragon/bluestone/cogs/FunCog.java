@@ -406,7 +406,7 @@ public class FunCog extends Cog {
     @Perm.ManageEmotes
     @Command(name = "add_emote", desc = "Add an emote to the server.", usage = "[emote name]",
             aliases = {"addemote", "emoteadd", "emote_add", "+emote", "+e"}, guildOnly = true)
-    private void cmdAddEmote(Context ctx) {
+    public void cmdAddEmote(Context ctx) {
         if (ctx.args.empty) {
             ctx.fail("You need to specify an emote! Twitch, Discord (custom only), FrankerFaceZ, and BetterTTV are supported.");
             return;
