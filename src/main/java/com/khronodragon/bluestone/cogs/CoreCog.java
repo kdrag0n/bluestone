@@ -85,7 +85,7 @@ public class CoreCog extends Cog {
 
         ctime.plusYears(yearDiff);
 
-        bot.scheduledExecutor.schedule(() -> {
+        Bot.scheduledExecutor.schedule(() -> {
             do {
                 TextChannel channel = bot.jda.getTextChannelById(ANNOUNCEMENT_CHANNEL);
                 if (channel == null) {
