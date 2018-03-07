@@ -76,6 +76,11 @@ public class PokemonCog extends Cog {
                 return;
         }
 
+        if (pokemon == null) {
+            ctx.fail("No such Pokémon!");
+            return;
+        }
+
         final String imageUrl = "https://khronodragon.com/pokesprites/" + pokemon.id + ".png";
         String stats = "**ATK**: " +
                 pokemon.atk +
