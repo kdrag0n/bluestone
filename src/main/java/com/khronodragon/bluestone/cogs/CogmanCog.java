@@ -78,7 +78,7 @@ public class CogmanCog extends Cog {
 
     @Perm.Owner
     @Command(name = "cog", desc = "Manage all the cogs.", aliases = {"cogs"}, reportErrors = false)
-    private void mainCmd(Context ctx) throws ReflectiveOperationException, MalformedURLException {
+    public void mainCmd(Context ctx) throws ReflectiveOperationException, MalformedURLException {
         if (ctx.args.empty) {
             ctx.send(NO_COMMAND).queue();
             return;
