@@ -9,6 +9,8 @@ plugins {
     id 'idea'
     id 'application'
     id 'com.github.ben-manes.versions' version '0.17.0'
+    id 'org.ajoberstar.grgit' version '2.1.1'
+    id 'de.fuerstenau.buildconfig' version '1.1.8'
 }
 
 group 'com.khronodragon'
@@ -39,6 +41,32 @@ repositories {
         name 'jitpack'
         url 'https://jitpack.io'
     }
+}
+
+ext {
+    commit = "none"
+    shortCommit = "none"
+    buildTime = System.currentTimeMillis()
+
+    if (grgit != null) {
+        commit = grgit.head().id
+        shortCommit = grgit.head().abbreviatedId
+    }
+}
+
+buildConfig {
+    appName = project.name
+    version = project.version
+
+    clsName = 'BuildConfig'
+    packageName = 'com.khronodragon.bluestone'
+    charset = 'UTF-8'
+
+    buildConfigField 'long', 'BUILD_UNIXTIME', buildTime + 'L'
+    buildConfigField 'java.util.Date', 'BUILD_DATE', 'new java.util.Date(' + buildTime + 'L)'
+    buildConfigField 'java.time.Instant', 'BUILD_INSTANT', 'java.time.Instant.ofEpochMilli(' + buildTime + 'L)'
+    buildConfigField 'String', 'GIT_COMMIT', commit
+    buildConfigField 'String', 'GIT_SHORT_COMMIT', shortCommit
 }
 
 shadowJar {
