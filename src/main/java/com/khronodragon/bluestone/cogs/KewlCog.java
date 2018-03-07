@@ -348,7 +348,7 @@ public class KewlCog extends Cog {
     }
 
     @Command(name = "profilesetup", desc = "Set up your personal user profile.", thread = true)
-    private void cmdProfileSetup(Context ctx) throws SQLException {
+    public void cmdProfileSetup(Context ctx) throws SQLException {
         if (profileSetupSessions.contains(ctx.author.getIdLong())) {
             ctx.fail("You already have a profile setup session active!");
             return;
