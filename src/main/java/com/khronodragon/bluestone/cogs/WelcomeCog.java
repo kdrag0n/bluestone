@@ -345,7 +345,7 @@ public class WelcomeCog extends Cog {
                 channel = event.getGuild().getTextChannelById(queryResult.getChannelId());
             }
 
-            if (!channel.canTalk())
+            if (channel == null || !channel.canTalk())
                 return;
 
             String msg = formatMessage(queryResult.getWelcome(), event.getGuild(),
