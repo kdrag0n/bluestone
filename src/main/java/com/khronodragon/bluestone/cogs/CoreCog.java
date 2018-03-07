@@ -76,6 +76,7 @@ public class CoreCog extends Cog {
         */
     }
 
+    /*
     private void scheduleAniv() {
         OffsetDateTime ctime = bot.jda.getSelfUser().getCreationTime();
 
@@ -104,7 +105,7 @@ public class CoreCog extends Cog {
 
             scheduleAniv();
         }, ctime.toInstant().toEpochMilli() - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
-    }
+    }*/
 
     private void f(Throwable e) {
         logger.error("Error sending anniversary announcement in <#" + ANNOUNCEMENT_CHANNEL + ">, retrying", e);
