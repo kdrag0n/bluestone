@@ -20,19 +20,15 @@ jobs:
           - v1-dependencies-
 
       - run:
-          name: Fetch dependencies
-          command: gradle dependencies
+          name: Create distribution
+          command: |
+              gradle distTar
+              mv build/distributions/bluestone*.tar /tmp/bluestone.tar
 
       - save_cache:
           paths:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
-
-      - run:
-          name: Create distribution
-          command: |
-              gradle distTar
-              mv build/distributions/bluestone*.tar /tmp/bluestone.tar
 
       - store_artifacts:
           path: /tmp/bluestone.tar
@@ -58,19 +54,15 @@ jobs:
           - v1-dependencies-
 
       - run:
-          name: Fetch dependencies
-          command: gradle dependencies
+          name: Create shadow JAR
+          command: |
+              gradle shadowJar
+              mv build/libs/bluestone*-all.jar /tmp/bluestone.jar
 
       - save_cache:
           paths:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
-
-      - run:
-          name: Create shadow JAR
-          command: |
-              gradle shadowJar
-              mv build/libs/bluestone*-all.jar /tmp/bluestone.jar
 
       - store_artifacts:
           path: /tmp/bluestone.jar
