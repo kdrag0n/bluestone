@@ -51,7 +51,7 @@ jobs:
 
     steps:
       - checkout
-i
+
       - restore_cache:
           keys:
           - v1-dependencies-{{ checksum "build.gradle" }}
@@ -75,3 +75,10 @@ i
       - store_artifacts:
           path: /tmp/bluestone.jar
           destination: bluestone.jar
+
+workflows:
+    version: 2
+    build:
+        jobs:
+            - build_tar
+            - build_jar
