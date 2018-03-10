@@ -50,15 +50,15 @@ jobs:
               gradle distTar
               mv build/distributions/bluestone*.tar /tmp/bluestone.tar
 
+      - store_artifacts:
+          path: /tmp/bluestone.tar
+          destination: bluestone.tar
+
       - run:
           name: Create shadow JAR
           command: |
               gradle shadowJar
               mv build/libs/bluestone*-all.jar /tmp/bluestone.jar
-
-      - store_artifacts:
-          path: /tmp/bluestone.tar
-          destination: bluestone.tar
 
       - store_artifacts:
           path: /tmp/bluestone.jar
