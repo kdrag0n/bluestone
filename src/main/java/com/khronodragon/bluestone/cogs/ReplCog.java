@@ -3,6 +3,7 @@ package com.khronodragon.bluestone.cogs;
 import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.handlers.RMessageWaitListener;
+import com.khronodragon.bluestone.util.GroovyScriptEngine;
 import com.khronodragon.bluestone.util.StackUtil;
 import com.khronodragon.bluestone.util.Switch;
 import gnu.trove.set.TLongSet;
@@ -19,7 +20,6 @@ import net.dv8tion.jda.core.utils.MiscUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.codehaus.groovy.jsr223.GroovyScriptEngineImpl;
 import org.luaj.vm2.script.LuaScriptEngine;
 
 import javax.script.*;
@@ -81,7 +81,7 @@ public class ReplCog extends Cog {
     @Perm.Owner
     @Command(name = "repl", desc = "A multilingual REPL, in Discord!\n\nFlags come before language in arguments.",
             usage = "[language] {flags}", thread=true)
-    public void cmdRepl(Context ctx) throws ScriptException {
+    public void cmdRepl(Context ctx) {
         if (ctx.args.length < 1) {
             ctx.fail("I need a valid language!");
             return;
@@ -119,6 +119,8 @@ public class ReplCog extends Cog {
                 language.equalsIgnoreCase("js") ||
                 language.equalsIgnoreCase("javascript")) {
             engine = new NashornScriptEngineFactory().getScriptEngine(NASHORN_ARGS);
+        } else if (language.equalsIgnoreCase("groovy")) {
+            engine = new GroovyScriptEngine();
         } else {
             engine = man.getEngineByName(language.toLowerCase());
 
@@ -155,7 +157,7 @@ public class ReplCog extends Cog {
         try {
             new Switch<Class<? extends ScriptEngine>>(engine.getClass())
                     .byInstance()
-                    .match(GroovyScriptEngineImpl.class, () -> engine.eval(
+                    .match(GroovyScriptEngine.class, () -> engine.eval(
                             "def print = { Object... args -> ctx.send(Arrays.stream(args).map({ it.toString() }).collect(Collectors.joining(' '))).queue() }"
                     ))
                     .match(NashornScriptEngine.class, () -> {
@@ -228,7 +230,7 @@ public class ReplCog extends Cog {
 
             Object result;
             try {
-                if (engine instanceof GroovyScriptEngineImpl) {
+                if (engine instanceof GroovyScriptEngine) {
                     result = engine.eval(GROOVY_PRE_INJECT + cleaned);
                 } else if (engine instanceof LuaScriptEngine) {
                     int lastNidx = cleaned.lastIndexOf(10);
