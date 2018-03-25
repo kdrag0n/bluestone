@@ -26,7 +26,7 @@ If you want to host the bot on your own computer, and are willing to go through 
 
 I won't go into *huge* detail here, refer to other guides online such as JDA's for that.
 
-**Make sure Java 8 or 9 is installed before proceeding!**
+**Make sure Java JDK 9 is installed before proceeding!**
 You can download Java [here](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
 Select the JDK instead of JRE or Server JRE.
 
@@ -72,7 +72,7 @@ If there are errors, open an issue on GitHub or join the Discord [support server
 You will need to create `config.json` for the bot to be able to start.
 
 ## Simple
-Paste this into the `config.json` file:
+Create a `config.json` file with the following contents:
 ```json
 {
   "token": "[token here]"
@@ -97,7 +97,6 @@ This is the template:
 {
   "token": "token",
   "shard_count": 2,
-  "type": "bot",
   "db_url": "h2:./database",
   "db_user": "username",
   "db_pass": "password",

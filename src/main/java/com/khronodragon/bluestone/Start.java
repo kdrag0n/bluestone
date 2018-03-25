@@ -32,24 +32,10 @@ class Start {
         int shardCount = config.optInt("shard_count", 1); // 1
         String type = config.optString("type"); // "bot"
 
-        AccountType accountType;
-        switch (type) {
-            case "bot":
-                accountType = AccountType.BOT;
-                break;
-            case "user":
-                accountType = AccountType.CLIENT;
-                break;
-            default:
-                System.out.println("Warning: unrecognized account type! Use either 'client' (user) or 'bot' (bot). Assuming bot.");
-                accountType = AccountType.BOT;
-                break;
-        }
-
         for (String path: dirInit) {
             new File(path).mkdirs();
         }
 
-        Bot.start(token, shardCount, accountType, config);
+        Bot.start(token, shardCount, config);
     }
 }
