@@ -26,7 +26,7 @@ If you want to host the bot on your own computer, and are willing to go through 
 
 I won't go into *huge* detail here, refer to other guides online such as JDA's for that.
 
-**Make sure Java 8 or 9 is installed before proceeding!**
+**Make sure Java JDK 9 is installed before proceeding!**
 You can download Java [here](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
 Select the JDK instead of JRE or Server JRE.
 
