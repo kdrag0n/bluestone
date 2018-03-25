@@ -605,7 +605,7 @@ public class Bot implements EventListener, ClassUtilities {
     }
 
     public String formatUptime() {
-        return Strings.formatDuration(new Date().getTime() - shardUtil.startTime.getTime() / 1000L);
+        return Strings.formatDuration((new Date().getTime() - shardUtil.startTime.getTime()) / 1000L);
     }
 
     public static boolean loadPatreonData() {
