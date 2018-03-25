@@ -17,7 +17,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
 
-import static com.khronodragon.bluestone.util.Strings.format;
+import static java.lang.String.format;
 
 public class Command {
     public final String name;
@@ -98,7 +98,7 @@ public class Command {
                     if (cause instanceof PassException) {
                     // assume error has already been sent
                 } else if (cause instanceof PermissionError) {
-                    channel.sendMessage(format("You can't use `{0}` because **{1}** is required.",
+                    channel.sendMessage(format("You can't use `%s` because **%s** is required.",
                             invoker, Strings.smartJoin(((PermissionError) cause).getFriendlyPerms(), "or"))).queue();
                 } else if (cause instanceof PermissionException) {
                     channel.sendMessage(Emotes.getFailure() + " I need the **" +
@@ -108,22 +108,22 @@ public class Command {
                         channel.sendMessage(Emotes.getFailure() + " I don't have the permission to do that.").queue();
                     } else {
                         bot.logger.error("Command ({}) invocation error:", invoker, cause);
-                        channel.sendMessage(format(Emotes.getFailure() + " Error. `{0}`",
+                        channel.sendMessage(format(Emotes.getFailure() + " An error occurred. `%s`",
                                 cause.getClass().getSimpleName())).queue();
                     }
                 } else if (cause instanceof SQLException) {
                     bot.logger.error("SQL error in command {}:", invoker, cause);
-                    channel.sendMessage(format(Emotes.getFailure() + " A database error occurred.")).queue();
+                    channel.sendMessage(Emotes.getFailure() + " A database error occurred.").queue();
                 } else if (cause instanceof JSONException) {
                     bot.logger.error("Command {}: Invalid JSON received", invoker);
                     channel.sendMessage(Emotes.getFailure() + " The service provided invalid data. Try again later.").queue();
                 } else {
                     bot.logger.error("Command ({}) invocation error:", invoker, cause);
-                    channel.sendMessage(format(Emotes.getFailure() + " An error occurred. `{0}`",
+                    channel.sendMessage(format(Emotes.getFailure() + " An error occurred. `%s`",
                             cause.getClass().getSimpleName())).queue();
                 }
             } catch (PermissionError e) {
-                channel.sendMessage(format("You can't use `{0}` because **{1}** is required.",
+                channel.sendMessage(format("You can't use `%s` because **%s** is required.",
                         invoker, Strings.smartJoin(e.getFriendlyPerms(), "or"))).queue();
             } catch (GuildOnlyError e) {
                 channel.sendMessage(Emotes.getFailure() + " That command only works in a server.").queue();

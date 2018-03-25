@@ -5,11 +5,15 @@ import com.khronodragon.bluestone.util.JSONUtils;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import static com.khronodragon.bluestone.util.Strings.str;
 
 public class TwitchEmoteProvider implements EmoteProvider {
+    private static final Logger logger = LogManager.getLogger(TwitchEmoteProvider.class);
+
     private JSONObject emotes = new JSONObject();
 
     public TwitchEmoteProvider(OkHttpClient client) {
@@ -17,14 +21,28 @@ public class TwitchEmoteProvider implements EmoteProvider {
                 .get()
                 .url("https://twitchemotes.com/api_cache/v3/global.json")
                 .build()).enqueue(Bot.callback(response -> {
-            JSONUtils.addAllTo(emotes, new JSONObject(response.body().string()));
-        }, e -> LogManager.getLogger(TwitchEmoteProvider.class).error("Failed to get main emotes", e)));
+            JSONObject data;
+            try {
+                data = new JSONObject(response.body().string());
+            } catch (JSONException ignored) {
+                logger.error("Invalid main emote JSON");
+                return;
+            }
+
+            JSONUtils.addAllTo(emotes, data);
+        }, e -> logger.error("Failed to get main emotes", e)));
 
         client.newCall(new Request.Builder()
                 .get()
                 .url("https://twitchemotes.com/api_cache/v3/subscriber.json")
                 .build()).enqueue(Bot.callback(response -> {
-            JSONObject data = new JSONObject(response.body().string());
+            JSONObject data;
+            try {
+                data = new JSONObject(response.body().string());
+            } catch (JSONException ignored) {
+                logger.error("Invalid subscriber emote JSON");
+                return;
+            }
 
             for (String key: data.keySet()) {
                 JSONObject channel = data.getJSONObject(key);
@@ -34,7 +52,7 @@ public class TwitchEmoteProvider implements EmoteProvider {
                     emotes.put(obj.getString("code"), obj);
                 }
             }
-        }, e -> LogManager.getLogger(TwitchEmoteProvider.class).error("Failed to get subscriber emotes", e)));
+        }, e -> logger.error("Failed to get subscriber emotes", e)));
     }
 
     @Override

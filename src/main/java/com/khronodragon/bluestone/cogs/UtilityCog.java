@@ -35,7 +35,6 @@ import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.entities.MessageReaction.ReactionEmote;
 import net.dv8tion.jda.core.entities.impl.GuildImpl;
-import net.dv8tion.jda.core.entities.impl.UserImpl;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import okhttp3.*;
@@ -62,7 +61,6 @@ import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 import static com.khronodragon.bluestone.util.Strings.smartJoin;
 import static com.khronodragon.bluestone.util.Strings.statify;
 import static com.khronodragon.bluestone.util.Strings.str;
-import static com.khronodragon.bluestone.util.Strings.format;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -137,7 +135,7 @@ public class UtilityCog extends Cog {
                             .setColor(randomColor())
                             .addField("IP", data.getString("ip"), true)
                             .addField("Reverse DNS", rdns, true)
-                            .addField("Country", format("{0} ({1})",
+                            .addField("Country", String.format("%s (%s)",
                                     data.getString("country_name"),
                                     data.getString("country_code")), true)
                             .addField("Region", "WIP", true)
@@ -367,7 +365,7 @@ public class UtilityCog extends Cog {
         EmbedBuilder emb = new EmbedBuilder()
                 .setColor(val(guild.getSelfMember().getColor()).or(Color.WHITE))
                 .setAuthor(guild.getName(), null,
-                        val(guild.getIconUrl()).or(ctx.jda.getSelfUser().getEffectiveAvatarUrl()))
+                        val(guild.getIconUrl()).or(ctx.jda.getSelfUser()::getEffectiveAvatarUrl))
                 .setFooter("Server created at", guild.getIconUrl())
                 .setTimestamp(guild.getCreationTime())
                 .addField("ID", guild.getId(), true)
@@ -480,17 +478,19 @@ public class UtilityCog extends Cog {
     public void cmdInvite(Context ctx) {
         if (ctx.args.empty) {
             ctx.send('<' + ctx.jda.asBot().getInviteUrl(PERMS_NEEDED) + '>').queue();
-        } else {
-            if (!Strings.isID(ctx.rawArgs)) {
-                ctx.fail("Invalid ID!");
-                return;
-            } else if (ctx.rawArgs.equals(ctx.jda.getSelfUser().getId())) {
-                ctx.send('<' + ctx.jda.asBot().getInviteUrl(PERMS_NEEDED) + '>').queue();
-            }
-
-            ctx.send(format("<https://discordapp.com/api/oauth2/authorize?client_id={0}&scope=bot&permissions=3072>",
-                    ctx.rawArgs)).queue();
+            return;
         }
+
+        if (!Strings.isID(ctx.rawArgs)) {
+            ctx.fail("Invalid ID!");
+            return;
+        } else if (ctx.rawArgs.equals(ctx.jda.getSelfUser().getId())) {
+            ctx.send('<' + ctx.jda.asBot().getInviteUrl(PERMS_NEEDED) + '>').queue();
+        }
+
+        ctx.send(String.format(
+                "<https://discordapp.com/api/oauth2/authorize?client_id=%s&scope=bot&permissions=3072>",
+                ctx.rawArgs)).queue();
     }
 
     @Command(name = "home", desc = "Get my \"contact\" info.", aliases = {"website", "web", "support"})
@@ -1028,7 +1028,7 @@ public class UtilityCog extends Cog {
         }
 
         emb.addField("Server Type", serverType, true);
-        emb.addField("Ping", format("{0,number}ms", data.getInt("ping_millis")), true);
+        emb.addField("Ping", String.format("%dms", data.getInt("ping_millis")), true);
         emb.setFooter("Tip: the " + ctx.invoker + " command can also show skins!", null);
 
         ctx.send(emb.build()).queue();
@@ -1063,7 +1063,7 @@ public class UtilityCog extends Cog {
                 .setDescription(ctx.rawArgs)
                 .addField("Message ID", ctx.message.getId(), true)
                 .addField("Author ID", ctx.author.getId(), true)
-                .addField("Channel", format("**{0}**\nID: `{1}`", ctx.channel.getName(), ctx.channel.getId()), true)
+                .addField("Channel", String.format("**%s**\nID: `%s`", ctx.channel.getName(), ctx.channel.getId()), true)
                 .addField("Sent via PM?", ctx.channel instanceof PrivateChannel ? "Yes" : "No", true)
                 .addField("Time", ctx.message.getCreationTime().toString(), true)
                 .addField("Timestamp", str(ctx.message.getCreationTime().toEpochSecond()), true)

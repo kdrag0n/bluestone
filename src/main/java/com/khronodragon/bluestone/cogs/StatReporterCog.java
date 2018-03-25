@@ -16,9 +16,7 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 
 import java.net.SocketTimeoutException;
-import java.text.MessageFormat;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -31,26 +29,9 @@ public class StatReporterCog extends Cog {
     private SimpleGraphiteClient graphiteClient;
     private static final AtomicInteger messagesSinceLastReport = new AtomicInteger();
     private static final AtomicInteger newGuildsSinceLastReport = new AtomicInteger();
-
-    private enum Endpoints {
-        DISCORD_BOTS("https://bots.discord.pw/api/bots/{0}/stats"),
-        CARBONITEX("https://www.carbonitex.net/discord/data/botdata.php"),
-        DISCORD_BOTS_ORG("https://discordbots.org/api/bots/{0}/stats");
-
-        private String endpoint;
-
-        Endpoints(String endpoint) {
-            this.endpoint = endpoint;
-        }
-
-        String format(Object... args) {
-            return MessageFormat.format(endpoint, args);
-        }
-
-        String getUrl() {
-            return endpoint;
-        }
-    }
+    private static final String DISCORD_BOTS = "https://bots.discord.pw/api/bots/%s/stats";
+    private static final String CARBONITEX = "https://www.carbonitex.net/discord/data/botdata.php";
+    private static final String DISCORD_BOTS_ORG = "https://discordbots.org/api/bots/%s/stats";
 
     public StatReporterCog(Bot bot) {
         super(bot);
@@ -59,7 +40,7 @@ public class StatReporterCog extends Cog {
                 bot.getConfig().has("graphite_port")) {
             graphiteClient = new SimpleGraphiteClient(bot.getConfig().getString("graphite_host"),
                     bot.getConfig().getInt("graphite_port"));
-            Bot.scheduledExecutor.scheduleAtFixedRate(this::graphiteReport, 2, 15, TimeUnit.SECONDS);
+            Bot.scheduledExecutor.scheduleAtFixedRate(this::graphiteReport, 2, 60, TimeUnit.SECONDS);
         }
     }
 
@@ -163,7 +144,7 @@ public class StatReporterCog extends Cog {
 
         Bot.http.newCall(new Request.Builder()
                 .post(RequestBody.create(JSON_MEDIA_TYPE, json.toString()))
-                .url(Endpoints.DISCORD_BOTS.format(bot.jda.getSelfUser().getId()))
+                .url(String.format(DISCORD_BOTS, bot.jda.getSelfUser().getId()))
                 .header("Authorization", key)
                 .build()).enqueue(Bot.callback(response -> {
             if (!response.isSuccessful()) {
@@ -185,7 +166,7 @@ public class StatReporterCog extends Cog {
                         .add("key", key)
                         .add("servercount", str(bot.shardUtil.getGuildCount()))
                         .build())
-                .url(Endpoints.CARBONITEX.getUrl())
+                .url(CARBONITEX)
                 .build()).enqueue(Bot.callback(response -> {
             if (!response.isSuccessful()) {
                 logger.warn("[Carbonitex] Bad response: {} {}", response.code(), response.message());
@@ -214,7 +195,7 @@ public class StatReporterCog extends Cog {
 
         Bot.http.newCall(new Request.Builder()
                 .post(RequestBody.create(JSON_MEDIA_TYPE, json.toString()))
-                .url(Endpoints.DISCORD_BOTS_ORG.format(bot.jda.getSelfUser().getId()))
+                .url(String.format(DISCORD_BOTS_ORG, bot.jda.getSelfUser().getId()))
                 .header("Authorization", key)
                 .build()).enqueue(Bot.callback(response -> {
             if (!response.isSuccessful())  {

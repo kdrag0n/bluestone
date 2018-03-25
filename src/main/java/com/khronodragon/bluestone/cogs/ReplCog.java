@@ -29,8 +29,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import static com.khronodragon.bluestone.util.Strings.format;
-
 @SuppressWarnings("SameParameterValue")
 public class ReplCog extends Cog {
     private static final Logger logger = LogManager.getLogger(ReplCog.class);
@@ -75,7 +73,7 @@ public class ReplCog extends Cog {
         return "A multilingual REPL, in Discord!";
     }
 
-    public static String cleanUpCode(String code) {
+    static String cleanUpCode(String code) {
         String stage1 = CODE_TYPE_PATTERN.matcher(code).replaceFirst("");
         return StringUtils.stripEnd(StringUtils.stripStart(stage1, "`"), "`");
     }
@@ -111,7 +109,7 @@ public class ReplCog extends Cog {
             List<String> langs = new ArrayList<>(factories.size());
 
             for (ScriptEngineFactory factory: factories) {
-                langs.add(format("{0} {1} ({2} {3})", factory.getEngineName(), factory.getEngineVersion(),
+                langs.add(String.format("%s %s (%s %s)", factory.getEngineName(), factory.getEngineVersion(),
                         factory.getLanguageName(), factory.getLanguageVersion()));
             }
 

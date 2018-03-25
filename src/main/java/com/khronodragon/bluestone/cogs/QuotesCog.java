@@ -121,7 +121,7 @@ public class QuotesCog extends Cog {
                 ctx.author.getIdLong(), ctx.author.getName());
         dao.create(quote);
 
-        ctx.success("Quote added with ID `" + quote.getId() + "`.");
+        ctx.success("Quote added with ID `" + quote.id + "`.");
     }
 
     private void quoteCmdDelete(Context ctx) throws SQLException {
@@ -141,9 +141,9 @@ public class QuotesCog extends Cog {
         if (quote == null) {
             ctx.fail("No such quote!");
             return;
-        } else if (quote.getAuthorId() != ctx.author.getIdLong() &&
+        } else if (quote.authorId != ctx.author.getIdLong() &&
                 ctx.author.getIdLong() != Bot.ownerId &&
-                ctx.author.getIdLong() != quote.getQuotedById()) {
+                ctx.author.getIdLong() != quote.quotedById) {
             ctx.fail("You didn't write or quote that quote!");
             return;
         }
@@ -286,10 +286,10 @@ public class QuotesCog extends Cog {
 
         Quote quote = new Quote(text,
                 msg.getAuthor().getIdLong(), msg.getAuthor().getName());
-        quote.setQuotedById(ctx.author.getIdLong());
+        quote.quotedById = ctx.author.getIdLong();
         dao.create(quote);
 
-        ctx.success("Quote added with ID `" + quote.getId() + "`.");
+        ctx.success("Quote added with ID `" + quote.id + "`.");
     }
 
     @Perm.Owner

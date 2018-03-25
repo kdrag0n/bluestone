@@ -4,13 +4,10 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.stmt.DeleteBuilder;
 import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
-import com.khronodragon.bluestone.annotations.Cooldown;
 import com.khronodragon.bluestone.annotations.EventHandler;
 import com.khronodragon.bluestone.enums.AutoroleConditions;
-import com.khronodragon.bluestone.enums.BucketType;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.sql.GuildAutorole;
-import com.khronodragon.bluestone.util.Paginator;
 import com.khronodragon.bluestone.util.Strings;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.linked.TLongLinkedList;
@@ -21,22 +18,10 @@ import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
-import net.dv8tion.jda.core.exceptions.PermissionException;
-import net.dv8tion.jda.core.requests.Request;
-import net.dv8tion.jda.core.requests.Response;
-import net.dv8tion.jda.core.requests.RestAction;
-import net.dv8tion.jda.core.requests.Route;
-import net.dv8tion.jda.core.utils.Checks;
 import net.dv8tion.jda.core.utils.MiscUtil;
-import net.dv8tion.jda.webhook.WebhookClient;
-import net.dv8tion.jda.webhook.WebhookClientBuilder;
-import net.dv8tion.jda.webhook.WebhookMessage;
-import net.dv8tion.jda.webhook.WebhookMessageBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.json.JSONArray;
 
-import javax.annotation.CheckReturnValue;
 import java.awt.*;
 import java.lang.reflect.Field;
 import java.sql.SQLException;
@@ -44,7 +29,6 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -169,10 +153,6 @@ public class ModerationCog extends Cog {
             aliases = {"clean", "nuke", "prune", "clear"},
             usage = "[parameters]", thread = true)
     public void cmdPurge(Context ctx) {
-        if (bot.isSelfbot()) {
-            ctx.fail("Discord doesn't allow selfbots to purge.");
-            return;
-        }
         if (ctx.args.empty) {
             ctx.send(PURGE_NO_PARAMS).queue();
             return;

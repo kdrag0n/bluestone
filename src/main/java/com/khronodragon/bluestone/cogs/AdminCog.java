@@ -103,9 +103,7 @@ public class AdminCog extends Cog {
                 return;
             }
 
-            if (!bot.isSelfbot()) {
-                username = ctx.jda.retrieveUserById(userId).complete().getName();
-            }
+            username = ctx.jda.retrieveUserById(userId).complete().getName();
         }
 
         BotAdmin adminObj = new BotAdmin(userId, username);

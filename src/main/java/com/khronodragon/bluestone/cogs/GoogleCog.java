@@ -25,11 +25,9 @@ import java.net.URLEncoder;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import static com.khronodragon.bluestone.util.Strings.format;
-
 public class GoogleCog extends Cog {
     private static final Logger logger = LogManager.getLogger(GoogleCog.class);
-    private static final String API_URL_BASE = "https://www.googleapis.com/customsearch/v1?key={0}&cx=011887893391472424519:xf_tuvgfrgk&q={1}";
+    private static final String API_URL_BASE = "https://www.googleapis.com/customsearch/v1?key=%s&cx=011887893391472424519:xf_tuvgfrgk&q=%s";
     private static final MessageEmbed FAILED_EMBED = new EmbedBuilder()
             .setColor(randomColor())
             .setTitle("Google Search")
@@ -139,7 +137,7 @@ public class GoogleCog extends Cog {
         ctx.channel.sendTyping().queue();
 
         try {
-            ctx.send(cache.get(format(API_URL_BASE, key, encodedQuery +
+            ctx.send(cache.get(String.format(API_URL_BASE, key, encodedQuery +
                     ((ctx.channel instanceof TextChannel && ((TextChannel) ctx.channel).isNSFW()) ?
                             "&safe=off" : "&safe=medium")))).queue();
         } catch (ExecutionException|UncheckedExecutionException e) {

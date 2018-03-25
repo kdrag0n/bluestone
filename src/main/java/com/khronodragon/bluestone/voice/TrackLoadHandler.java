@@ -30,7 +30,6 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
     private final String term;
     private final GuildMusicSettings settings;
     private final boolean canTalk;
-    private final boolean canReact;
     private final boolean isPatron;
 
     public TrackLoadHandler(Context ctx, boolean isPatron, AudioState state, AudioPlayerManager man,
@@ -40,8 +39,6 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
         this.term = term;
         this.settings = settings;
         this.canTalk = ((TextChannel) ctx.channel).canTalk();
-        this.canReact = ctx.guild.getSelfMember()
-                .hasPermission((TextChannel) ctx.channel, Permission.MESSAGE_ADD_REACTION);
         this.isPatron = isPatron;
         manager = man;
 
@@ -59,10 +56,6 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
                     ctx.send("⛔ Track longer than **2 h 30 min**!").queue();
             }
 
-            if (canReact) {
-                Cog.removeReactionIfExists(ctx.message, "⌛");
-                ctx.message.addReaction("❌").queue();
-            }
             return;
         }
 
@@ -72,10 +65,6 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
 
             if (canTalk) ctx.send(Emotes.getSuccess() + " Queued **" + info.title + "** by **" + info.author +
                     "**, length **" + Strings.formatDuration(info.length / 1000L) + "**").queue();
-            if (canReact) {
-                Cog.removeReactionIfExists(ctx.message, "⌛");
-                ctx.message.addReaction("✅").queue();
-            }
         }
     }
 
@@ -95,7 +84,6 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
 
     private void searchResults(List<AudioTrack> tracks) {
         if (!ctx.member.hasPermission((Channel) ctx.channel, Permission.MESSAGE_EMBED_LINKS)) {
-            ctx.send("⚠ Selecting first result because I don't have the **Embed Links** permission.\nTo avoid this message in the future, give me **Embed Links** for result selection, or switch to no-selection with `" + ctx.prefix + "play_first_result`.").queue();
             trackLoaded(tracks.get(0));
             return;
         }
@@ -126,7 +114,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
                 AudioTrack track = tracks.get(i);
                 AudioTrackInfo info = track.getInfo();
 
-                builder.addChoices(format("`[{0}]` [**{1}** (by {2})]({3})",
+                builder.addChoices(String.format("`%s` [**%s** by %s](%s)",
                         formatTime(track.getDuration()), info.title, info.author,
                         info.uri));
             }
@@ -171,10 +159,6 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
 
         if (canTalk) ctx.send(Emotes.getSuccess() + " Queued playlist **" + playlist.getName() + "**, length **" +
                 Strings.formatDuration(duration / 1000L) + "**").queue();
-        if (canReact) {
-            Cog.removeReactionIfExists(ctx.message, "⌛");
-            ctx.message.addReaction("✅").queue();
-        }
     }
 
     @Override
@@ -184,19 +168,11 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
             manager.loadItem(PREFIXES[iteration] + term, this);
         } else {
             if (canTalk) ctx.fail("No matches found!");
-            if (canReact) {
-                Cog.removeReactionIfExists(ctx.message, "⌛");
-                ctx.message.addReaction("❌").queue();
-            }
         }
     }
 
     @Override
     public void loadFailed(FriendlyException exception) {
         if (canTalk) ctx.send("‼ Error loading track: " + exception.getMessage()).queue();
-        if (canReact) {
-            Cog.removeReactionIfExists(ctx.message, "⌛");
-            ctx.message.addReaction("❌").queue();
-        }
     }
 }

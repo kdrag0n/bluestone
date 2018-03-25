@@ -248,7 +248,7 @@ public class Bot implements EventListener, ClassUtilities {
                     .add(() -> playing(format("in {0} channels", shardUtil.getChannelCount())))
                     .add(() -> playing(format("in {0} servers", shardUtil.getGuildCount())))
                     .add(() -> playing(format("in {0} guilds", shardUtil.getGuildCount())))
-                    .add(() -> playing(format("from shard {0} of {1}", getShardNum(), getShardTotal())))
+                    .add(() -> playing(String.format("from shard %d of %d", getShardNum(), getShardTotal())))
                     .add(playing("with my buddies"))
                     .add(playing("with bits and bytes"))
                     .add(playing("World Domination"))
@@ -604,20 +604,8 @@ public class Bot implements EventListener, ClassUtilities {
         }
     }
 
-    public boolean isSelfbot() {
-        return !jda.getSelfUser().isBot();
-    }
-
-    public boolean isBot() {
-        return jda.getSelfUser().isBot();
-    }
-
-    private long getUptimeMillis() {
-        return new Date().getTime() - shardUtil.startTime.getTime();
-    }
-
     public String formatUptime() {
-        return Strings.formatDuration(getUptimeMillis() / 1000L);
+        return Strings.formatDuration(new Date().getTime() - shardUtil.startTime.getTime() / 1000L);
     }
 
     public static boolean loadPatreonData() {
@@ -644,10 +632,10 @@ public class Bot implements EventListener, ClassUtilities {
         System.out.println("Starting...");
 
         if (shardCount < 1) {
-            System.out.println("How will the bot work with no shards?");
+            System.out.println("Less than 1 shard is unsupported.");
             return 1;
         } else if (shardCount == 2) {
-            System.out.println("2 shards is very buggy and doesn't work well. Use either 1 or 3+ shards.");
+            System.out.println("2 shards is unsupported. Use either 1 or 3+ shards.");
             return 1;
         }
 
@@ -703,13 +691,7 @@ public class Bot implements EventListener, ClassUtilities {
                     synchronized (bot) {
                         try {
                             bot.wait();
-                        } catch (InterruptedException e) {
-                            while (jda.getStatus() == JDA.Status.CONNECTED) {
-                                try {
-                                    Thread.sleep(25);
-                                } catch (InterruptedException ignored) {}
-                            }
-                        }
+                        } catch (InterruptedException ignored) {}
                     }
 
                     if (jda.getStatus() != JDA.Status.DISCONNECTED) {
@@ -744,6 +726,11 @@ public class Bot implements EventListener, ClassUtilities {
                 defLog.error("Failed to get Unsafe!");
             }
         }
+    }
+
+    public static Unsafe getUnsafe() {
+        ensureUnsafe();
+        return unsafe;
     }
 
     public interface EConsumer<T> {

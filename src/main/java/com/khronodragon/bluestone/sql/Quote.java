@@ -3,59 +3,31 @@ package com.khronodragon.bluestone.sql;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import static com.khronodragon.bluestone.util.Strings.format;
 
 @DatabaseTable(tableName = "quotes")
 public class Quote {
-    private static final String QUOTE_FORMAT = "**[{0}]** {4}\"{1}\"{4} — `{2}` (__{3,date}__)";
+    private static final String QUOTE_FORMAT = "**[%d]** %s\"%s\"%s — `%s` \u2022 %s";
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM dd, 'yy");
 
     @DatabaseField(generatedId = true, canBeNull = false, width = 4, index = true)
-    private int id;
+    public int id;
 
     @DatabaseField(width = 360, canBeNull = false)
-    private String quote;
+    public String quote;
 
     @DatabaseField(canBeNull = false)
-    private Date date;
+    public Date date;
 
     @DatabaseField(canBeNull = false, index = true)
-    private long authorId;
+    public long authorId;
 
     @DatabaseField(canBeNull = false, width = 32, defaultValue = "Someone")
-    private String authorName;
+    public String authorName;
 
     @DatabaseField(canBeNull = false)
-    private long quotedById = 0;
-
-    public int getId() {
-        return id;
-    }
-
-    public String getQuote() {
-        return quote;
-    }
-
-    public Date getDate() {
-        return date;
-    }
-
-    public long getAuthorId() {
-        return authorId;
-    }
-
-    public String getAuthorName() {
-        return authorName;
-    }
-
-    public long getQuotedById() {
-        return quotedById;
-    }
-
-    public void setQuotedById(long quotedById) {
-        this.quotedById = quotedById;
-    }
+    public long quotedById = 0;
 
     public Quote() {}
 
@@ -69,6 +41,7 @@ public class Quote {
     public String render() {
         String italicKey = quote.indexOf('*') == -1 ? "*" : "";
 
-        return format(QUOTE_FORMAT, id, quote, authorName, date, italicKey);
+        return String.format(QUOTE_FORMAT,
+                id, italicKey, quote, italicKey, authorName, DATE_FORMAT.format(date));
     }
 }

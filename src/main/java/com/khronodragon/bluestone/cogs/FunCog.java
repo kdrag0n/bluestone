@@ -1,7 +1,5 @@
 package com.khronodragon.bluestone.cogs;
 
-import com.google.re2j.Matcher;
-import com.google.re2j.Pattern;
 import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.emotes.*;
 import com.khronodragon.bluestone.annotations.Command;
@@ -49,7 +47,7 @@ import java.util.stream.Collectors;
 
 import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 import static com.khronodragon.bluestone.util.Strings.str;
-import static com.khronodragon.bluestone.util.Strings.format;
+import static java.lang.String.format;
 
 public class FunCog extends Cog {
     private static final Logger logger = LogManager.getLogger(FunCog.class);
@@ -149,43 +147,43 @@ public class FunCog extends Cog {
             "thoroughly",
             "doubtfully",
             "proudly"};
-    private static final String[] FIGHTS = {"pokes {0} with a spear",
-            "impales {0}",
-            "stabs {0}",
-            "guts {0} with a stone knife",
-            "eviscerates {0} with a sharp stone",
-            "decapitates {0} with a wand",
-            "fires cruise missle at {0}",
-            "backstabs {0}",
-            "punches {0}",
-            "poisons {0}",
-            "opens trapdoor under {0}",
-            "360 quick scopes {0}",
-            "noscopes {0}",
-            "normally snipes {0}",
-            "uses katana to slice through {0}",
-            "deadily stares at {0}",
-            "uses a trebuchet to shoot a 95kg projectile over 300 meters at {0}",
-            "snaps neck from {0}",
-            "pours lava over {0}",
-            "dumps acid above {0}",
-            "shoots with a glock 17 at {0}",
-            "incinerates {0}",
-            "uses a tridagger to stab {0}",
-            "assasinates {0}",
-            "fires with a minigun at {0}",
-            "fires with bazooka at {0}",
-            "uses granny bomb at {0}",
-            "throws bananabomb at {0}",
-            "throws holy grenade at {0}"};
-    private static final String[] DEATHS = {"{0} dies.",
-            "{0} survives.",
-            "Blood pours from {0}.",
-            "{0} heals themself.",
-            "Fairies take {0} away.",
-            "An old man carries {0} away.",
-            "{0} is in shock.",
-            "{0} passes out."};
+    private static final String[] FIGHTS = {"pokes %s with a spear",
+            "impales %s",
+            "stabs %s",
+            "guts %s with a stone knife",
+            "eviscerates %s with a sharp stone",
+            "decapitates %s with a wand",
+            "fires cruise missle at %s",
+            "backstabs %s",
+            "punches %s",
+            "poisons %s",
+            "opens trapdoor under %s",
+            "360 quick scopes %s",
+            "noscopes %s",
+            "normally snipes %s",
+            "uses katana to slice through %s",
+            "deadily stares at %s",
+            "uses a trebuchet to shoot a 95kg projectile over 300 meters at %s",
+            "snaps neck from %s",
+            "pours lava over %s",
+            "dumps acid above %s",
+            "shoots with a glock 17 at %s",
+            "incinerates %s",
+            "uses a tridagger to stab %s",
+            "assasinates %s",
+            "fires with a minigun at %s",
+            "fires with bazooka at %s",
+            "uses granny bomb at %s",
+            "throws bananabomb at %s",
+            "throws holy grenade at %s"};
+    private static final String[] DEATHS = {"%s dies.",
+            "%s survives.",
+            "Blood pours from %s.",
+            "%s heals themself.",
+            "Fairies take %s away.",
+            "An old man carries %s away.",
+            "%s is in shock.",
+            "%s passes out."};
     private static final Color BLEACH_COLOR = new Color(51, 143, 216);
     private static final MessageEmbed BLEACH_EMBED = new EmbedBuilder()
             .setColor(BLEACH_COLOR)
@@ -335,7 +333,7 @@ public class FunCog extends Cog {
             String fact = val(new JSONObject(Bot.http.newCall(new Request.Builder()
                     .get()
                     .url("https://dog-api.kinduff.com/api/facts?number=1")
-                    .build()).execute().body().string()).optJSONArray("facts")).or(new JSONArray())
+                    .build()).execute().body().string()).optJSONArray("facts")).or(JSONArray::new)
                             .optString(0, null);
 
             if (cat == null || fact == null) {
@@ -437,133 +435,6 @@ public class FunCog extends Cog {
         }, e -> ctx.send(Emotes.getFailure() + " Failed to fetch or create emote.").queue()));
     }
 
-    @Perm.ManageEmotes
-    @Command(name = "add_compound_emote", desc = "Add a compound emote to the server.", guildOnly = true,
-            aliases = {"add_cmp_emote", "addcemote", "addcmpemote", "cmp_add", "cadd",
-                    "cemote_add", "cmp_emote_add", "+ce", "+cmp", "+compound", "+cemote"},
-            usage = "[emote name] [attach an image]", hidden = true)
-    public void cmdAddCompoundEmote(Context ctx) { // TODO: fix this
-        String baseName;
-        Message.Attachment attachment;
-        if (ctx.args.empty || !Strings.isEmoteName(baseName = ctx.args.get(0))) {
-            ctx.fail("Invalid emote name! Must be between 2 and 32 characters in length.");
-            return;
-        } else if (ctx.message.getAttachments().size() < 1 || !(attachment = ctx.message.getAttachments().get(0)).isImage()) {
-            ctx.fail("You must upload an image!");
-            return;
-        }
-
-        ctx.channel.sendTyping().queue();
-
-        Bot.http.newCall(new Request.Builder()
-                .get()
-                .url(attachment.getProxyUrl())
-                .build()).enqueue(Bot.callback(resp -> {
-            BufferedImage base;
-
-            // Load image
-            try (InputStream is = resp.body().byteStream()) {
-                base = ImageIO.read(is);
-            } catch (IOException | NullPointerException | IllegalArgumentException ignored) {
-                ctx.fail("Invalid image! Only GIF, PNG, and JPEG images are supported.");
-                return;
-            } catch (ArrayIndexOutOfBoundsException ignored) {
-                ctx.fail("Your image seems to be in a weird format, or corrupted...");
-                return;
-            }
-
-            // Crop to square based on smallest dimension, if not already exactly square
-            int dim;
-            if (base.getWidth() != base.getHeight()) {
-                dim = Math.min(base.getWidth(), base.getHeight());
-                base = base.getSubimage(0, 0, dim, dim);
-            } else {
-                dim = base.getWidth();
-            }
-
-            // Init some variables
-            final int emoteImageDim = 112;
-            final int maxEmoteDim = 5;
-
-            // Dimension verification
-            int emoteDim = Math.round((float) dim / (float) emoteImageDim);
-            if (emoteDim > maxEmoteDim) {
-                emoteDim = maxEmoteDim;
-            }
-
-            int targetDim = emoteImageDim * emoteDim;
-            base = GraphicsUtils.resizeImage(base, targetDim, targetDim);
-
-            // Init some variables
-            List<byte[]> results = new ArrayList<>(emoteDim * emoteDim);
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-
-            // Do actual emote cropping
-            for (int x = 0; x < emoteDim; x++) {
-                for (int y = 0; y < emoteDim; y++) {
-                    BufferedImage section = base.getSubimage(emoteImageDim * x, emoteImageDim * y,
-                            emoteImageDim, emoteImageDim);
-
-                    ImageIO.write(section, "png", stream);
-                    results.add(stream.toByteArray());
-
-                    stream.reset();
-                }
-            }
-
-            ctx.channel.sendTyping().queue();
-            OffsetDateTime lastSentTyping = OffsetDateTime.now();
-            List<Emote> finalEmotes = new ArrayList<>(results.size());
-
-            for (int i = 0; i < results.size(); i++) {
-                Emote emote =
-                        ctx.guild.getController().createEmote(baseName + (i + 1), Icon.from(results.get(i)))
-                        .reason("Creating emote " + (i + 1) + " of " + results.size() +
-                                " for " + emoteDim + "x" + emoteDim + " compound emote \"" + baseName + '"')
-                        .complete();
-
-                finalEmotes.add(emote);
-
-                OffsetDateTime now = OffsetDateTime.now();
-                if (lastSentTyping.isBefore(now.minusSeconds(14))) {
-                    ctx.channel.sendTyping().queue();
-                    lastSentTyping = now;
-                }
-
-                Thread.sleep(100);
-            }
-
-            // Render and send the result
-            StringBuilder usageAll = new StringBuilder((baseName.length() + 4) * finalEmotes.size() + emoteDim);
-            StringBuilder renderAll = new StringBuilder((baseName.length() + 25) * finalEmotes.size() + emoteDim);
-
-            int ix = 1;
-            for (Emote emote : finalEmotes) {
-                // add to usageAll
-                usageAll.append(':')
-                        .append(emote.getName())
-                        .append(':');
-
-                // add to renderAll
-                renderAll.append(emote.getAsMention());
-
-                if (ix == 5) {
-                    usageAll.append('\n');
-                    renderAll.append('\n');
-                    ix = 0;
-                }
-
-                ix++;
-            }
-
-            ctx.send(Emotes.getSuccess() + " Compound emote created.\n\nUsage:\n```" + usageAll.toString() +
-                    "```\n\nResult:\n" + renderAll.toString()).queue();
-        }, e -> {
-            logger.error("Error creating compound emote", e);
-            ctx.fail("Failed to create compound emote.");
-        }));
-    }
-
     private String applyStyle(String orig, UnisafeString mapTo) {
         UnisafeString mapFrom = charsets.get("normal");
         StringBuilder newString = new StringBuilder();
@@ -634,7 +505,7 @@ public class FunCog extends Cog {
             return;
         }
 
-        ctx.send(format("{0} {1}s *{2}* **{3}**.", (ctx.guild == null ? ctx.author : ctx.member).getAsMention(),
+        ctx.send(format("%s %ss *%s* **%s**.", (ctx.guild == null ? ctx.author : ctx.member).getAsMention(),
                 ctx.invoker, ctx.rawArgs, randomChoice(ADJECTIVES))).queue();
     }
 
@@ -650,72 +521,13 @@ public class FunCog extends Cog {
                 format(randomChoice(FIGHTS), target) + ". " + format(randomChoice(DEATHS), target)).queue();
     }
 
-    @Command(name = "charlie", desc = "Ask a question... Charlie Charlie are you there?")
-    public void cmdCharlie(Context ctx) {
-        if (ctx.args.empty) {
-            ctx.fail("I need a question!");
-            return;
-        }
-        String question = ctx.rawArgs.endsWith("?") ? ctx.rawArgs : ctx.rawArgs + '?';
-
-        ctx.send("*Charlie Charlie* " + question + "\n**" + (randint(0, 1) == 1 ? "Yes" : "No") + "**").queue();
-    }
-
     @Command(name = "soon", desc = "Feel the loading of 10000 years, aka Soon™.", aliases = {"soontm"})
     public void cmdSoon(Context ctx) {
         ctx.channel.sendFile(FunCog.class.getResourceAsStream("/assets/soon.gif"),
                 "soon.gif", null).queue();
     }
 
-    @Perm.Patron
-    @Command(name = "multibleach", desc = "Get multiple loads of bleach.", usage = "[amount of bleach]",
-            aliases = {"mbleach", "mb"}, guildOnly = true)
-    public void cmdMultiBleach(Context ctx) {
-        short n;
-        try {
-            if ((n = Short.parseShort(ctx.args.get(0))) < 2 || n > 10) {
-                ctx.fail("You must specify between 2 and 10 bleach!");
-                return;
-            }
-        } catch (IndexOutOfBoundsException|NumberFormatException ignored) {
-            ctx.fail("You must specify between 2 and 10 bleach!");
-            return;
-        }
-
-        if (!ctx.guild.getSelfMember().hasPermission((TextChannel) ctx.channel, Permission.MANAGE_WEBHOOKS)) {
-            ctx.fail("I need to be able to **manage webhooks** here!");
-            return;
-        }
-
-        ctx.guild.getWebhooks().queue(wl -> {
-            Webhook hook = wl.stream()
-                    .filter(w -> w.getName().equals("multibleach for #" + ctx.channel.getName()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (hook == null) {
-                ((TextChannel) ctx.channel).createWebhook("multibleach for #" + ctx.channel.getName())
-                        .queue(h -> mb2(h, n),
-                                e -> ctx.send(Emotes.getFailure() + " Failed to create webhook.").queue());
-                return;
-            }
-
-            mb2(hook, n);
-        }, e -> ctx.send(Emotes.getFailure() + " Failed to fetch webhooks.").queue());
-    }
-
-    private void mb2(Webhook hook, short n) {
-        WebhookClient client = new WebhookClientBuilder(hook)
-                .setHttpClient(Bot.http)
-                .setDaemon(true)
-                .setExecutorService(Bot.scheduledExecutor)
-                .build();
-        client.send(numToBleachMsg.get(n));
-        client.close();
-    }
-
-    @Command(name = "rps", desc = "Play a game of Rock, Paper, Scissors with the bot. (10 rounds)",
-            aliases = {"rockpaperscissors", "rock,paper,scissors"})
+    @Command(name = "rps", desc = "Play a game of Rock, Paper, Scissors with the bot. (10 rounds)")
     public void cmdRps(Context ctx) {
         if (ctx.channel instanceof TextChannel &&
                 !ctx.member.hasPermission((Channel) ctx.channel,

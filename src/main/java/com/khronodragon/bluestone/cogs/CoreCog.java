@@ -208,7 +208,7 @@ public class CoreCog extends Cog {
         pages.add(emb.build());
 
         MessageDestination destination = MessageDestination.AUTHOR;
-        if (sendPublic || bot.isSelfbot()) {
+        if (sendPublic) {
             destination = MessageDestination.CHANNEL;
         } else {
             if (pages.size() < 2 && pages.get(0).getLength() < 1012) {
@@ -232,7 +232,7 @@ public class CoreCog extends Cog {
 
         if (destination == MessageDestination.AUTHOR && ctx.guild != null) {
             try {
-                ctx.message.addReaction("✅").queue();
+                ctx.message.addReaction("✅").queue(null, e -> {});
             } catch (PermissionException ignored) {
                 ctx.success("Check your DMs!");
             }
