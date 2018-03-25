@@ -18,7 +18,7 @@ public class WikiCog extends Cog {
     }
 
     public String getName() {
-        return "Wiki";
+        return "Wikipedia";
     }
 
     public String getDescription() {
