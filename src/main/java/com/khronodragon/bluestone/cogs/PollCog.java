@@ -20,7 +20,6 @@ import net.dv8tion.jda.core.entities.TextChannel;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.ocpsoft.prettytime.PrettyTime;
 
 import java.awt.*;
 import java.sql.SQLException;
@@ -35,13 +34,11 @@ import java.util.stream.Collectors;
 public class PollCog extends Cog {
     private static final Logger logger = LogManager.getLogger(PollCog.class);
 
-
     private static final Pattern UNICODE_EMOTE_PATTERN = Pattern.compile("([\\u20a0-\\u32ff\\x{1f000}-\\x{1ffff}\\x{fe4e5}-\\x{fe4ee}]|[0-9]\\u20e3)");
     private static final Pattern CUSTOM_EMOTE_PATTERN = Pattern.compile("<:[a-z_]+:([0-9]{17,19})>", Pattern.CASE_INSENSITIVE);
     private static final Pattern CONTIGUOUS_SPACE_PATTERN = Pattern.compile("\\s+");
     private final Dao<ActivePoll, Long> pollDao;
 
-    private final PrettyTime prettyTime = new PrettyTime();
     private final Parser timeParser = new Parser();
 
     public PollCog(Bot bot) {
@@ -95,8 +92,10 @@ public class PollCog extends Cog {
         }
 
         if (date == null || date.getTime() < System.currentTimeMillis()) {
-            ctx.send(Emotes.getFailure() +
-                    " Invalid time! I take formats like `1 week`, `5 minutes`, or `2 years`.").queue();
+            ctx.fail("Invalid length! Examples: `1 week`, `5 minutes`, `2 years`");
+            return;
+        } else if (date.getTime() > System.currentTimeMillis() + 15768000000L) { // 6 months
+            ctx.fail("That time/date is too far away!");
             return;
         }
 
@@ -151,7 +150,7 @@ public class PollCog extends Cog {
 
             embed.setDescription(question)
                     .appendDescription("\n\n")
-                    .appendDescription("**✅ Go ahead and vote!**");
+                    .appendDescription("**✅ Vote!**");
 
             schedulePoll(poll);
 
@@ -215,7 +214,7 @@ public class PollCog extends Cog {
 
                 EmbedBuilder emb = new EmbedBuilder(message.getEmbeds().get(0))
                         .addField("Winner", winner, false);
-                emb.getDescriptionBuilder().replace(emb.getDescriptionBuilder().indexOf("**✅ Go ahead and vote!**"),
+                emb.getDescriptionBuilder().replace(emb.getDescriptionBuilder().indexOf("**✅ Vote!**"),
                         emb.getDescriptionBuilder().length(), "**❌ Poll ended.**");
 
                 message.editMessage(emb.build()).queue();
