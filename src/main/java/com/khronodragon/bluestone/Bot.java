@@ -106,7 +106,7 @@ public class Bot implements EventListener, ClassUtilities {
     public final PrefixStore prefixStore;
 
     static {
-        scheduledExecutor.setMaximumPoolSize(6);
+        scheduledExecutor.setMaximumPoolSize(16);
         scheduledExecutor.setKeepAliveTime(16L, TimeUnit.SECONDS);
 
         ensureUnsafe();

@@ -69,17 +69,12 @@ public class StatReporterCog extends Cog {
                 put("bot.text_channels", shardUtil.getTextChannelCount());
                 put("bot.users", shardUtil.getUserCount());
                 put("bot.shards", shardUtil.getShardCount());
-                put("bot.cpu_usage", UtilityCog.systemBean.getProcessCpuLoad());
-                put("bot.cpu_time", UtilityCog.systemBean.getProcessCpuTime());
                 put("bot.emotes", shardUtil.getEmoteCount());
                 put("bot.music_tracks", shardUtil.getTrackCount());
                 put("bot.music_streams", shardUtil.getStreamCount());
                 put("bot.messages_per_min", messagesSinceLastReport.getAndSet(0));
                 put("bot.guilds_per_min", newGuildsSinceLastReport.getAndSet(0));
 
-                put("system.load_average", UtilityCog.systemBean.getSystemLoadAverage());
-                put("system.cpu_usage", UtilityCog.systemBean.getSystemCpuLoad());
-                put("system.memory_free", UtilityCog.systemBean.getFreePhysicalMemorySize());
                 put("system.memory_used", runtime.totalMemory() - runtime.freeMemory());
             }});
         } catch (Exception e) {
