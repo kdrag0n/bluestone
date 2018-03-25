@@ -42,6 +42,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.*;
@@ -612,6 +613,8 @@ public class Bot implements EventListener, ClassUtilities {
         String jsonCode;
         try {
             jsonCode = new String(Files.readAllBytes(Paths.get("patreon.json")));
+        } catch (NoSuchFileException ignored) {
+            return true;
         } catch (IOException e) {
             defLog.error("Failed to load Patreon data", e);
             return false;
