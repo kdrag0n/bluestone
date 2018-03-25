@@ -303,6 +303,8 @@ public class Strings {
     public static String formatMemory() {
         Runtime runtime = Runtime.getRuntime();
         NumberFormat format = NumberFormat.getInstance();
+        format.setMaximumFractionDigits(0);
+
         return format.format((runtime.totalMemory() - runtime.freeMemory()) / 1048576.0f) + " MB";
     }
 
@@ -316,10 +318,11 @@ public class Strings {
         long s = duration % 60;
         long d = h / 24;
         h = h % 24;
-        String sd = (d > 0 ? String.valueOf(d) + " day" + (d == 1 ? "" : "s") : "");
-        String sh = (h > 0 ? String.valueOf(h) + " hr" : "");
-        String sm = (m < 10 && m > 0 && h > 0 ? "0" : "") + (m > 0 ? (h > 0 && s == 0 ? String.valueOf(m) : String.valueOf(m) + " min") : "");
-        String ss = (s == 0 && (h > 0 || m > 0) ? "" : (s < 10 && (h > 0 || m > 0) ? "0" : "") + String.valueOf(s) + " sec");
-        return sd + (d > 0 ? " " : "") + sh + (h > 0 ? " " : "") + sm + (m > 0 ? " " : "") + ss;
+
+        String sd = d > 0 ? String.valueOf(d) + "d" : "";
+        String sh = h > 0 ? String.valueOf(h) + "h" : "";
+        String sm = m > 0 ? (h > 0 && s == 0 ? String.valueOf(m) : String.valueOf(m) + "m") : "1m";
+
+        return sd + sh + sm;
     }
 }

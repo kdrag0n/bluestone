@@ -68,7 +68,7 @@ public class Bot implements EventListener, ClassUtilities {
     private static final Pattern GENERAL_MENTION_PATTERN = Pattern.compile("^<@[!&]?[0-9]{17,20}>\\s*");
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
     public final Logger logger;
-    public static final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(6, new ThreadFactoryBuilder()
+    public static final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(8, new ThreadFactoryBuilder()
             .setDaemon(true)
             .setNameFormat("Bot BG-Task Thread %d")
             .build());

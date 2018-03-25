@@ -15,12 +15,16 @@ import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.requests.RestAction;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+
+import static com.khronodragon.bluestone.util.Strings.str;
 
 public class CoreCog extends Cog {
     private static final String JOIN_MESSAGE =
@@ -28,6 +32,12 @@ public class CoreCog extends Cog {
             "Enjoy!";
 
     private static final long PRODUCTION_USER_ID = 239775420470394897L;
+    static final Collection<Permission> PERMS_NEEDED = Permission.getPermissions(473295957L);
+
+    private static final String INFO_LINKS = "\u200b    \u2022 Use my [invite link]([invite]) to take me to another server\n" +
+            "    \u2022 [Donate](https://patreon.com/kdragon) to help keep me alive\n" +
+            "    \u2022 Go to [my website](https://khronodragon.com/goldmine/) for help\n" +
+            "    \u2022 Join my [support server](https://discord.gg/sYkwfxA) for even more help";
 
     public CoreCog(Bot bot) {
         super(bot);
@@ -251,6 +261,29 @@ public class CoreCog extends Cog {
     public void cmdUptime(Context ctx) {
         ctx.send("I've been up for **" + bot.formatUptime() +
                 "**, and am using **" + Strings.formatMemory() + "** of memory.").queue();
+    }
+
+    @Command(name = "info", desc = "Get some info about me.", aliases = {"about", "stats", "statistics", "status"})
+    public void cmdInfo(Context ctx) {
+        ShardUtil shardUtil = bot.shardUtil;
+
+        EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://khronodragon.com/goldmine")
+                .setColor(randomColor())
+                .setDescription("A bot by **" + Bot.ownerTag + "** made with ❤")
+                .addField("Servers", str(shardUtil.getGuildCount()), true)
+                .addField("Uptime", bot.formatUptime(), true)
+                .addField("Threads", str(Thread.activeCount()), true)
+                .addField("Memory Used", Strings.formatMemory(), true)
+                .addField("Users", str(shardUtil.getUserCount()), true)
+                .addField("Channels", str(shardUtil.getChannelCount()), true)
+                .addField("Revision", BuildConfig.GIT_SHORT_COMMIT, true)
+                .addField("Music Tracks Loaded", str(shardUtil.getTrackCount()), true)
+                .addField("Playing Music in", shardUtil.getStreamCount() + " channels", true)
+                .addField("Links", StringUtils.replace(INFO_LINKS, "[invite]", ctx.jda.asBot().getInviteUrl(PERMS_NEEDED)), false)
+                .setFooter("Serving you from shard " + bot.getShardNum(), null)
+                .setTimestamp(Instant.now());
+
+        ctx.send(emb.build()).queue();
     }
 
     @EventHandler

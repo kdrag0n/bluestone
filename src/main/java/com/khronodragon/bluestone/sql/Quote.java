@@ -9,7 +9,7 @@ import java.util.Date;
 @DatabaseTable(tableName = "quotes")
 public class Quote {
     private static final String QUOTE_FORMAT = "**[%d]** %s\"%s\"%s — `%s` \u2022 %s";
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM dd, 'yy");
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM dd, ''yy");
 
     @DatabaseField(generatedId = true, canBeNull = false, width = 4, index = true)
     public int id;

@@ -255,7 +255,7 @@ public class CryptoCurrencyCog extends Cog {
     }
 
     @Command(name = "dcl", desc = "List all cryptocurrencies, with a detailed info page for each one.",
-            usage = "{page #}")
+            usage = "{page #}", aliases = {"cryptolist"})
     public void cmdDclFull(Context ctx) {
         AtomicInteger index = new AtomicInteger(0);
         Consumer<Throwable> failure = ignored -> ctx.fail("Error setting up list!");

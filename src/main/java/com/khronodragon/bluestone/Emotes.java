@@ -74,13 +74,6 @@ public class Emotes {
             return "❌";
     }
 
-    public static String getCredits() {
-        if (hasParadise)
-            return "A <:discord:337404050737856522> bot by **kdragon#1337** made with <:jda:337404349514907648>, <:gradle:337404435128909825>, and <:intellij_idea:337404644835852288>";
-        else
-            return "A Discord bot by **kdragon#1337** made with JDA, Gradle, and IntelliJ IDEA";
-    }
-
     public static String getGrave() {
         if (hasParadise)
             return "<:rip:337405147347025930>";
