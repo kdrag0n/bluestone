@@ -18,6 +18,7 @@ import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
+import net.dv8tion.jda.core.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -307,12 +308,14 @@ public class ModerationCog extends Cog {
                     continue;
 
                 PermissionOverride override = channel.getPermissionOverride(user);
-                if (override == null)
-                    channel.createPermissionOverride(user)
-                            .setDeny(MUTED_PERMS)
-                            .reason(reason).queue();
-                else
-                    override.getManager().deny(MUTED_PERMS).reason(reason).queue();
+                try {
+                    if (override == null)
+                        channel.createPermissionOverride(user)
+                                .setDeny(MUTED_PERMS)
+                                .reason(reason).queue();
+                    else
+                        override.getManager().deny(MUTED_PERMS).reason(reason).queue();
+                } catch (InsufficientPermissionException ignored) {}
             }
 
             status.editMessage(Emotes.getSuccess() + " Muted **" +
@@ -358,8 +361,10 @@ public class ModerationCog extends Cog {
                     continue;
 
                 PermissionOverride override = channel.getPermissionOverride(user);
-                if (override != null)
-                    override.getManager().clear(MUTED_PERMS).reason(reason).queue();
+                try {
+                    if (override != null)
+                        override.getManager().clear(MUTED_PERMS).reason(reason).queue();
+                } catch (InsufficientPermissionException ignored) {}
             }
 
             status.editMessage(Emotes.getSuccess() + " Unmuted **" +

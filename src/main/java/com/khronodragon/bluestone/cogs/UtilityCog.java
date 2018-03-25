@@ -507,6 +507,10 @@ public class UtilityCog extends Cog {
         if (ctx.args.length < 1) {
             ctx.fail("Missing question, emotes, and time (like `5 minutes`)!");
             return;
+        } else if (!ctx.guild.getSelfMember().hasPermission(ctx.guild.getTextChannelById(ctx.channel.getIdLong()),
+                Permission.MESSAGE_HISTORY)) {
+            ctx.fail("I need the **read message history** permission!");
+            return;
         }
 
         StringBuilder qBuilder = new StringBuilder(ctx.rawArgs);
@@ -564,6 +568,7 @@ public class UtilityCog extends Cog {
             for (String emote: unicodeEmotes) {
                 msg.addReaction(emote).queue();
             }
+
             for (Emote emote: customEmotes) {
                 msg.addReaction(emote).queue();
             }
