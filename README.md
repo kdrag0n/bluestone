@@ -72,7 +72,7 @@ If there are errors, open an issue on GitHub or join the Discord [support server
 You will need to create `config.json` for the bot to be able to start.
 
 ## Simple
-Paste this into the `config.json` file:
+Create a `config.json` file with the following contents:
 ```json
 {
   "token": "[token here]"
