@@ -23,22 +23,11 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class CoreCog extends Cog {
-    private static final Logger logger = LogManager.getLogger(CoreCog.class);
     private static final String JOIN_MESSAGE =
-            "By adding this bot, you agree that the activity of all users in this server *may* be logged, depending on features used or enabled.\n" +
-                    "Features that may log data: quotes, starboard, etc. (this is to comply with the Discord ToS.)\n\n" +
-                    "**Enjoy this bot!**\n" +
-                    "\n" +
-                    "If you ever have questions, *please* read the **FAQ** first: <https://khronodragon.com/goldmine/faq>\n" +
-                    "It saves you, me, and everyone else a lot of time.\n" +
-                    "\n" +
-                    "*If you like " + Bot.NAME + ", please help keep it alive by donating here: <https://patreon.com/kdragon>.\n" +
-                    "Any amount is appreciated.*";
+            "Please read the FAQ *before* asking any questions. <https://tiny.cc/gfaq> Thanks ❤\n\n" +
+            "Enjoy!";
 
-    // IDs
     private static final long PRODUCTION_USER_ID = 239775420470394897L;
-
-    private static volatile int sTries = 0;
 
     public CoreCog(Bot bot) {
         super(bot);
@@ -91,7 +80,7 @@ public class CoreCog extends Cog {
 
     @Command(name = "owner", desc = "Become the bot owner.", aliases = {"bot_owner"})
     public void cmdOwnerInfo(Context ctx) {
-        ctx.send("My owner is **" + getTag(bot.owner) +
+        ctx.send("My owner is **" + Bot.ownerTag +
                 "**. The bot owner is a role that applies globally to the entire bot, and is the person who owns the actual bot, **not** the owner of a server or anything like that.\n" +
         "**No**, you may not have bot owner, because it allows full bot control. In your server, being **server owner** is sufficient, and grants you permission to perform all the actions you will need to, automatically.\n\n" +
         "**__TL;DR Server owner is enough, you can't have bot owner because that's one person (the actual owner of the bot) and offers unlimited control.__**").queue();
@@ -102,7 +91,7 @@ public class CoreCog extends Cog {
     public void cmdHelp(Context ctx) {
         int charLimit = ctx.jda.getSelfUser().isBot() ? MessageEmbed.EMBED_MAX_LENGTH_BOT : MessageEmbed.EMBED_MAX_LENGTH_CLIENT;
         boolean sendPublic = false;
-        boolean isOwner = ctx.author.getIdLong() == bot.owner.getIdLong();
+        boolean isOwner = ctx.author.getIdLong() == Bot.ownerId;
 
         if (ctx.invoker.charAt(0) == 'p' && Permissions.check(ctx,
                 Permission.MANAGE_CHANNEL, Permission.MANAGE_PERMISSIONS,

@@ -69,7 +69,7 @@ public class Permissions {
     }
 
     public static boolean check(Context ctx, Permission... permsAccepted) {
-        if (ctx.author.getIdLong() == ctx.bot.owner.getIdLong())
+        if (ctx.author.getIdLong() == Bot.ownerId)
             return true;
 
         outerLoop:

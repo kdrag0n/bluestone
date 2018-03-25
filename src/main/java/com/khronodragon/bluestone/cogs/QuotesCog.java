@@ -81,14 +81,14 @@ public class QuotesCog extends Cog {
         else if (Strings.is4Digits(invoked))
             quoteShowId(ctx, Integer.parseInt(invoked));
         else if (Strings.isID(invoked)) {
-            ctx._flag = true; // use different argument index
+            ctx.flag = true; // use different argument index
             quoteCmdAddMessage(ctx);
         } else
             ctx.send(NO_COMMAND).queue();
     }
 
     private void quoteCmdAdd(Context ctx) throws SQLException {
-        if (ctx.args.length < 8) {
+        if (ctx.rawArgs.length() < 8) {
             ctx.fail("I need valid text to quote!");
             return;
         } else if (banDao.queryForId(ctx.author.getIdLong()) != null) {
@@ -142,7 +142,7 @@ public class QuotesCog extends Cog {
             ctx.fail("No such quote!");
             return;
         } else if (quote.getAuthorId() != ctx.author.getIdLong() &&
-                ctx.author.getIdLong() != bot.owner.getIdLong() &&
+                ctx.author.getIdLong() != Bot.ownerId &&
                 ctx.author.getIdLong() != quote.getQuotedById()) {
             ctx.fail("You didn't write or quote that quote!");
             return;
@@ -243,7 +243,7 @@ public class QuotesCog extends Cog {
     }
 
     private void quoteCmdAddMessage(Context ctx) throws SQLException {
-        final int i = ctx._flag ? 0 : 1;
+        final int i = ctx.flag ? 0 : 1;
         if (ctx.args.length < 2 || !Strings.isID(ctx.args.get(i))) {
             ctx.fail("I need the ID of a message to quote!");
             return;

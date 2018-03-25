@@ -193,13 +193,6 @@ public class FunCog extends Cog {
             .setImage("https://upload.wikimedia.org/wikipedia/commons/d/d3/Clorox_Bleach_products.jpg")
             .build();
     private final EmoteProviderManager emoteProviderManager = new EmoteProviderManager();
-    // stage 1: consonants before vowel go to end, then + "ay" -- "latin" = "atinlay"
-    private static final Pattern pigLatinS1 = Pattern.compile("\b([b-df-hj-np-tv-z]+)([aeiou])(.*)\b", Pattern.CASE_INSENSITIVE);
-    // stage 2: single sound consonant cluster at beginning, move to end and append "ay"
-    private static final Pattern pigLatinS2 = Pattern.compile("\b([b-df-hj-np-tv-z]{2,3})(.*)\b", Pattern.CASE_INSENSITIVE);
-    // stage 3: begin with vowel, append "ay"
-    private static final Pattern pigLatinS3 = Pattern.compile("\b([aeiou])(.*)\b", Pattern.CASE_INSENSITIVE);
-
     static {
         List<MessageEmbed> list = new LinkedList<>();
 
@@ -715,33 +708,10 @@ public class FunCog extends Cog {
         WebhookClient client = new WebhookClientBuilder(hook)
                 .setHttpClient(Bot.http)
                 .setDaemon(true)
-                .setExecutorService(bot.scheduledExecutor)
+                .setExecutorService(Bot.scheduledExecutor)
                 .build();
         client.send(numToBleachMsg.get(n));
         client.close();
-    }
-
-    @Command(name = "pig_latin", desc = "Translate some text into Pig Latin.", aliases = {"pl", "piglatin", "pig"},
-            usage = "[text]")
-    public void cmdPigLatin(Context ctx) {
-        if (ctx.args.empty) {
-            ctx.fail("You must specify text to translate to Pig Latin!");
-            return;
-        }
-
-        // stage 1
-        Matcher matcher = pigLatinS1.matcher(ctx.rawArgs);
-        String result = matcher.replaceAll("$2$3$1ay");
-
-        // stage 2
-        matcher = pigLatinS2.matcher(result);
-        result = matcher.replaceAll("$2$1ay");
-
-        // stage 3
-        matcher = pigLatinS3.matcher(result);
-        result = matcher.replaceAll("$1$2ay");
-
-        ctx.send(result).queue();
     }
 
     @Command(name = "rps", desc = "Play a game of Rock, Paper, Scissors with the bot. (10 rounds)",

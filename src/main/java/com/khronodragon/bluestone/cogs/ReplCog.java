@@ -263,11 +263,11 @@ public class ReplCog extends Cog {
             if (result instanceof RestAction)
                 result = ((RestAction) result).complete();
             else if (result instanceof Message)
-                ctx.channel.sendMessage((Message) result).queue();
+                ctx.send((Message) result).queue();
             else if (result instanceof EmbedBuilder)
-                ctx.channel.sendMessage(((EmbedBuilder) result).build()).queue();
+                ctx.send(((EmbedBuilder) result).build()).queue();
             else if (result instanceof MessageEmbed)
-                ctx.channel.sendMessage((MessageEmbed) result).queue();
+                ctx.send((MessageEmbed) result).queue();
 
             engine.put("last", result);
 

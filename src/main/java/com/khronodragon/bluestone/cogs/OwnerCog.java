@@ -4,7 +4,6 @@ import com.khronodragon.bluestone.*;
 import com.khronodragon.bluestone.annotations.Command;
 import com.khronodragon.bluestone.annotations.Cooldown;
 import com.khronodragon.bluestone.enums.BucketType;
-import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.entities.*;
@@ -18,9 +17,7 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.io.File;
 import java.io.IOException;
-import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 import static com.khronodragon.bluestone.util.Strings.str;
@@ -137,8 +134,8 @@ public class OwnerCog extends Cog {
         if (ctx.jda.getShardInfo() != null) {
             ss = ctx.jda.getShardInfo().getShardString() + ' ';
 
-            if (!ctx._flag) {
-                ctx._flag = true;
+            if (!ctx.flag) {
+                ctx.flag = true;
 
                 Collection<Bot> shards = bot.shardUtil.getShards();
                 shards.remove(ctx.bot);

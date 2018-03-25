@@ -22,6 +22,7 @@ import net.dv8tion.jda.core.events.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.exceptions.InsufficientPermissionException;
+import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.hooks.EventListener;
 import net.dv8tion.jda.core.requests.RestAction;
 import okhttp3.*;
@@ -87,7 +88,6 @@ public class Bot implements EventListener, ClassUtilities {
     public final ShardUtil shardUtil;
     public static JSONObject patreonData = new JSONObject();
     public static TLongSet patronIds = new TLongHashSet();
-    private final Set<ScheduledFuture> tasks = new HashSet<>();
     public final Map<String, Command> commands = new HashMap<>();
     public final Map<String, Cog> cogs = new HashMap<>();
     private final Map<Class<? extends Event>, List<ExtraEvent>> extraEvents = new HashMap<>();
@@ -98,12 +98,12 @@ public class Bot implements EventListener, ClassUtilities {
             .writeTimeout(8, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
             .build();
-    public User owner;
+    public static long ownerId;
+    public static String ownerTag;
     private static long ourId;
     private static String ourMention;
     private static String ourGuildMention;
     public final PrefixStore prefixStore;
-    private static boolean shouldReportErrors = !Start.hasSentry;
 
     static {
         scheduledExecutor.setMaximumPoolSize(6);
@@ -197,7 +197,7 @@ public class Bot implements EventListener, ClassUtilities {
                         } catch (InvocationTargetException eContainer) {
                             Throwable e = eContainer.getCause();
 
-                            logger.error("{} errored while handling a {}",
+                            logger.error("{} error handling {}",
                                     extraEvent.getMethod().getDeclaringClass().getName(),
                                     event.getClass().getSimpleName(), e);
                         }
@@ -212,13 +212,17 @@ public class Bot implements EventListener, ClassUtilities {
         }
     }
 
-    private void updateOwner() {
+    private void updateOwnerInfo() {
+        User owner;
         if (jda.getSelfUser().isBot()) {
             ApplicationInfo appInfo = jda.asBot().getApplicationInfo().complete();
             owner = appInfo.getOwner();
         } else {
             owner = jda.getSelfUser();
         }
+
+        ownerId = owner.getIdLong();
+        ownerTag = Cog.getTag(owner);
     }
 
     private void onReady() {
@@ -227,11 +231,10 @@ public class Bot implements EventListener, ClassUtilities {
         ourMention = jda.getSelfUser().getAsMention();
         ourGuildMention = "<@!" + ourId + '>';
 
-        updateOwner();
-        logger.info("Ready - ID {}", ourId);
+        if (ownerId == 0)
+            updateOwnerInfo();
 
-        if (jda.getGuilds().size() < 100)
-            shouldReportErrors = false;
+        logger.info("Ready - ID {}", ourId);
 
         if (jda.getGuildById(110373943822540800L) != null)
             Emotes.setHasDbots();
@@ -305,8 +308,7 @@ public class Bot implements EventListener, ClassUtilities {
             jda.getPresence().setGame(status);
         };
 
-        ScheduledFuture future = scheduledExecutor.scheduleAtFixedRate(task, 10, 120, TimeUnit.SECONDS);
-        tasks.add(future);
+        scheduledExecutor.scheduleAtFixedRate(task, 10, 120, TimeUnit.SECONDS);
 
         Reflections reflector = new Reflections("com.khronodragon.bluestone.cogs");
         Set<Class<? extends Cog>> cogClasses = reflector.getSubTypesOf(Cog.class);
@@ -493,19 +495,20 @@ public class Bot implements EventListener, ClassUtilities {
                     GENERAL_MENTION_PATTERN.matcher(message.getContentRaw()).replaceFirst(""));
 
             if (request.equalsIgnoreCase("prefix")) {
-                channel.sendMessage("My prefix here is `" + prefix + "`.").queue();
+                channel.sendMessage("My prefix here is `" + Context.filterMessage(prefix) + "`.").queue();
             } else if (request.length() > 0) {
                 chatResponse(channel, "gbot_" + author.getId(), request, null);
             } else {
                 channel.sendMessage("To talk, start your message with `@Goldmine`.\n" +
                         "Prefix: `" + Context.filterMessage(prefix) + '`').queue();
             }
-        } else if (channel instanceof PrivateChannel && author.getIdLong() != owner.getIdLong() &&
+        } else if (channel instanceof PrivateChannel && author.getIdLong() != ownerId &&
                 content.length() != 0 && content.charAt(0) == '`') {
             final String request = Strings.renderMessage(message, null, message.getContentRaw());
 
             if (request.length() < 1) {
-                channel.sendMessage("**Hey there**! My prefix is `" + prefix + "`.\nYou can use commands, or talk to me directly.").queue();
+                channel.sendMessage("My prefix is `" + Context.filterMessage(prefix) +
+                        "`.\nYou can use commands with `!`, or talk directly.").queue();
             } else {
                 chatResponse(channel, "bs_GMdbot2-" + author.getId(), request, "💬 ");
             }
@@ -542,26 +545,11 @@ public class Bot implements EventListener, ClassUtilities {
             else
                 toSend = respPrefix + resp.getString("response");
 
-            channel.sendMessage(toSend).queue(null, e -> {});
+            channel.sendMessage(Context.filterMessage(toSend)).queue(null, e -> {});
         }, e -> {
             logger.error("Error getting ChatEngine response", e);
             channel.sendMessage(Emotes.getFailure() + " Try again later.").queue(null, ex -> {});
         }));
-    }
-
-    public void reportErrorToOwner(Throwable e, Message msg, Command cmd) {
-        if (!shouldReportErrors) return;
-
-        owner.openPrivateChannel().queue(ch -> ch.sendMessage(errorEmbed(e, msg, cmd)).queue());
-    }
-
-    public static Unsafe getUnsafe() {
-        if (unsafe == null) {
-            ensureUnsafe();
-            return unsafe;
-        }
-
-        return unsafe;
     }
 
     private MessageEmbed errorEmbed(Throwable e, Message msg, Command cmd) {
@@ -768,7 +756,7 @@ public class Bot implements EventListener, ClassUtilities {
             public void onResponse(Call call, Response response) {
                 try {
                     if (!(response.isSuccessful() || response.isRedirect())) {
-                        failure.accept(new IOException("Request was not successful. Got status " +
+                        failure.accept(new IOException("Request unsuccessful, status " +
                                 response.code() + " " + response.message()));
                         return;
                     }
@@ -786,7 +774,14 @@ public class Bot implements EventListener, ClassUtilities {
 
                         failure.accept(e);
                     } catch (Throwable ee) {
-                        defLog.error("Error running HTTP call failure callback after error in success callback!", ee);
+                        if (ee instanceof PermissionException) {
+                            PermissionException pe = (PermissionException) ee;
+                            if (pe.getPermission() != Permission.MESSAGE_WRITE) {
+                                defLog.error("Permission error in HTTP fail callback after success callback error", pe);
+                            }
+                        } else {
+                            defLog.error("Error running HTTP call failure callback after error in success callback!", ee);
+                        }
                     }
                 }
             }

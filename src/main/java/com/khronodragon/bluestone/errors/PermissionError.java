@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class PermissionError extends CheckFailure {
+public class PermissionError extends RuntimeException {
     private Permission[] erroredPerms;
 
     public PermissionError() {}

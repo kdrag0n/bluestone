@@ -1,6 +1,5 @@
 package com.khronodragon.bluestone.cogs;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.j256.ormlite.dao.Dao;
 import com.khronodragon.bluestone.*;
@@ -22,7 +21,6 @@ import gnu.trove.impl.sync.TSynchronizedLongObjectMap;
 import gnu.trove.map.TLongObjectMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.GuildVoiceState;
 import net.dv8tion.jda.core.entities.Member;
@@ -33,8 +31,6 @@ import net.dv8tion.jda.core.events.guild.voice.GuildVoiceJoinEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.managers.AudioManager;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.sql.SQLException;
 import java.time.Instant;
@@ -42,6 +38,8 @@ import java.util.*;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static com.khronodragon.bluestone.util.NullValueWrapper.val;
 
 public class MusicCog extends Cog {
     private ScheduledThreadPoolExecutor bgExecutor = new ScheduledThreadPoolExecutor(2, new ThreadFactoryBuilder()
@@ -327,6 +325,7 @@ public class MusicCog extends Cog {
 
         EmbedBuilder builder = new EmbedBuilder()
                 .setAuthor("Voice Queue", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
+                .setColor(val(ctx.member.getColor()).or(Cog::randomColor))
                 .setTimestamp(Instant.now());
 
         if (state.scheduler.current == null)
@@ -355,10 +354,7 @@ public class MusicCog extends Cog {
         }
 
         try {
-            ctx.send(new MessageBuilder()
-                    .append("🎶🎵")
-                    .setEmbed(builder.build())
-                    .build()).queue();
+            ctx.send(builder.build()).queue();
         } catch (IllegalArgumentException e) {
             ctx.fail("Queue too long to be displayed!");
         }

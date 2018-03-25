@@ -22,7 +22,6 @@ public class AdminCog extends Cog {
             Permission.MESSAGE_MANAGE};
     private static final String ADMIN_NO_COMMAND = "🤔 **I need an action!**\n" +
             "The following are valid:\n" +
-            "    \u2022 `test` - test if you're an admin\n" +
             "    \u2022 `list` - list current admins\n" +
             "    \u2022 `add [mention or id]` - add an admin\n" +
             "    \u2022 `remove [mention or id]` - remove an admin\n" +
@@ -64,18 +63,10 @@ public class AdminCog extends Cog {
             case "remove":
                 adminCmdRemove(ctx);
                 break;
-            case "test":
-                adminCmdTest(ctx);
-                break;
             default:
                 ctx.send(ADMIN_NO_COMMAND).queue();
                 break;
         }
-    }
-
-    private void adminCmdTest(Context ctx) throws SQLException {
-        String admin = bot.getAdminDao().idExists(ctx.author.getIdLong()) ? " 👋 Hey there, admin!" : " 😢 You aren't an admin!";
-        ctx.send(ctx.mention + admin).queue();
     }
 
     private void adminCmdList(Context ctx) throws SQLException {

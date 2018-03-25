@@ -1,6 +1,7 @@
 package com.khronodragon.bluestone.voice;
 
 import com.khronodragon.bluestone.Bot;
+import com.khronodragon.bluestone.Context;
 import com.khronodragon.bluestone.Emotes;
 import com.khronodragon.bluestone.util.Strings;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
@@ -77,7 +78,7 @@ public class TrackScheduler extends AudioEventAdapter {
             if (track.getUserData() != null && track.getUserData(ExtraTrackInfo.class).sendNowPlaying) {
                 AudioTrackInfo info = track.getInfo();
                 track.getUserData(ExtraTrackInfo.class).textChannel
-                        .sendMessage("➡ **" + mentionClean(info.title) + "**, length **" +
+                        .sendMessage("➡ **" + Context.filterMessage(info.title) + "**, length **" +
                                 Strings.formatDuration(info.length / 1000L) + "**").queue();
             }
         } catch (PermissionException ignored) {}
@@ -138,9 +139,5 @@ public class TrackScheduler extends AudioEventAdapter {
 
     public void shuffleQueue() {
         Collections.shuffle((List<?>) queue);
-    }
-
-    private String mentionClean(String in) {
-        return in.replace("@everyone", "@\u200beveryone").replace("@here", "@\u200bhere");
     }
 }

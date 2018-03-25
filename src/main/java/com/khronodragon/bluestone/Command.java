@@ -1,11 +1,9 @@
 package com.khronodragon.bluestone;
 
-import com.khronodragon.bluestone.errors.CheckFailure;
 import com.khronodragon.bluestone.errors.GuildOnlyError;
 import com.khronodragon.bluestone.errors.PassException;
 import com.khronodragon.bluestone.errors.PermissionError;
 import com.khronodragon.bluestone.util.ArrayListView;
-import com.khronodragon.bluestone.util.StackUtil;
 import com.khronodragon.bluestone.util.Strings;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.MessageChannel;
@@ -18,7 +16,6 @@ import org.json.JSONException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
-import java.util.function.Predicate;
 
 import static com.khronodragon.bluestone.util.Strings.format;
 
@@ -30,11 +27,8 @@ public class Command {
     private final Permission[] permsRequired;
     private final boolean guildOnly;
     public final String[] aliases;
-    private final String cogName;
     private final boolean needThread;
-    private final boolean reportErrors;
     public final boolean requiresOwner;
-    // private List<Predicate<Context>> checks = new ArrayList<>(1);
     private final Method func;
     public final Cog cog;
 
@@ -50,17 +44,14 @@ public class Command {
         this.aliases = aliases;
         this.func = func;
         this.cog = cogInstance;
-        this.cogName = cogInstance.getName();
         this.needThread = needThread;
-        this.reportErrors = reportErrors;
         this.requiresOwner = ArrayUtils.contains(permsRequired, Permissions.BOT_OWNER);
     }
 
     private void invoke(Bot bot, MessageReceivedEvent event, ArrayListView args,
-                        String prefix, String invoker) throws IllegalAccessException, InvocationTargetException, CheckFailure {
+                        String prefix, String invoker) throws IllegalAccessException, InvocationTargetException {
         Context ctx = new Context(bot, event, args, prefix, invoker);
 
-        // runChecks(ctx); // checks aren't implemented yet
         if (guildOnly && ctx.guild == null) {
             throw new GuildOnlyError("Command only works in a guild");
         }
@@ -77,11 +68,11 @@ public class Command {
         if (needThread) {
             Runnable task = () -> invokeWithHandling(bot, event, args, prefix, invoker);
 
-            if (bot.threadExecutor.getActiveCount() >= bot.threadExecutor.getMaximumPoolSize()) {
+            if (Bot.threadExecutor.getActiveCount() >= Bot.threadExecutor.getMaximumPoolSize()) {
                 event.getChannel().sendMessage(
-                        "⌛ Your command has been queued. **If this happens often, contact the owner!**").queue();
+                        "⌛ Your command has been queued.").queue();
             }
-            bot.threadExecutor.execute(task);
+            Bot.threadExecutor.execute(task);
         } else {
             invokeWithHandling(bot, event, args, prefix, invoker);
         }
@@ -96,7 +87,7 @@ public class Command {
                 invoke(bot, event, args, prefix, invoker);
             } catch (IllegalAccessException e) {
                 bot.logger.error("Severe command ({}) invocation error:", invoker, e);
-                channel.sendMessage(Emotes.getFailure() + " A severe internal error occurred.").queue();
+                channel.sendMessage(Emotes.getFailure() + " An internal error occurred.").queue();
             } catch (InvocationTargetException e) {
                 Throwable cause = e.getCause();
 
@@ -107,93 +98,51 @@ public class Command {
                     if (cause instanceof PassException) {
                     // assume error has already been sent
                 } else if (cause instanceof PermissionError) {
-                    channel.sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.",
-                            event.getAuthor().getAsMention(), prefix, invoker,
-                            Strings.smartJoin(((PermissionError) cause).getFriendlyPerms(), "or"))).queue();
+                    channel.sendMessage(format("You can't use `{0}` because **{1}** is required.",
+                            invoker, Strings.smartJoin(((PermissionError) cause).getFriendlyPerms(), "or"))).queue();
                 } else if (cause instanceof PermissionException) {
                     channel.sendMessage(Emotes.getFailure() + " I need the **" +
-                            ((PermissionException) cause).getPermission().getName() + "** permission!").queue();
+                            ((PermissionException) cause).getPermission().getName() + "** permission.").queue();
                 } else if (cause instanceof ErrorResponseException) {
                     if (((ErrorResponseException) cause).getErrorCode() == 50013) {
-                        channel.sendMessage(Emotes.getFailure() +
-                                " I'm missing a permission! Make sure I have enough permissions to do that.").queue();
+                        channel.sendMessage(Emotes.getFailure() + " I don't have the permission to do that.").queue();
                     } else {
                         bot.logger.error("Command ({}) invocation error:", invoker, cause);
-                        channel.sendMessage(format(Emotes.getFailure() + " Error!```java\n{2}```This error has been reported.",
-                                prefix, invoker, StackUtil.vagueTrace(cause))).queue();
-
-                        if (reportErrors)
-                            bot.reportErrorToOwner(cause, event.getMessage(), this);
+                        channel.sendMessage(format(Emotes.getFailure() + " Error. `{0}`",
+                                cause.getClass().getSimpleName())).queue();
                     }
                 } else if (cause instanceof SQLException) {
                     bot.logger.error("SQL error in command {}:", invoker, cause);
-                    channel.sendMessage(format(Emotes.getFailure() + " A database error has occurred.```java\n{2}```This error has been reported.",
-                            prefix, invoker, StackUtil.briefSqlError(((SQLException) cause)))).queue();
-
-                    bot.reportErrorToOwner(cause, event.getMessage(), this);
+                    channel.sendMessage(format(Emotes.getFailure() + " A database error occurred.")).queue();
                 } else if (cause instanceof JSONException) {
                     bot.logger.error("Command {}: Invalid JSON received", invoker);
-                    channel.sendMessage(Emotes.getFailure() + " The service responded with invalid data. Try again later.").queue();
+                    channel.sendMessage(Emotes.getFailure() + " The service provided invalid data. Try again later.").queue();
                 } else {
                     bot.logger.error("Command ({}) invocation error:", invoker, cause);
-                    channel.sendMessage(format(Emotes.getFailure() + " Error!```java\n{2}```This error has been reported.",
-                            prefix, invoker, StackUtil.vagueTrace(cause))).queue();
-
-                    if (reportErrors)
-                        bot.reportErrorToOwner(cause, event.getMessage(), this);
+                    channel.sendMessage(format(Emotes.getFailure() + " An error occurred. `{0}`",
+                            cause.getClass().getSimpleName())).queue();
                 }
             } catch (PermissionError e) {
-                channel.sendMessage(format("{0} Missing permission for `{1}{2}`! **{3}** will work.",
-                        event.getAuthor().getAsMention(), prefix, invoker,
-                        Strings.smartJoin(e.getFriendlyPerms(), "or"))).queue();
+                channel.sendMessage(format("You can't use `{0}` because **{1}** is required.",
+                        invoker, Strings.smartJoin(e.getFriendlyPerms(), "or"))).queue();
             } catch (GuildOnlyError e) {
-                channel.sendMessage(Emotes.getFailure() + "Sorry, that command only works in a server.").queue();
-            } catch (CheckFailure e) {
-                channel.sendMessage(format("{0} A check for `{1}{2}` failed. Do you not have permissions?",
-                        event.getAuthor().getAsMention(), prefix, invoker)).queue();
+                channel.sendMessage(Emotes.getFailure() + " That command only works in a server.").queue();
             } catch (Exception e) {
                 bot.logger.error("Unknown command ({}) error:", invoker, e);
-                channel.sendMessage(Emotes.getFailure() + " An internal error occurred. It has been reported.").queue();
-
-                bot.reportErrorToOwner(e, event.getMessage(), this);
+                channel.sendMessage(Emotes.getFailure() + " An internal error occurred.").queue();
             }
         } catch (PermissionException ignored) {}
     }
 
-    /*
-    private boolean runChecks(Context ctx) throws CheckFailure {
-        if (guildOnly && ctx.guild == null) {
-            throw new GuildOnlyError("Command only works in a guild");
-        }
-
-        if (permsRequired.length > 0) {
-            checkPerms(ctx);
-        }
-
-        for (Predicate<Context> check: checks) {
-            try {
-                if (!check.test(ctx)) {
-                    throw new CheckFailure("Check failed");
-                }
-            } catch (CheckFailure e) {
-                throw e;
-            } catch (Exception e) {
-                throw new CheckFailure("Check failed");
-            }
-        }
-        return true;
-    }
-    */
-
     private void checkPerms(Context ctx) throws PermissionError {
         if (!Permissions.check(ctx, permsRequired))
-            throw new PermissionError("Requester missing permissions for command " + name)
+            throw new PermissionError("Sender missing permissions for command " + name)
                    .setPerms(permsRequired);
     }
 
     public static void checkPerms(Context ctx, Permission[] permsRequired) {
         if (!Permissions.check(ctx, permsRequired))
-            throw new PermissionError("Requester missing permissions for command")
+            throw new PermissionError("Sender missing permissions")
                     .setPerms(permsRequired);
     }
 }

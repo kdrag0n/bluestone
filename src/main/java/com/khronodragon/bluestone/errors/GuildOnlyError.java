@@ -1,6 +1,6 @@
 package com.khronodragon.bluestone.errors;
 
-public class GuildOnlyError extends CheckFailure {
+public class GuildOnlyError extends RuntimeException {
     public GuildOnlyError() {}
 
     public GuildOnlyError(String message) {

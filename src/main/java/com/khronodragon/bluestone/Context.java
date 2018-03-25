@@ -10,6 +10,8 @@ import org.apache.commons.lang3.StringUtils;
 import javax.annotation.CheckReturnValue;
 
 public class Context {
+    private static final String truncateSuffix = "**...too long**";
+    private static final String codeTruncateSuffix = "```" + truncateSuffix;
     public Bot bot;
     public final MessageReceivedEvent event;
     public final Message message;
@@ -22,8 +24,7 @@ public class Context {
     public final ArrayListView args;
     public String invoker;
     public final String rawArgs;
-    public final String mention;
-    public boolean _flag = false;
+    public boolean flag = false;
 
     public Context(Bot bot, MessageReceivedEvent event, ArrayListView args,
                    String prefix, String invoker) {
@@ -38,41 +39,34 @@ public class Context {
         this.prefix = prefix;
         this.args = args;
         this.invoker = invoker;
-        this.mention = author.getAsMention();
-        this.rawArgs = message.getContentRaw().substring(Math.min(prefix.length() + invoker.length() + 1, prefix.length() + invoker.length())).trim();
+        this.rawArgs = message.getContentRaw().substring(prefix.length() + invoker.length()).trim();
     }
 
     public static String truncate(String msg) {
-        return truncate(msg, "**...too long**");
-    }
-
-    private static String truncate(String msg, @SuppressWarnings("SameParameterValue") String truncateString) {
         if (msg.length() > 2000) {
             msg = msg.substring(0, 2000);
+
             if (StringUtils.countMatches(msg, "```") % 2 == 1) {
-                truncateString = "```" + truncateString;
+                return msg.substring(0, msg.length() - codeTruncateSuffix.length()) + codeTruncateSuffix;
             }
-            return msg.substring(0, msg.length() - truncateString.length()) + truncateString;
-        } else {
-            return msg;
+
+            return msg.substring(0, msg.length() - truncateSuffix.length()) + truncateSuffix;
         }
+
+        return msg;
     }
 
+    @CheckReturnValue
     public static String filterMessage(String msg) {
-        return truncate(StringUtils.replace(StringUtils.replace(msg, "@everyone", "@\u200beveryone")
-                , "@here", "@\u200bhere"));
+        return StringUtils.replace(StringUtils.replace(msg, "@everyone", "@\u200beveryone", -1),
+                "@here", "@\u200bhere", -1);
     }
 
     @CheckReturnValue
     public RestAction<Message> send(String msg) {
-        msg = truncate(StringUtils.replace(StringUtils.replace(msg, "@everyone", "@\u200beveryone")
-                , "@here", "@\u200bhere")); // fully inline filter here for performance
+        msg = truncate(StringUtils.replace(StringUtils.replace(msg, "@everyone", "@\u200beveryone", -1),
+                "@here", "@\u200bhere", -1)); // fully inline
 
-        return channel.sendMessage(msg);
-    }
-
-    @CheckReturnValue
-    public RestAction<Message> rawSend(String msg) {
         return channel.sendMessage(msg);
     }
 

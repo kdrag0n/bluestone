@@ -54,7 +54,7 @@ public class ReminderCog extends Cog {
     }
 
     private void schedule(Reminder reminder) {
-        bot.scheduledExecutor.schedule(() -> {
+        Bot.scheduledExecutor.schedule(() -> {
             try {
                 dao.delete(reminder);
             } catch (SQLException ignored) {}

@@ -569,7 +569,7 @@ public class UtilityCog extends Cog {
             }
 
             ActivePoll poll = new ActivePoll(msg.getIdLong(), msg.getChannel().getIdLong(), finalDate);
-            bot.threadExecutor.execute(() -> {
+            Bot.threadExecutor.execute(() -> {
                 try {
                     pollDao.create(poll);
                 } catch (SQLException e) {
@@ -583,7 +583,7 @@ public class UtilityCog extends Cog {
 
             schedulePoll(poll);
 
-            bot.scheduledExecutor.schedule(() ->
+            Bot.scheduledExecutor.schedule(() ->
                             msg.editMessage(embed.build()).queue(),
                     (unicodeEmotes.size() + customEmotes.size()) * (int) (ctx.jda.getPing() * 1.92),
                     TimeUnit.MILLISECONDS);
@@ -596,7 +596,7 @@ public class UtilityCog extends Cog {
         if (bot.jda.getTextChannelById(poll.getChannelId()) == null)
             return;
 
-        bot.scheduledExecutor.schedule(() -> {
+        Bot.scheduledExecutor.schedule(() -> {
             TextChannel channel = bot.jda.getTextChannelById(poll.getChannelId());
 
             try {
@@ -647,9 +647,9 @@ public class UtilityCog extends Cog {
                         emb.getDescriptionBuilder().length(), "**❌ Poll ended.**");
 
                 message.editMessage(emb.build()).queue();
-                channel.sendMessage("**Poll ended!\n" +
+                channel.sendMessage("**Poll ended!**\n" +
                         "Winner: " + winner + "\n\n" +
-                        "Full Results:**\n" + String.join("\n", orderedResultList)).queue();
+                        "Full Results:\n" + String.join("\n", orderedResultList)).queue();
             } catch (Exception e) {
                 logger.error("Poll: error", e);
             } finally {
@@ -1079,13 +1079,14 @@ public class UtilityCog extends Cog {
                     guild.getMembersMap().size(), true);
         }
 
-        PrivateChannel ownerChannel = bot.owner.openPrivateChannel().complete(); // one-time and fast enough
-        ownerChannel.sendMessage(new MessageBuilder()
-                .append("📧 New message.")
-                .setEmbed(emb.build())
-                .build()).queue();
+        ctx.jda.getUserById(Bot.ownerId).openPrivateChannel().queue(ch -> {
+            ch.sendMessage(new MessageBuilder()
+                    .append("📧 New message.")
+                    .setEmbed(emb.build())
+                    .build()).queue();
 
-        ctx.success("Message sent.");
+            ctx.success("Message sent.");
+        });
     }
 
     @Perm.Owner

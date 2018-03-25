@@ -442,9 +442,9 @@ public class ModerationCog extends Cog {
 
         user.getUser().openPrivateChannel().queue(ch -> {
             if (validUreason)
-                ch.sendMessage("You've been banned from **" + ctx.guild.getName() + "** for `" + userReason + "`.").queue();
+                ch.sendMessage("You were banned from **" + ctx.guild.getName() + "** for `" + userReason + "`.").queue();
             else
-                ch.sendMessage("You've been banned from **" + ctx.guild.getName() + "**. No reason was specified.").queue();
+                ch.sendMessage("You were banned from **" + ctx.guild.getName() + "**. No reason was specified.").queue();
 
             ctx.guild.getController().ban(user, 0, reason).reason(reason).queue();
             ctx.send("🔨 Banned.").queue();
