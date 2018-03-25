@@ -49,6 +49,12 @@ public class WikiCog extends Cog {
             }
 
             JSONArray json = new JSONArray(response.body().string());
+            if (json.getJSONArray(1).length() < 1) {
+                emb.setDescription("No results.");
+                ctx.send(emb.build()).queue();
+                return;
+            }
+
             emb.setTitle(json.getJSONArray(1).getString(0))
                     .setDescription(json.getJSONArray(2).getString(0))
                     .addField("Link", json.getJSONArray(3).getString(0), false);
