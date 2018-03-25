@@ -97,7 +97,6 @@ This is the template:
 {
   "token": "token",
   "shard_count": 2,
-  "type": "bot",
   "db_url": "h2:./database",
   "db_user": "username",
   "db_pass": "password",

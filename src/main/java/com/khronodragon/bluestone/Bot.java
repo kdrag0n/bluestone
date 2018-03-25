@@ -628,7 +628,7 @@ public class Bot implements EventListener, ClassUtilities {
         return true;
     }
 
-    public static int start(String token, int shardCount, AccountType accountType, JSONObject config) {
+    public static int start(String token, int shardCount, JSONObject config) {
         System.out.println("Starting...");
 
         if (shardCount < 1) {
@@ -640,7 +640,7 @@ public class Bot implements EventListener, ClassUtilities {
         }
 
         ShardUtil shardUtil = new ShardUtil(shardCount, config);
-        JDABuilder builder = new JDABuilder(accountType)
+        JDABuilder builder = new JDABuilder(AccountType.BOT)
                 .setToken(token)
                 .setAudioEnabled(true)
                 .setAutoReconnect(true)
