@@ -76,8 +76,8 @@ shadowJar {
 }
 
 dependencies {
-    compile 'net.dv8tion:JDA:3.5.1_352'
-    compile 'com.sedmelluq:lavaplayer:1.2.56'
+    compile 'net.dv8tion:JDA:3.5.1_353'
+    compile 'com.sedmelluq:lavaplayer:1.2.58'
     compile 'com.squareup.okhttp3:okhttp:3.10.0'
     compile 'com.google.guava:guava:24.1-jre'
     compile 'org.json:json:20180130'
