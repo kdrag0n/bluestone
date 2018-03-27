@@ -56,7 +56,9 @@ public class ReplCog extends Cog {
             "import com.khronodragon.bluestone.enums.*\n" +
             "import com.khronodragon.bluestone.util.*\n" +
             "import java.time.*\n" +
-            "import java.math.*\n";
+            "import java.math.*\n" +
+            "import java.lang.*\n" +
+            "import java.util.*\n";
 
     private TLongSet replSessions = new TLongHashSet();
 
