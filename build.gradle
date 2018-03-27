@@ -13,13 +13,13 @@ plugins {
     id 'de.fuerstenau.buildconfig' version '1.1.8'
 }
 
-group 'com.khronodragon'
+group 'com.kdragon'
 version '0.9.1'
 compileJava.options.encoding = 'UTF-8'
 
 sourceCompatibility = 1.9
 archivesBaseName = 'bluestone'
-mainClassName = 'com.khronodragon.bluestone.Start'
+mainClassName = 'com.kdragon.bluestone.Start'
 applicationDefaultJvmArgs = [
         '-Xms1000M',
         '-XX:MaxDirectMemorySize=64M',
@@ -59,7 +59,7 @@ buildConfig {
     version = project.version
 
     clsName = 'BuildConfig'
-    packageName = 'com.khronodragon.bluestone'
+    packageName = 'com.kdragon.bluestone'
     charset = 'UTF-8'
 
     buildConfigField 'long', 'BUILD_UNIXTIME', buildTime + 'L'

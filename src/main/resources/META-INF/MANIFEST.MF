@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-Main-Class: com.khronodragon.bluestone.Start
+Main-Class: com.kdragon.bluestone.Start
 
