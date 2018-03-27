@@ -163,7 +163,7 @@ public class WelcomeCog extends Cog {
 
     private void welcomeCmdPreview(Context ctx) {
         onGuildMemberJoin(new GuildMemberJoinEvent(ctx.jda, ctx.event.getResponseNumber(),
-                ctx.guild, ctx.member));
+                ctx.member));
     }
 
     private void controlCmdChannel(Context ctx) throws SQLException {
@@ -278,7 +278,7 @@ public class WelcomeCog extends Cog {
 
     private void leaveCmdPreview(Context ctx) {
         onGuildMemberLeave(new GuildMemberLeaveEvent(ctx.jda, ctx.event.getResponseNumber(),
-                ctx.guild, ctx.member));
+                ctx.member));
     }
 
     private GuildWelcomeMessages initGuild(Guild guild) throws SQLException {
