@@ -96,6 +96,7 @@ public class QuotesCog extends Cog {
             return;
         } else if (Strings.isID(ctx.args.get(1))) {
             quoteCmdAddMessage(ctx);
+            return;
         }
 
         String text = Strings.renderMessage(ctx.message, ctx.guild, ctx.rawArgs.substring(ctx.args.get(0).length()).trim()
