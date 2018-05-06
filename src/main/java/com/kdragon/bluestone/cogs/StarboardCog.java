@@ -199,6 +199,18 @@ public class StarboardCog extends Cog {
                 MessageEmbed data = origMessage.getEmbeds().get(0);
                 if (data.getType() == EmbedType.IMAGE) {
                     emb.setImage(data.getUrl());
+                } else {
+                    for (MessageEmbed embed : origMessage.getEmbeds()) {
+                        String value = val(data.getTitle()).or("*No title*");
+
+                        if (data.getFields().size() > 0) {
+                            value += String.format("\n%d fields", data.getFields().size());
+                        } else {
+                            value += "\nNo fields";
+                        }
+
+                        emb.addField("Embed", value, false);
+                    }
                 }
             }
 
