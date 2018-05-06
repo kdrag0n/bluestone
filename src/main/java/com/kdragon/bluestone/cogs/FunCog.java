@@ -26,6 +26,8 @@ import org.json.JSONObject;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
@@ -492,13 +494,13 @@ public class FunCog extends Cog {
     }
 
     @Command(name = "lmgtfy", desc = "Let me Google that for you!")
-    public void cmdLmgtfy(Context ctx) {
+    public void cmdLmgtfy(Context ctx) throws UnsupportedEncodingException {
         if (ctx.args.empty) {
             ctx.fail("I need some search terms!");
             return;
         }
 
-        ctx.send("<http://lmgtfy.com/?q=" + StringUtils.replace(ctx.args.join('+'), "+", "%2B") + '>').queue();
+        ctx.send("<http://lmgtfy.com/?q=" + URLEncoder.encode(ctx.args.join('+'), "UTF-8") + '>').queue();
     }
 
     @Command(name = "slap", desc = "Slap someone, with passion.", aliases = {"boop", "poke", "hit"})

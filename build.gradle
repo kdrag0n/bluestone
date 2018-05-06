@@ -32,7 +32,7 @@ applicationDefaultJvmArgs = [
         '-XX:+UseG1GC',
         '-server',
         '-XX:+CMSClassUnloadingEnabled',
-        '-XX:+AggessiveOpts',
+        '-XX:+AggressiveOpts',
         '-XX:MaxGCPauseMillis=2500'
 ]
 
