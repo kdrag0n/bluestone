@@ -28,7 +28,12 @@ applicationDefaultJvmArgs = [
         '-Xss1M',
         '-Xmx3641799K',
         '-Xverify:none',
-        '-Djava.lang.invoke.stringConcat=MH_INLINE_SIZED_EXACT'
+        '-Djava.lang.invoke.stringConcat=MH_INLINE_SIZED_EXACT',
+        '-XX:+UseG1GC',
+        '-server',
+        '-XX:+CMSClassUnloadingEnabled',
+        '-XX:+AggessiveOpts',
+        '-XX:MaxGCPauseMillis=2500'
 ]
 
 apply plugin: 'com.github.johnrengelman.shadow' // work around bug
