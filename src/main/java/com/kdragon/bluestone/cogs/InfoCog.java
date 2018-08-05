@@ -146,7 +146,7 @@ public class InfoCog extends Cog {
         ctx.channel.sendTyping().queue();
         ShardUtil shardUtil = bot.shardUtil;
 
-        Map<String, TIntList> stats = new LinkedHashMap<>() {{
+        Map<String, TIntList> stats = new LinkedHashMap<String, TIntList>() {{
             put("Members per Server", shardUtil.guildNums(g -> g.getMembersMap().size()));
             put("Online Members per Server", shardUtil.guildNums(g ->
                     mCount(g, m -> m.getOnlineStatus() == OnlineStatus.ONLINE)));

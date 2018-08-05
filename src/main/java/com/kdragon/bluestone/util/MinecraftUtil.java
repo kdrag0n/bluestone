@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 public class MinecraftUtil {
-    private static final Map<String, String> FORMAT_KEYS = new HashMap<>() {{
+    private static final Map<String, String> FORMAT_KEYS = new HashMap<String, String>() {{
         put("bold", "**");
         put("italic", "*");
         put("underlined", "__");

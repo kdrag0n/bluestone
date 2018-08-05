@@ -512,7 +512,7 @@ public class IDMapTrie extends IDTrie {
 
     /** Collections implementation. uses a live view of the Map. */
     public Map<Long, Long> getMap() {
-        return new Map<>() {
+        return new Map<Long, Long>() {
             @Override
             public int size() {
                 return IDMapTrie.this.size();
@@ -565,7 +565,7 @@ public class IDMapTrie extends IDTrie {
 
             @Override
             public Set<Long> keySet() {
-                return new Set<>() {
+                return new Set<Long>() {
                     @Override
                     public int size() {
                         return IDMapTrie.this.size();
@@ -641,7 +641,7 @@ public class IDMapTrie extends IDTrie {
 
             @Override
             public Set<Entry<Long, Long>> entrySet() {
-                return new Set<>() {
+                return new Set<Entry<Long, Long>>() {
                     @Override
                     public int size() {
                         return IDMapTrie.this.size();
@@ -659,7 +659,7 @@ public class IDMapTrie extends IDTrie {
 
                     @Override
                     public Iterator<Entry<Long, Long>> iterator() {
-                        return new Iterator<>() {
+                        return new Iterator<Entry<Long, Long>>() {
 
                             IDTrie.IDTrieCursor tcursor = IDMapTrie.this.cursor();
                             long next = tcursor.first();
@@ -671,7 +671,7 @@ public class IDMapTrie extends IDTrie {
 
                             @Override
                             public Entry<Long, Long> next() {
-                                Map.Entry<Long, Long> e = new Map.Entry<>() {
+                                Map.Entry<Long, Long> e = new Map.Entry<Long, Long>() {
                                     long k = next;
                                     long v = tcursor.getValue();
 

@@ -85,7 +85,7 @@ public class SimpleGraphiteClient {
 	 */
 	@SuppressWarnings("serial")
     private void sendMetric(final String key, final Number value, long timeStamp) {
-		sendMetrics(new HashMap<>() {{
+		sendMetrics(new HashMap<String, Number>() {{
             put(key, value);
         }}, timeStamp);
 	}

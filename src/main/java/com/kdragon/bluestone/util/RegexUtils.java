@@ -10,7 +10,7 @@ import java.util.stream.StreamSupport;
 
 public class RegexUtils {
     private static Iterable<MatchResult> iterMatches(final Pattern p, final CharSequence input) {
-        return () -> new Iterator<>() {
+        return () -> new Iterator<MatchResult>() {
             // Use a matcher internally.
             final Matcher matcher = p.matcher(input);
             // Keep a match around that supports any interleaving of hasNext/next calls.

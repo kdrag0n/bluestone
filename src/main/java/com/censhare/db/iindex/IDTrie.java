@@ -314,7 +314,7 @@ public abstract class IDTrie {
     Iterable<Long> getKeys() {
         final IDTrie.IDTrieCursor cursor = cursor();
 
-        return () -> new Iterator<>() {
+        return () -> new Iterator<Long>() {
 
             long next = cursor.first();
 

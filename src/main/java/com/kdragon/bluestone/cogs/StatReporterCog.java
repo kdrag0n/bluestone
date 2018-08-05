@@ -59,7 +59,7 @@ public class StatReporterCog extends Cog {
 
     private void graphiteReport() {
         try {
-            graphiteClient.sendMetrics(new HashMap<>() {{
+            graphiteClient.sendMetrics(new HashMap<String, Number>() {{
                 ShardUtil shardUtil = bot.shardUtil;
                 Runtime runtime = Runtime.getRuntime();
 
