@@ -344,16 +344,16 @@ public abstract class IDTrie {
     public interface IDTrieCursor {
 
         /** Returns first (lowest) key and (re-)start cursor. */
-        public long first();
+        long first();
 
         /** Returns first (lowest) key that is greater than or equal to given key and (re-)start cursor. */
-        public long first(long targetKey);
+        long first(long targetKey);
 
         /** Returns next key. */
-        public long next();
+        long next();
 
         /** Returns current value of current key. */
-        public long getValue();
+        long getValue();
     }
 
 }

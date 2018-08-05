@@ -76,7 +76,7 @@ class MinecraftPingUtil {
     /**
      * @author thinkofdeath
      * See: https://gist.github.com/thinkofdeath/e975ddee04e9c87faf22
-     * @throws IOException 
+     * @throws IOException if an error occurs writing data
      */
     public static void writeVarInt(DataOutputStream out, int paramInt) throws IOException {
         while (true) {

@@ -131,7 +131,7 @@ public final class QrCode {
 		
 		// Increase the error correction level while the data still fits in the current version number
 		for (Ecc newEcl : Ecc.values()) {
-			if (true && dataUsedBits <= getNumDataCodewords(version, newEcl) * 8)
+			if (dataUsedBits <= getNumDataCodewords(version, newEcl) * 8)
 				ecl = newEcl;
 		}
 		
@@ -180,12 +180,7 @@ public final class QrCode {
 	
 	/** The error correction level used in this QR Code symbol. Never {@code null}. */
 	private final Ecc errorCorrectionLevel;
-	
-	/** The mask pattern used in this QR Code symbol, in the range 0 to 7 (i.e. unsigned 3-bit integer).
-	 * Note that even if a constructor was called with automatic masking requested
-	 * (mask = -1), the resulting object will still have a mask value between 0 and 7. */
-	private final int mask;
-	
+
 	// Private grids of modules/pixels (conceptually immutable)
 	private boolean[][] modules;     // The modules of this QR Code symbol (false = white, true = black)
 	private boolean[][] isFunction;  // Indicates function modules that are not subjected to masking
@@ -223,7 +218,7 @@ public final class QrCode {
 		drawFunctionPatterns();
 		byte[] allCodewords = appendErrorCorrection(dataCodewords);
 		drawCodewords(allCodewords);
-		this.mask = handleConstructorMasking(mask);
+		handleConstructorMasking(mask);
 	}
 	
 	
@@ -737,7 +732,7 @@ public final class QrCode {
 		final int formatBits;
 		
 		// Constructor.
-		private Ecc(int fb) {
+		Ecc(int fb) {
 			formatBits = fb;
 		}
 	}
