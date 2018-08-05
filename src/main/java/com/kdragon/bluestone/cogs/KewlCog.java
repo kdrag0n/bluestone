@@ -25,7 +25,7 @@ import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.entities.impl.GuildImpl;
-import net.dv8tion.jda.core.events.user.UserAvatarUpdateEvent;
+import net.dv8tion.jda.core.events.user.update.UserUpdateAvatarEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import okhttp3.Request;
@@ -343,7 +343,7 @@ public class KewlCog extends Cog {
     }
 
     @EventHandler
-    public void onUserAvatarUpdate(UserAvatarUpdateEvent event) {
+    public void onUserUpdateAvatar(UserUpdateAvatarEvent event) {
         profileCache.invalidate(event.getUser());
     }
 
