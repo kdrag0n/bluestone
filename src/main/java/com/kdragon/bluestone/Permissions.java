@@ -74,8 +74,7 @@ public class Permissions {
 
         outerLoop:
         for (Permission perm: permsAccepted) {
-            if (perm == BOT_OWNER) {
-            } else if (perm == BOT_ADMIN) {
+            if (perm == BOT_ADMIN) {
                 try {
                     if (ctx.bot.getAdminDao().idExists(ctx.author.getIdLong()))
                         return true;
