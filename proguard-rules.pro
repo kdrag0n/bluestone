@@ -57,7 +57,7 @@
 -ignorewarnings
 
 # Main class
--keep class com.kdragon.bluestone.Start { *; }
+-keep class com.kdrag0n.bluestone.Start { *; }
 
 # Log4j
 -keep class org.apache.logging.log4j.** { *; }
@@ -106,7 +106,7 @@
 -dontwarn com.mysql.cj.jdbc.integration.** # C3P0, JBoss
 
 # ORM models
--keep class com.kdragon.bluestone.sql.** { *; }
+-keep class com.kdrag0n.bluestone.sql.** { *; }
 
 # HikariCP
 -keep class com.zaxxer.hikari.** { *; }
@@ -138,9 +138,9 @@
 }
 
 # Cogs
--keep class com.kdragon.bluestone.cogs.** { *; }
--dontwarn com.kdragon.bluestone.cogs.ReplCog # Nashorn JS engine
--dontwarn com.kdragon.bluestone.cogs.OwnerCog # Nashorn JS engine
+-keep class com.kdrag0n.bluestone.cogs.** { *; }
+-dontwarn com.kdrag0n.bluestone.cogs.ReplCog # Nashorn JS engine
+-dontwarn com.kdrag0n.bluestone.cogs.OwnerCog # Nashorn JS engine
 
 # Reflections
 -dontwarn org.reflections.** # Dom4J
