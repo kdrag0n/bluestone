@@ -30,7 +30,7 @@ I won't go into *huge* detail here, refer to other guides online such as JDA's f
 You can download Java [here](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
 Select the JDK instead of JRE or Server JRE.
 
-Have patience, the first build will take a while.
+Have patience, the first build may take a while.
 
 ## Windows
 Run the following commands in a new instance of `cmd.exe` (Start -> cmd). Administrator is not required.
