@@ -8,6 +8,7 @@
 -optimizations *
 -optimizationpasses 5
 -allowaccessmodification
+-dontoptimize
 
 -dontusemixedcaseclassnames
 -dontskipnonpubliclibraryclasses
@@ -74,7 +75,7 @@
 -dontwarn org.antlr.runtime.tree.DOTTreeGenerator # Antlr string template library
 
 # Ical4j
--dontwarn net.fortuna.ical4j.model.ContentBuilder # Groovy utilities
+-dontwarn net.fortuna.ical4j.model.** # Groovy
 
 # Javassist
 -dontwarn javassist.util.HotSwapper* # Sun JDI JVM utilities
@@ -96,17 +97,6 @@
 # JDBC
 -keep class org.h2.Driver { *; }
 -keep class com.mysql.cj.jdbc.Driver { *; }
-
-# Groovy
--keep class groovy.grape.GrabAnnotationTransformation { *; }
--keep class org.codehaus.groovy.ast.builder.AstBuilderTransformation { *; }
--keep class org.codehaus.groovy.jsr223.** { *; }
--dontwarn org.codehaus.groovy.control.XStreamUtils # XStream
--dontwarn org.codehaus.groovy.tools.** # Apache Ivy, JANSI
--dontwarn groovyjar*.** # ICU, stringtemplate, Abego Treelayout
--dontwarn groovy.grape.** # Apache Ivy
--dontwarn org.apache.groovy.internal.util.ReevaluatingReference # MethodHandle#invokeExact()
--dontoptimize
 
 # PrettyTime
 -keep class org.ocpsoft.prettytime.PrettyTime { *; }
@@ -150,6 +140,7 @@
 # Cogs
 -keep class com.kdragon.bluestone.cogs.** { *; }
 -dontwarn com.kdragon.bluestone.cogs.ReplCog # Nashorn JS engine
+-dontwarn com.kdragon.bluestone.cogs.OwnerCog # Nashorn JS engine
 
 # Reflections
 -dontwarn org.reflections.** # Dom4J

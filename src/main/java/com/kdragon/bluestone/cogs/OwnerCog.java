@@ -4,6 +4,8 @@ import com.kdragon.bluestone.*;
 import com.kdragon.bluestone.annotations.Command;
 import com.kdragon.bluestone.annotations.Cooldown;
 import com.kdragon.bluestone.enums.BucketType;
+import com.kdragon.bluestone.util.StackUtil;
+
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.entities.*;
@@ -19,12 +21,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
+
 import static com.kdragon.bluestone.util.NullValueWrapper.val;
 import static com.kdragon.bluestone.util.Strings.str;
 
 public class OwnerCog extends Cog {
     private static final Logger logger = LogManager.getLogger(OwnerCog.class);
-    private ScriptEngine evalEngine = new ScriptEngineManager().getEngineByName("groovy");
+    private ScriptEngine evalEngine = new NashornScriptEngineFactory().getScriptEngine(ReplCog.NASHORN_ARGS);
     private final String token;
 
     public OwnerCog(Bot bot) {
@@ -196,21 +200,33 @@ public class OwnerCog extends Cog {
 
         Object result;
         try {
-            result = evalEngine.eval(ReplCog.GROOVY_PRE_INJECT + ReplCog.cleanUpCode(ctx.rawArgs));
+            result = evalEngine.eval(ReplCog.cleanUpCode(ctx.rawArgs));
         } catch (ScriptException e) {
             result = e.getCause();
             if (result instanceof ScriptException) {
                 result = ((ScriptException) result).getCause();
             }
         }
+
         if (result instanceof RestAction)
             result = ((RestAction) result).complete();
         evalEngine.put("last", result);
 
         if (result == null)
             ctx.message.addReaction("✅").queue();
-        else
-            ctx.send("```java\n" + StringUtils.replace(result.toString(), token, "") + "```").queue();
+        else {
+            String strResult = result.toString();
+
+            if (ReplCog.JS_OBJECT_PATTERN.matcher(strResult).matches()) {
+                try {
+                    strResult = (String) evalEngine.eval("JSON.stringify(last)");
+                } catch (ScriptException e) {
+                    strResult = StackUtil.renderStackTrace(e);
+                }
+            }
+
+            ctx.send("```js\n" + StringUtils.replace(strResult, token, "") + "```").queue();
+        }
     }
 
     @Perm.Owner

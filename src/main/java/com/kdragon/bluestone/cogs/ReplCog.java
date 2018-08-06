@@ -1,7 +1,6 @@
 package com.kdragon.bluestone.cogs;
 
 import com.kdragon.bluestone.*;
-import com.kdragon.bluestone.util.GroovyScriptEngine;
 import com.kdragon.bluestone.util.Switch;
 import com.kdragon.bluestone.annotations.Command;
 import com.kdragon.bluestone.handlers.RMessageWaitListener;
@@ -31,34 +30,34 @@ import java.util.regex.Pattern;
 
 @SuppressWarnings("SameParameterValue")
 public class ReplCog extends Cog {
+    public static final String[] NASHORN_ARGS = {"--language=es6", "-scripting"};
+    public static final Pattern JS_OBJECT_PATTERN = Pattern.compile("^\\[object [A-Z][a-z0-9]*]$");
     private static final Logger logger = LogManager.getLogger(ReplCog.class);
-    private static final String[] NASHORN_ARGS = {"--language=es6", "-scripting"};
-    private static final Pattern JS_OBJECT_PATTERN = Pattern.compile("^\\[object [A-Z][a-z0-9]*]$");
-    private static final Pattern CODE_TYPE_PATTERN = Pattern.compile("```(?:js|javascript|java|groovy|lua)\n?");
+    private static final Pattern CODE_TYPE_PATTERN = Pattern.compile("```(?:js|javascript|java|lua)\n?");
     private final String token;
-    static final String GROOVY_PRE_INJECT = "import net.dv8tion.jda.core.entities.*\n" +
-            "import net.dv8tion.jda.core.*\n" +
-            "import net.dv8tion.jda.core.entities.impl.*\n" +
-            "import net.dv8tion.jda.core.audio.*\n" +
-            "import net.dv8tion.jda.core.audit.*\n" +
-            "import net.dv8tion.jda.core.managers.*\n" +
-            "import net.dv8tion.jda.core.exceptions.*\n" +
-            "import net.dv8tion.jda.core.events.*\n" +
-            "import net.dv8tion.jda.core.utils.*\n" +
-            "import com.kdragon.bluestone.*\n" +
-            "import org.apache.logging.log4j.*\n" +
-            "import javax.script.*\n" +
-            "import com.kdragon.bluestone.cogs.*\n" +
-            "import com.kdragon.bluestone.errors.*\n" +
-            "import org.json.*\n" +
-            "import com.kdragon.bluestone.sql.*\n" +
-            "import com.kdragon.bluestone.handlers.*\n" +
-            "import com.kdragon.bluestone.enums.*\n" +
-            "import com.kdragon.bluestone.util.*\n" +
-            "import java.time.*\n" +
-            "import java.math.*\n" +
-            "import java.lang.*\n" +
-            "import java.util.*\n";
+    private static final String IMPORTS = "net.dv8tion.jda.core.entities\n" +
+            "net.dv8tion.jda.core\n" +
+            "net.dv8tion.jda.core.entities.impl\n" +
+            "net.dv8tion.jda.core.audio\n" +
+            "net.dv8tion.jda.core.audit\n" +
+            "net.dv8tion.jda.core.managers\n" +
+            "net.dv8tion.jda.core.exceptions\n" +
+            "net.dv8tion.jda.core.events\n" +
+            "net.dv8tion.jda.core.utils\n" +
+            "com.kdragon.bluestone\n" +
+            "org.apache.logging.log4j\n" +
+            "javax.script\n" +
+            "com.kdragon.bluestone.cogs\n" +
+            "com.kdragon.bluestone.errors\n" +
+            "org.json\n" +
+            "com.kdragon.bluestone.sql\n" +
+            "com.kdragon.bluestone.handlers\n" +
+            "com.kdragon.bluestone.enums\n" +
+            "com.kdragon.bluestone.util\n" +
+            "java.time\n" +
+            "java.math\n" +
+            "java.lang\n" +
+            "java.util\n";
 
     private TLongSet replSessions = new TLongHashSet();
 
@@ -121,8 +120,6 @@ public class ReplCog extends Cog {
                 language.equalsIgnoreCase("js") ||
                 language.equalsIgnoreCase("javascript")) {
             engine = new NashornScriptEngineFactory().getScriptEngine(NASHORN_ARGS);
-        } else if (language.equalsIgnoreCase("groovy")) {
-            engine = new GroovyScriptEngine();
         } else {
             engine = man.getEngineByName(language.toLowerCase());
 
@@ -159,17 +156,11 @@ public class ReplCog extends Cog {
         try {
             new Switch<Class<? extends ScriptEngine>>(engine.getClass())
                     .byInstance()
-                    .match(GroovyScriptEngine.class, () -> engine.eval(
-                            "def print = { Object... args -> ctx.send(Arrays.stream(args).map({ it.toString() }).collect(Collectors.joining(' '))).queue() }"
-                    ))
                     .match(NashornScriptEngine.class, () -> {
                         // imports
                         StringBuilder importsObj = new StringBuilder("const imports=new JavaImporter(null");
 
-                        for (String stmt : StringUtils.split(GROOVY_PRE_INJECT, '\n')) {
-                            String pkg = StringUtils.split(stmt, ' ')[1];
-                            pkg = pkg.substring(0, pkg.length() - 2);
-
+                        for (String pkg : StringUtils.split(IMPORTS, '\n')) {
                             importsObj.append(",Packages.")
                                     .append(pkg);
                         }
@@ -232,9 +223,7 @@ public class ReplCog extends Cog {
 
             Object result;
             try {
-                if (engine instanceof GroovyScriptEngine) {
-                    result = engine.eval(GROOVY_PRE_INJECT + cleaned);
-                } else if (engine instanceof LuaScriptEngine) {
+                if (engine instanceof LuaScriptEngine) {
                     int lastNidx = cleaned.lastIndexOf(10);
                     String code = lastNidx == -1 ? "" : cleaned.substring(0, lastNidx);
                     String lastLine = lastNidx == -1 ? cleaned : cleaned.substring(lastNidx + 1);
