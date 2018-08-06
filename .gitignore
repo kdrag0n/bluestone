@@ -192,3 +192,6 @@ patreon.json
 /jdebug*
 /jitdump*.dmp
 /Snap*.trc
+
+# ProGuard mappings
+mapping.txt

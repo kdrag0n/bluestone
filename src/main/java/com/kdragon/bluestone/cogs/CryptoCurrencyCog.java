@@ -357,9 +357,13 @@ public class CryptoCurrencyCog extends Cog {
     }
 
     private static class Cryptocurrency {
+        @SerializedName("id")
         String id;
+        @SerializedName("name")
         String name;
+        @SerializedName("symbol")
         String symbol;
+        @SerializedName("rank")
         short rank;
         @SerializedName("price_usd")
         double priceUSD;
@@ -375,7 +379,9 @@ public class CryptoCurrencyCog extends Cog {
         double marketCapUSD;
         @SerializedName("market_cap_eur")
         double marketCapEUR;
+        @SerializedName("available_supply")
         double availableSupply;
+        @SerializedName("total_supply")
         double totalSupply;
         @SerializedName("percent_change_1h")
         float percentChange1h;
@@ -383,7 +389,9 @@ public class CryptoCurrencyCog extends Cog {
         float percentChange24h;
         @SerializedName("percent_change_7d")
         float percentChange7d;
+        @SerializedName("last_updated")
         long lastUpdated;
+
         Instant updateTime;
     }
 }

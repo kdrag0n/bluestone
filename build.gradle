@@ -1,6 +1,10 @@
 buildscript {
+    repositories {
+        flatDir dirs: '/usr/share/proguard/lib'
+    }
     dependencies {
         classpath 'de.sebastianboegl.gradle.plugins:shadow-log4j-transformer:2.2.0'
+        classpath ':proguard:'
     }
 }
 
@@ -38,6 +42,7 @@ applicationDefaultJvmArgs = [
 ]
 
 import de.sebastianboegl.gradle.plugins.shadow.transformers.Log4j2PluginsFileTransformer
+import proguard.gradle.ProGuardTask
 
 repositories {
     mavenCentral()
@@ -78,6 +83,13 @@ shadowJar {
     transform(Log4j2PluginsFileTransformer)
     mergeServiceFiles()
     zip64 true
+}
+
+task proguard(type: ProGuardTask) {
+    configuration 'proguard-rules.pro'
+
+    injars "build/libs/bluestone-$version-all.jar"
+    outjars "build/libs/bluestone-$version-pro.jar"
 }
 
 dependencies {
