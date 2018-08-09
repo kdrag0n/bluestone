@@ -87,7 +87,7 @@ public class SimpleGraphiteClient {
     private void sendMetric(final String key, final Number value, long timeStamp) {
 		HashMap<String, Number> map = new HashMap<>();
 		map.put(key, value);
-		
+
 		sendMetrics(map, timeStamp);
 	}
 	

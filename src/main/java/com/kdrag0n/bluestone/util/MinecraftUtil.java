@@ -9,12 +9,14 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 public class MinecraftUtil {
-    private static final Map<String, String> FORMAT_KEYS = new HashMap<String, String>() {{
-        put("bold", "**");
-        put("italic", "*");
-        put("underlined", "__");
-        put("strikethrough", "~~");
-    }};
+    private static final Map<String, String> formatKeys = new HashMap<>();
+
+    static {
+        formatKeys.put("bold", "**");
+        formatKeys.put("italic", "*");
+        formatKeys.put("underlined", "__");
+        formatKeys.put("strikethrough", "~~");
+    }
 
     public static String decodeJsonText(JSONObject data) {
         List<String> segments = new LinkedList<>();
@@ -23,7 +25,7 @@ public class MinecraftUtil {
             JSONObject element = (JSONObject) elem;
 
             StringBuilder item = new StringBuilder(element.optString("text", ""));
-            for (String fkey: FORMAT_KEYS.keySet()) {
+            for (String fkey: formatKeys.keySet()) {
                 if (element.optBoolean(fkey, false)) {
                     String intKey = "{F" + fkey + '}';
                     item.insert(0, intKey)
@@ -40,7 +42,7 @@ public class MinecraftUtil {
         }
         String text = textBuilder.toString();
 
-        for (Map.Entry<String, String> fmtPair: FORMAT_KEYS.entrySet()) {
+        for (Map.Entry<String, String> fmtPair: formatKeys.entrySet()) {
             String intKey = "{F" + fmtPair.getKey() + '}';
 
             text = text.replaceAll("(?:" + Pattern.quote(intKey) + "){2,}", "")
