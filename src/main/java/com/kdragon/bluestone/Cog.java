@@ -11,7 +11,7 @@ import org.apache.commons.text.WordUtils;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
-import java.awt.Color;
+import java.awt.*;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;

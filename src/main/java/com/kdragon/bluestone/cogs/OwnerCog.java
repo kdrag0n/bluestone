@@ -5,7 +5,7 @@ import com.kdragon.bluestone.annotations.Command;
 import com.kdragon.bluestone.annotations.Cooldown;
 import com.kdragon.bluestone.enums.BucketType;
 import com.kdragon.bluestone.util.StackUtil;
-
+import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.entities.*;
@@ -15,16 +15,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
-
-import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
+import java.util.Collection;
 
 import static com.kdragon.bluestone.util.NullValueWrapper.val;
-import static com.kdragon.bluestone.util.Strings.str;
 
 public class OwnerCog extends Cog {
     private static final Logger logger = LogManager.getLogger(OwnerCog.class);

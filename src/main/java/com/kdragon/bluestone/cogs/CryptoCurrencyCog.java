@@ -31,8 +31,10 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -40,8 +42,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import static com.kdragon.bluestone.util.NullValueWrapper.val;
-import static com.kdragon.bluestone.util.Strings.str;
 import static com.kdragon.bluestone.util.Strings.format;
+import static com.kdragon.bluestone.util.Strings.str;
 
 public class CryptoCurrencyCog extends Cog {
     private static final Logger logger = LogManager.getLogger(CryptoCurrencyCog.class);

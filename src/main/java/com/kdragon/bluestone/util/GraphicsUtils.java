@@ -2,7 +2,7 @@ package com.kdragon.bluestone.util;
 
 import com.twelvemonkeys.image.ResampleOp;
 
-import java.awt.Color;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class GraphicsUtils {

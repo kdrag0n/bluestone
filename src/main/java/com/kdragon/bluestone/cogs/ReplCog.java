@@ -1,10 +1,10 @@
 package com.kdragon.bluestone.cogs;
 
 import com.kdragon.bluestone.*;
-import com.kdragon.bluestone.util.Switch;
 import com.kdragon.bluestone.annotations.Command;
 import com.kdragon.bluestone.handlers.RMessageWaitListener;
 import com.kdragon.bluestone.util.StackUtil;
+import com.kdragon.bluestone.util.Switch;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
@@ -21,9 +21,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.luaj.vm2.script.LuaScriptEngine;
 
-import javax.script.*;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
