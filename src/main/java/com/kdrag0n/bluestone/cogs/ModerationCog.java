@@ -20,8 +20,8 @@ import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.core.utils.MiscUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.awt.*;
 import java.lang.reflect.Field;
@@ -39,24 +39,20 @@ import java.util.regex.PatternSyntaxException;
 import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
 
 public class ModerationCog extends Cog {
-    private static final Logger logger = LogManager.getLogger(ModerationCog.class);
-    private static final String PURGE_NO_PARAMS = Emotes.getFailure() + " **No valid parameters included!**\n" +
-            "Valid parameters:\n" +
-            "    \u2022 `<num 1-800>` - number of messages to include **(required)**\n" +
-            "    \u2022 `links` - include messages with links\n" +
-            "    \u2022 `attach` - include messages with an attachment\n" +
-            "    \u2022 `embeds` - include messages with embeds\n" +
-            "    \u2022 `@user` - include messages by `user`\n" +
-            "    \u2022 `bots` - include messages by bots\n" +
-            "    \u2022 `\"text\"` - include messages containing `text`\n" +
-            "    \u2022 `[regex]` - include messages that match the regex";
-    private static final String NO_COMMAND = "🤔 **I need an action!**\n" +
-            "The following are valid:\n" +
-            "    \u2022 `list` - list autoroles\n" +
-            "    \u2022 `add [id/name/@role]` - add a role to autoroles\n" +
-            "    \u2022 `remove [id/name/@role]` - remove a role from autoroles\n" +
-            "    \u2022 `clear` - clear autoroles (remove all)";
-    private static final String[] BYTE_UNITS = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
+    private static final Logger logger = LoggerFactory.getLogger(ModerationCog.class);
+    private static final String PURGE_NO_PARAMS = Emotes.getFailure() + " **No valid parameters included!**\n"
+            + "Valid parameters:\n" + "    \u2022 `<num 1-800>` - number of messages to include **(required)**\n"
+            + "    \u2022 `links` - include messages with links\n"
+            + "    \u2022 `attach` - include messages with an attachment\n"
+            + "    \u2022 `embeds` - include messages with embeds\n"
+            + "    \u2022 `@user` - include messages by `user`\n" + "    \u2022 `bots` - include messages by bots\n"
+            + "    \u2022 `\"text\"` - include messages containing `text`\n"
+            + "    \u2022 `[regex]` - include messages that match the regex";
+    private static final String NO_COMMAND = "🤔 **I need an action!**\n" + "The following are valid:\n"
+            + "    \u2022 `list` - list autoroles\n" + "    \u2022 `add [id/name/@role]` - add a role to autoroles\n"
+            + "    \u2022 `remove [id/name/@role]` - remove a role from autoroles\n"
+            + "    \u2022 `clear` - clear autoroles (remove all)";
+    private static final String[] BYTE_UNITS = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
     private static final Pattern FIRST_ID_PATTERN = Pattern.compile("^[0-9]{17,20}");
     private static final Pattern PURGE_LINK_PATTERN = Pattern.compile("https?://.+");
     private static final Pattern PURGE_QUOTE_PATTERN = Pattern.compile("[\"“](.*?)[\"”]", Pattern.DOTALL);
@@ -109,10 +105,12 @@ public class ModerationCog extends Cog {
         else
             return;
 
-        for (GuildAutorole autorole: autoroles) {
+        for (GuildAutorole autorole : autoroles) {
             Role role = event.getGuild().getRoleById(autorole.getRoleId());
-            if (role == null) continue;
-            if (!event.getGuild().getSelfMember().canInteract(role)) continue;
+            if (role == null)
+                continue;
+            if (!event.getGuild().getSelfMember().canInteract(role))
+                continue;
 
             if (AutoroleConditions.test(autorole.getConditions()))
                 toAdd.add(role);
@@ -120,15 +118,11 @@ public class ModerationCog extends Cog {
 
         if (toAdd.size() > 0)
             event.getGuild().getController().addRolesToMember(event.getMember(), toAdd)
-                    .reason("Autorole: new member matched specified conditions for role(s)")
-                    .queue();
+                    .reason("Autorole: new member matched specified conditions for role(s)").queue();
     }
 
     private List<GuildAutorole> autorolesFor(long guildId) throws SQLException {
-        return autoroleDao.queryBuilder()
-                .where()
-                .eq("guildId", guildId)
-                .query();
+        return autoroleDao.queryBuilder().where().eq("guildId", guildId).query();
     }
 
     private String match(Pattern pattern, String input, Consumer<Matcher> func) {
@@ -150,9 +144,8 @@ public class ModerationCog extends Cog {
     }
 
     @Perm.Combo.ManageMessagesAndReadHistory
-    @Command(name = "purge", desc = "Purge messages from a channel.", guildOnly = true,
-            aliases = {"clean", "nuke", "prune", "clear"},
-            usage = "[parameters]", thread = true)
+    @Command(name = "purge", desc = "Purge messages from a channel.", guildOnly = true, aliases = { "clean", "nuke",
+            "prune", "clear" }, usage = "[parameters]", thread = true)
     public void cmdPurge(Context ctx) {
         if (ctx.args.empty) {
             ctx.send(PURGE_NO_PARAMS).queue();
@@ -204,13 +197,14 @@ public class ModerationCog extends Cog {
         boolean embeds = args.contains("embed");
         boolean links = args.contains("link");
         boolean attachments = args.contains("attach");
-        boolean none = substrings.isEmpty() && pattern == null && userIds.isEmpty() && !bots && !embeds && !links && !attachments;
+        boolean none = substrings.isEmpty() && pattern == null && userIds.isEmpty() && !bots && !embeds && !links
+                && !attachments;
 
         String twoWeekWarn = "";
         OffsetDateTime maxAge = ctx.message.getCreationTime().minusWeeks(2).plusMinutes(1);
         List<Message> toDelete = new LinkedList<>();
 
-        for (Message msg: channel.getIterableHistory()) {
+        for (Message msg : channel.getIterableHistory()) {
             if (toDelete.size() >= limit)
                 break;
 
@@ -219,15 +213,14 @@ public class ModerationCog extends Cog {
                 break;
             }
 
-            if (none || userIds.contains(msg.getAuthor().getIdLong()) || (bots && msg.getAuthor().isBot()) ||
-                    (embeds && !msg.getEmbeds().isEmpty()) || (attachments && !msg.getAttachments().isEmpty()) ||
-                    (links && PURGE_LINK_PATTERN.matcher(msg.getContentRaw()).find())) {
+            if (none || userIds.contains(msg.getAuthor().getIdLong()) || (bots && msg.getAuthor().isBot())
+                    || (embeds && !msg.getEmbeds().isEmpty()) || (attachments && !msg.getAttachments().isEmpty())
+                    || (links && PURGE_LINK_PATTERN.matcher(msg.getContentRaw()).find())) {
                 toDelete.add(msg);
                 continue;
             }
 
-            if (substrings.stream()
-                    .anyMatch(ss -> msg.getContentRaw().toLowerCase().contains(ss))) {
+            if (substrings.stream().anyMatch(ss -> msg.getContentRaw().toLowerCase().contains(ss))) {
                 toDelete.add(msg);
                 continue;
             }
@@ -244,38 +237,42 @@ public class ModerationCog extends Cog {
         if (toDelete.size() == 1) {
             try {
                 toDelete.get(0).delete().reason("Purge command - deleting a single message").complete();
-            } catch (ErrorResponseException ignored) {}
+            } catch (ErrorResponseException ignored) {
+            }
         } else if (toDelete.size() <= 100) {
             try {
                 channel.deleteMessages(toDelete).complete();
-            } catch (ErrorResponseException ignored) {}
+            } catch (ErrorResponseException ignored) {
+            }
         } else {
             for (int i = 0; i <= toDelete.size(); i += 99) {
                 List<Message> list = toDelete.subList(i, Math.min(i + 99, toDelete.size()));
-                if (list.isEmpty()) break;
+                if (list.isEmpty())
+                    break;
 
                 if (list.size() == 1)
                     try {
                         toDelete.get(0).delete().reason("Purge command - deleting a single message").complete();
-                    } catch (ErrorResponseException ignored) {}
+                    } catch (ErrorResponseException ignored) {
+                    }
                 else
                     try {
                         channel.deleteMessages(list).complete();
-                    } catch (ErrorResponseException ignored) {}
+                    } catch (ErrorResponseException ignored) {
+                    }
             }
         }
 
         String k = toDelete.size() == 1 ? "" : "s";
-        ctx.send(Emotes.getSuccess() + " Deleted **" + toDelete.size() +
-                "** message" + k + '!' + twoWeekWarn).queue(
-                        msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS, null, exp -> {}));
+        ctx.send(Emotes.getSuccess() + " Deleted **" + toDelete.size() + "** message" + k + '!' + twoWeekWarn)
+                .queue(msg -> msg.delete().queueAfter(2, TimeUnit.SECONDS, null, exp -> {
+                }));
     }
 
     @Perm.ManageRoles
     @Perm.ManageChannels
     @Perm.ManagePermissions
-    @Command(name = "mute", desc = "Mute someone in all text channels.", guildOnly = true,
-            usage = "[@user] {reason}")
+    @Command(name = "mute", desc = "Mute someone in all text channels.", guildOnly = true, usage = "[@user] {reason}")
     public void cmdMute(Context ctx) {
         if (ctx.args.empty) {
             ctx.fail("I need someone to mute!");
@@ -303,26 +300,22 @@ public class ModerationCog extends Cog {
             else
                 reason = getTag(ctx.author) + ": " + userReason;
 
-            for (TextChannel channel: ctx.guild.getTextChannels()) {
+            for (TextChannel channel : ctx.guild.getTextChannels()) {
                 if (!user.hasPermission(channel, Permission.MESSAGE_WRITE))
                     continue;
 
                 PermissionOverride override = channel.getPermissionOverride(user);
                 try {
                     if (override == null)
-                        channel.createPermissionOverride(user)
-                                .setDeny(MUTED_PERMS)
-                                .reason(reason).queue();
+                        channel.createPermissionOverride(user).setDeny(MUTED_PERMS).reason(reason).queue();
                     else
                         override.getManager().deny(MUTED_PERMS).reason(reason).queue();
-                } catch (InsufficientPermissionException ignored) {}
+                } catch (InsufficientPermissionException ignored) {
+                }
             }
 
-            status.editMessage(Emotes.getSuccess() + " Muted **" +
-                    user.getUser().getName() +
-                    '#' +
-                    user.getUser().getDiscriminator() +
-                    "**.").queue();
+            status.editMessage(Emotes.getSuccess() + " Muted **" + user.getUser().getName() + '#'
+                    + user.getUser().getDiscriminator() + "**.").queue();
         });
     }
 
@@ -356,7 +349,7 @@ public class ModerationCog extends Cog {
             else
                 reason = getTag(ctx.author) + ": " + userReason;
 
-            for (TextChannel channel: ctx.guild.getTextChannels()) {
+            for (TextChannel channel : ctx.guild.getTextChannels()) {
                 if (user.hasPermission(channel, Permission.MESSAGE_WRITE))
                     continue;
 
@@ -364,26 +357,23 @@ public class ModerationCog extends Cog {
                 try {
                     if (override != null)
                         override.getManager().clear(MUTED_PERMS).reason(reason).queue();
-                } catch (InsufficientPermissionException ignored) {}
+                } catch (InsufficientPermissionException ignored) {
+                }
             }
 
-            status.editMessage(Emotes.getSuccess() + " Unmuted **" +
-                    user.getUser().getName() +
-                    '#' +
-                    user.getUser().getDiscriminator() +
-                    "**.").queue();
+            status.editMessage(Emotes.getSuccess() + " Unmuted **" + user.getUser().getName() + '#'
+                    + user.getUser().getDiscriminator() + "**.").queue();
         });
     }
 
     @Perm.Ban
-    @Command(name = "ban", desc = "Swing the ban hammer on someone.", guildOnly = true,
-            usage = "[@user or user ID] {reason}")
+    @Command(name = "ban", desc = "Swing the ban hammer on someone.", guildOnly = true, usage = "[@user or user ID] {reason}")
     public void cmdBan(Context ctx) {
         if (ctx.args.empty) {
             ctx.fail("I need someone to ban!");
             return;
-        } else if ((!MENTION_PATTERN.matcher(ctx.rawArgs).find() || ctx.message.getMentionedUsers().size() < 1) &&
-                !Strings.isID(ctx.args.get(0))) {
+        } else if ((!MENTION_PATTERN.matcher(ctx.rawArgs).find() || ctx.message.getMentionedUsers().size() < 1)
+                && !Strings.isID(ctx.args.get(0))) {
             ctx.fail("Invalid mention or user ID!");
             return;
         }
@@ -391,8 +381,7 @@ public class ModerationCog extends Cog {
         String reason;
         Matcher _m = MENTION_PATTERN.matcher(ctx.rawArgs);
         String _userReason = _m.replaceFirst("");
-        final String userReason = _m.reset(_userReason).usePattern(FIRST_ID_PATTERN)
-                .replaceFirst("").trim();
+        final String userReason = _m.reset(_userReason).usePattern(FIRST_ID_PATTERN).replaceFirst("").trim();
         final boolean validUreason = !(userReason.length() < 1 || userReason.length() > 450);
 
         if (validUreason)
@@ -406,7 +395,8 @@ public class ModerationCog extends Cog {
         } else {
             user = ctx.guild.getMemberById(ctx.args.get(0));
             if (user == null) {
-                ctx.fail("I can't find that member!\n*hackbanning / banning by ID before an user ever joins is coming Soon™*");
+                ctx.fail(
+                        "I can't find that member!\n*hackbanning / banning by ID before an user ever joins is coming Soon™*");
                 return;
             }
         }
@@ -427,9 +417,11 @@ public class ModerationCog extends Cog {
 
         user.getUser().openPrivateChannel().queue(ch -> {
             if (validUreason)
-                ch.sendMessage("You were banned from **" + ctx.guild.getName() + "** for `" + userReason + "`.").queue();
+                ch.sendMessage("You were banned from **" + ctx.guild.getName() + "** for `" + userReason + "`.")
+                        .queue();
             else
-                ch.sendMessage("You were banned from **" + ctx.guild.getName() + "**. No reason was specified.").queue();
+                ch.sendMessage("You were banned from **" + ctx.guild.getName() + "**. No reason was specified.")
+                        .queue();
 
             ctx.guild.getController().ban(user, 0, reason).reason(reason).queue();
             ctx.send("🔨 Banned.").queue();
@@ -440,14 +432,13 @@ public class ModerationCog extends Cog {
     }
 
     @Perm.Kick
-    @Command(name = "kick", desc = "Kick a member of the server.", guildOnly = true,
-            usage = "[@user or user ID] [reason]")
+    @Command(name = "kick", desc = "Kick a member of the server.", guildOnly = true, usage = "[@user or user ID] [reason]")
     public void cmdKick(Context ctx) {
         if (ctx.args.empty) {
             ctx.fail("I need someone to kick!");
             return;
-        } else if ((!MENTION_PATTERN.matcher(ctx.rawArgs).find() || ctx.message.getMentionedUsers().size() < 1) &&
-                !Strings.isID(ctx.args.get(0))) {
+        } else if ((!MENTION_PATTERN.matcher(ctx.rawArgs).find() || ctx.message.getMentionedUsers().size() < 1)
+                && !Strings.isID(ctx.args.get(0))) {
             ctx.fail("Invalid mention or user ID!");
             return;
         }
@@ -455,8 +446,7 @@ public class ModerationCog extends Cog {
         String reason;
         Matcher _m = MENTION_PATTERN.matcher(ctx.rawArgs);
         String _userReason = _m.replaceFirst("");
-        final String userReason = _m.reset(_userReason).usePattern(FIRST_ID_PATTERN)
-                .replaceFirst("").trim();
+        final String userReason = _m.reset(_userReason).usePattern(FIRST_ID_PATTERN).replaceFirst("").trim();
         final boolean validUreason = !(userReason.length() < 1 || userReason.length() > 450);
 
         if (validUreason)
@@ -491,9 +481,11 @@ public class ModerationCog extends Cog {
 
         user.getUser().openPrivateChannel().queue(ch -> {
             if (validUreason)
-                ch.sendMessage("You've been kicked from **" + ctx.guild.getName() + "** for `" + userReason + "`.").queue();
+                ch.sendMessage("You've been kicked from **" + ctx.guild.getName() + "** for `" + userReason + "`.")
+                        .queue();
             else
-                ch.sendMessage("You've been kicked from **" + ctx.guild.getName() + "**. No reason was specified.").queue();
+                ch.sendMessage("You've been kicked from **" + ctx.guild.getName() + "**. No reason was specified.")
+                        .queue();
 
             ctx.guild.getController().kick(user, reason).reason(reason).queue();
             ctx.send("👢 Kicked.").queue();
@@ -504,8 +496,8 @@ public class ModerationCog extends Cog {
     }
 
     @Perm.ManageRoles
-    @Command(name = "autorole", desc = "Manage autoroles in this server.", guildOnly = true,
-            usage = "[action] {role}", aliases = {"autoroles", "ar"}, thread = true)
+    @Command(name = "autorole", desc = "Manage autoroles in this server.", guildOnly = true, usage = "[action] {role}", aliases = {
+            "autoroles", "ar" }, thread = true)
     public void cmdAutorole(Context ctx) throws SQLException {
         if (ctx.args.empty) {
             ctx.send(NO_COMMAND).queue();
@@ -514,21 +506,21 @@ public class ModerationCog extends Cog {
         String invoked = ctx.args.get(0);
 
         switch (invoked) {
-            case "list":
-                autoroleList(ctx);
-                break;
-            case "add":
-                autoroleAdd(ctx);
-                break;
-            case "remove":
-                autoroleRemove(ctx);
-                break;
-            case "clear":
-                autoroleClear(ctx);
-                break;
-            default:
-                ctx.send(NO_COMMAND).queue();
-                break;
+        case "list":
+            autoroleList(ctx);
+            break;
+        case "add":
+            autoroleAdd(ctx);
+            break;
+        case "remove":
+            autoroleRemove(ctx);
+            break;
+        case "clear":
+            autoroleClear(ctx);
+            break;
+        default:
+            ctx.send(NO_COMMAND).queue();
+            break;
         }
     }
 
@@ -552,8 +544,8 @@ public class ModerationCog extends Cog {
     private Role requireRole(Context ctx) {
         Role role;
 
-        if (ctx.args.length < 2 ||
-                (role = parseRole(ctx.guild, ctx.rawArgs.substring(ctx.args.get(0).length()).trim())) == null) {
+        if (ctx.args.length < 2
+                || (role = parseRole(ctx.guild, ctx.rawArgs.substring(ctx.args.get(0).length()).trim())) == null) {
             ctx.fail("I need a role in the form of the name, @role, or ID!");
             throw new PassException();
         }
@@ -571,15 +563,11 @@ public class ModerationCog extends Cog {
         EmbedBuilder emb = new EmbedBuilder()
                 .setAuthor("Autorole List", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
                 .setDescription("Here are the autoroles in this server:")
-                .setColor(val(ctx.guild.getSelfMember().getColor()).or(Color.WHITE))
-                .setTimestamp(Instant.now());
+                .setColor(val(ctx.guild.getSelfMember().getColor()).or(Color.WHITE)).setTimestamp(Instant.now());
 
-        for (GuildAutorole autorole: autoroles)
-            emb.getDescriptionBuilder().append("\n    \u2022 <@&")
-                    .append(autorole.getRoleId())
-                    .append("> (ID: `")
-                    .append(autorole.getRoleId())
-                    .append("`)");
+        for (GuildAutorole autorole : autoroles)
+            emb.getDescriptionBuilder().append("\n    \u2022 <@&").append(autorole.getRoleId()).append("> (ID: `")
+                    .append(autorole.getRoleId()).append("`)");
 
         ctx.send(emb.build()).queue();
     }
@@ -617,17 +605,15 @@ public class ModerationCog extends Cog {
 
     private void autoroleClear(Context ctx) throws SQLException {
         DeleteBuilder builder = autoroleDao.deleteBuilder();
-        builder.where()
-                .eq("guildId", ctx.guild.getIdLong());
+        builder.where().eq("guildId", ctx.guild.getIdLong());
         int deleted = builder.delete();
 
         ctx.success("Cleared " + deleted + " autoroles.");
     }
 
     @Perm.Invite
-    @Command(name = "instant_invite", desc = "Create an instant invite that never expires.",
-            usage = "{#channel - default current channel}", guildOnly = true,
-            aliases = {"inv", "make_invite", "mkinvite", "makeinvite", "createinvite", "instantinvite", "create_invite"})
+    @Command(name = "instant_invite", desc = "Create an instant invite that never expires.", usage = "{#channel - default current channel}", guildOnly = true, aliases = {
+            "inv", "make_invite", "mkinvite", "makeinvite", "createinvite", "instantinvite", "create_invite" })
     public void cmdMakeInvite(Context ctx) {
         MessageChannel channel = ctx.channel;
         if (ctx.message.getMentionedChannels().size() > 0) {
@@ -641,13 +627,9 @@ public class ModerationCog extends Cog {
             return;
         }
 
-        ch.createInvite()
-                .setUnique(false)
-                .setTemporary(false)
-                .setMaxAge(0)
-                .setMaxUses(0)
-                .queue(i -> ctx.send(Emotes.getSuccess() + " Invite created to " +
-                        ch.getAsMention() + ".\n" + i.getURL()).queue(), e -> {
+        ch.createInvite().setUnique(false).setTemporary(false).setMaxAge(0).setMaxUses(0).queue(i -> ctx
+                .send(Emotes.getSuccess() + " Invite created to " + ch.getAsMention() + ".\n" + i.getURL()).queue(),
+                e -> {
                     ctx.fail("Failed to create invite!");
                     logger.error("Invite creation error", e);
                 });

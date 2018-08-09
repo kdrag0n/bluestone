@@ -59,13 +59,6 @@
 # Main class
 -keep class com.kdrag0n.bluestone.Start { *; }
 
-# Log4j
--keep class org.apache.logging.log4j.** { *; }
--dontwarn org.apache.logging.slf4j.EventDataConverter # SLF4J extension: EventData
--dontwarn org.apache.logging.log4j.util.** # OSGI, Java 10 ObjectInputFilter
--dontwarn org.apache.logging.log4j.core.** # Commons CSV, OSGI, JavaX mail, JANSI, disruptor, Jackson XML, queues, concurrency, Apacke Kafka, ZeroMQ, Commons Compression, JavaX JMS, JavaX servlet
--dontwarn org.apache.commons.logging.impl.** # Apache Avalon, old Log4j, old Log, JavaX servlet
-
 # SLF4J
 -keep class org.slf4j.** { *; }
 -dontwarn org.slf4j.MDC # MDC binder

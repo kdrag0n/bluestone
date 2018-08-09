@@ -16,8 +16,8 @@ import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.utils.MiscUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.awt.*;
 import java.sql.SQLException;
@@ -28,18 +28,14 @@ import java.util.stream.Collectors;
 import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
 
 public class QuotesCog extends Cog {
-    private static final Logger logger = LogManager.getLogger(QuotesCog.class);
-    private static final String NO_COMMAND = "🤔 **I need an action!**\n" +
-            "The following are valid:\n" +
-            "    \u2022 `[id]` - show quote `id`\n" +
-            "    \u2022 `add [quote]` - add a quote\n" +
-            "    \u2022 `delete [id]` - delete a quote, if you own it\n" +
-            "    \u2022 `list` - list all the quotes (paginated)\n" +
-            "    \u2022 `random` - view a random quote\n" +
-            "    \u2022 `count` - see how many quotes there are\n" +
-            "    \u2022 `message [message id]` - quote a message by its ID\n" +
-            "\n" +
-            "Aliases: [create, new, remove], [del, rm], [rand], [num], [addmsg, madd, msg]";
+    private static final Logger logger = LoggerFactory.getLogger(QuotesCog.class);
+    private static final String NO_COMMAND = "🤔 **I need an action!**\n" + "The following are valid:\n"
+            + "    \u2022 `[id]` - show quote `id`\n" + "    \u2022 `add [quote]` - add a quote\n"
+            + "    \u2022 `delete [id]` - delete a quote, if you own it\n"
+            + "    \u2022 `list` - list all the quotes (paginated)\n" + "    \u2022 `random` - view a random quote\n"
+            + "    \u2022 `count` - see how many quotes there are\n"
+            + "    \u2022 `message [message id]` - quote a message by its ID\n" + "\n"
+            + "Aliases: [create, new, remove], [del, rm], [rand], [num], [addmsg, madd, msg]";
     private final Dao<Quote, Integer> dao;
     private final Dao<QuotesBannedMember, Long> banDao;
 
@@ -58,8 +54,8 @@ public class QuotesCog extends Cog {
         return "Gotta quote 'em all!";
     }
 
-    @Command(name = "quote", desc = "Add, create, or view a quote!", thread = true,
-            usage = "[action / id] {args?...}", aliases = {"quotes", "q"})
+    @Command(name = "quote", desc = "Add, create, or view a quote!", thread = true, usage = "[action / id] {args?...}", aliases = {
+            "quotes", "q" })
     public void cmdQuote(Context ctx) throws SQLException {
         if (ctx.args.empty) {
             ctx.send(NO_COMMAND).queue();
@@ -69,8 +65,7 @@ public class QuotesCog extends Cog {
 
         if (invoked.equals("add") || invoked.equals("create") || invoked.equals("new"))
             quoteCmdAdd(ctx);
-        else if (invoked.equals("delete") || invoked.equals("remove") ||
-                invoked.equals("del") || invoked.equals("rm"))
+        else if (invoked.equals("delete") || invoked.equals("remove") || invoked.equals("del") || invoked.equals("rm"))
             quoteCmdDelete(ctx);
         else if (invoked.equals("list"))
             quoteCmdList(ctx);
@@ -78,7 +73,8 @@ public class QuotesCog extends Cog {
             quoteCmdRandom(ctx);
         else if (invoked.equals("count") || invoked.equals("num"))
             quoteCmdCount(ctx);
-        else if (invoked.equals("message") || invoked.equals("addmsg") || invoked.equals("madd") || invoked.equals("msg"))
+        else if (invoked.equals("message") || invoked.equals("addmsg") || invoked.equals("madd")
+                || invoked.equals("msg"))
             quoteCmdAddMessage(ctx);
         else if (Strings.is4Digits(invoked))
             quoteShowId(ctx, Integer.parseInt(invoked));
@@ -101,27 +97,23 @@ public class QuotesCog extends Cog {
             return;
         }
 
-        String text = Strings.renderMessage(ctx.message, ctx.guild, ctx.rawArgs.substring(ctx.args.get(0).length()).trim()
-                .replace('\n', ' '));
+        String text = Strings.renderMessage(ctx.message, ctx.guild,
+                ctx.rawArgs.substring(ctx.args.get(0).length()).trim().replace('\n', ' '));
 
         if (text.length() > 360) {
             ctx.fail("Text too long!");
             return;
         }
 
-        long quotes = dao.queryBuilder()
-                .where()
-                .eq("authorId", ctx.author.getIdLong())
-                .countOf();
+        long quotes = dao.queryBuilder().where().eq("authorId", ctx.author.getIdLong()).countOf();
 
-        if (quotes >= 25 && !Permissions.check(ctx, Permissions.BOT_ADMIN) &&
-                ctx.author.getIdLong() != 219550353518100480L) {
+        if (quotes >= 25 && !Permissions.check(ctx, Permissions.BOT_ADMIN)
+                && ctx.author.getIdLong() != 219550353518100480L) {
             ctx.fail("You already have 25 quotes!");
             return;
         }
 
-        Quote quote = new Quote(text,
-                ctx.author.getIdLong(), ctx.author.getName());
+        Quote quote = new Quote(text, ctx.author.getIdLong(), ctx.author.getName());
         dao.create(quote);
 
         ctx.success("Quote added with ID `" + quote.id + "`.");
@@ -144,9 +136,8 @@ public class QuotesCog extends Cog {
         if (quote == null) {
             ctx.fail("No such quote!");
             return;
-        } else if (quote.authorId != ctx.author.getIdLong() &&
-                ctx.author.getIdLong() != Bot.ownerId &&
-                ctx.author.getIdLong() != quote.quotedById) {
+        } else if (quote.authorId != ctx.author.getIdLong() && ctx.author.getIdLong() != Bot.ownerId
+                && ctx.author.getIdLong() != quote.quotedById) {
             ctx.fail("You didn't write or quote that quote!");
             return;
         }
@@ -156,9 +147,7 @@ public class QuotesCog extends Cog {
     }
 
     private void quoteCmdList(Context ctx) throws SQLException {
-        List<Quote> quotes = dao.queryBuilder()
-                .orderBy("id", true)
-                .query();
+        List<Quote> quotes = dao.queryBuilder().orderBy("id", true).query();
 
         if (quotes.size() < 1) {
             ctx.send("There are no quotes!").queue();
@@ -194,49 +183,34 @@ public class QuotesCog extends Cog {
             name = ctx.member.getEffectiveName();
         }
 
-        Paginator.Builder builder = new Paginator.Builder()
-                .setColumns(1)
-                .useNumberedItems(false)
-                .setItemsPerPage(12)
-                .waitOnSinglePage(false)
-                .showPageNumbers(true)
-                .setColor(color)
-                .setText("Listing all quotes:")
-                .setItems(renderedQuotes)
-                .setFinalAction(msg -> {
-                    msg.editMessage(new MessageBuilder()
-                            .append("Finished.")
-                            .setEmbed(new EmbedBuilder()
-                                    .setColor(color)
+        Paginator.Builder builder = new Paginator.Builder().setColumns(1).useNumberedItems(false).setItemsPerPage(12)
+                .waitOnSinglePage(false).showPageNumbers(true).setColor(color).setText("Listing all quotes:")
+                .setItems(renderedQuotes).setFinalAction(msg -> {
+                    msg.editMessage(new MessageBuilder().append("Finished.")
+                            .setEmbed(new EmbedBuilder().setColor(color)
                                     .setAuthor(name, null, ctx.author.getEffectiveAvatarUrl())
-                                    .setFooter("Full quote list", null)
-                                    .build())
+                                    .setFooter("Full quote list", null).build())
                             .build()).queue();
 
                     try {
                         msg.clearReactions().queue();
-                    } catch (PermissionException|IllegalStateException ignored) {
-                        //noinspection EmptyCatchBlock
+                    } catch (PermissionException | IllegalStateException ignored) {
+                        // noinspection EmptyCatchBlock
                         try {
-                            for (MessageReaction r: msg.getReactions()) {
+                            for (MessageReaction r : msg.getReactions()) {
                                 r.removeReaction().queue();
                                 r.removeReaction(ctx.author).queue();
                             }
-                        } catch (PermissionException _ignored) {}
+                        } catch (PermissionException _ignored) {
+                        }
                     }
-                })
-                .setEventWaiter(bot.eventWaiter)
-                .setTimeout(2, TimeUnit.MINUTES)
-                .addUsers(ctx.author);
+                }).setEventWaiter(bot.eventWaiter).setTimeout(2, TimeUnit.MINUTES).addUsers(ctx.author);
 
         builder.build().paginate(ctx.channel, page);
     }
 
     private void quoteCmdRandom(Context ctx) throws SQLException {
-        Quote quote = dao.queryBuilder()
-                .orderByRaw("RAND()")
-                .limit(1L)
-                .queryForFirst();
+        Quote quote = dao.queryBuilder().orderByRaw("RAND()").limit(1L).queryForFirst();
 
         ctx.send(quote.render()).queue();
     }
@@ -276,19 +250,15 @@ public class QuotesCog extends Cog {
             return;
         }
 
-        long quotes = dao.queryBuilder()
-                .where()
-                .eq("authorId", msg.getAuthor().getIdLong())
-                .countOf();
+        long quotes = dao.queryBuilder().where().eq("authorId", msg.getAuthor().getIdLong()).countOf();
 
-        if (quotes >= 25 && !Permissions.check(ctx, Permissions.BOT_ADMIN) &&
-                msg.getAuthor().getIdLong() != 219550353518100480L) {
+        if (quotes >= 25 && !Permissions.check(ctx, Permissions.BOT_ADMIN)
+                && msg.getAuthor().getIdLong() != 219550353518100480L) {
             ctx.fail("The author of that message already has 25 quotes, and you aren't an admin!");
             return;
         }
 
-        Quote quote = new Quote(text,
-                msg.getAuthor().getIdLong(), msg.getAuthor().getName());
+        Quote quote = new Quote(text, msg.getAuthor().getIdLong(), msg.getAuthor().getName());
         quote.quotedById = ctx.author.getIdLong();
         dao.create(quote);
 
@@ -296,8 +266,8 @@ public class QuotesCog extends Cog {
     }
 
     @Perm.Owner
-    @Command(name = "quote_ban", desc = "Ban an user from adding quotes.", usage = "[@mention/user ID]",
-            thread = true, aliases = {"quotes_ban", "qb"})
+    @Command(name = "quote_ban", desc = "Ban an user from adding quotes.", usage = "[@mention/user ID]", thread = true, aliases = {
+            "quotes_ban", "qb" })
     public void cmdQuoteBan(Context ctx) throws SQLException {
         long userId;
         User user;
@@ -315,26 +285,24 @@ public class QuotesCog extends Cog {
 
         int newN = banDao.create(new QuotesBannedMember(userId));
         DeleteBuilder builder = dao.deleteBuilder();
-        builder.where()
-                .eq("authorId", userId);
+        builder.where().eq("authorId", userId);
         int delN = builder.delete();
 
         if (newN > 0) {
-            ctx.send(Emotes.getSuccess() + " Successfully banned **" + getTag(user) +
-                    "** from adding quotes. All of their **" + delN + "** quotes have been deleted.").queue();
+            ctx.send(Emotes.getSuccess() + " Successfully banned **" + getTag(user)
+                    + "** from adding quotes. All of their **" + delN + "** quotes have been deleted.").queue();
         } else {
             ctx.fail("**" + getTag(user) + "** was already banned from adding quotes.");
         }
     }
 
     @Perm.Owner
-    @Command(name = "quote_ban_list", desc = "List users banned from adding quotes.", thread = true,
-            aliases = {"quotes_ban_list", "qb_list"})
+    @Command(name = "quote_ban_list", desc = "List users banned from adding quotes.", thread = true, aliases = {
+            "quotes_ban_list", "qb_list" })
     public void cmdQuoteBanList(Context ctx) throws SQLException {
-        String rendered =
-                banDao.queryForAll().stream().map(q -> "**" +
-                        getTag(ctx.jda.retrieveUserById(q.id).complete()) +
-                "** (`" + q.id + "`)").collect(Collectors.joining("\n    \u2022 "));
+        String rendered = banDao.queryForAll().stream()
+                .map(q -> "**" + getTag(ctx.jda.retrieveUserById(q.id).complete()) + "** (`" + q.id + "`)")
+                .collect(Collectors.joining("\n    \u2022 "));
 
         if (rendered.length() < 1) {
             ctx.success("Nobody is banned from adding quotes.");
@@ -344,9 +312,9 @@ public class QuotesCog extends Cog {
     }
 
     @Perm.Owner
-    @Command(name = "quote_ban_remove", desc = "Allow a banned user from adding quotes.", usage = "[@mention/user ID]",
-            thread = true, aliases = {"quotes_ban_remove", "qb_remove", "qb_rm", "qb_del", "quote_ban_rm",
-            "quote_ban_del", "quotes_ban_rm", "quotes_ban_del"})
+    @Command(name = "quote_ban_remove", desc = "Allow a banned user from adding quotes.", usage = "[@mention/user ID]", thread = true, aliases = {
+            "quotes_ban_remove", "qb_remove", "qb_rm", "qb_del", "quote_ban_rm", "quote_ban_del", "quotes_ban_rm",
+            "quotes_ban_del" })
     public void cmdQuoteBanRemove(Context ctx) throws SQLException {
         long userId;
         User user;
@@ -365,8 +333,8 @@ public class QuotesCog extends Cog {
         int delN = banDao.deleteById(userId);
 
         if (delN > 0) {
-            ctx.send(Emotes.getSuccess() + " Successfully unbanned **" + getTag(user) +
-                    "** from adding quotes.").queue();
+            ctx.send(Emotes.getSuccess() + " Successfully unbanned **" + getTag(user) + "** from adding quotes.")
+                    .queue();
         } else {
             ctx.fail("**" + getTag(user) + "** isn't banned from adding quotes.");
         }

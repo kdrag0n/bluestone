@@ -14,8 +14,8 @@ import okhttp3.FormBody;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.json.JSONObject;
 
 import java.net.SocketTimeoutException;
@@ -28,7 +28,7 @@ import static com.kdrag0n.bluestone.util.Strings.str;
 
 public class StatReporterCog extends Cog {
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
-    private static final Logger logger = LogManager.getLogger(StatReporterCog.class);
+    private static final Logger logger = LoggerFactory.getLogger(StatReporterCog.class);
     private SimpleGraphiteClient graphiteClient;
     private static final AtomicInteger messagesSinceLastReport = new AtomicInteger();
     private static final AtomicInteger newGuildsSinceLastReport = new AtomicInteger();
@@ -39,8 +39,7 @@ public class StatReporterCog extends Cog {
     public StatReporterCog(Bot bot) {
         super(bot);
 
-        if (bot.getShardNum() == 1 && bot.getConfig().has("graphite_host") &&
-                bot.getConfig().has("graphite_port")) {
+        if (bot.getShardNum() == 1 && bot.getConfig().has("graphite_host") && bot.getConfig().has("graphite_port")) {
             graphiteClient = new SimpleGraphiteClient(bot.getConfig().getString("graphite_host"),
                     bot.getConfig().getInt("graphite_port"));
             Bot.scheduledExecutor.scheduleAtFixedRate(this::graphiteReport, 2, 60, TimeUnit.SECONDS);
@@ -62,24 +61,26 @@ public class StatReporterCog extends Cog {
 
     private void graphiteReport() {
         try {
-            graphiteClient.sendMetrics(new HashMap<String, Number>() {{
-                ShardUtil shardUtil = bot.shardUtil;
-                Runtime runtime = Runtime.getRuntime();
+            graphiteClient.sendMetrics(new HashMap<String, Number>() {
+                {
+                    ShardUtil shardUtil = bot.shardUtil;
+                    Runtime runtime = Runtime.getRuntime();
 
-                put("bot.guilds", shardUtil.getGuildCount());
-                put("bot.channels", shardUtil.getChannelCount());
-                put("bot.voice_channels", shardUtil.getVoiceChannelCount());
-                put("bot.text_channels", shardUtil.getTextChannelCount());
-                put("bot.users", shardUtil.getUserCount());
-                put("bot.shards", shardUtil.getShardCount());
-                put("bot.emotes", shardUtil.getEmoteCount());
-                put("bot.music_tracks", shardUtil.getTrackCount());
-                put("bot.music_streams", shardUtil.getStreamCount());
-                put("bot.messages_per_min", messagesSinceLastReport.getAndSet(0));
-                put("bot.guilds_per_min", newGuildsSinceLastReport.getAndSet(0));
+                    put("bot.guilds", shardUtil.getGuildCount());
+                    put("bot.channels", shardUtil.getChannelCount());
+                    put("bot.voice_channels", shardUtil.getVoiceChannelCount());
+                    put("bot.text_channels", shardUtil.getTextChannelCount());
+                    put("bot.users", shardUtil.getUserCount());
+                    put("bot.shards", shardUtil.getShardCount());
+                    put("bot.emotes", shardUtil.getEmoteCount());
+                    put("bot.music_tracks", shardUtil.getTrackCount());
+                    put("bot.music_streams", shardUtil.getStreamCount());
+                    put("bot.messages_per_min", messagesSinceLastReport.getAndSet(0));
+                    put("bot.guilds_per_min", newGuildsSinceLastReport.getAndSet(0));
 
-                put("system.memory_used", runtime.totalMemory() - runtime.freeMemory());
-            }});
+                    put("system.memory_used", runtime.totalMemory() - runtime.freeMemory());
+                }
+            });
         } catch (Exception e) {
             logger.error("Error reporting stats to Graphite", e);
         }
@@ -133,50 +134,46 @@ public class StatReporterCog extends Cog {
         if (bot.jda.getShardInfo() != null) {
             JDA.ShardInfo sInfo = bot.jda.getShardInfo();
 
-            json.put("shard_id", sInfo.getShardId())
-                    .put("shard_count", sInfo.getShardTotal())
-                    .put("server_count", bot.jda.getGuilds().size());
+            json.put("shard_id", sInfo.getShardId()).put("shard_count", sInfo.getShardTotal()).put("server_count",
+                    bot.jda.getGuilds().size());
         } else {
             json.put("server_count", bot.jda.getGuilds().size());
         }
 
-        Bot.http.newCall(new Request.Builder()
-                .post(RequestBody.create(JSON_MEDIA_TYPE, json.toString()))
-                .url(String.format(DISCORD_BOTS, bot.jda.getSelfUser().getId()))
-                .header("Authorization", key)
-                .build()).enqueue(Bot.callback(response -> {
-            if (!response.isSuccessful()) {
-                logger.warn("[Discord Bots] Bad response: {} {}", response.code(), response.message());
-            }
+        Bot.http.newCall(new Request.Builder().post(RequestBody.create(JSON_MEDIA_TYPE, json.toString()))
+                .url(String.format(DISCORD_BOTS, bot.jda.getSelfUser().getId())).header("Authorization", key).build())
+                .enqueue(Bot.callback(response -> {
+                    if (!response.isSuccessful()) {
+                        logger.warn("[Discord Bots] Bad response: {} {}", response.code(), response.message());
+                    }
 
-            response.body().close();
-        }, e -> {
-            if (e instanceof SocketTimeoutException)
-                logger.error("[Discord Bots] Report: timeout");
-            else
-                logger.error("[Discord Bots] Report failed", e);
-        }));
+                    response.body().close();
+                }, e -> {
+                    if (e instanceof SocketTimeoutException)
+                        logger.error("[Discord Bots] Report: timeout");
+                    else
+                        logger.error("[Discord Bots] Report failed", e);
+                }));
     }
 
     private void reportCarbonitex(String key) {
-        Bot.http.newCall(new Request.Builder()
-                .post(new FormBody.Builder()
-                        .add("key", key)
-                        .add("servercount", str(bot.shardUtil.getGuildCount()))
-                        .build())
-                .url(CARBONITEX)
-                .build()).enqueue(Bot.callback(response -> {
-            if (!response.isSuccessful()) {
-                logger.warn("[Carbonitex] Bad response: {} {}", response.code(), response.message());
-            }
+        Bot.http.newCall(
+                new Request.Builder()
+                        .post(new FormBody.Builder().add("key", key)
+                                .add("servercount", str(bot.shardUtil.getGuildCount())).build())
+                        .url(CARBONITEX).build())
+                .enqueue(Bot.callback(response -> {
+                    if (!response.isSuccessful()) {
+                        logger.warn("[Carbonitex] Bad response: {} {}", response.code(), response.message());
+                    }
 
-            response.body().close();
-        }, e -> {
-            if (e instanceof SocketTimeoutException)
-                logger.error("[Carbonitex] Report: timeout");
-            else
-                logger.error("[Carbonitex] Report failed", e);
-        }));
+                    response.body().close();
+                }, e -> {
+                    if (e instanceof SocketTimeoutException)
+                        logger.error("[Carbonitex] Report: timeout");
+                    else
+                        logger.error("[Carbonitex] Report failed", e);
+                }));
     }
 
     private void reportDiscordBotsOrg(String key) {
@@ -184,28 +181,25 @@ public class StatReporterCog extends Cog {
         if (bot.jda.getShardInfo() != null) {
             JDA.ShardInfo sInfo = bot.jda.getShardInfo();
 
-            json.put("shard_id", sInfo.getShardId())
-                    .put("shard_count", sInfo.getShardTotal())
-                    .put("server_count", bot.jda.getGuilds().size());
+            json.put("shard_id", sInfo.getShardId()).put("shard_count", sInfo.getShardTotal()).put("server_count",
+                    bot.jda.getGuilds().size());
         } else {
             json.put("server_count", bot.jda.getGuilds().size());
         }
 
-        Bot.http.newCall(new Request.Builder()
-                .post(RequestBody.create(JSON_MEDIA_TYPE, json.toString()))
-                .url(String.format(DISCORD_BOTS_ORG, bot.jda.getSelfUser().getId()))
-                .header("Authorization", key)
+        Bot.http.newCall(new Request.Builder().post(RequestBody.create(JSON_MEDIA_TYPE, json.toString()))
+                .url(String.format(DISCORD_BOTS_ORG, bot.jda.getSelfUser().getId())).header("Authorization", key)
                 .build()).enqueue(Bot.callback(response -> {
-            if (!response.isSuccessful())  {
-                logger.warn("[Discord Bot List] Bad response: {} {}", response.code(), response.message());
-            }
+                    if (!response.isSuccessful()) {
+                        logger.warn("[Discord Bot List] Bad response: {} {}", response.code(), response.message());
+                    }
 
-            response.body().close();
-        }, e -> {
-            if (e instanceof SocketTimeoutException)
-                logger.error("[Discord Bot List] Report: timeout");
-            else
-                logger.error("[Discord Bot List] Report failed", e);
-        }));
+                    response.body().close();
+                }, e -> {
+                    if (e instanceof SocketTimeoutException)
+                        logger.error("[Discord Bot List] Report: timeout");
+                    else
+                        logger.error("[Discord Bot List] Report failed", e);
+                }));
     }
 }

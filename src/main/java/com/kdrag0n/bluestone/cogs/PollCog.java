@@ -17,8 +17,8 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageReaction;
 import net.dv8tion.jda.core.entities.TextChannel;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.awt.*;
 import java.sql.SQLException;
@@ -31,10 +31,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class PollCog extends Cog {
-    private static final Logger logger = LogManager.getLogger(PollCog.class);
+    private static final Logger logger = LoggerFactory.getLogger(PollCog.class);
 
-    private static final Pattern UNICODE_EMOTE_PATTERN = Pattern.compile("([\\u20a0-\\u32ff\\x{1f000}-\\x{1ffff}\\x{fe4e5}-\\x{fe4ee}]|[0-9]\\u20e3)");
-    private static final Pattern CUSTOM_EMOTE_PATTERN = Pattern.compile("<:[a-z_]+:([0-9]{17,19})>", Pattern.CASE_INSENSITIVE);
+    private static final Pattern UNICODE_EMOTE_PATTERN = Pattern
+            .compile("([\\u20a0-\\u32ff\\x{1f000}-\\x{1ffff}\\x{fe4e5}-\\x{fe4ee}]|[0-9]\\u20e3)");
+    private static final Pattern CUSTOM_EMOTE_PATTERN = Pattern.compile("<:[a-z_]+:([0-9]{17,19})>",
+            Pattern.CASE_INSENSITIVE);
     private static final Pattern CONTIGUOUS_SPACE_PATTERN = Pattern.compile("\\s+");
     private final Dao<ActivePoll, Long> pollDao;
 
@@ -61,7 +63,7 @@ public class PollCog extends Cog {
     }
 
     private void scheduleAllPolls() throws SQLException {
-        for (ActivePoll poll: pollDao.queryForAll())
+        for (ActivePoll poll : pollDao.queryForAll())
             schedulePoll(poll);
     }
 
@@ -81,7 +83,7 @@ public class PollCog extends Cog {
         Collections.reverse(groups);
 
         Date date = null;
-        for (DateGroup group: groups) {
+        for (DateGroup group : groups) {
             if (!group.getDates().isEmpty()) {
                 date = group.getDates().get(0);
                 int pos = qBuilder.lastIndexOf(group.getText());
@@ -101,11 +103,10 @@ public class PollCog extends Cog {
         final Date finalDate = date;
         String preQuestion = qBuilder.toString().trim();
 
-        Set<String> unicodeEmotes = RegexUtils.matchStream(UNICODE_EMOTE_PATTERN, preQuestion)
-                .map(MatchResult::group).collect(Collectors.toSet());
-        Set<Emote> customEmotes = RegexUtils.matchStream(CUSTOM_EMOTE_PATTERN, preQuestion)
-                .map(m -> ctx.jda.getEmoteById(m.group(1)))
+        Set<String> unicodeEmotes = RegexUtils.matchStream(UNICODE_EMOTE_PATTERN, preQuestion).map(MatchResult::group)
                 .collect(Collectors.toSet());
+        Set<Emote> customEmotes = RegexUtils.matchStream(CUSTOM_EMOTE_PATTERN, preQuestion)
+                .map(m -> ctx.jda.getEmoteById(m.group(1))).collect(Collectors.toSet());
 
         if (customEmotes.contains(null)) {
             customEmotes.remove(null);
@@ -122,19 +123,16 @@ public class PollCog extends Cog {
         final Color c = ctx.member.getColor();
 
         EmbedBuilder embed = new EmbedBuilder()
-                .setAuthor(ctx.member.getEffectiveName() + " is polling...",
-                        null, ctx.author.getEffectiveAvatarUrl())
-                .setColor(c == null ? Color.WHITE : c)
-                .setDescription(question)
-                .appendDescription("\n\n")
+                .setAuthor(ctx.member.getEffectiveName() + " is polling...", null, ctx.author.getEffectiveAvatarUrl())
+                .setColor(c == null ? Color.WHITE : c).setDescription(question).appendDescription("\n\n")
                 .appendDescription("**⌛ Reactions are being added...**");
 
         ctx.send(embed.build()).queue(msg -> {
-            for (String emote: unicodeEmotes) {
+            for (String emote : unicodeEmotes) {
                 msg.addReaction(emote).queue();
             }
 
-            for (Emote emote: customEmotes) {
+            for (Emote emote : customEmotes) {
                 msg.addReaction(emote).queue();
             }
 
@@ -147,14 +145,11 @@ public class PollCog extends Cog {
                 }
             });
 
-            embed.setDescription(question)
-                    .appendDescription("\n\n")
-                    .appendDescription("**✅ Vote!**");
+            embed.setDescription(question).appendDescription("\n\n").appendDescription("**✅ Vote!**");
 
             schedulePoll(poll);
 
-            Bot.scheduledExecutor.schedule(() ->
-                            msg.editMessage(embed.build()).queue(),
+            Bot.scheduledExecutor.schedule(() -> msg.editMessage(embed.build()).queue(),
                     (unicodeEmotes.size() + customEmotes.size()) * (int) (ctx.jda.getPing() * 1.92),
                     TimeUnit.MILLISECONDS);
         });
@@ -185,41 +180,35 @@ public class PollCog extends Cog {
 
                 long ourId = bot.jda.getSelfUser().getIdLong();
                 Map<MessageReaction.ReactionEmote, Integer> resultTable = message.getReactions().stream()
-                        .map(r -> ImmutablePair.of(r, (int) r.getUsers()
-                                .complete()
-                                .stream()
-                                .filter(u -> u.getIdLong() != ourId)
-                                .count()))
-                        .sorted(Collections.reverseOrder(Comparator.comparing(ImmutablePair<MessageReaction, Integer>::getRight)))
-                        .collect(Collectors.toMap(
-                                e -> e.getLeft().getReactionEmote(),
-                                ImmutablePair::getRight,
-                                (k, v) -> { throw new IllegalStateException("Duplicate key " + k); },
-                                LinkedHashMap::new
-                        ));
+                        .map(r -> ImmutablePair.of(r,
+                                (int) r.getUsers().complete().stream().filter(u -> u.getIdLong() != ourId).count()))
+                        .sorted(Collections
+                                .reverseOrder(Comparator.comparing(ImmutablePair<MessageReaction, Integer>::getRight)))
+                        .collect(Collectors.toMap(e -> e.getLeft().getReactionEmote(), ImmutablePair::getRight,
+                                (k, v) -> {
+                                    throw new IllegalStateException("Duplicate key " + k);
+                                }, LinkedHashMap::new));
 
-                MessageReaction.ReactionEmote winnerKey = Collections.max(resultTable.entrySet(), Map.Entry.comparingByValue()).getKey();
-                String winner = winnerKey.getEmote() == null ? winnerKey.getName() : winnerKey.getEmote().getAsMention();
+                MessageReaction.ReactionEmote winnerKey = Collections
+                        .max(resultTable.entrySet(), Map.Entry.comparingByValue()).getKey();
+                String winner = winnerKey.getEmote() == null ? winnerKey.getName()
+                        : winnerKey.getEmote().getAsMention();
 
-                List<String> orderedResultList = resultTable.entrySet().stream()
-                        .map(e -> {
-                            final MessageReaction.ReactionEmote key = e.getKey();
-                            final Integer value = e.getValue();
-                            final String userKey = key.getEmote() == null ? key.getName() : key.getEmote().getAsMention();
+                List<String> orderedResultList = resultTable.entrySet().stream().map(e -> {
+                    final MessageReaction.ReactionEmote key = e.getKey();
+                    final Integer value = e.getValue();
+                    final String userKey = key.getEmote() == null ? key.getName() : key.getEmote().getAsMention();
 
-                            return userKey + ": " + value + " vote" + (value == 1 ? "" : "s");
-                        })
-                        .collect(Collectors.toList());
+                    return userKey + ": " + value + " vote" + (value == 1 ? "" : "s");
+                }).collect(Collectors.toList());
 
-                EmbedBuilder emb = new EmbedBuilder(message.getEmbeds().get(0))
-                        .addField("Winner", winner, false);
+                EmbedBuilder emb = new EmbedBuilder(message.getEmbeds().get(0)).addField("Winner", winner, false);
                 emb.getDescriptionBuilder().replace(emb.getDescriptionBuilder().indexOf("**✅ Vote!**"),
                         emb.getDescriptionBuilder().length(), "**❌ Poll ended.**");
 
                 message.editMessage(emb.build()).queue();
-                channel.sendMessage("**Poll ended!**\n" +
-                        "Winner: " + winner + "\n\n" +
-                        "Full Results:\n" + String.join("\n", orderedResultList)).queue();
+                channel.sendMessage("**Poll ended!**\n" + "Winner: " + winner + "\n\n" + "Full Results:\n"
+                        + String.join("\n", orderedResultList)).queue();
             } catch (Exception e) {
                 logger.error("Poll: error", e);
             } finally {

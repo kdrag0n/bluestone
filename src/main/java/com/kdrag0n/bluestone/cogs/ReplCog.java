@@ -17,8 +17,8 @@ import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.requests.RestAction;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.luaj.vm2.script.LuaScriptEngine;
 
 import javax.script.ScriptEngine;
@@ -35,34 +35,18 @@ import java.util.regex.Pattern;
 
 @SuppressWarnings("SameParameterValue")
 public class ReplCog extends Cog {
-    public static final String[] NASHORN_ARGS = {"--language=es6", "-scripting"};
+    public static final String[] NASHORN_ARGS = { "--language=es6", "-scripting" };
     public static final Pattern JS_OBJECT_PATTERN = Pattern.compile("^\\[object [A-Z][a-z0-9]*]$");
-    private static final Logger logger = LogManager.getLogger(ReplCog.class);
+    private static final Logger logger = LoggerFactory.getLogger(ReplCog.class);
     private static final Pattern CODE_TYPE_PATTERN = Pattern.compile("```(?:js|javascript|java|lua)\n?");
     private final String token;
-    private static final String IMPORTS = "net.dv8tion.jda.core.entities\n" +
-            "net.dv8tion.jda.core\n" +
-            "net.dv8tion.jda.core.entities.impl\n" +
-            "net.dv8tion.jda.core.audio\n" +
-            "net.dv8tion.jda.core.audit\n" +
-            "net.dv8tion.jda.core.managers\n" +
-            "net.dv8tion.jda.core.exceptions\n" +
-            "net.dv8tion.jda.core.events\n" +
-            "net.dv8tion.jda.core.utils\n" +
-            "com.kdrag0n.bluestone\n" +
-            "org.apache.logging.log4j\n" +
-            "javax.script\n" +
-            "com.kdrag0n.bluestone.cogs\n" +
-            "com.kdrag0n.bluestone.errors\n" +
-            "org.json\n" +
-            "com.kdrag0n.bluestone.sql\n" +
-            "com.kdrag0n.bluestone.handlers\n" +
-            "com.kdrag0n.bluestone.enums\n" +
-            "com.kdrag0n.bluestone.util\n" +
-            "java.time\n" +
-            "java.math\n" +
-            "java.lang\n" +
-            "java.util\n";
+    private static final String IMPORTS = "net.dv8tion.jda.core.entities\n" + "net.dv8tion.jda.core\n"
+            + "net.dv8tion.jda.core.entities.impl\n" + "net.dv8tion.jda.core.audio\n" + "net.dv8tion.jda.core.audit\n"
+            + "net.dv8tion.jda.core.managers\n" + "net.dv8tion.jda.core.exceptions\n" + "net.dv8tion.jda.core.events\n"
+            + "net.dv8tion.jda.core.utils\n" + "com.kdrag0n.bluestone\n" + "org.apache.logging.log4j\n"
+            + "javax.script\n" + "com.kdrag0n.bluestone.cogs\n" + "com.kdrag0n.bluestone.errors\n" + "org.json\n"
+            + "com.kdrag0n.bluestone.sql\n" + "com.kdrag0n.bluestone.handlers\n" + "com.kdrag0n.bluestone.enums\n"
+            + "com.kdrag0n.bluestone.util\n" + "java.time\n" + "java.math\n" + "java.lang\n" + "java.util\n";
 
     private TLongSet replSessions = new TLongHashSet();
 
@@ -75,6 +59,7 @@ public class ReplCog extends Cog {
     public String getName() {
         return "REPL";
     }
+
     public String getDescription() {
         return "A multilingual REPL, in Discord!";
     }
@@ -85,8 +70,7 @@ public class ReplCog extends Cog {
     }
 
     @Perm.Owner
-    @Command(name = "repl", desc = "A multilingual REPL, in Discord!\n\nFlags come before language in arguments.",
-            usage = "[language] {flags}", thread=true)
+    @Command(name = "repl", desc = "A multilingual REPL, in Discord!\n\nFlags come before language in arguments.", usage = "[language] {flags}", thread = true)
     public void cmdRepl(Context ctx) {
         if (ctx.args.length < 1) {
             ctx.fail("I need a valid language!");
@@ -114,16 +98,15 @@ public class ReplCog extends Cog {
             List<ScriptEngineFactory> factories = man.getEngineFactories();
             List<String> langs = new ArrayList<>(factories.size());
 
-            for (ScriptEngineFactory factory: factories) {
+            for (ScriptEngineFactory factory : factories) {
                 langs.add(String.format("%s %s (%s %s)", factory.getEngineName(), factory.getEngineVersion(),
                         factory.getLanguageName(), factory.getLanguageVersion()));
             }
 
             ctx.send("List of available languages:\n    \u2022 " + StringUtils.join(langs, "\n    \u2022 ")).queue();
             return;
-        } else if (language.equalsIgnoreCase("nashorn") ||
-                language.equalsIgnoreCase("js") ||
-                language.equalsIgnoreCase("javascript")) {
+        } else if (language.equalsIgnoreCase("nashorn") || language.equalsIgnoreCase("js")
+                || language.equalsIgnoreCase("javascript")) {
             engine = new NashornScriptEngineFactory().getScriptEngine(NASHORN_ARGS);
         } else {
             engine = man.getEngineByName(language.toLowerCase());
@@ -159,52 +142,54 @@ public class ReplCog extends Cog {
 
         // ScriptEngine post-init
         try {
-            new Switch<Class<? extends ScriptEngine>>(engine.getClass())
-                    .byInstance()
+            new Switch<Class<? extends ScriptEngine>>(engine.getClass()).byInstance()
                     .match(NashornScriptEngine.class, () -> {
                         // imports
                         StringBuilder importsObj = new StringBuilder("const imports=new JavaImporter(null");
 
                         for (String pkg : StringUtils.split(IMPORTS, '\n')) {
-                            importsObj.append(",Packages.")
-                                    .append(pkg);
+                            importsObj.append(",Packages.").append(pkg);
                         }
 
                         importsObj.append(')');
 
-                        engine.eval(importsObj.toString() +
-                                ";function loadShims(){load('https://raw.githubusercontent.com/es-shims/es5-shim/master/es5-shim.min.js');load('https://raw.githubusercontent.com/paulmillr/es6-shim/master/es6-shim.min.js');}");
+                        engine.eval(importsObj.toString()
+                                + ";function loadShims(){load('https://raw.githubusercontent.com/es-shims/es5-shim/master/es5-shim.min.js');load('https://raw.githubusercontent.com/paulmillr/es6-shim/master/es6-shim.min.js');}");
 
                         // print
-                        engine.eval("function print() { ctx.send.apply(ctx, arguments.join(' ')).queue() }; var console = {log: print};");
-                    })
-                    .match(LuaScriptEngine.class, () -> {
+                        engine.eval(
+                                "function print() { ctx.send.apply(ctx, arguments.join(' ')).queue() }; var console = {log: print};");
+                    }).match(LuaScriptEngine.class, () -> {
                         engine.eval("function print(...) ctx.send(string.join(' ', ...)).queue() end");
                         engine.put("__dirsep", System.getProperty("file.separator"));
-                        engine.eval("debug = debug or {}; package = package or {}; package.config = package.config or (__dirsep .. '\\n;\\n?\\n!\\n-'); require 'assets.essentials'; require 'assets.cron'; require 'assets.middleclass'; require 'assets.stateful'; require 'assets.inspect'; require 'assets.repl_base'");
+                        engine.eval(
+                                "debug = debug or {}; package = package or {}; package.config = package.config or (__dirsep .. '\\n;\\n?\\n!\\n-'); require 'assets.essentials'; require 'assets.cron'; require 'assets.middleclass'; require 'assets.stateful'; require 'assets.inspect'; require 'assets.repl_base'");
                     });
         } catch (Exception e) {
             ctx.send("⚠ Engine post-init failed.\n```java\n" + StackUtil.renderStackTrace(e) + "```").queue();
         }
 
-        ctx.send(Emotes.getSuccess() + " **REPL started" + (untrusted ? " in untrusted mode" : "") +
-                ".** Prefix is " + prefix).queue();
+        ctx.send(Emotes.getSuccess() + " **REPL started" + (untrusted ? " in untrusted mode" : "") + ".** Prefix is "
+                + prefix).queue();
         while (true) {
             Message response;
             if (untrusted) {
-                response = waitForRMessage(0, msg -> msg.getContentRaw().startsWith(prefix) &&
-                        msg.getAuthor().getIdLong() != ctx.jda.getSelfUser().getIdLong(),
-                        e -> e.getUser().getIdLong() == ctx.author.getIdLong() &&
-                                !MiscUtil.getCreationTime(e.getMessageIdLong()).isBefore(startTime), ctx.channel.getIdLong());
+                response = waitForRMessage(0,
+                        msg -> msg.getContentRaw().startsWith(prefix)
+                                && msg.getAuthor().getIdLong() != ctx.jda.getSelfUser().getIdLong(),
+                        e -> e.getUser().getIdLong() == ctx.author.getIdLong()
+                                && !MiscUtil.getCreationTime(e.getMessageIdLong()).isBefore(startTime),
+                        ctx.channel.getIdLong());
             } else {
-                response = bot.waitForMessage(0, msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong() &&
-                        msg.getChannel().getIdLong() == ctx.channel.getIdLong() &&
-                        msg.getContentRaw().startsWith(prefix));
+                response = bot.waitForMessage(0,
+                        msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong()
+                                && msg.getChannel().getIdLong() == ctx.channel.getIdLong()
+                                && msg.getContentRaw().startsWith(prefix));
             }
 
             if (untrusted && response.getAuthor().getIdLong() != ctx.author.getIdLong()) {
-                Optional<MessageReaction> rr =
-                        response.getReactions().stream().filter(r -> r.getReactionEmote().getName().equals("🛡")).findFirst();
+                Optional<MessageReaction> rr = response.getReactions().stream()
+                        .filter(r -> r.getReactionEmote().getName().equals("🛡")).findFirst();
                 if (rr.isPresent()) {
                     MessageReaction mr = rr.get();
                     if (mr.getUsers().complete().stream().noneMatch(u -> u.getIdLong() == ctx.author.getIdLong())) {
@@ -220,8 +205,8 @@ public class ReplCog extends Cog {
             engine.put("msg", response);
             String cleaned = cleanUpCode(response.getContentRaw());
 
-            if (stringExists(cleaned, "quit", "exit", "System.exit()", "System.exit", "System.exit(0)",
-                    "exit()", "stop", "stop()", "System.exit();", "stop;", "stop();", "System.exit(0);")) {
+            if (stringExists(cleaned, "quit", "exit", "System.exit()", "System.exit", "System.exit(0)", "exit()",
+                    "stop", "stop()", "System.exit();", "stop;", "stop();", "System.exit(0);")) {
                 replSessions.remove(ctx.channel.getIdLong());
                 break;
             }
@@ -283,8 +268,8 @@ public class ReplCog extends Cog {
                 } catch (Exception e) {
                     logger.warn("Error sending result", e);
                     try {
-                        ctx.send("```java\n" +
-                                StringUtils.replace(StackUtil.renderStackTrace(e), token, "") + "```").queue();
+                        ctx.send("```java\n" + StringUtils.replace(StackUtil.renderStackTrace(e), token, "") + "```")
+                                .queue();
                     } catch (Exception ex) {
                         logger.error("Error sending send error", ex);
                     }
@@ -297,8 +282,8 @@ public class ReplCog extends Cog {
         ctx.success("REPL stopped.");
     }
 
-    private Message waitForRMessage(long millis, Predicate<Message> check,
-                                    Predicate<MessageReactionAddEvent> rCheck, long channelId) {
+    private Message waitForRMessage(long millis, Predicate<Message> check, Predicate<MessageReactionAddEvent> rCheck,
+            long channelId) {
         AtomicReference<Message> lock = new AtomicReference<>();
         RMessageWaitListener listener = new RMessageWaitListener(lock, check, rCheck, channelId);
         bot.jda.addEventListener(listener);

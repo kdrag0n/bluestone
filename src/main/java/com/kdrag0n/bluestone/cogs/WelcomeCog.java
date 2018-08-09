@@ -14,47 +14,41 @@ import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.regex.Pattern;
 
 public class WelcomeCog extends Cog {
-    private static final Logger logger = LogManager.getLogger(WelcomeCog.class);
-    private static final String DEFAULT_WELCOME = "[mention] **Welcome to [server]!**\n" +
-            "Enjoy your time here, and find out more about me with `[prefix]help`.";
+    private static final Logger logger = LoggerFactory.getLogger(WelcomeCog.class);
+    private static final String DEFAULT_WELCOME = "[mention] **Welcome to [server]!**\n"
+            + "Enjoy your time here, and find out more about me with `[prefix]help`.";
     private static final String DEFAULT_LEAVE = "[rip] **[member_tag] has left the server...**";
 
     private static final Pattern SUB_REGEX = Pattern.compile("\\[([a-z_]+)]");
-    private static final String NO_COMMAND = "🤔 **I need an action!**\n" +
-            "The following are valid:\n" +
-            "    \u2022 `status` - view the status of this message\n" +
-            "    \u2022 `show` - show the current message\n" +
-            "    \u2022 `set [message]` - set the current message\n" +
-            "    \u2022 `toggle` - toggle the status of this message\n" +
-            "    \u2022 `preview` - preview the current message\n" +
-            "    \u2022 `channel [#channel]` - change the channel messages are sent in (default: default channel, or first available one)\n" +
-            "    \u2022 `tags` - show the tags available for use in messages\n";
-    private static final String TAG_HELP = "**Here are all the tags:**\n" +
-            "    • `[mention/member_mention/member]` - @mention the member\n" +
-            "    • `[member_name]` - the name of the member\n" +
-            "    • `[member_tag]` - the tag (Username#XXXX) of the member\n" +
-            "    • `[member_discrim]` - the member's discriminator\n" +
-            "    • `[member_id]` - the member's user ID\n" +
-            "    • `[server/server_name]` - the name of this server\n" +
-            "    • `[server_icon]` - the link to this server's icon\n" +
-            "    • `[server_id]` - this server's ID\n" +
-            "    • `[server_owner]` - the name of this server's owner\n" +
-            "    • `[time/date]` - the current date and time, like `Tue Jun 27 10:06:59 EDT 2017`\n" +
-            "    • `[prefix]` - my command prefix in this server\n" +
-            "    • `[bot_owner]` - the tag of my owner\n" +
-            "    • `[rip]` - a gravestone\n" +
-            "\n" +
-            "Example message:```\n" +
-            "[mention] Hey there, and welcome to [server]! The owner here is [server_owner]. You joined at [time]. " +
-            "To use this bot, try [prefix]help. It was made by [bot_owner]. Have fun!```";
+    private static final String NO_COMMAND = "🤔 **I need an action!**\n" + "The following are valid:\n"
+            + "    \u2022 `status` - view the status of this message\n"
+            + "    \u2022 `show` - show the current message\n"
+            + "    \u2022 `set [message]` - set the current message\n"
+            + "    \u2022 `toggle` - toggle the status of this message\n"
+            + "    \u2022 `preview` - preview the current message\n"
+            + "    \u2022 `channel [#channel]` - change the channel messages are sent in (default: default channel, or first available one)\n"
+            + "    \u2022 `tags` - show the tags available for use in messages\n";
+    private static final String TAG_HELP = "**Here are all the tags:**\n"
+            + "    • `[mention/member_mention/member]` - @mention the member\n"
+            + "    • `[member_name]` - the name of the member\n"
+            + "    • `[member_tag]` - the tag (Username#XXXX) of the member\n"
+            + "    • `[member_discrim]` - the member's discriminator\n" + "    • `[member_id]` - the member's user ID\n"
+            + "    • `[server/server_name]` - the name of this server\n"
+            + "    • `[server_icon]` - the link to this server's icon\n" + "    • `[server_id]` - this server's ID\n"
+            + "    • `[server_owner]` - the name of this server's owner\n"
+            + "    • `[time/date]` - the current date and time, like `Tue Jun 27 10:06:59 EDT 2017`\n"
+            + "    • `[prefix]` - my command prefix in this server\n" + "    • `[bot_owner]` - the tag of my owner\n"
+            + "    • `[rip]` - a gravestone\n" + "\n" + "Example message:```\n"
+            + "[mention] Hey there, and welcome to [server]! The owner here is [server_owner]. You joined at [time]. "
+            + "To use this bot, try [prefix]help. It was made by [bot_owner]. Have fun!```";
     private final Dao<GuildWelcomeMessages, Long> messageDao;
 
     public WelcomeCog(Bot bot) {
@@ -73,8 +67,8 @@ public class WelcomeCog extends Cog {
 
     @Perm.Combo.ManageServerAndInvite
     @Perm.Combo.ManageRolesAndInvite
-    @Command(name = "welcome", desc = "Manage member welcome messages.", guildOnly = true,
-            aliases = {"welcome_msgs", "welcomemsg"}, thread = true, usage = "[action] {args...}")
+    @Command(name = "welcome", desc = "Manage member welcome messages.", guildOnly = true, aliases = { "welcome_msgs",
+            "welcomemsg" }, thread = true, usage = "[action] {args...}")
     public void welcomeControl(Context ctx) throws SQLException {
         if (ctx.args.empty) {
             ctx.send(NO_COMMAND).queue();
@@ -84,37 +78,37 @@ public class WelcomeCog extends Cog {
 
         try {
             switch (invoked) {
-                case "status":
-                    welcomeCmdStatus(ctx);
-                    break;
-                case "show":
-                    welcomeCmdShow(ctx);
-                    break;
-                case "set":
-                    welcomeCmdSet(ctx);
-                    break;
-                case "toggle":
-                    welcomeCmdToggle(ctx);
-                    break;
-                case "preview":
-                    welcomeCmdPreview(ctx);
-                    break;
-                case "channel":
-                    controlCmdChannel(ctx);
-                    break;
-                case "tags":
-                    allCmdHelp(ctx);
-                    break;
-                default:
-                    ctx.send(NO_COMMAND).queue();
-                    break;
+            case "status":
+                welcomeCmdStatus(ctx);
+                break;
+            case "show":
+                welcomeCmdShow(ctx);
+                break;
+            case "set":
+                welcomeCmdSet(ctx);
+                break;
+            case "toggle":
+                welcomeCmdToggle(ctx);
+                break;
+            case "preview":
+                welcomeCmdPreview(ctx);
+                break;
+            case "channel":
+                controlCmdChannel(ctx);
+                break;
+            case "tags":
+                allCmdHelp(ctx);
+                break;
+            default:
+                ctx.send(NO_COMMAND).queue();
+                break;
             }
         } catch (NullPointerException e) {
             ctx.fail("Something's not right with this server's message settings. Let me try to fix that...");
 
             try {
-                messageDao.createOrUpdate(new GuildWelcomeMessages(ctx.guild.getIdLong(),
-                        "[default]", "[default]", true, true));
+                messageDao.createOrUpdate(
+                        new GuildWelcomeMessages(ctx.guild.getIdLong(), "[default]", "[default]", true, true));
             } catch (SQLException ex) {
                 logger.error("Failed to recover from NPE (control cmd)", ex);
                 ctx.send(":sob: I wasn't able to fix it for you. If it's a problem, contact the bot owner.").queue();
@@ -162,8 +156,7 @@ public class WelcomeCog extends Cog {
     }
 
     private void welcomeCmdPreview(Context ctx) {
-        onGuildMemberJoin(new GuildMemberJoinEvent(ctx.jda, ctx.event.getResponseNumber(),
-                ctx.member));
+        onGuildMemberJoin(new GuildMemberJoinEvent(ctx.jda, ctx.event.getResponseNumber(), ctx.member));
     }
 
     private void controlCmdChannel(Context ctx) throws SQLException {
@@ -173,22 +166,23 @@ public class WelcomeCog extends Cog {
             query.setChannelId(channel.getIdLong());
             messageDao.update(query);
 
-            ctx.send(Emotes.getSuccess() + " Welcome and leave channel changed to " + channel.getAsMention() + '.').queue();
+            ctx.send(Emotes.getSuccess() + " Welcome and leave channel changed to " + channel.getAsMention() + '.')
+                    .queue();
         } else {
             long chid = query.getChannelId();
             if (chid == 0L) {
                 chid = ctx.guild.getIdLong();
             }
 
-            ctx.send("**Current welcome and leave channel**: <#" + chid +
-                    ">\n*To change it, use this command with a #channel argument.*").queue();
+            ctx.send("**Current welcome and leave channel**: <#" + chid
+                    + ">\n*To change it, use this command with a #channel argument.*").queue();
         }
     }
 
     @Perm.Combo.ManageServerAndInvite
     @Perm.Combo.ManageRolesAndInvite
-    @Command(name = "leave", desc = "Manage member leave messages.", guildOnly = true,
-            aliases = {"leave_msgs", "leavemsg"}, thread = true, usage = "[action] {args...}")
+    @Command(name = "leave", desc = "Manage member leave messages.", guildOnly = true, aliases = { "leave_msgs",
+            "leavemsg" }, thread = true, usage = "[action] {args...}")
     public void leaveControl(Context ctx) throws SQLException {
         if (ctx.args.empty) {
             ctx.send(NO_COMMAND).queue();
@@ -198,38 +192,38 @@ public class WelcomeCog extends Cog {
 
         try {
             switch (invoked) {
-                case "status":
-                    leaveCmdStatus(ctx);
-                    break;
-                case "show":
-                    leaveCmdShow(ctx);
-                    break;
-                case "set":
-                    leaveCmdSet(ctx);
-                    break;
-                case "toggle":
-                    leaveCmdToggle(ctx);
-                    break;
-                case "preview":
-                    leaveCmdPreview(ctx);
-                    break;
-                case "channel":
-                    controlCmdChannel(ctx);
-                    break;
-                case "tags":
-                    allCmdHelp(ctx);
-                    break;
-                default:
-                    ctx.send(NO_COMMAND).queue();
-                    break;
+            case "status":
+                leaveCmdStatus(ctx);
+                break;
+            case "show":
+                leaveCmdShow(ctx);
+                break;
+            case "set":
+                leaveCmdSet(ctx);
+                break;
+            case "toggle":
+                leaveCmdToggle(ctx);
+                break;
+            case "preview":
+                leaveCmdPreview(ctx);
+                break;
+            case "channel":
+                controlCmdChannel(ctx);
+                break;
+            case "tags":
+                allCmdHelp(ctx);
+                break;
+            default:
+                ctx.send(NO_COMMAND).queue();
+                break;
             }
         } catch (NullPointerException e) {
             logger.warn("Message control: NPE", e);
             ctx.fail("Something's not right with this server's message settings. Let me try to fix that...");
 
             try {
-                messageDao.createOrUpdate(new GuildWelcomeMessages(ctx.guild.getIdLong(),
-                        "[default]", "[default]", true, true));
+                messageDao.createOrUpdate(
+                        new GuildWelcomeMessages(ctx.guild.getIdLong(), "[default]", "[default]", true, true));
             } catch (SQLException ex) {
                 logger.error("Failed to recover from NPE (control cmd)", ex);
                 ctx.send(":robot: I wasn't able to fix it for you. If it's a problem, contact the bot owner.").queue();
@@ -277,38 +271,28 @@ public class WelcomeCog extends Cog {
     }
 
     private void leaveCmdPreview(Context ctx) {
-        onGuildMemberLeave(new GuildMemberLeaveEvent(ctx.jda, ctx.event.getResponseNumber(),
-                ctx.member));
+        onGuildMemberLeave(new GuildMemberLeaveEvent(ctx.jda, ctx.event.getResponseNumber(), ctx.member));
     }
 
     private GuildWelcomeMessages initGuild(Guild guild) throws SQLException {
-        GuildWelcomeMessages obj = new GuildWelcomeMessages(guild.getIdLong(),
-                "[default]", "[default]", true, true);
+        GuildWelcomeMessages obj = new GuildWelcomeMessages(guild.getIdLong(), "[default]", "[default]", true, true);
         messageDao.createOrUpdate(obj);
 
         return obj;
     }
 
     private String formatMessage(String msg, Guild guild, Member member, String def) {
-        return Strings.replace(StringUtils.replace(msg, "[default]", def), SUB_REGEX, m -> Strings.createMap()
-                .map("mention", member::getAsMention)
-                .map("member_name", member::getEffectiveName)
-                .map("member_tag", () -> getTag(member.getUser()))
-                .map("member_discrim", member.getUser()::getDiscriminator)
-                .map("member_id", member.getUser()::getId)
-                .map("server", guild::getName)
-                .map("server_icon", guild::getIconUrl)
-                .map("server_id", guild::getId)
-                .map("server_owner", guild.getOwner()::getEffectiveName)
-                .map("member", member::getAsMention)
-                .map("member_mention", member::getAsMention)
-                .map("time", () -> new Date().toString())
-                .map("date", () -> new Date().toString())
-                .map("server_name", guild::getName)
-                .map("prefix", () -> bot.prefixStore.getPrefix(guild.getIdLong()))
-                .map("bot_owner", "Dragon5232#1841")
-                .map("rip", Emotes::getGrave)
-                .exec(m));
+        return Strings.replace(StringUtils.replace(msg, "[default]", def), SUB_REGEX,
+                m -> Strings.createMap().map("mention", member::getAsMention)
+                        .map("member_name", member::getEffectiveName).map("member_tag", () -> getTag(member.getUser()))
+                        .map("member_discrim", member.getUser()::getDiscriminator)
+                        .map("member_id", member.getUser()::getId).map("server", guild::getName)
+                        .map("server_icon", guild::getIconUrl).map("server_id", guild::getId)
+                        .map("server_owner", guild.getOwner()::getEffectiveName).map("member", member::getAsMention)
+                        .map("member_mention", member::getAsMention).map("time", () -> new Date().toString())
+                        .map("date", () -> new Date().toString()).map("server_name", guild::getName)
+                        .map("prefix", () -> bot.prefixStore.getPrefix(guild.getIdLong()))
+                        .map("bot_owner", "Dragon5232#1841").map("rip", Emotes::getGrave).exec(m));
     }
 
     private void allCmdHelp(Context ctx) {
@@ -334,7 +318,8 @@ public class WelcomeCog extends Cog {
                     return;
                 }
             }
-            if (!queryResult.isWelcomeEnabled()) return;
+            if (!queryResult.isWelcomeEnabled())
+                return;
 
             TextChannel channel;
             if (queryResult.getChannelId() == 0L) {
@@ -348,8 +333,7 @@ public class WelcomeCog extends Cog {
             if (channel == null || !channel.canTalk())
                 return;
 
-            String msg = formatMessage(queryResult.getWelcome(), event.getGuild(),
-                    event.getMember(), DEFAULT_WELCOME);
+            String msg = formatMessage(queryResult.getWelcome(), event.getGuild(), event.getMember(), DEFAULT_WELCOME);
 
             channel.sendMessage(Context.truncate(msg)).queue();
         } catch (SQLException e) {
@@ -376,7 +360,8 @@ public class WelcomeCog extends Cog {
                     return;
                 }
             }
-            if (!queryResult.isLeaveEnabled()) return;
+            if (!queryResult.isLeaveEnabled())
+                return;
 
             TextChannel channel;
             if (queryResult.getChannelId() == 0L) {
@@ -390,8 +375,7 @@ public class WelcomeCog extends Cog {
             if (channel == null || !channel.canTalk())
                 return;
 
-            String msg = formatMessage(queryResult.getLeave(), event.getGuild(),
-                    event.getMember(), DEFAULT_LEAVE);
+            String msg = formatMessage(queryResult.getLeave(), event.getGuild(), event.getMember(), DEFAULT_LEAVE);
 
             channel.sendMessage(Context.truncate(msg)).queue();
         } catch (SQLException e) {
@@ -402,8 +386,8 @@ public class WelcomeCog extends Cog {
     @EventHandler(threaded = true)
     public void onGuildJoin(GuildJoinEvent event) {
         try {
-            messageDao.createOrUpdate(new GuildWelcomeMessages(event.getGuild().getIdLong(),
-                    "[default]", "[default]", true, true));
+            messageDao.createOrUpdate(
+                    new GuildWelcomeMessages(event.getGuild().getIdLong(), "[default]", "[default]", true, true));
         } catch (SQLException e) {
             logger.error("Failed to create WelcomeMessages for guild {}", event.getGuild().getId(), e);
         }

@@ -3,15 +3,15 @@ package com.kdrag0n.bluestone;
 import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.map.TLongObjectMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class PrefixStore {
-    private static final Logger logger = LogManager.getLogger(PrefixStore.class);
+    private static final Logger logger = LoggerFactory.getLogger(PrefixStore.class);
     public final String defaultPrefix;
     private final HikariDataSource pool;
     public final TLongObjectMap<String> cache = new TLongObjectHashMap<>();
@@ -38,7 +38,7 @@ public class PrefixStore {
 
                 cache.put(guildId, defaultPrefix);
                 return defaultPrefix;
-            } catch (SQLException|NullPointerException e) {
+            } catch (SQLException | NullPointerException e) {
                 logger.error("Error getting prefix from DB", e);
                 return defaultPrefix;
             }

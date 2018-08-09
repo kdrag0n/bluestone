@@ -32,8 +32,8 @@ import okhttp3.Request;
 import okhttp3.ResponseBody;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.json.JSONArray;
 
 import javax.annotation.Nonnull;
@@ -57,29 +57,26 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class KewlCog extends Cog {
-    private static final Logger logger = LogManager.getLogger(KewlCog.class);
-    private static final Pattern DATE_WEEKDAY_PATTERN = Pattern.compile("^The date [0-9 a-zA-Z]+ is not a ([MTWFS][a-z]+), but a ([MTWFS][a-z]+)\\.$");
+    private static final Logger logger = LoggerFactory.getLogger(KewlCog.class);
+    private static final Pattern DATE_WEEKDAY_PATTERN = Pattern
+            .compile("^The date [0-9 a-zA-Z]+ is not a ([MTWFS][a-z]+), but a ([MTWFS][a-z]+)\\.$");
 
     private static final int PROFILE_WIDTH = 1600;
     private static final int PROFILE_HEIGHT = 1000;
     private static final String PROFILE_FONT = "Lato";
-    private static final String[] PROFILE_QUESTIONS = {"What's your favorite color?",
-            "What's your favorite food?",
-            "What do you want people to know about you?",
-            "What do you like to do?",
-            "What are some neat things you've done?",
-            "Tell me a little bit more about yourself."};
+    private static final String[] PROFILE_QUESTIONS = { "What's your favorite color?", "What's your favorite food?",
+            "What do you want people to know about you?", "What do you like to do?",
+            "What are some neat things you've done?", "Tell me a little bit more about yourself." };
     private static volatile boolean hasWarmedUp = false;
-    private final LoadingCache<User, byte[]> profileCache = CacheBuilder.newBuilder()
-            .concurrencyLevel(2)
-            .initialCapacity(8)
-            .maximumSize(36)
-            .expireAfterWrite(12, TimeUnit.HOURS)
+    private final LoadingCache<User, byte[]> profileCache = CacheBuilder.newBuilder().concurrencyLevel(2)
+            .initialCapacity(8).maximumSize(36).expireAfterWrite(12, TimeUnit.HOURS)
             .build(new CacheLoader<User, byte[]>() {
                 @Override
                 public byte[] load(@Nonnull User user) throws Exception {
-                    ResponseBody imgBody = Bot.http.newCall(new Request.Builder().get()
-                            .url(user.getEffectiveAvatarUrl() + "?size=256").build()).execute().body();
+                    ResponseBody imgBody = Bot.http
+                            .newCall(
+                                    new Request.Builder().get().url(user.getEffectiveAvatarUrl() + "?size=256").build())
+                            .execute().body();
                     BufferedImage avatar = ImageIO.read(imgBody.byteStream());
                     imgBody.close();
 
@@ -118,8 +115,7 @@ public class KewlCog extends Cog {
                     // Profile info
                     g2d.setColor(new Color(74, 144, 226, 255));
                     g2d.drawString(fstr(user.getName(), new Font(PROFILE_FONT, Font.BOLD, 64)), 420, 192);
-                    g2d.drawString(fstr('@' + getTag(user),
-                            new Font(PROFILE_FONT, Font.PLAIN, 36)), 420, 248);
+                    g2d.drawString(fstr('@' + getTag(user), new Font(PROFILE_FONT, Font.PLAIN, 36)), 420, 248);
 
                     // Flags
                     TIntList flags = ProfileFlags.getFlags(bot, user);
@@ -133,18 +129,18 @@ public class KewlCog extends Cog {
                         InputStream iconStream;
 
                         switch (flag) {
-                            case ProfileFlags.BOT_OWNER:
-                                iconStream = cl.getResourceAsStream("/assets/owner.png");
-                                break;
-                            case ProfileFlags.BOT_ADMIN:
-                                iconStream = cl.getResourceAsStream("/assets/key.png");
-                                break;
-                            case ProfileFlags.PATREON_SUPPORTER:
-                                iconStream = cl.getResourceAsStream("/assets/patreon.png");
-                                break;
-                            default:
-                                iconStream = cl.getResourceAsStream("/assets/unknown.png");
-                                break;
+                        case ProfileFlags.BOT_OWNER:
+                            iconStream = cl.getResourceAsStream("/assets/owner.png");
+                            break;
+                        case ProfileFlags.BOT_ADMIN:
+                            iconStream = cl.getResourceAsStream("/assets/key.png");
+                            break;
+                        case ProfileFlags.PATREON_SUPPORTER:
+                            iconStream = cl.getResourceAsStream("/assets/patreon.png");
+                            break;
+                        default:
+                            iconStream = cl.getResourceAsStream("/assets/unknown.png");
+                            break;
                         }
 
                         g2d.drawImage(ImageIO.read(iconStream), 674 + startx + (60 * flagI), 292, null);
@@ -169,26 +165,22 @@ public class KewlCog extends Cog {
                                 int x = i < 5 ? 136 : 850;
                                 int iMinusN = i < 5 ? 1 : 6;
 
-                                drawMLString(g2d, "[B]" + WordUtils.wrap(pairData.getString(0),
-                                        50, "\n", true) + "[/B]\n" +
-                                                WordUtils.wrap(pairData.getString(1), 55,
-                                                        "\n", true),
+                                drawMLString(g2d,
+                                        "[B]" + WordUtils.wrap(pairData.getString(0), 50, "\n", true) + "[/B]\n"
+                                                + WordUtils.wrap(pairData.getString(1), 55, "\n", true),
                                         x, 504 + ((i - iMinusN) * 96));
                             }
                         } catch (Throwable e) {
                             logger.error("Error drawing user profile questions", e);
                             g2d.setFont(new Font(PROFILE_FONT, Font.BOLD, 84));
                             g2d.setColor(new Color(244, 10, 1, 255));
-                            drawMLString(g2d, "An error occurred rendering\nor loading this section!",
-                                    160, 440);
+                            drawMLString(g2d, "An error occurred rendering\nor loading this section!", 160, 440);
                         }
                     } else {
                         g2d.setFont(new Font(PROFILE_FONT, Font.BOLD, 80));
-                        drawMLString(g2d,
-                                "This user hasn't set up their\nprofile yet!\n(╯°□°）╯︵ ┻━─┬\uFEFF ノ( ゜-゜ノ)",
+                        drawMLString(g2d, "This user hasn't set up their\nprofile yet!\n(╯°□°）╯︵ ┻━─┬\uFEFF ノ( ゜-゜ノ)",
                                 160, 440);
                     }
-
 
                     g2d.dispose();
 
@@ -217,7 +209,8 @@ public class KewlCog extends Cog {
 
                     try {
                         profileCache.get(user);
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 }
             });
 
@@ -254,25 +247,22 @@ public class KewlCog extends Cog {
         } else if (Strings.isTag(ctx.rawArgs)) {
             Collection<User> users;
             switch (ctx.channel.getType()) {
-                case TEXT:
-                    users = ((GuildImpl) ctx.guild).getMembersMap().valueCollection()
-                            .stream().map(Member::getUser).collect(Collectors.toList());
-                    break;
-                case PRIVATE:
-                    users = Arrays.asList(ctx.author, ctx.jda.getSelfUser());
-                    break;
-                case GROUP:
-                    users = ((Group) ctx.channel).getUsers();
-                    break;
-                default:
-                    users = Collections.singletonList(ctx.jda.getSelfUser());
-                    break;
+            case TEXT:
+                users = ((GuildImpl) ctx.guild).getMembersMap().valueCollection().stream().map(Member::getUser)
+                        .collect(Collectors.toList());
+                break;
+            case PRIVATE:
+                users = Arrays.asList(ctx.author, ctx.jda.getSelfUser());
+                break;
+            case GROUP:
+                users = ((Group) ctx.channel).getUsers();
+                break;
+            default:
+                users = Collections.singletonList(ctx.jda.getSelfUser());
+                break;
             }
 
-            user = users.stream()
-                    .filter(u -> getTag(u).contentEquals(ctx.rawArgs))
-                    .findFirst()
-                    .orElse(null);
+            user = users.stream().filter(u -> getTag(u).contentEquals(ctx.rawArgs)).findFirst().orElse(null);
         } else if (ctx.args.empty) {
             user = ctx.author;
         } else if (ctx.args.length > 0 && ctx.args.get(0).equalsIgnoreCase("setup")) {
@@ -340,7 +330,7 @@ public class KewlCog extends Cog {
     }
 
     private static void drawMLString(Graphics2D g2d, String text, int x, int y) {
-        for (String line: StringUtils.split(text, '\n'))
+        for (String line : StringUtils.split(text, '\n'))
             g2d.drawString(fstr(line, g2d.getFont()), x, y += g2d.getFontMetrics().getHeight());
     }
 
@@ -358,7 +348,9 @@ public class KewlCog extends Cog {
         profileSetupSessions.add(ctx.author.getIdLong());
 
         try {
-            ctx.send("Welcome to Profile Setup. I will ask you a series of questions, and you can respond with your answer. If you don't want to answer a certain question, just answer `skip`. If you want to stop this setup, answer `stop`.\n**The questions will now begin.**\n\n\u200b").queue();
+            ctx.send(
+                    "Welcome to Profile Setup. I will ask you a series of questions, and you can respond with your answer. If you don't want to answer a certain question, just answer `skip`. If you want to stop this setup, answer `stop`.\n**The questions will now begin.**\n\n\u200b")
+                    .queue();
             JSONArray answers = new JSONArray();
 
             for (String question : PROFILE_QUESTIONS) {
@@ -366,11 +358,12 @@ public class KewlCog extends Cog {
 
                 while (!satisfied) {
                     ctx.send(question).queue();
-                    Message resp = bot.waitForMessage(300000, m -> m.getAuthor().getIdLong() == ctx.author.getIdLong() &&
-                            m.getChannel().getIdLong() == ctx.channel.getIdLong());
+                    Message resp = bot.waitForMessage(300000, m -> m.getAuthor().getIdLong() == ctx.author.getIdLong()
+                            && m.getChannel().getIdLong() == ctx.channel.getIdLong());
 
                     if (resp == null) {
-                        ctx.fail("You took too long to respond. Stopping.\nIf you ever want to continue, just invoke this command again.\n**Note**: No answers were saved.");
+                        ctx.fail(
+                                "You took too long to respond. Stopping.\nIf you ever want to continue, just invoke this command again.\n**Note**: No answers were saved.");
                         return;
                     }
 
@@ -378,15 +371,17 @@ public class KewlCog extends Cog {
                     if (text.equalsIgnoreCase("skip"))
                         text = "¯\\_(ツ)_/¯";
                     else if (text.equalsIgnoreCase("stop")) {
-                        ctx.send("Stopping. If you ever want to do it again, just invoke this command again.\n**Note**: No answers were saved.").queue();
+                        ctx.send(
+                                "Stopping. If you ever want to do it again, just invoke this command again.\n**Note**: No answers were saved.")
+                                .queue();
                         return;
                     }
 
                     if (text.length() > (question.equals("Tell me a little bit more about yourself.") ? 250 : 100)) {
                         ctx.fail("Answer too long! Try again.");
                         continue;
-                    } else if (StringUtils.countMatches(text, '\n') >
-                            (question.equals("Tell me a little bit more about yourself.") ? 10 : 2)) {
+                    } else if (StringUtils.countMatches(text,
+                            '\n') > (question.equals("Tell me a little bit more about yourself.") ? 10 : 2)) {
                         ctx.fail("Too many new lines! Try again.");
                         continue;
                     }
@@ -405,18 +400,18 @@ public class KewlCog extends Cog {
             profileDao.createOrUpdate(profile);
             profileCache.invalidate(ctx.author);
 
-            ctx.send("**Thank you for completing the profile setup!**\nYou may now check your profile using the `profile` command.\n**Tip**: If you want to change your profile background, use `profile bg` or `set_profile_bg`.").queue();
+            ctx.send(
+                    "**Thank you for completing the profile setup!**\nYou may now check your profile using the `profile` command.\n**Tip**: If you want to change your profile background, use `profile bg` or `set_profile_bg`.")
+                    .queue();
         } finally {
             profileSetupSessions.remove(ctx.author.getIdLong());
         }
     }
 
-    @Command(name = "set_profile_bg", desc = "Set your profile background.",
-            usage = "{\"reset\" or \"default\" to reset to default}", thread = true,
-            aliases = {"profilebg", "profile_bg", "setprofilebg"})
+    @Command(name = "set_profile_bg", desc = "Set your profile background.", usage = "{\"reset\" or \"default\" to reset to default}", thread = true, aliases = {
+            "profilebg", "profile_bg", "setprofilebg" })
     public void cmdSetProfileBg(Context ctx) {
-        String a = ctx.invoker.equalsIgnoreCase("profile") ?
-                ctx.args.get(ctx.args.length - 1) : ctx.rawArgs;
+        String a = ctx.invoker.equalsIgnoreCase("profile") ? ctx.args.get(ctx.args.length - 1) : ctx.rawArgs;
         Message.Attachment attachment;
 
         if (a.equalsIgnoreCase("reset") || a.equalsIgnoreCase("default")) {
@@ -431,17 +426,17 @@ public class KewlCog extends Cog {
             } else {
                 ctx.fail("You're **already** using the default background!");
             }
-        } else if (ctx.message.getAttachments().size() > 0 && (attachment = ctx.message.getAttachments().get(0)).isImage()) {
+        } else if (ctx.message.getAttachments().size() > 0
+                && (attachment = ctx.message.getAttachments().get(0)).isImage()) {
             ctx.channel.sendTyping().queue();
 
-            try (InputStream is = Bot.http.newCall(new Request.Builder()
-                    .get()
-                    .url(attachment.getUrl())
-                    .build()).execute().body().byteStream()) {
+            try (InputStream is = Bot.http.newCall(new Request.Builder().get().url(attachment.getUrl()).build())
+                    .execute().body().byteStream()) {
                 BufferedImage image = ImageIO.read(is);
 
                 if (image.getType() != BufferedImage.TYPE_INT_RGB) {
-                    BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+                    BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(),
+                            BufferedImage.TYPE_INT_RGB);
                     Graphics2D g2d = newImage.createGraphics();
                     g2d.drawImage(image, 0, 0, null);
                     g2d.dispose();
@@ -450,8 +445,7 @@ public class KewlCog extends Cog {
 
                 image = GraphicsUtils.resizeImage(image, PROFILE_WIDTH, PROFILE_HEIGHT);
 
-                ImageIO.write(image, "png", new File("data/profiles/bg/" +
-                        ctx.author.getIdLong() + ".png"));
+                ImageIO.write(image, "png", new File("data/profiles/bg/" + ctx.author.getIdLong() + ".png"));
                 profileCache.invalidate(ctx.author);
 
                 ctx.success("Background set.");
@@ -461,13 +455,13 @@ public class KewlCog extends Cog {
                 ctx.fail("Your image seems to be in a weird format, or corrupted...");
             }
         } else {
-            ctx.fail("If you want to use the default background, specify `reset` or `default`. If you want to use a custom background, upload it as an attachment along with your command message. Only GIF, PNG, and JPEG image formats are supported.");
+            ctx.fail(
+                    "If you want to use the default background, specify `reset` or `default`. If you want to use a custom background, upload it as an attachment along with your command message. Only GIF, PNG, and JPEG image formats are supported.");
         }
     }
 
     @Perm.Owner
-    @Command(name = "profile_override_bg", desc = "Override an user's profile background. This just executes `profile bg` as them.",
-            usage = "[@user/user ID] {to: reset/default / attach image}", thread = true)
+    @Command(name = "profile_override_bg", desc = "Override an user's profile background. This just executes `profile bg` as them.", usage = "[@user/user ID] {to: reset/default / attach image}", thread = true)
     public void cmdProfileOverrideBg(Context ctx) {
         User target;
 

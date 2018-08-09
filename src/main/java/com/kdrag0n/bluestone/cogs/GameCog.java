@@ -16,8 +16,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -31,7 +31,7 @@ import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
 import static com.kdrag0n.bluestone.util.Strings.str;
 
 public class GameCog extends Cog {
-    private static final Logger logger = LogManager.getLogger(GameCog.class);
+    private static final Logger logger = LoggerFactory.getLogger(GameCog.class);
 
     public GameCog(Bot bot) {
         super(bot);
@@ -47,11 +47,9 @@ public class GameCog extends Cog {
 
     @Command(name = "rps", desc = "Play a game of Rock, Paper, Scissors with the bot. (10 rounds)")
     public void cmdRps(Context ctx) {
-        if (ctx.channel instanceof TextChannel &&
-                !ctx.member.hasPermission((Channel) ctx.channel,
-                        Permission.MESSAGE_ADD_REACTION, Permission.MESSAGE_EMBED_LINKS)) {
-            ctx.send(Emotes.getFailure() +
-                    " I need to be able to **add reactions** and **embed links** here!").queue();
+        if (ctx.channel instanceof TextChannel && !ctx.member.hasPermission((Channel) ctx.channel,
+                Permission.MESSAGE_ADD_REACTION, Permission.MESSAGE_EMBED_LINKS)) {
+            ctx.send(Emotes.getFailure() + " I need to be able to **add reactions** and **embed links** here!").queue();
             return;
         }
 
@@ -59,33 +57,40 @@ public class GameCog extends Cog {
     }
 
     private final class RpsGame {
-        private final Object[] REACTIONS = {"🗿", "📰", "✂", "⛔"};
-        private final String[] IDX_CMAP = {"Rock", "Paper", "Scissors"};
-        private final String[] IDX_MAP = {"rock", "paper", "scissors"};
-        private final String[] WIN_STATUSES = {"seems to win over", "wins over", "beats", "goes over", "destroys",
+        private final Object[] REACTIONS = { "🗿", "📰", "✂", "⛔" };
+        private final String[] IDX_CMAP = { "Rock", "Paper", "Scissors" };
+        private final String[] IDX_MAP = { "rock", "paper", "scissors" };
+        private final String[] WIN_STATUSES = { "seems to win over", "wins over", "beats", "goes over", "destroys",
                 "eliminates", "takes down", "dramatically incinerates", "overpowers", "wrecks", "blows up", "escapes",
-                "dominates", "is clearly superior to", "is superior to", "is definitely better than", "tackles"};
-        private final String[] LOSE_STATUSES = {"can't beat", "loses to", "is taken down by", "goes under",
+                "dominates", "is clearly superior to", "is superior to", "is definitely better than", "tackles" };
+        private final String[] LOSE_STATUSES = { "can't beat", "loses to", "is taken down by", "goes under",
                 "is tortured by", "cowers under", "hides from", "runs away from", "flees from", "begs for mercy from",
-                "can't take on", "fails to hold its own against", "obeys", "bows down to"};
-        private final String[] WIN_PREFIX = {"You're in luck.", "You win!", "I bow down to you.",
+                "can't take on", "fails to hold its own against", "obeys", "bows down to" };
+        private final String[] WIN_PREFIX = { "You're in luck.", "You win!", "I bow down to you.",
                 "I'm crying right now.", "You dominate me.", "It's your lucky day.", "You're doing well.", "Good job.",
-                "You fiercely take me down.", "You just tackle me. That can't be.", "Me, a puny little bot, is nothing for you.",
-                "RIP me.", "I can't beat you. 😭", "I admit, I'm dumb. Happy now?", "You played well.", "Good choice.", "Smart choice.",
-                "I'm is no match for you. But you're just a puny little human!", "CHEATER! That CAN'T be! I always win!"};
-        private final String[] WIN_SUFFIX = {"That makes sense for you.", "Just what I expected.", "I expected nothing less.",
-                "Good job.", "You did better than I thought. Maybe puny humans like you have some worth.", "I'm surprised.",
-                "You weren't supposed to do so good.", "That's just wrong.", "Nice playing.", "Nice luck.", "Nice shot.",
-                "You're doing a bit *too* good. Slow down, buddy.", "Whoa, whoa. Slow down there, buddy."};
-        private final String[] LOSE_PREFIX = {"Uh-oh.", "RIP.", "The mighty AI takes you down.", "You're no match for the AI.",
-                "You're no more.", "You helplessly cry as the AI's weapon of choice tears you apart.", "0/10 WANT MORE ACTION. 2ez.",
+                "You fiercely take me down.", "You just tackle me. That can't be.",
+                "Me, a puny little bot, is nothing for you.", "RIP me.", "I can't beat you. 😭",
+                "I admit, I'm dumb. Happy now?", "You played well.", "Good choice.", "Smart choice.",
+                "I'm is no match for you. But you're just a puny little human!",
+                "CHEATER! That CAN'T be! I always win!" };
+        private final String[] WIN_SUFFIX = { "That makes sense for you.", "Just what I expected.",
+                "I expected nothing less.", "Good job.",
+                "You did better than I thought. Maybe puny humans like you have some worth.", "I'm surprised.",
+                "You weren't supposed to do so good.", "That's just wrong.", "Nice playing.", "Nice luck.",
+                "Nice shot.", "You're doing a bit *too* good. Slow down, buddy.",
+                "Whoa, whoa. Slow down there, buddy." };
+        private final String[] LOSE_PREFIX = { "Uh-oh.", "RIP.", "The mighty AI takes you down.",
+                "You're no match for the AI.", "You're no more.",
+                "You helplessly cry as the AI's weapon of choice tears you apart.", "0/10 WANT MORE ACTION. 2ez.",
                 "Too easy!", "You should be better than this.", "How can you not win? It's so easy.", "Amusing.",
                 "WANT. MORE. ACTION. NOW.", "Has anyone ever told you that you suck? If not, well, you do.", "Noh.",
-                "Not this time, human. And never.", "Boo-hoo. You're dead."};
-        private final String[] LOSE_SUFFIX = {"It was worth a shot.", "At least you played.", "Better luck next time.",
-                "0/10 Not enough action, IGN.", "You should be better than this.", "I expected more.", "Can't you do such a simple thing?",
-                "I guess humans have no hope.", "Hopeless little humans... You're a better dinner than this.", "Dinner, mmm.",
-                "Are you capable of winning? I doubt it.", "Meh, I'm not even sweating. You?", "Oh nooo. I was so scared."};
+                "Not this time, human. And never.", "Boo-hoo. You're dead." };
+        private final String[] LOSE_SUFFIX = { "It was worth a shot.", "At least you played.", "Better luck next time.",
+                "0/10 Not enough action, IGN.", "You should be better than this.", "I expected more.",
+                "Can't you do such a simple thing?", "I guess humans have no hope.",
+                "Hopeless little humans... You're a better dinner than this.", "Dinner, mmm.",
+                "Are you capable of winning? I doubt it.", "Meh, I'm not even sweating. You?",
+                "Oh nooo. I was so scared." };
 
         private final EmbedBuilder emb = new EmbedBuilder();
         private Message message;
@@ -104,8 +109,7 @@ public class GameCog extends Cog {
 
             emb.setAuthor("Rock, Paper, Scissors!", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
                     .setDescription("⌛ **Please wait, game is starting...**")
-                    .setFooter("Game started at", ctx.author.getEffectiveAvatarUrl())
-                    .setTimestamp(Instant.now());
+                    .setFooter("Game started at", ctx.author.getEffectiveAvatarUrl()).setTimestamp(Instant.now());
 
             if (ctx.guild == null)
                 emb.setColor(randomColor());
@@ -113,24 +117,24 @@ public class GameCog extends Cog {
                 emb.setColor(val(ctx.member.getColor()).or(Color.WHITE));
 
             message = channel.sendMessage(emb.build()).complete();
-            for (Object emoji: REACTIONS) {
+            for (Object emoji : REACTIONS) {
                 message.addReaction((String) emoji).complete();
             }
             next();
 
             onFinish = () -> {
-                String descSuffix = (wins == losses ? "That means you tied. " + loseSuffix() :
-                        (wins > losses ? "That makes you the winner. " + winSuffix() :
-                                "That makes you the loser. " + loseSuffix()));
-                emb.setDescription("❌ Game ended.\n\nYou won **" + wins + "** times, and lost **" + losses + "** times." +
-                        '\n' + descSuffix);
+                String descSuffix = (wins == losses ? "That means you tied. " + loseSuffix()
+                        : (wins > losses ? "That makes you the winner. " + winSuffix()
+                                : "That makes you the loser. " + loseSuffix()));
+                emb.setDescription("❌ Game ended.\n\nYou won **" + wins + "** times, and lost **" + losses + "** times."
+                        + '\n' + descSuffix);
 
                 message.editMessage(emb.build()).queue();
                 try {
                     message.clearReactions().queue();
-                } catch (ErrorResponseException | PermissionException ignored) {}
-                catch (IllegalStateException ignored) { // DM
-                    for (MessageReaction reaction: message.getReactions()) {
+                } catch (ErrorResponseException | PermissionException ignored) {
+                } catch (IllegalStateException ignored) { // DM
+                    for (MessageReaction reaction : message.getReactions()) {
                         reaction.removeReaction().queue();
                         reaction.removeReaction(ctx.author).queue();
                     }
@@ -144,15 +148,16 @@ public class GameCog extends Cog {
 
         private void scheduleEventWait(Context ctx) {
             bot.eventWaiter.waitForEvent(MessageReactionAddEvent.class,
-                    ev -> ev.getChannel().getIdLong() == channel.getIdLong() &&
-                            ev.getMessageIdLong() == message.getIdLong() && ev.getUser().getIdLong() == userId, ev -> {
-                        if (!isActive) return;
+                    ev -> ev.getChannel().getIdLong() == channel.getIdLong()
+                            && ev.getMessageIdLong() == message.getIdLong() && ev.getUser().getIdLong() == userId,
+                    ev -> {
+                        if (!isActive)
+                            return;
 
                         byte answer = (byte) ArrayUtils.indexOf(REACTIONS, ev.getReactionEmote().getName());
 
                         if (answer == 3) {
-                            emb.clearFields()
-                                    .addField("Status", "Game was stopped before the end!", false);
+                            emb.clearFields().addField("Status", "Game was stopped before the end!", false);
                             onFinish.run();
                             return;
                         }
@@ -162,7 +167,8 @@ public class GameCog extends Cog {
                         } finally {
                             try {
                                 ev.getReaction().removeReaction(ctx.author).queue();
-                            } catch (Throwable ignored) {}
+                            } catch (Throwable ignored) {
+                            }
 
                             scheduleEventWait(ctx);
                         }
@@ -172,21 +178,27 @@ public class GameCog extends Cog {
         private void ans(byte answer) {
             byte ai = (byte) ThreadLocalRandom.current().nextInt(0, 2);
             if (answer == ai) {
-                emb.clearFields()
-                        .addField("Round #" + plays,
-                                "**Tie!** Try again.\n\nRock, paper, or scissors?", false);
+                emb.clearFields().addField("Round #" + plays, "**Tie!** Try again.\n\nRock, paper, or scissors?",
+                        false);
                 message.editMessage(emb.build()).queue();
                 return;
             }
             boolean win;
 
-            if (answer==0 && ai==2) win = true;
-            else if (answer==0 && ai==1) win = false;
-            else if (answer==1 && ai==2) win = false;
-            else if (answer==1 && ai==0) win = true;
-            else if (answer==2 && ai==1) win = true;
-            else if (answer==2 && ai==0) win = false;
-            else win = false;
+            if (answer == 0 && ai == 2)
+                win = true;
+            else if (answer == 0 && ai == 1)
+                win = false;
+            else if (answer == 1 && ai == 2)
+                win = false;
+            else if (answer == 1 && ai == 0)
+                win = true;
+            else if (answer == 2 && ai == 1)
+                win = true;
+            else if (answer == 2 && ai == 0)
+                win = false;
+            else
+                win = false;
 
             boolean flip = ThreadLocalRandom.current().nextBoolean();
             int a;
@@ -199,8 +211,9 @@ public class GameCog extends Cog {
                 b = (int) ai;
             }
 
-            String msg = IDX_CMAP[a] + ' ' + (flip ? (win ? loseStatus() : winStatus()) :
-                    (win ? winStatus() : loseStatus())) + ' ' + IDX_MAP[b] + '.';
+            String msg = IDX_CMAP[a] + ' '
+                    + (flip ? (win ? loseStatus() : winStatus()) : (win ? winStatus() : loseStatus())) + ' '
+                    + IDX_MAP[b] + '.';
 
             boolean wlSide = ThreadLocalRandom.current().nextBoolean();
             if (wlSide) {
@@ -217,12 +230,13 @@ public class GameCog extends Cog {
                 }
             }
 
-            emb.clearFields()
-                    .addField("Round #" + plays, msg, false);
+            emb.clearFields().addField("Round #" + plays, msg, false);
             message.editMessage(emb.build()).queue();
 
-            if (win) ++wins;
-            else ++losses;
+            if (win)
+                ++wins;
+            else
+                ++losses;
             next();
         }
 
@@ -256,21 +270,18 @@ public class GameCog extends Cog {
                 return;
             }
 
-            emb.setDescription(null)
-                    .addField("Round #" + ++plays, "Rock, paper, or scissors?", false);
+            emb.setDescription(null).addField("Round #" + ++plays, "Rock, paper, or scissors?", false);
 
             message.editMessage(emb.build()).queue();
         }
     }
 
-    @Command(name = "akinator", desc = "Play a game of Akinator, where you answer questions for it to guess your character.",
-            aliases = {"guess"})
+    @Command(name = "akinator", desc = "Play a game of Akinator, where you answer questions for it to guess your character.", aliases = {
+            "guess" })
     public void cmdAkinator(Context ctx) {
-        if (ctx.channel instanceof TextChannel &&
-                !ctx.member.hasPermission((Channel) ctx.channel,
-                        Permission.MESSAGE_ADD_REACTION, Permission.MESSAGE_EMBED_LINKS)) {
-            ctx.send(Emotes.getFailure() +
-                    " I need to be able to **add reactions** and **embed links** here!").queue();
+        if (ctx.channel instanceof TextChannel && !ctx.member.hasPermission((Channel) ctx.channel,
+                Permission.MESSAGE_ADD_REACTION, Permission.MESSAGE_EMBED_LINKS)) {
+            ctx.send(Emotes.getFailure() + " I need to be able to **add reactions** and **embed links** here!").queue();
             return;
         }
 
@@ -290,7 +301,7 @@ public class GameCog extends Cog {
         private static final String GET_GUESS_URL = "http://api-en4.akinator.com/ws/list";
         private static final String CHOICE_URL = "http://api-en4.akinator.com/ws/choice";
         private static final String EXCLUSION_URL = "http://api-en4.akinator.com/ws/exclusion";
-        private final Object[] REACTIONS = {"✅", "❌", "🤷", "👍", "👎", "⛔"};
+        private final Object[] REACTIONS = { "✅", "❌", "🤷", "👍", "👎", "⛔" };
 
         private final OkHttpClient client = new OkHttpClient();
         private final EmbedBuilder emb = new EmbedBuilder();
@@ -311,10 +322,9 @@ public class GameCog extends Cog {
             this.userId = ctx.author.getIdLong();
 
             // Start new session
-            JSONObject json = new JSONObject(client.newCall(new Request.Builder()
-                    .get()
-                    .url(NEW_SESSION_URL + RandomStringUtils.random(16))
-                    .build()).execute().body().string());
+            JSONObject json = new JSONObject(client
+                    .newCall(new Request.Builder().get().url(NEW_SESSION_URL + RandomStringUtils.random(16)).build())
+                    .execute().body().string());
             stepInfo = new StepInfo(json);
 
             signature = stepInfo.getSignature();
@@ -322,8 +332,7 @@ public class GameCog extends Cog {
 
             emb.setAuthor("Akinator Game", "http://akinator.com", ctx.jda.getSelfUser().getEffectiveAvatarUrl())
                     .setDescription("⌛ **Please wait, game is starting...**")
-                    .setFooter("Game started at", ctx.author.getEffectiveAvatarUrl())
-                    .setTimestamp(Instant.now());
+                    .setFooter("Game started at", ctx.author.getEffectiveAvatarUrl()).setTimestamp(Instant.now());
 
             if (ctx.guild == null)
                 emb.setColor(randomColor());
@@ -331,7 +340,7 @@ public class GameCog extends Cog {
                 emb.setColor(val(ctx.member.getColor()).or(Color.WHITE));
 
             message = channel.sendMessage(emb.build()).complete();
-            for (Object emoji: REACTIONS) {
+            for (Object emoji : REACTIONS) {
                 message.addReaction((String) emoji).complete();
             }
             presentNextQuestion();
@@ -341,18 +350,15 @@ public class GameCog extends Cog {
                 if (stepInfo.getStepNum() == 0)
                     emb.appendDescription("as 1 question");
                 else
-                    emb.getDescriptionBuilder()
-                            .append("ere ")
-                            .append(stepInfo.getStepNum() + 1)
-                            .append(" questions");
+                    emb.getDescriptionBuilder().append("ere ").append(stepInfo.getStepNum() + 1).append(" questions");
                 emb.getDescriptionBuilder().append('.');
 
                 message.editMessage(emb.build()).queue();
                 try {
                     message.clearReactions().queue();
-                } catch (ErrorResponseException | PermissionException ignored) {}
-                catch (IllegalStateException ignored) { // DM
-                    for (MessageReaction reaction: message.getReactions()) {
+                } catch (ErrorResponseException | PermissionException ignored) {
+                } catch (IllegalStateException ignored) { // DM
+                    for (MessageReaction reaction : message.getReactions()) {
                         reaction.removeReaction().queue();
                         reaction.removeReaction(ctx.author).queue();
                     }
@@ -366,16 +372,17 @@ public class GameCog extends Cog {
 
         private void scheduleEventWait(Context ctx) {
             bot.eventWaiter.waitForEvent(MessageReactionAddEvent.class,
-                    ev -> ev.getChannel().getIdLong() == channel.getIdLong() &&
-                            ev.getMessageIdLong() == message.getIdLong() && ev.getUser().getIdLong() == userId, ev -> {
-                        if (!isActive) return;
+                    ev -> ev.getChannel().getIdLong() == channel.getIdLong()
+                            && ev.getMessageIdLong() == message.getIdLong() && ev.getUser().getIdLong() == userId,
+                    ev -> {
+                        if (!isActive)
+                            return;
 
                         byte answer = (byte) ArrayUtils.indexOf(REACTIONS, ev.getReactionEmote().getName());
 
                         if (answer == 5) {
-                            emb.setImage(null)
-                                    .clearFields()
-                                    .addField("Status", "Game was stopped before the end!", false);
+                            emb.setImage(null).clearFields().addField("Status", "Game was stopped before the end!",
+                                    false);
                             onFinish.run();
                             return;
                         }
@@ -392,7 +399,8 @@ public class GameCog extends Cog {
                         } finally {
                             try {
                                 ev.getReaction().removeReaction(ctx.author).queue();
-                            } catch (Throwable ignored) {}
+                            } catch (Throwable ignored) {
+                            }
 
                             scheduleEventWait(ctx);
                         }
@@ -400,17 +408,14 @@ public class GameCog extends Cog {
         }
 
         private void endInvalidData() {
-            emb.setImage(null)
-                    .clearFields()
-                    .addField("Status", "Akinator sent invalid data, or failed to respond.", false);
+            emb.setImage(null).clearFields().addField("Status", "Akinator sent invalid data, or failed to respond.",
+                    false);
             onFinish.run();
         }
 
         private void presentNextQuestion() {
-            emb.setDescription(null)
-                    .clearFields()
-                    .setImage(null)
-                    .addField("Question #" + (stepInfo.getStepNum() + 1), stepInfo.getQuestion(), false);
+            emb.setDescription(null).clearFields().setImage(null).addField("Question #" + (stepInfo.getStepNum() + 1),
+                    stepInfo.getQuestion(), false);
 
             message.editMessage(emb.build()).queue();
             lastQuestionWasGuess = false;
@@ -419,14 +424,12 @@ public class GameCog extends Cog {
         private void presentGuess() {
             try {
                 guess = new Guess();
-            } catch (JSONException|IOException ignored) {
+            } catch (JSONException | IOException ignored) {
                 endInvalidData();
                 return;
             }
 
-            emb.clearFields()
-                    .addField("Is this your character?", guess.toString(), false)
-                    .setImage(guess.getImgPath());
+            emb.clearFields().addField("Is this your character?", guess.toString(), false).setImage(guess.getImgPath());
 
             message.editMessage(emb.build()).queue();
             lastQuestionWasGuess = true;
@@ -434,21 +437,17 @@ public class GameCog extends Cog {
 
         private void answerQuestion(byte answer) {
             try {
-                JSONObject json = new JSONObject(client.newCall(new Request.Builder()
-                        .get()
-                        .url(Strings.buildQueryUrl(ANSWER_URL,
-                                "session", session,
-                                "signature", signature,
-                                "step", str(stepInfo.getStepNum()),
-                                "answer", Byte.toString(answer)))
-                        .build()).execute().body().string());
+                JSONObject json = new JSONObject(client
+                        .newCall(new Request.Builder().get()
+                                .url(Strings.buildQueryUrl(ANSWER_URL, "session", session, "signature", signature,
+                                        "step", str(stepInfo.getStepNum()), "answer", Byte.toString(answer)))
+                                .build())
+                        .execute().body().string());
 
                 try {
                     stepInfo = new StepInfo(json);
                 } catch (JSONException ignored) {
-                    emb.setImage(null)
-                            .clearFields()
-                            .addField("Status", "Akinator ran out of questions.", false);
+                    emb.setImage(null).clearFields().addField("Status", "Akinator ran out of questions.", false);
                     onFinish.run();
                 }
 
@@ -465,23 +464,15 @@ public class GameCog extends Cog {
         private void answerGuess(byte answer) {
             try {
                 if (answer == 0) {
-                    client.newCall(new Request.Builder()
-                            .get()
-                            .url(Strings.buildQueryUrl(CHOICE_URL,
-                                    "session", session,
-                                    "signature", signature,
-                                    "step", str(stepInfo.getStepNum()),
-                                    "element", guess.getId()))
+                    client.newCall(new Request.Builder().get()
+                            .url(Strings.buildQueryUrl(CHOICE_URL, "session", session, "signature", signature, "step",
+                                    str(stepInfo.getStepNum()), "element", guess.getId()))
                             .build()).execute().body().close();
                     onFinish.run();
                 } else if (answer == 1) {
-                    client.newCall(new Request.Builder()
-                            .get()
-                            .url(Strings.buildQueryUrl(EXCLUSION_URL,
-                                    "session", session,
-                                    "signature", signature,
-                                    "step", str(stepInfo.getStepNum()),
-                                    "forward_answer", Byte.toString(answer)))
+                    client.newCall(new Request.Builder().get()
+                            .url(Strings.buildQueryUrl(EXCLUSION_URL, "session", session, "signature", signature,
+                                    "step", str(stepInfo.getStepNum()), "forward_answer", Byte.toString(answer)))
                             .build()).execute().body().close();
 
                     lastQuestionWasGuess = false;
@@ -543,17 +534,15 @@ public class GameCog extends Cog {
             private final String imgPath;
 
             Guess() throws IOException {
-                JSONObject json = new JSONObject(client.newCall(new Request.Builder()
-                        .get()
-                        .url(Strings.buildQueryUrl(GET_GUESS_URL,
-                                "session", session,
-                                "signature", signature,
-                                "step", str(stepInfo.getStepNum())))
-                        .build()).execute().body().string());
+                JSONObject json = new JSONObject(client
+                        .newCall(
+                                new Request.Builder().get()
+                                        .url(Strings.buildQueryUrl(GET_GUESS_URL, "session", session, "signature",
+                                                signature, "step", str(stepInfo.getStepNum())))
+                                        .build())
+                        .execute().body().string());
 
-                JSONObject character = json.getJSONObject("parameters")
-                        .getJSONArray("elements")
-                        .getJSONObject(0)
+                JSONObject character = json.getJSONObject("parameters").getJSONArray("elements").getJSONObject(0)
                         .getJSONObject("element");
 
                 id = character.getString("id");
@@ -590,9 +579,7 @@ public class GameCog extends Cog {
 
             @Override
             public String toString() {
-                return "**" + name + "**\n"
-                        + desc + '\n'
-                        + "Ranking as **#" + ranking + "**";
+                return "**" + name + "**\n" + desc + '\n' + "Ranking as **#" + ranking + "**";
             }
         }
     }

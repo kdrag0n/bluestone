@@ -1,0 +1,22 @@
+<configuration debug="false">
+<appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%d{HH:mm:ss}] [%-4level] [%thread] %logger{24}: %msg%n</pattern>
+        </encoder>
+
+    </appender>
+
+    <appender name="Sentry" class="io.sentry.logback.SentryAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="Console" />
+        <appender-ref ref="Sentry" />
+    </root>
+
+    <!-- TableUtils logs every SQL statement and more as Info -->
+    <logger name="com.j256.ormlite.table.TableUtils" level="WARN" />
+</configuration>

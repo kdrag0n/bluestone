@@ -3,7 +3,7 @@ package com.kdrag0n.bluestone.emotes;
 import com.kdrag0n.bluestone.Bot;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import org.apache.logging.log4j.LogManager;
+import org.slf4j.LoggerFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -13,29 +13,28 @@ public class FrankerFaceZEmoteProvider implements EmoteProvider {
     private JSONObject emotes = new JSONObject();
 
     public FrankerFaceZEmoteProvider(OkHttpClient client) {
-        client.newCall(new Request.Builder()
-                .get()
-                .url("https://api.frankerfacez.com/v1/emoticons?sort=count-desc&per_page=200&page=1")
-                .build()).enqueue(Bot.callback(response -> {
-            JSONObject data = new JSONObject(response.body().string());
-            JSONArray rawEmotes = data.getJSONArray("emoticons");
-            JSONObject tempEmotes = new JSONObject();
+        client.newCall(new Request.Builder().get()
+                .url("https://api.frankerfacez.com/v1/emoticons?sort=count-desc&per_page=200&page=1").build())
+                .enqueue(Bot.callback(response -> {
+                    JSONObject data = new JSONObject(response.body().string());
+                    JSONArray rawEmotes = data.getJSONArray("emoticons");
+                    JSONObject tempEmotes = new JSONObject();
 
-            for (Object emote: rawEmotes) {
-                JSONObject realEmote = (JSONObject) emote;
-                final String name = realEmote.getString("name");
-                realEmote.remove("name");
-                realEmote.remove("css");
-                realEmote.remove("margins");
-                realEmote.remove("public");
-                realEmote.remove("hidden");
-                realEmote.remove("modifier");
-                realEmote.remove("offset");
+                    for (Object emote : rawEmotes) {
+                        JSONObject realEmote = (JSONObject) emote;
+                        final String name = realEmote.getString("name");
+                        realEmote.remove("name");
+                        realEmote.remove("css");
+                        realEmote.remove("margins");
+                        realEmote.remove("public");
+                        realEmote.remove("hidden");
+                        realEmote.remove("modifier");
+                        realEmote.remove("offset");
 
-                tempEmotes.put(name, realEmote);
-            }
-            emotes = tempEmotes;
-        }, e -> LogManager.getLogger(FrankerFaceZEmoteProvider.class).error("Failed to get data", e)));
+                        tempEmotes.put(name, realEmote);
+                    }
+                    emotes = tempEmotes;
+                }, e -> LoggerFactory.getLogger(FrankerFaceZEmoteProvider.class).error("Failed to get data", e)));
     }
 
     @Override

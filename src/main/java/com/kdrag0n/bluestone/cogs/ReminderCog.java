@@ -11,8 +11,8 @@ import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.sql.Reminder;
 import net.dv8tion.jda.core.EmbedBuilder;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.sql.SQLException;
 import java.time.Instant;
@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class ReminderCog extends Cog {
-    private static final Logger logger = LogManager.getLogger(ReminderCog.class);
+    private static final Logger logger = LoggerFactory.getLogger(ReminderCog.class);
     private final Parser timeParser = new Parser();
     private final Dao<Reminder, Integer> dao;
 
@@ -48,7 +48,7 @@ public class ReminderCog extends Cog {
     }
 
     private void scheduleAllFromDB() throws SQLException {
-        for (Reminder reminder: dao.queryForAll()) {
+        for (Reminder reminder : dao.queryForAll()) {
             schedule(reminder);
         }
     }
@@ -57,22 +57,20 @@ public class ReminderCog extends Cog {
         Bot.scheduledExecutor.schedule(() -> {
             try {
                 dao.delete(reminder);
-            } catch (SQLException ignored) {}
+            } catch (SQLException ignored) {
+            }
 
-            bot.jda.getUserById(reminder.getUserId()).openPrivateChannel().queue(channel ->
-                    channel.sendMessage(new EmbedBuilder()
+            bot.jda.getUserById(reminder.getUserId()).openPrivateChannel()
+                    .queue(channel -> channel.sendMessage(new EmbedBuilder()
                             .setAuthor("Reminder", null, bot.jda.getSelfUser().getEffectiveAvatarUrl())
                             .setDescription(reminder.getMessage())
-                            .setFooter("You asked me to remind you of this at", null)
-                            .setColor(randomColor())
-                            .setTimestamp(Instant.now())
-                            .build()).queue()
-            );
+                            .setFooter("You asked me to remind you of this at", null).setColor(randomColor())
+                            .setTimestamp(Instant.now()).build()).queue());
         }, reminder.getRemindAt().getTime() - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
     }
 
-    @Command(name = "remindme", desc = "Schedule a reminder for you at a certain time, over DM.",
-            usage = "[time/date] [message", aliases = {"remind", "remind_me"})
+    @Command(name = "remindme", desc = "Schedule a reminder for you at a certain time, over DM.", usage = "[time/date] [message", aliases = {
+            "remind", "remind_me" })
     public void cmdRemindMe(Context ctx) throws SQLException {
         if (ctx.rawArgs.length() < 2) {
             ctx.fail("I need a time/date (in any form), and message to remind you with!");
@@ -82,7 +80,7 @@ public class ReminderCog extends Cog {
 
         String msg = "";
         Date date = null;
-        for (DateGroup group: groups) {
+        for (DateGroup group : groups) {
             if (!group.getDates().isEmpty()) {
                 date = group.getDates().get(0);
                 msg = StringUtils.replaceOnce(ctx.rawArgs, group.getText(), "");

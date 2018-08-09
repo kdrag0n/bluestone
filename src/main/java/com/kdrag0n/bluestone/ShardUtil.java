@@ -20,8 +20,8 @@ import gnu.trove.list.linked.TIntLinkedList;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.impl.GuildImpl;
 import net.dv8tion.jda.core.entities.impl.JDAImpl;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.json.JSONObject;
 
 import javax.annotation.CheckReturnValue;
@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 public class ShardUtil {
-    private static final Logger logger = LogManager.getLogger(ShardUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(ShardUtil.class);
     private static final MySQLDatabaseType mysqlDbType = new MySQLDatabaseType();
     private final Map<Integer, Bot> shards = new LinkedHashMap<>();
     public final Date startTime = new Date();
@@ -103,7 +103,7 @@ public class ShardUtil {
     }
 
     @CheckReturnValue
-    public<C, K> Dao<C, K> setupDao(Class<C> clazz) {
+    public <C, K> Dao<C, K> setupDao(Class<C> clazz) {
         try {
             TableUtils.createTableIfNotExists(dbConn, clazz);
         } catch (SQLException e) {
@@ -201,7 +201,7 @@ public class ShardUtil {
     private int sumBot(ObjectFunctionInt<Bot> fn) {
         int total = 0;
 
-        for (Bot shard: shards.values()) {
+        for (Bot shard : shards.values()) {
             total += fn.apply(shard);
         }
 
@@ -211,7 +211,7 @@ public class ShardUtil {
     private int sumJda(ObjectFunctionInt<JDAImpl> fn) {
         int total = 0;
 
-        for (Bot shard: shards.values()) {
+        for (Bot shard : shards.values()) {
             total += fn.apply((JDAImpl) shard.jda);
         }
 
@@ -221,8 +221,8 @@ public class ShardUtil {
     public TIntList guildNums(ObjectFunctionInt<GuildImpl> fn) {
         TIntList l = new TIntLinkedList();
 
-        for (Bot shard: shards.values()) {
-            for (Guild guild: shard.jda.getGuildCache()) {
+        for (Bot shard : shards.values()) {
+            for (Guild guild : shard.jda.getGuildCache()) {
                 l.add(fn.apply((GuildImpl) guild));
             }
         }
@@ -233,8 +233,8 @@ public class ShardUtil {
     public int guildCount(ObjectFunctionBool<GuildImpl> fn) {
         int c = 0;
 
-        for (Bot shard: shards.values()) {
-            for (Guild guild: shard.jda.getGuildCache()) {
+        for (Bot shard : shards.values()) {
+            for (Guild guild : shard.jda.getGuildCache()) {
                 if (fn.apply((GuildImpl) guild))
                     c++;
             }

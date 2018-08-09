@@ -29,8 +29,8 @@ import net.dv8tion.jda.core.hooks.EventListener;
 import net.dv8tion.jda.core.requests.RestAction;
 import okhttp3.*;
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.reflections.Reflections;
@@ -62,7 +62,7 @@ import static com.kdrag0n.bluestone.util.Strings.str;
 import static net.dv8tion.jda.core.entities.Game.*;
 
 public class Bot implements EventListener, ClassUtilities {
-    private static final Logger defLog = LogManager.getLogger(Bot.class);
+    private static final Logger defLog = LoggerFactory.getLogger(Bot.class);
     public static final String NAME = "Goldmine";
 
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
@@ -71,20 +71,16 @@ public class Bot implements EventListener, ClassUtilities {
     private static final Pattern GENERAL_MENTION_PATTERN = Pattern.compile("^<@[!&]?[0-9]{17,20}>\\s*");
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
     public final Logger logger;
-    public static final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(8, new ThreadFactoryBuilder()
-            .setDaemon(true)
-            .setNameFormat("Bot BG-Task Thread %d")
-            .build());
+    public static final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(8,
+            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Bot BG-Task Thread %d").build());
     private static final ThreadPoolExecutor cogEventExecutor = new ThreadPoolExecutor(4, 32, 10, TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(64), new ThreadFactoryBuilder()
-            .setDaemon(true)
-            .setNameFormat("Bot Cog-Event Pool Thread %d")
-            .build(), new RejectedExecHandlerImpl("Cog-Event"));
+            new ArrayBlockingQueue<>(64),
+            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Bot Cog-Event Pool Thread %d").build(),
+            new RejectedExecHandlerImpl("Cog-Event"));
     public static final ThreadPoolExecutor threadExecutor = new ThreadPoolExecutor(4, 85, 10, TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(72), new ThreadFactoryBuilder()
-            .setDaemon(true)
-            .setNameFormat("Bot Command-Exec Pool Thread %d")
-            .build(), new RejectedExecHandlerImpl("Command-Exec"));
+            new ArrayBlockingQueue<>(72),
+            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Bot Command-Exec Pool Thread %d").build(),
+            new RejectedExecHandlerImpl("Command-Exec"));
     public final EventWaiter eventWaiter = new EventWaiter();
     private static Unsafe unsafe = null;
     public final JDA jda;
@@ -95,12 +91,8 @@ public class Bot implements EventListener, ClassUtilities {
     public final Map<String, Cog> cogs = new HashMap<>();
     private final Map<Class<? extends Event>, List<ExtraEvent>> extraEvents = new HashMap<>();
     public static final OkHttpClient http = new OkHttpClient.Builder()
-            .cache(new Cache(new File("data/http_cache"), 24000000000L))
-            .connectTimeout(5, TimeUnit.SECONDS)
-            .readTimeout(12, TimeUnit.SECONDS)
-            .writeTimeout(8, TimeUnit.SECONDS)
-            .retryOnConnectionFailure(true)
-            .build();
+            .cache(new Cache(new File("data/http_cache"), 24000000000L)).connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(12, TimeUnit.SECONDS).writeTimeout(8, TimeUnit.SECONDS).retryOnConnectionFailure(true).build();
     public static long ownerId;
     public static String ownerTag;
     private static long ourId;
@@ -148,7 +140,7 @@ public class Bot implements EventListener, ClassUtilities {
         jda.addEventListener(this, eventWaiter);
 
         final ShardInfo sInfo = jda.getShardInfo();
-        logger = LogManager.getLogger("Bot" + (sInfo == null ? "" : " [" + sInfo.getShardString() + ']'));
+        logger = LoggerFactory.getLogger("Bot" + (sInfo == null ? "" : " [" + sInfo.getShardString() + ']'));
     }
 
     public int getShardNum() {
@@ -183,13 +175,13 @@ public class Bot implements EventListener, ClassUtilities {
     }
 
     private void dispatchCogEvent(Event event) {
-        for (Map.Entry<Class<? extends Event>, List<ExtraEvent>> entry: extraEvents.entrySet()) {
+        for (Map.Entry<Class<? extends Event>, List<ExtraEvent>> entry : extraEvents.entrySet()) {
             Class<? extends Event> eventClass = entry.getKey();
 
             if (eventClass.isInstance(event)) {
                 List<ExtraEvent> events = entry.getValue();
 
-                for (ExtraEvent extraEvent: events) {
+                for (ExtraEvent extraEvent : events) {
                     Runnable task = () -> {
                         try {
                             extraEvent.getMethod().invoke(extraEvent.getParent(), event);
@@ -200,8 +192,7 @@ public class Bot implements EventListener, ClassUtilities {
                         } catch (InvocationTargetException eContainer) {
                             Throwable e = eContainer.getCause();
 
-                            logger.error("{} error handling {}",
-                                    extraEvent.getMethod().getDeclaringClass().getName(),
+                            logger.error("{} error handling {}", extraEvent.getMethod().getDeclaringClass().getName(),
                                     event.getClass().getSimpleName(), e);
                         }
                     };
@@ -252,61 +243,37 @@ public class Bot implements EventListener, ClassUtilities {
                     .add(() -> playing(format("in {0} servers", shardUtil.getGuildCount())))
                     .add(() -> playing(format("in {0} guilds", shardUtil.getGuildCount())))
                     .add(() -> playing(String.format("from shard %d of %d", getShardNum(), getShardTotal())))
-                    .add(playing("with my buddies"))
-                    .add(playing("with bits and bytes"))
-                    .add(playing("World Domination"))
-                    .add(playing("with you"))
-                    .add(playing("with potatoes"))
-                    .add(playing("something"))
-                    .add(streaming("data", ""))
+                    .add(playing("with my buddies")).add(playing("with bits and bytes"))
+                    .add(playing("World Domination")).add(playing("with you")).add(playing("with potatoes"))
+                    .add(playing("something")).add(streaming("data", ""))
                     .add(streaming("music", "https://www.youtube.com/channel/UC-9-kyTW8ZkZNDHQJ6FgpwQ"))
-                    .add(streaming("your tunes", "https://www.youtube.com/watch?v=zQJh0MWvccs"))
-                    .add(listening("you"))
-                    .add(watching("darkness"))
-                    .add(watching("streams"))
-                    .add(streaming("your face", "https://www.youtube.com/watch?v=IUjZtoCrpyA"))
-                    .add(listening("alone"))
+                    .add(streaming("your tunes", "https://www.youtube.com/watch?v=zQJh0MWvccs")).add(listening("you"))
+                    .add(watching("darkness")).add(watching("streams"))
+                    .add(streaming("your face", "https://www.youtube.com/watch?v=IUjZtoCrpyA")).add(listening("alone"))
                     .add(streaming("Alone", "https://www.youtube.com/watch?v=YnwsMEabmSo"))
                     .add(streaming("bits and bytes", "https://www.youtube.com/watch?v=N3ZMvqISfvY"))
                     .add(listening("Rick Astley"))
                     .add(streaming("only the very best", "https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
-                    .add(listening("those potatoes"))
-                    .add(playing("with my fellow shards"))
-                    .add(listening("the cries of my shards"))
-                    .add(listening("as the sun goes down"))
-                    .add(streaming("Monstercat", "https://www.twitch.tv/monstercat"))
-                    .add(watching("dem videos"))
-                    .add(watching("you in your sleep"))
-                    .add(watching("over you as I sleep"))
-                    .add(watching("the movement of electrons"))
-                    .add(playing("with some protons"))
-                    .add(listening("the poor electrons"))
-                    .add(listening("the poor neutrons"))
-                    .add(listening("trigger-happy players"))
-                    .add(playing("Discord Hacker v39.2"))
-                    .add(playing("Discord Hacker v42.0"))
-                    .add(listening("Discordians"))
+                    .add(listening("those potatoes")).add(playing("with my fellow shards"))
+                    .add(listening("the cries of my shards")).add(listening("as the sun goes down"))
+                    .add(streaming("Monstercat", "https://www.twitch.tv/monstercat")).add(watching("dem videos"))
+                    .add(watching("you in your sleep")).add(watching("over you as I sleep"))
+                    .add(watching("the movement of electrons")).add(playing("with some protons"))
+                    .add(listening("the poor electrons")).add(listening("the poor neutrons"))
+                    .add(listening("trigger-happy players")).add(playing("Discord Hacker v39.2"))
+                    .add(playing("Discord Hacker v42.0")).add(listening("Discordians"))
                     .add(streaming("donations", "https://patreon.com/kdragon"))
                     .add(streaming("You should totally donate!", "https://patreon.com/kdragon"))
-                    .add(listening("my people"))
-                    .add(listening("my favorites"))
-                    .add(watching("my minions"))
-                    .add(watching("the chosen ones"))
-                    .add(watching("stars combust"))
-                    .add(watching("your demise"))
+                    .add(listening("my people")).add(listening("my favorites")).add(watching("my minions"))
+                    .add(watching("the chosen ones")).add(watching("stars combust")).add(watching("your demise"))
                     .add(streaming("the supernova", "https://www.youtube.com/watch?v=5WXyCJ1w3Ks"))
                     .add(listening("something"))
                     .add(streaming("something", "https://www.youtube.com/watch?v=FM7MFYoylVs"))
-                    .add(watching("I am Cow"))
-                    .add(watching("you play"))
-                    .add(watching("for raids"))
+                    .add(watching("I am Cow")).add(watching("you play")).add(watching("for raids"))
                     .add(playing("buffing before the raid"))
                     .add(streaming("this sick action", "https://www.youtube.com/watch?v=tD6KJ7QtQH8"))
-                    .add(listening("memes"))
-                    .add(watching("memes"))
-                    .add(playing("memes")) // memes
-                    .add(watching("that dank vid"))
-                    .select();
+                    .add(listening("memes")).add(watching("memes")).add(playing("memes")) // memes
+                    .add(watching("that dank vid")).select();
 
             jda.getPresence().setGame(status);
         };
@@ -315,7 +282,7 @@ public class Bot implements EventListener, ClassUtilities {
 
         Reflections reflector = new Reflections("com.kdrag0n.bluestone.cogs");
         Set<Class<? extends Cog>> cogClasses = reflector.getSubTypesOf(Cog.class);
-        for (Class<?> cogClass: cogClasses) {
+        for (Class<?> cogClass : cogClasses) {
             if (cogClass.isAnnotationPresent(DoNotAutoload.class))
                 continue;
 
@@ -332,12 +299,13 @@ public class Bot implements EventListener, ClassUtilities {
     public void registerCog(Cog cog) {
         Class<? extends Cog> clazz = cog.getClass();
 
-        for (Method method: clazz.getDeclaredMethods()) {
+        for (Method method : clazz.getDeclaredMethods()) {
             if (method.isAnnotationPresent(com.kdrag0n.bluestone.annotations.Command.class)) {
-                com.kdrag0n.bluestone.annotations.Command anno = method.getDeclaredAnnotation(com.kdrag0n.bluestone.annotations.Command.class);
+                com.kdrag0n.bluestone.annotations.Command anno = method
+                        .getDeclaredAnnotation(com.kdrag0n.bluestone.annotations.Command.class);
 
                 List<Permission> perms = new ArrayList<>(method.getDeclaredAnnotations().length - 1);
-                for (Annotation a: method.getDeclaredAnnotations()) {
+                for (Annotation a : method.getDeclaredAnnotations()) {
                     Class<? extends Annotation> type = a.annotationType();
                     if (type == com.kdrag0n.bluestone.annotations.Command.class)
                         continue;
@@ -377,20 +345,20 @@ public class Bot implements EventListener, ClassUtilities {
                             long finalRaw = 0;
                             StringBuilder joinedName = new StringBuilder();
 
-                            for (Permission p: permA) {
-                                if (p.isGuild()) isGuild = true;
-                                if (p.isChannel()) isChannel = true;
+                            for (Permission p : permA) {
+                                if (p.isGuild())
+                                    isGuild = true;
+                                if (p.isChannel())
+                                    isChannel = true;
 
                                 if (p != Permission.UNKNOWN)
                                     finalRaw |= p.getRawValue();
 
-                                joinedName.append(p.getName())
-                                        .append(" & ");
+                                joinedName.append(p.getName()).append(" & ");
                             }
 
                             String jn = joinedName.toString();
-                            perm = Permissions.createPerm(58, isGuild, isChannel,
-                                    jn.substring(0, jn.length() - 3));
+                            perm = Permissions.createPerm(58, isGuild, isChannel, jn.substring(0, jn.length() - 3));
                             Permissions.setRaw(perm, finalRaw);
 
                             Permissions.compoundMap.put(perm, permA);
@@ -402,18 +370,16 @@ public class Bot implements EventListener, ClassUtilities {
                     }
                 }
 
-                Command command = new Command(
-                        anno.name(), anno.desc(), anno.usage(), anno.hidden(),
-                        perms.toArray(new Permission[0]), anno.guildOnly(), anno.aliases(), method, cog,
-                        anno.thread(), anno.reportErrors()
-                );
+                Command command = new Command(anno.name(), anno.desc(), anno.usage(), anno.hidden(),
+                        perms.toArray(new Permission[0]), anno.guildOnly(), anno.aliases(), method, cog, anno.thread(),
+                        anno.reportErrors());
 
                 if (commands.containsKey(command.name))
                     throw new IllegalStateException("Command '" + command.name + "' already registered!");
                 else
                     commands.put(command.name, command);
 
-                for (String al: command.aliases) {
+                for (String al : command.aliases) {
                     if (commands.containsKey(al))
                         throw new IllegalStateException("Command '" + al + "' already registered!");
                     else
@@ -439,7 +405,7 @@ public class Bot implements EventListener, ClassUtilities {
     }
 
     public void unregisterCog(Cog cog) {
-        for (Map.Entry<String, Command> entry: new HashSet<>(commands.entrySet())) {
+        for (Map.Entry<String, Command> entry : new HashSet<>(commands.entrySet())) {
             Command cmd = entry.getValue();
 
             if (cmd.cog == cog) {
@@ -450,8 +416,8 @@ public class Bot implements EventListener, ClassUtilities {
         cog.unload();
         cogs.remove(cog.getName(), cog);
 
-        for (List<ExtraEvent> events: extraEvents.values()) {
-            for (ExtraEvent event: new HashSet<>(events)) {
+        for (List<ExtraEvent> events : extraEvents.values()) {
+            for (ExtraEvent event : new HashSet<>(events)) {
                 if (event.getMethod().getDeclaringClass().equals(cog.getClass())) {
                     events.remove(event);
                 }
@@ -483,7 +449,8 @@ public class Bot implements EventListener, ClassUtilities {
 
         if (content.startsWith(prefix)) {
             final String[] split = WHITESPACE_PATTERN.split(content.substring(prefix.length()), 0);
-            if (split.length == 0) return;
+            if (split.length == 0)
+                return;
             final ArrayListView args = new ArrayListView(split);
 
             final String cmdName = split[0].toLowerCase();
@@ -502,16 +469,16 @@ public class Bot implements EventListener, ClassUtilities {
             } else if (request.length() > 0) {
                 chatResponse(channel, "gbot_" + author.getId(), request, null);
             } else {
-                channel.sendMessage("To talk, start your message with `@Goldmine`.\n" +
-                        "Prefix: `" + Context.filterMessage(prefix) + '`').queue();
+                channel.sendMessage("To talk, start your message with `@Goldmine`.\n" + "Prefix: `"
+                        + Context.filterMessage(prefix) + '`').queue();
             }
-        } else if (channel instanceof PrivateChannel && author.getIdLong() != ownerId &&
-                content.length() != 0 && content.charAt(0) == '`') {
+        } else if (channel instanceof PrivateChannel && author.getIdLong() != ownerId && content.length() != 0
+                && content.charAt(0) == '`') {
             final String request = Strings.renderMessage(message, null, message.getContentRaw());
 
             if (request.length() < 1) {
-                channel.sendMessage("My prefix is `" + Context.filterMessage(prefix) +
-                        "`.\nYou can use commands with `!`, or talk directly.").queue();
+                channel.sendMessage("My prefix is `" + Context.filterMessage(prefix)
+                        + "`.\nYou can use commands with `!`, or talk directly.").queue();
             } else {
                 chatResponse(channel, "bs_GMdbot2-" + author.getId(), request, "💬 ");
             }
@@ -527,32 +494,31 @@ public class Bot implements EventListener, ClassUtilities {
         channel.sendTyping().queue();
 
         http.newCall(new Request.Builder()
-                .post(RequestBody.create(JSON_MEDIA_TYPE, new JSONObject()
-                        .put("session", sessionID)
-                        .put("query", query)
-                        .toString()))
-                .url(reqDest)
-                .header("Authorization", getKeys().optString("chatengine"))
-                .build()).enqueue(Bot.callback(response -> {
-            JSONObject resp = new JSONObject(response.body().string());
+                .post(RequestBody.create(JSON_MEDIA_TYPE,
+                        new JSONObject().put("session", sessionID).put("query", query).toString()))
+                .url(reqDest).header("Authorization", getKeys().optString("chatengine")).build())
+                .enqueue(Bot.callback(response -> {
+                    JSONObject resp = new JSONObject(response.body().string());
 
-            if (!resp.optBoolean("success", false)) {
-                logger.error("ChatEngine returned error: {}", resp.optString("error", "Not specified"));
-                channel.sendMessage(Emotes.getFailure() + " An error occurred getting a response!").queue();
-                return;
-            }
+                    if (!resp.optBoolean("success", false)) {
+                        logger.error("ChatEngine returned error: {}", resp.optString("error", "Not specified"));
+                        channel.sendMessage(Emotes.getFailure() + " An error occurred getting a response!").queue();
+                        return;
+                    }
 
-            String toSend;
-            if (respPrefix == null)
-                toSend = resp.getString("response");
-            else
-                toSend = respPrefix + resp.getString("response");
+                    String toSend;
+                    if (respPrefix == null)
+                        toSend = resp.getString("response");
+                    else
+                        toSend = respPrefix + resp.getString("response");
 
-            channel.sendMessage(Context.filterMessage(toSend)).queue(null, e -> {});
-        }, e -> {
-            logger.error("Error getting ChatEngine response", e);
-            channel.sendMessage(Emotes.getFailure() + " Try again later.").queue(null, ex -> {});
-        }));
+                    channel.sendMessage(Context.filterMessage(toSend)).queue(null, e -> {
+                    });
+                }, e -> {
+                    logger.error("Error getting ChatEngine response", e);
+                    channel.sendMessage(Emotes.getFailure() + " Try again later.").queue(null, ex -> {
+                    });
+                }));
     }
 
     private MessageEmbed errorEmbed(Throwable e, Message msg, Command cmd) {
@@ -560,21 +526,17 @@ public class Bot implements EventListener, ClassUtilities {
 
         EmbedBuilder emb = new EmbedBuilder()
                 .setAuthor(Cog.getTag(msg.getAuthor()), null, msg.getAuthor().getEffectiveAvatarUrl())
-                .setTitle("Error in command `" + cmd.name + '`')
-                .setColor(Color.ORANGE)
-                .appendDescription("```java\n")
-                .appendDescription(stack.substring(0, Math.min(stack.length(), 2037)))
-                .appendDescription("```");
+                .setTitle("Error in command `" + cmd.name + '`').setColor(Color.ORANGE).appendDescription("```java\n")
+                .appendDescription(stack.substring(0, Math.min(stack.length(), 2037))).appendDescription("```");
 
         if (e.getCause() != null) {
             String causeStack = StackUtil.renderStackTrace(e, "\u3000", "> ");
-            emb.addField("Caused by", "```java\n" +
-                    causeStack.substring(0, Math.min(causeStack.length(), 1013)) + "```", false);
+            emb.addField("Caused by",
+                    "```java\n" + causeStack.substring(0, Math.min(causeStack.length(), 1013)) + "```", false);
         }
 
         emb.addField("Timestamp", System.currentTimeMillis() + "ms", true)
-                .addField("Author ID", msg.getAuthor().getId(), true)
-                .addField("Message ID", msg.getId(), true)
+                .addField("Author ID", msg.getAuthor().getId(), true).addField("Message ID", msg.getId(), true)
                 .addField("Attachments", str(msg.getAttachments().size()), true)
                 .addField("Guild", msg.getGuild() == null ? "None" : msg.getGuild().getName(), true)
                 .addField("Guild ID", msg.getGuild() == null ? "None (no guild)" : msg.getGuild().getId(), true)
@@ -582,8 +544,7 @@ public class Bot implements EventListener, ClassUtilities {
                 .addField("Channel ID", msg.getChannel().getId(), true)
                 .addField("Content", '`' + msg.getContentDisplay() + '`', true)
                 .addField("Embeds", str(msg.getEmbeds().size()), true)
-                .addField("Shard ID", str(getShardNum() - 1), true)
-                .setTimestamp(Instant.now());
+                .addField("Shard ID", str(getShardNum() - 1), true).setTimestamp(Instant.now());
 
         if (msg.getGuild() != null)
             emb.setFooter("Guild Icon", msg.getGuild().getIconUrl());
@@ -625,7 +586,7 @@ public class Bot implements EventListener, ClassUtilities {
         patreonData = new JSONObject(jsonCode);
 
         TLongSet ids = new TLongHashSet();
-        for (Object iter: patreonData.getJSONArray("user_ids")) {
+        for (Object iter : patreonData.getJSONArray("user_ids")) {
             ids.add(iter instanceof Long ? (Long) iter : Long.parseUnsignedLong((String) iter));
         }
         patronIds = ids;
@@ -645,23 +606,15 @@ public class Bot implements EventListener, ClassUtilities {
         }
 
         ShardUtil shardUtil = new ShardUtil(shardCount, config);
-        JDABuilder builder = new JDABuilder(AccountType.BOT)
-                .setToken(token)
-                .setAudioEnabled(true)
-                .setAutoReconnect(true)
-                .setWebsocketFactory(new WebSocketFactory()
-                        .setConnectionTimeout(120000))
-                .setBulkDeleteSplittingEnabled(false)
-                .setStatus(OnlineStatus.IDLE)
-                .setCorePoolSize(5)
+        JDABuilder builder = new JDABuilder(AccountType.BOT).setToken(token).setAudioEnabled(true)
+                .setAutoReconnect(true).setWebsocketFactory(new WebSocketFactory().setConnectionTimeout(120000))
+                .setBulkDeleteSplittingEnabled(false).setStatus(OnlineStatus.IDLE).setCorePoolSize(5)
                 .setEnableShutdownHook(true)
-                .setHttpClientBuilder(new OkHttpClient.Builder()
-                        .retryOnConnectionFailure(true))
+                .setHttpClientBuilder(new OkHttpClient.Builder().retryOnConnectionFailure(true))
                 .setGame(Game.playing("something"));
 
-        if ((System.getProperty("os.arch").startsWith("x86") ||
-                System.getProperty("os.arch").equals("amd64")) &&
-                (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX))
+        if ((System.getProperty("os.arch").startsWith("x86") || System.getProperty("os.arch").equals("amd64"))
+                && (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX))
             builder.setAudioSendFactory(new NativeAudioSendFactory());
 
         loadPatreonData();
@@ -670,7 +623,7 @@ public class Bot implements EventListener, ClassUtilities {
             final int shardId = i;
 
             Runnable monitor = () -> {
-                final Logger logger = LogManager.getLogger("ShardMonitor " + shardId);
+                final Logger logger = LoggerFactory.getLogger("ShardMonitor " + shardId);
 
                 while (true) {
                     if (shardCount != 1) {
@@ -686,7 +639,8 @@ public class Bot implements EventListener, ClassUtilities {
                             System.exit(1);
                         try {
                             Thread.sleep(1000);
-                        } catch (InterruptedException ignored) {}
+                        } catch (InterruptedException ignored) {
+                        }
                         continue;
                     }
 
@@ -696,7 +650,8 @@ public class Bot implements EventListener, ClassUtilities {
                     synchronized (bot) {
                         try {
                             bot.wait();
-                        } catch (InterruptedException ignored) {}
+                        } catch (InterruptedException ignored) {
+                        }
                     }
 
                     if (jda.getStatus() != JDA.Status.DISCONNECTED) {
@@ -715,7 +670,8 @@ public class Bot implements EventListener, ClassUtilities {
             monThread.start();
             try {
                 Thread.sleep(5000);
-            } catch (InterruptedException ignored) {}
+            } catch (InterruptedException ignored) {
+            }
         }
 
         return 0;
@@ -748,14 +704,14 @@ public class Bot implements EventListener, ClassUtilities {
             public void onResponse(Call call, Response response) {
                 try {
                     if (!(response.isSuccessful() || response.isRedirect())) {
-                        failure.accept(new IOException("Request unsuccessful, status " +
-                                response.code() + " " + response.message()));
+                        failure.accept(new IOException(
+                                "Request unsuccessful, status " + response.code() + " " + response.message()));
                         return;
                     }
 
                     if (response.isRedirect()) {
-                        defLog.warn("Response is redirect, status " + response.code() + " " + response.message() +
-                                ". Destination: " + val(response.header("Location")).or("[not sent]"));
+                        defLog.warn("Response is redirect, status " + response.code() + " " + response.message()
+                                + ". Destination: " + val(response.header("Location")).or("[not sent]"));
                     }
 
                     success.accept(response);
@@ -772,7 +728,8 @@ public class Bot implements EventListener, ClassUtilities {
                                 defLog.error("Permission error in HTTP fail callback after success callback error", pe);
                             }
                         } else {
-                            defLog.error("Error running HTTP call failure callback after error in success callback!", ee);
+                            defLog.error("Error running HTTP call failure callback after error in success callback!",
+                                    ee);
                         }
                     }
                 }
