@@ -595,13 +595,13 @@ public class Bot implements EventListener, ClassUtilities {
     }
 
     public static int start(String token, int shardCount, JSONObject config) {
-        System.out.println("Starting...");
+        defLog.info("Starting bot...");
 
         if (shardCount < 1) {
-            System.out.println("Less than 1 shard is unsupported.");
+            defLog.info("At least 1 shard is required; {} requested", shardCount);
             return 1;
         } else if (shardCount == 2) {
-            System.out.println("2 shards is unsupported. Use either 1 or 3+ shards.");
+            defLog.error("2 shards not supported");
             return 1;
         }
 
