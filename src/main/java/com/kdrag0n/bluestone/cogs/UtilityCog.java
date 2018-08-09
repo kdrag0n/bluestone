@@ -11,10 +11,7 @@ import com.kdrag0n.bluestone.enums.BucketType;
 import com.kdrag0n.bluestone.handlers.RejectedExecHandlerImpl;
 import com.kdrag0n.bluestone.sql.ContactBannedUser;
 import com.kdrag0n.bluestone.sql.UserFaqRecord;
-import com.kdrag0n.bluestone.util.Base65536;
-import com.kdrag0n.bluestone.util.MinecraftUtil;
-import com.kdrag0n.bluestone.util.StreamUtil;
-import com.kdrag0n.bluestone.util.Strings;
+import com.kdrag0n.bluestone.util.*;
 import io.nayuki.qrcodegen.QrCode;
 import net.dv8tion.jda.client.entities.Group;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -26,7 +23,6 @@ import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import okhttp3.Request;
 import org.apache.commons.codec.DecoderException;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
 import org.slf4j.LoggerFactory;
@@ -35,18 +31,15 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.imageio.ImageIO;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.text.NumberFormat;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
@@ -65,7 +58,6 @@ public class UtilityCog extends Cog {
     private static final JSONArray EMPTY_JSON_ARRAY = new JSONArray();
     private static final Pattern END_MENTION_PATTERN = Pattern.compile(", [<@&0-9>]*$");
 
-    private final ScriptEngine calcEngine = new ScriptEngineManager().getEngineByName("lua");
     private static final ThreadPoolExecutor calcExecutor = new ThreadPoolExecutor(1, 2, 5, TimeUnit.SECONDS,
             new ArrayBlockingQueue<>(5),
             new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Bot Calculation Thread %d").build(),
@@ -75,12 +67,6 @@ public class UtilityCog extends Cog {
 
     public UtilityCog(Bot bot) {
         super(bot);
-
-        try (InputStream st = Bot.class.getClassLoader().getResourceAsStream("assets/calc.lua")) {
-            calcEngine.eval(IOUtils.toString(st, StandardCharsets.UTF_8));
-        } catch (IOException | ScriptException e) {
-            logger.error("Error evaluating calc.lua for calc command", e);
-        }
 
         contactBanDao = setupDao(ContactBannedUser.class);
         userFaqDao = setupDao(UserFaqRecord.class);
@@ -803,56 +789,32 @@ public class UtilityCog extends Cog {
     }
 
     @Command(name = "calculate", desc = "Evaluate a mathematical expression.", aliases = { "calc", "calculator" })
-    public void cmdCalculate(Context ctx) {
+    public void cmdCalculate(Context ctx) throws Throwable {
         if (ctx.args.empty) {
             ctx.fail("I need an expression to evaluate!");
             return;
-        } else if (ctx.rawArgs.contains("while") || ctx.rawArgs.contains("for")) {
-            ctx.fail("Blocked keywords found!");
-            return;
         }
 
-        String pCode = StringUtils.replace(ctx.rawArgs, "**", "^");
-        int lastNidx = pCode.lastIndexOf(10);
-        String code = lastNidx == -1 ? "" : pCode.substring(0, lastNidx);
-        String lastLine = lastNidx == -1 ? pCode : pCode.substring(lastNidx + 1);
-
-        if (lastLine.equals("end")) {
-            code += "\nend";
-            lastLine = "nil";
-        }
-
-        Object _result;
+        double result;
         try {
-            final String c = code;
-            final String l = lastLine;
-
-            FutureTask<Object> task = new FutureTask<>(
-                    () -> calcEngine.eval("return calc([[" + c + "]], [[" + l + "]])"));
+            FutureTask<Double> task = new FutureTask<>(() -> MathUtils.eval(ctx.rawArgs));
             calcExecutor.execute(task);
-            _result = task.get(2, TimeUnit.SECONDS);
+            result = task.get(2, TimeUnit.SECONDS);
         } catch (TimeoutException | InterruptedException ignored) {
             ctx.fail("Your expression took too long to evaluate!");
             return;
         } catch (ExecutionException _e) {
             Throwable e = _e.getCause();
 
-            if (e instanceof ScriptException) {
-                _result = e.getCause().getCause().getMessage();
+            if (e instanceof RuntimeException) {
+                ctx.fail("Invalid expression: " + e.getMessage());
+                return;
             } else {
-                _result = e.getMessage();
+                throw e;
             }
         }
 
-        if (_result == null)
-            _result = "nil";
-
-        String result = _result instanceof String ? (String) _result : _result.toString();
-
-        if (result.length() < 1)
-            result = "\u200b";
-
-        ctx.send("```lua\n" + result + "```").queue();
+        ctx.send(NumberFormat.getInstance().format(result)).queue();
     }
 
     @Command(name = "strikethrough", desc = "Apply a strikethrough effect to any text, works anywhere without special formatting.", aliases = {

@@ -75,7 +75,6 @@
 
 # JSR-223 scripting engines
 -keep class org.codehaus.groovy.jsr223.GroovyScriptEngineFactory { *; }
--keep class org.luaj.vm2.script.LuaScriptEngineFactory { *; }
 
 # Sentry
 -keep class io.sentry.** { *; }
@@ -137,9 +136,6 @@
 
 # Reflections
 -dontwarn org.reflections.** # Dom4J
-
-# LuaJ
--dontwarn org.luaj.vm2.luajc.** # Apache bcel
 
 # H2 Database
 -dontwarn org.h2.** # OSGI, locationtech jts, javax servlet, Apache Lucene, etc

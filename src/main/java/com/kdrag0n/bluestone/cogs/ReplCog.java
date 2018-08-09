@@ -19,7 +19,6 @@ import net.dv8tion.jda.core.utils.MiscUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
-import org.luaj.vm2.script.LuaScriptEngine;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
@@ -38,7 +37,7 @@ public class ReplCog extends Cog {
     public static final String[] NASHORN_ARGS = { "--language=es6", "-scripting" };
     public static final Pattern JS_OBJECT_PATTERN = Pattern.compile("^\\[object [A-Z][a-z0-9]*]$");
     private static final Logger logger = LoggerFactory.getLogger(ReplCog.class);
-    private static final Pattern CODE_TYPE_PATTERN = Pattern.compile("```(?:js|javascript|java|lua)\n?");
+    private static final Pattern CODE_TYPE_PATTERN = Pattern.compile("```(?:js|javascript)\n?");
     private final String token;
     private static final String IMPORTS = "net.dv8tion.jda.core.entities\n" + "net.dv8tion.jda.core\n"
             + "net.dv8tion.jda.core.entities.impl\n" + "net.dv8tion.jda.core.audio\n" + "net.dv8tion.jda.core.audit\n"
@@ -142,29 +141,23 @@ public class ReplCog extends Cog {
 
         // ScriptEngine post-init
         try {
-            new Switch<Class<? extends ScriptEngine>>(engine.getClass()).byInstance()
-                    .match(NashornScriptEngine.class, () -> {
-                        // imports
-                        StringBuilder importsObj = new StringBuilder("const imports=new JavaImporter(null");
+            if (engine instanceof NashornScriptEngine) {
+                // imports
+                StringBuilder importsObj = new StringBuilder("const imports=new JavaImporter(null");
 
-                        for (String pkg : StringUtils.split(IMPORTS, '\n')) {
-                            importsObj.append(",Packages.").append(pkg);
-                        }
+                for (String pkg : StringUtils.split(IMPORTS, '\n')) {
+                    importsObj.append(",Packages.").append(pkg);
+                }
 
-                        importsObj.append(')');
+                importsObj.append(')');
 
-                        engine.eval(importsObj.toString()
-                                + ";function loadShims(){load('https://raw.githubusercontent.com/es-shims/es5-shim/master/es5-shim.min.js');load('https://raw.githubusercontent.com/paulmillr/es6-shim/master/es6-shim.min.js');}");
+                engine.eval(importsObj.toString()
+                        + ";function loadShims(){load('https://raw.githubusercontent.com/es-shims/es5-shim/master/es5-shim.min.js');load('https://raw.githubusercontent.com/paulmillr/es6-shim/master/es6-shim.min.js');}");
 
-                        // print
-                        engine.eval(
-                                "function print() { ctx.send.apply(ctx, arguments.join(' ')).queue() }; var console = {log: print};");
-                    }).match(LuaScriptEngine.class, () -> {
-                        engine.eval("function print(...) ctx.send(string.join(' ', ...)).queue() end");
-                        engine.put("__dirsep", System.getProperty("file.separator"));
-                        engine.eval(
-                                "debug = debug or {}; package = package or {}; package.config = package.config or (__dirsep .. '\\n;\\n?\\n!\\n-'); require 'assets.essentials'; require 'assets.cron'; require 'assets.middleclass'; require 'assets.stateful'; require 'assets.inspect'; require 'assets.repl_base'");
-                    });
+                // print
+                engine.eval(
+                        "function print() { ctx.send.apply(ctx, arguments.join(' ')).queue() }; var console = {log: print};");
+            }
         } catch (Exception e) {
             ctx.send("⚠ Engine post-init failed.\n```java\n" + StackUtil.renderStackTrace(e) + "```").queue();
         }
@@ -213,24 +206,7 @@ public class ReplCog extends Cog {
 
             Object result;
             try {
-                if (engine instanceof LuaScriptEngine) {
-                    int lastNidx = cleaned.lastIndexOf(10);
-                    String code = lastNidx == -1 ? "" : cleaned.substring(0, lastNidx);
-                    String lastLine = lastNidx == -1 ? cleaned : cleaned.substring(lastNidx + 1);
-
-                    if (lastLine.equals("end")) {
-                        code += "\nend";
-                        lastLine = "return nil";
-                    }
-
-                    engine.put("__code", code);
-                    engine.put("__last_line", lastLine);
-                    engine.put("__orig", cleaned);
-
-                    result = engine.eval("__repl_step()");
-                } else {
-                    result = engine.eval(cleaned);
-                }
+                result = engine.eval(cleaned);
             } catch (ScriptException e) {
                 result = e.getCause();
 
