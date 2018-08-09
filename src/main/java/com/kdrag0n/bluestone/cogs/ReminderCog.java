@@ -96,7 +96,7 @@ public class ReminderCog extends Cog {
             ctx.fail("Invalid time/date!");
             return;
         } else if (date.getTime() > System.currentTimeMillis() + 63072000000L) { // 2 years
-            ctx.fail("That time/date is too far away!");
+            ctx.fail("That time/date is too far in the future!");
             return;
         } else if (msg.length() < 1) {
             ctx.fail("I can't remind you of nothing!");
