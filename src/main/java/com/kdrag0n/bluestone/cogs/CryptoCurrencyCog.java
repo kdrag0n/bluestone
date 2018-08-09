@@ -1,10 +1,6 @@
 package com.kdrag0n.bluestone.cogs;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.annotations.SerializedName;
 import com.jagrosh.jdautilities.menu.Paginator;
 import com.kdrag0n.bluestone.Bot;
 import com.kdrag0n.bluestone.Cog;
@@ -21,6 +17,9 @@ import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
+import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -31,10 +30,8 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -47,8 +44,6 @@ import static com.kdrag0n.bluestone.util.Strings.str;
 
 public class CryptoCurrencyCog extends Cog {
     private static final Logger logger = LoggerFactory.getLogger(CryptoCurrencyCog.class);
-    private static final Gson gson = new GsonBuilder()
-            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
     private static volatile Map<String, Cryptocurrency> currencies = new LinkedHashMap<>();
     private static final ScheduledExecutorService scheduledExec = new ScheduledThreadPoolExecutor(1,
             new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Cryptocurrency Updater Thread %d").build());
@@ -83,20 +78,23 @@ public class CryptoCurrencyCog extends Cog {
 
     private static void update() {
         try {
-            Cryptocurrency[] data;
+            List<Cryptocurrency> data;
             try (ResponseBody rbody = Bot.http.newCall(
                     new Request.Builder().get().url("https://api.coinmarketcap.com/v1/ticker/?convert=EUR").build())
                     .execute().body()) {
-                data = gson.fromJson(rbody.charStream(), Cryptocurrency[].class);
+                JSONArray items = new JSONArray(StringUtils.replace(rbody.string(), "null", "0"));
+                data = new ArrayList<>(items.length());
+
+                for (int i = 0; i < items.length(); i++) {
+                    data.add(new Cryptocurrency(items.getJSONObject(i)));
+                }
             }
 
-            Map<String, Cryptocurrency> newCurrencies = new LinkedHashMap<>();
-            List<String> newRanked = new LinkedList<>();
+            Map<String, Cryptocurrency> newCurrencies = new LinkedHashMap<>(data.size());
+            List<String> newRanked = new ArrayList<>(data.size());
+            Instant now = Instant.now();
 
             for (Cryptocurrency currency : data) {
-                currency.updateTime = Instant.ofEpochMilli(currency.lastUpdated);
-                Instant now = Instant.now();
-
                 if (currency.updateTime.isBefore(now.minus(Duration.ofDays(1)))) {
                     currency.updateTime = now;
                 }
@@ -344,41 +342,43 @@ public class CryptoCurrencyCog extends Cog {
     }
 
     private static class Cryptocurrency {
-        @SerializedName("id")
         String id;
-        @SerializedName("name")
         String name;
-        @SerializedName("symbol")
         String symbol;
-        @SerializedName("rank")
-        short rank;
-        @SerializedName("price_usd")
+        int rank;
         double priceUSD;
-        @SerializedName("price_btc")
         double priceBTC;
-        @SerializedName("price_eur")
         double priceEUR;
-        @SerializedName("24h_volume_usd")
         double volume24hUSD;
-        @SerializedName("24h_volume_eur")
         double volume24hEUR;
-        @SerializedName("market_cap_usd")
         double marketCapUSD;
-        @SerializedName("market_cap_eur")
         double marketCapEUR;
-        @SerializedName("available_supply")
         double availableSupply;
-        @SerializedName("total_supply")
         double totalSupply;
-        @SerializedName("percent_change_1h")
         float percentChange1h;
-        @SerializedName("percent_change_24h")
         float percentChange24h;
-        @SerializedName("percent_change_7d")
         float percentChange7d;
-        @SerializedName("last_updated")
-        long lastUpdated;
 
         Instant updateTime;
+
+        private Cryptocurrency(JSONObject obj) {
+            id = obj.getString("id");
+            name = obj.getString("name");
+            symbol = obj.getString("symbol");
+            rank = obj.getInt("rank");
+            priceUSD = obj.getDouble("price_usd");
+            priceBTC = obj.getDouble("price_btc");
+            priceEUR = obj.getDouble("price_eur");
+            volume24hUSD = obj.getDouble("24h_volume_usd");
+            volume24hEUR = obj.getDouble("24h_volume_eur");
+            marketCapUSD = obj.getDouble("market_cap_usd");
+            marketCapEUR = obj.getDouble("market_cap_eur");
+            availableSupply = obj.getDouble("available_supply");
+            totalSupply = obj.getDouble("total_supply");
+            percentChange1h = obj.getFloat("percent_change_1h");
+            percentChange24h = obj.getFloat("percent_change_24h");
+            percentChange7d = obj.getFloat("percent_change_7d");
+            updateTime = Instant.ofEpochMilli(obj.getLong("last_updated"));
+        }
     }
 }
