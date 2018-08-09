@@ -6,7 +6,7 @@ import com.j256.ormlite.dao.Dao;
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 import com.kdrag0n.bluestone.sql.BotAdmin;
 import com.kdrag0n.bluestone.util.*;
-import com.kdrag0n.bluestone.annotations.DoNotAutoload;
+import com.kdrag0n.bluestone.annotations.Disable;
 import com.kdrag0n.bluestone.annotations.EventHandler;
 import com.kdrag0n.bluestone.errors.PassException;
 import com.kdrag0n.bluestone.handlers.MessageWaitEventListener;
@@ -283,7 +283,7 @@ public class Bot implements EventListener, ClassUtilities {
         Reflections reflector = new Reflections("com.kdrag0n.bluestone.cogs");
         Set<Class<? extends Cog>> cogClasses = reflector.getSubTypesOf(Cog.class);
         for (Class<?> cogClass : cogClasses) {
-            if (cogClass.isAnnotationPresent(DoNotAutoload.class))
+            if (cogClass.isAnnotationPresent(Disable.class))
                 continue;
 
             try {

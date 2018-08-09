@@ -4,9 +4,9 @@ import com.kdrag0n.bluestone.Bot;
 import com.kdrag0n.bluestone.Cog;
 import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.annotations.Command;
-import com.kdrag0n.bluestone.annotations.DoNotAutoload;
+import com.kdrag0n.bluestone.annotations.Disable;
 
-@DoNotAutoload
+@Disable
 public class StoryCog extends Cog {
     public StoryCog(Bot bot) {
         super(bot);

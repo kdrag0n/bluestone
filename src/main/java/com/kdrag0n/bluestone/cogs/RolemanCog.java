@@ -6,7 +6,7 @@ import com.google.common.cache.LoadingCache;
 import com.j256.ormlite.dao.Dao;
 import com.kdrag0n.bluestone.*;
 import com.kdrag0n.bluestone.annotations.Command;
-import com.kdrag0n.bluestone.annotations.DoNotAutoload;
+import com.kdrag0n.bluestone.annotations.Disable;
 import com.kdrag0n.bluestone.annotations.EventHandler;
 import com.kdrag0n.bluestone.sql.GuildMemberActions;
 import com.kdrag0n.bluestone.sql.GuildRoleOption;
@@ -24,7 +24,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@DoNotAutoload
+@Disable
 public class RolemanCog extends Cog {
     private static final Logger logger = LoggerFactory.getLogger(RolemanCog.class);
     private static final String NO_COMMAND = "🤔 **I need an action!**\n" + "The following are valid:\n"

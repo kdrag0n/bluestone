@@ -4,10 +4,10 @@ import com.kdrag0n.bluestone.Bot;
 import com.kdrag0n.bluestone.Cog;
 import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.annotations.Command;
-import com.kdrag0n.bluestone.annotations.DoNotAutoload;
+import com.kdrag0n.bluestone.annotations.Disable;
 import com.kdrag0n.bluestone.errors.PermissionError;
 
-@DoNotAutoload
+@Disable
 public class NotesCog extends Cog {
     private static final String NO_COMMAND = "🤔 **I need an action!**\n" +
             "The following are valid:\n" +
