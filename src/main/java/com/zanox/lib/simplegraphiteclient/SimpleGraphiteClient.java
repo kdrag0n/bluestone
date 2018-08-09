@@ -85,9 +85,10 @@ public class SimpleGraphiteClient {
 	 */
 	@SuppressWarnings("serial")
     private void sendMetric(final String key, final Number value, long timeStamp) {
-		sendMetrics(new HashMap<String, Number>() {{
-            put(key, value);
-        }}, timeStamp);
+		HashMap<String, Number> map = new HashMap<>();
+		map.put(key, value);
+		
+		sendMetrics(map, timeStamp);
 	}
 	
 	private Socket createSocket() throws IOException {
