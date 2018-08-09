@@ -18,13 +18,13 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
-group 'com.kdrag0n'
+group 'com.kdragon'
 version '0.9.1'
 compileJava.options.encoding = 'UTF-8'
 
 sourceCompatibility = 1.8
 archivesBaseName = 'bluestone'
-mainClassName = 'com.kdrag0n.bluestone.Start'
+mainClassName = 'com.kdragon.bluestone.Start'
 applicationDefaultJvmArgs = [
         '-Xms1000M',
         '-XX:MaxDirectMemorySize=64M',
@@ -69,7 +69,7 @@ buildConfig {
     version = project.version
 
     clsName = 'BuildConfig'
-    packageName = 'com.kdrag0n.bluestone'
+    packageName = 'com.kdragon.bluestone'
     charset = 'UTF-8'
 
     buildConfigField 'long', 'BUILD_UNIXTIME', buildTime + 'L'
