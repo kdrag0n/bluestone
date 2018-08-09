@@ -90,9 +90,6 @@
 -keep class org.h2.Driver { *; }
 -keep class com.mysql.cj.jdbc.Driver { *; }
 
-# PrettyTime
--keep class org.ocpsoft.prettytime.PrettyTime { *; }
-
 # MySQL
 -keep class com.mysql.cj.** { *; }
 -dontwarn com.mysql.cj.jdbc.integration.** # C3P0, JBoss

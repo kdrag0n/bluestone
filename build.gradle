@@ -112,7 +112,6 @@ dependencies {
     implementation 'net.sf.trove4j:trove4j:3.0.3'
     implementation 'com.jagrosh:jda-utilities-menu:2.1.2'
     implementation 'com.jagrosh:jda-utilities-commons:2.1.2'
-    implementation 'org.ocpsoft.prettytime:prettytime:4.0.2.Final'
     implementation 'com.joestelmach:natty:0.13'
     implementation 'com.twelvemonkeys.imageio:imageio-core:3.3.2'
     implementation 'com.google.re2j:re2j:1.2'
