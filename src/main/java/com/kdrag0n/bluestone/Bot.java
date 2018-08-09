@@ -296,7 +296,7 @@ public class Bot implements EventListener, ClassUtilities {
         }
     }
 
-    public void registerCog(Cog cog) {
+    private void registerCog(Cog cog) {
         Class<? extends Cog> clazz = cog.getClass();
 
         for (Method method : clazz.getDeclaredMethods()) {
@@ -632,7 +632,7 @@ public class Bot implements EventListener, ClassUtilities {
 
                     JDA jda;
                     try {
-                        jda = builder.buildAsync();
+                        jda = builder.build();
                     } catch (Exception e) {
                         logger.error("Failed to initialize JDA", e);
                         if (shardCount == 1)
