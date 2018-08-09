@@ -8,10 +8,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 public class RejectedExecHandlerImpl implements RejectedExecutionHandler {
     private final Logger logger;
-    private String poolName;
 
     public RejectedExecHandlerImpl(String name) {
-        poolName = name;
         logger = LoggerFactory.getLogger("Pool " + name);
     }
 
