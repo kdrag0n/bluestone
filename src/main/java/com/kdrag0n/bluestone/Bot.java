@@ -59,7 +59,7 @@ import static com.kdrag0n.bluestone.util.Strings.format;
 import static com.kdrag0n.bluestone.util.Strings.str;
 import static net.dv8tion.jda.core.entities.Game.*;
 
-public class Bot implements EventListener, ClassUtilities {
+public class Bot implements EventListener {
     private static final Logger defLog = LoggerFactory.getLogger(Bot.class);
     public static final String NAME = "Goldmine";
 
@@ -350,7 +350,7 @@ public class Bot implements EventListener, ClassUtilities {
                             }
 
                             String jn = joinedName.toString();
-                            perm = Permissions.createPerm(58, isGuild, isChannel, jn.substring`(0, jn.length() - 3));
+                            perm = Permissions.createPerm(58, isGuild, isChannel, jn.substring(0, jn.length() - 3));
                             Permissions.setRaw(perm, finalRaw);
 
                             Permissions.compoundMap.put(perm, permA);
