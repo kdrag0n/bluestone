@@ -10,7 +10,6 @@ import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.kdrag0n.bluestone.cogs.MusicCog;
-import com.kdrag0n.bluestone.sql.BotAdmin;
 import com.kdrag0n.bluestone.sql.GuildPrefix;
 import com.kdrag0n.bluestone.sql.MySQLDatabaseType;
 import com.zaxxer.hikari.HikariConfig;
@@ -39,7 +38,6 @@ public class ShardUtil {
     private final Map<Integer, Bot> shards = new LinkedHashMap<>();
     public final Date startTime = new Date();
     private int shardCount;
-    private final Dao<BotAdmin, Long> adminDao;
     private ConnectionSource dbConn;
     private HikariDataSource dataSource;
     private JSONObject config;
@@ -55,7 +53,7 @@ public class ShardUtil {
         dbConfig.setPassword(config.optString("db_pass", null));
         dbConfig.setMinimumIdle(5);
         dbConfig.setMaximumPoolSize(15);
-        dbConfig.setPoolName("Bot Pool [ShardUtil]");
+        dbConfig.setPoolName("Bot");
         dbConfig.setAllowPoolSuspension(true);
         dbConfig.setRegisterMbeans(true);
         dbConfig.setLeakDetectionThreshold(7500);
@@ -85,8 +83,6 @@ public class ShardUtil {
             }
         }
 
-        adminDao = setupDao(BotAdmin.class);
-
         try {
             TableUtils.createTableIfNotExists(dbConn, GuildPrefix.class);
         } catch (SQLException e) {
@@ -115,10 +111,6 @@ public class ShardUtil {
         } catch (SQLException e) {
             throw new RuntimeException("Error creating DAO for " + clazz.getSimpleName() + '!', e);
         }
-    }
-
-    public Dao<BotAdmin, Long> getAdminDao() {
-        return adminDao;
     }
 
     public ConnectionSource getDatabase() {

@@ -118,7 +118,7 @@ public class KewlCog extends Cog {
                     g2d.drawString(fstr('@' + getTag(user), new Font(PROFILE_FONT, Font.PLAIN, 36)), 420, 248);
 
                     // Flags
-                    TIntList flags = ProfileFlags.getFlags(bot, user);
+                    TIntList flags = ProfileFlags.getFlags(user);
                     TIntIterator iterator = flags.iterator();
                     int flagI = 0;
 
@@ -131,9 +131,6 @@ public class KewlCog extends Cog {
                         switch (flag) {
                         case ProfileFlags.BOT_OWNER:
                             iconStream = cl.getResourceAsStream("/assets/owner.png");
-                            break;
-                        case ProfileFlags.BOT_ADMIN:
-                            iconStream = cl.getResourceAsStream("/assets/key.png");
                             break;
                         case ProfileFlags.PATREON_SUPPORTER:
                             iconStream = cl.getResourceAsStream("/assets/patreon.png");

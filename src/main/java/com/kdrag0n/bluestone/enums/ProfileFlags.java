@@ -10,36 +10,13 @@ import java.sql.SQLException;
 
 public class ProfileFlags {
     public static final int BOT_OWNER = 0x1;
-    public static final int BOT_ADMIN = 0x2;
-    public static final int PATREON_SUPPORTER = 0x4;
+    public static final int PATREON_SUPPORTER = 0x2;
 
-    public static int calculate(Context ctx, User user) {
-        int flags = 0;
-
-        if (user.getIdLong() == Bot.ownerId)
-            flags |= BOT_OWNER;
-
-        try {
-            if (ctx.bot.getAdminDao().idExists(user.getIdLong()))
-                flags |= BOT_ADMIN;
-        } catch (SQLException ignored) {}
-
-        if (Bot.patronIds.contains(user.getIdLong()))
-            flags |= PATREON_SUPPORTER;
-
-        return flags;
-    }
-
-    public static TIntList getFlags(Bot bot, User user) {
+    public static TIntList getFlags(User user) {
         TIntList flags = new TIntArrayList(3);
 
         if (user.getIdLong() == Bot.ownerId)
             flags.add(BOT_OWNER);
-
-        try {
-            if (bot.getAdminDao().idExists(user.getIdLong()))
-                flags.add(BOT_ADMIN);
-        } catch (SQLException ignored) {}
 
         if (Bot.patronIds.contains(user.getIdLong()))
             flags.add(PATREON_SUPPORTER);

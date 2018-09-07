@@ -1,8 +1,5 @@
 package com.kdrag0n.bluestone.util;
 
-import com.kdrag0n.bluestone.Bot;
-import sun.misc.Unsafe;
-
 /**
  * A more flexible switch-case system.
  * @param <T> Type of object to switch with

@@ -2,9 +2,7 @@ package com.kdrag0n.bluestone;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.re2j.Pattern;
-import com.j256.ormlite.dao.Dao;
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
-import com.kdrag0n.bluestone.sql.BotAdmin;
 import com.kdrag0n.bluestone.util.*;
 import com.kdrag0n.bluestone.annotations.Disable;
 import com.kdrag0n.bluestone.annotations.EventHandler;
@@ -93,7 +91,7 @@ public class Bot implements EventListener, ClassUtilities {
     public static final OkHttpClient http = new OkHttpClient.Builder()
             .cache(new Cache(new File("data/http_cache"), 24000000000L)).connectTimeout(5, TimeUnit.SECONDS)
             .readTimeout(12, TimeUnit.SECONDS).writeTimeout(8, TimeUnit.SECONDS).retryOnConnectionFailure(true).build();
-    public static long ownerId;
+    public static long ownerId = -1;
     public static String ownerTag;
     private static long ourId;
     private static String ourMention;
@@ -116,10 +114,6 @@ public class Bot implements EventListener, ClassUtilities {
 
             defLog.error("RestAction failure", e);
         };
-    }
-
-    public Dao<BotAdmin, Long> getAdminDao() {
-        return shardUtil.getAdminDao();
     }
 
     public JSONObject getConfig() {
@@ -312,8 +306,6 @@ public class Bot implements EventListener, ClassUtilities {
 
                     if (type == Perm.Owner.class) {
                         perms.add(Permissions.BOT_OWNER);
-                    } else if (type == Perm.Admin.class) {
-                        perms.add(Permissions.BOT_ADMIN);
                     } else if (type == Perm.Patron.class) {
                         perms.add(Permissions.PATREON_SUPPORTER);
                     } else {

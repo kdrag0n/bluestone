@@ -333,7 +333,6 @@ public class CryptoCurrencyCog extends Cog {
     }
 
     @Perm.Owner
-    @Perm.Admin
     @Command(name = "cryptoupdate", desc = "Update the cryptocurrency data.", thread = true, aliases = {
             "currencyupdate", "cupdate", "crypto_update" })
     public void cmdCryptoUpdate(Context ctx) {

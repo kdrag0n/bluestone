@@ -5,7 +5,6 @@ import net.dv8tion.jda.core.entities.TextChannel;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
-import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -14,7 +13,6 @@ public class Permissions {
     private static final Class<Permission> permClass = Permission.class;
     private static final Field permOffset, permRaw, permIsGuild, permIsChannel, permName;
     public static final Permission BOT_OWNER;
-    public static final Permission BOT_ADMIN;
     public static final Permission PATREON_SUPPORTER;
     private static final Permission COMPOUND;
     public static final Map<Permission, Permission[]> compoundMap =
@@ -38,7 +36,6 @@ public class Permissions {
         }
 
         BOT_OWNER = createPerm(61, false, false, "Bot Owner");
-        BOT_ADMIN = createPerm(60, false, false, "Bot Admin");
         PATREON_SUPPORTER = createPerm(59, false, false, "Patreon Supporter");
         COMPOUND = createPerm(58, false, false, "Compound Permission");
     }
@@ -74,14 +71,7 @@ public class Permissions {
 
         outerLoop:
         for (Permission perm: permsAccepted) {
-            if (perm == BOT_ADMIN) {
-                try {
-                    if (ctx.bot.getAdminDao().idExists(ctx.author.getIdLong()))
-                        return true;
-                } catch (SQLException e) {
-                    ctx.bot.logger.warn("Bot admin perm check error", e);
-                }
-            } else if (perm == PATREON_SUPPORTER) {
+            if (perm == PATREON_SUPPORTER) {
                 if (Bot.patronIds.contains(ctx.author.getIdLong()))
                     return true;
             } else if (perm.getOffset() == 58) {
@@ -94,13 +84,6 @@ public class Permissions {
                 for (Permission p: pA) {
                     if (p == BOT_OWNER) {
                         continue outerLoop;
-                    } else if (p == BOT_ADMIN) {
-                        try {
-                            if (!ctx.bot.getAdminDao().idExists(ctx.author.getIdLong()))
-                                continue outerLoop;
-                        } catch (SQLException e) {
-                            ctx.bot.logger.warn("Bot admin perm check error", e);
-                        }
                     } else if (p == PATREON_SUPPORTER) {
                         if (!Bot.patronIds.contains(ctx.author.getIdLong()))
                             continue outerLoop;

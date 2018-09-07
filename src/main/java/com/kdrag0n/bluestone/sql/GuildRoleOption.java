@@ -117,11 +117,6 @@ public class GuildRoleOption {
                 return false;
         }
 
-        if ((conditions & IS_BOT_ADMIN) == IS_BOT_ADMIN) {
-            if (!Permissions.check(ctx, Permissions.BOT_ADMIN))
-                return false;
-        }
-
         if ((conditions & IS_PATRON) == IS_PATRON) {
             return Permissions.check(ctx, Permissions.PATREON_SUPPORTER);
         }
@@ -149,7 +144,6 @@ public class GuildRoleOption {
 
         // Ranks
         static final int IS_BOT_OWNER = 1<<12;
-        static final int IS_BOT_ADMIN = 1<<13;
-        static final int IS_PATRON = 1<<14;
+        static final int IS_PATRON = 1<<13;
     }
 }

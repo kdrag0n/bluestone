@@ -30,10 +30,6 @@ public class Perm {
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-    public @interface Admin {}
-
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.METHOD)
     public @interface Patron {}
 
     @Retention(RetentionPolicy.RUNTIME)
@@ -56,7 +52,7 @@ public class Perm {
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-    public @interface GuildAdministrator {
+    public @interface Administrator {
         Permission value() default Permission.ADMINISTRATOR;
     }
 
