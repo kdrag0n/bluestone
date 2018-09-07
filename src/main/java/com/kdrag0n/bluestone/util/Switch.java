@@ -91,7 +91,7 @@ public class Switch<T> {
     }
 
     /**
-     * A variant of {@link Runnable} that allows the function to throw any {@link Throwable\}.
+     * A variant of {@link Runnable} that allows the function to throw any {@link Exception}.
      */
     public interface ThrowingRunnable {
         /**
