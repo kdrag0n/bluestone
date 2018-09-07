@@ -350,7 +350,7 @@ public class Bot implements EventListener, ClassUtilities {
                             }
 
                             String jn = joinedName.toString();
-                            perm = Permissions.createPerm(58, isGuild, isChannel, jn.substring(0, jn.length() - 3));
+                            perm = Permissions.createPerm(58, isGuild, isChannel, jn.substring`(0, jn.length() - 3));
                             Permissions.setRaw(perm, finalRaw);
 
                             Permissions.compoundMap.put(perm, permA);

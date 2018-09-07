@@ -264,49 +264,6 @@ public class UtilityCog extends Cog {
         ctx.send(embed.build()).queue();
     }
 
-    @Command(name = "encode", desc = "Encode some text into Base65536.", usage = "[text]")
-    public void cmdEncode(Context ctx) {
-        if (ctx.args.empty) {
-            ctx.fail("I need some text!");
-            return;
-        }
-
-        byte[] bytes;
-        try {
-            bytes = ctx.rawArgs.getBytes("UTF-8");
-        } catch (UnsupportedEncodingException ignored) {
-            return;
-        }
-
-        ctx.send("```" + Base65536.encode(bytes) + "```").queue();
-    }
-
-    @Command(name = "decode", desc = "Decode Base65536 into regular text.", usage = "[text]")
-    public void cmdDecode(Context ctx) {
-        if (ctx.args.empty) {
-            ctx.fail("I need some text!");
-            return;
-        }
-
-        byte[] rawOutput;
-        try {
-            rawOutput = Base65536.decode(ctx.rawArgs);
-        } catch (DecoderException e) {
-            ctx.send(Emotes.getFailure() + " Error: `" + e.getMessage() + '`').queue();
-            return;
-        }
-
-        String decoded;
-        try {
-            decoded = new String(rawOutput, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            ctx.fail("The bot's system doesn't support an essential encoding.");
-            return;
-        }
-
-        ctx.send("```" + decoded + "```").queue();
-    }
-
     @Cooldown(scope = BucketType.USER, delay = 5)
     @Command(name = "minecraft", desc = "Get information about a Minecraft server.", usage = "[server address]", aliases = {
             "mc", "mcserver" }, thread = true)
