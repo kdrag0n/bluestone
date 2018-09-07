@@ -8,7 +8,6 @@ import sun.misc.Unsafe;
  * @param <T> Type of object to switch with
  */
 public class Switch<T> {
-    private static final Unsafe unsafe = Bot.getUnsafe();
     private final T obj;
     private boolean mode = true; // false = Object#equals(), true = identity (==)
 
@@ -54,14 +53,18 @@ public class Switch<T> {
      * @param object object to test with
      * @param func the function to execute, if objects match
      * @return this instance of Switch
-     * @throws Throwable any exception that {@literal func} throws
+     * @throws RuntimeException any exception that {@literal func} throws
      */
     public Switch<T> match(T object, ThrowingRunnable func) {
         if (mode ? obj == object : (obj == null ? object == null : obj.equals(object))) { // messy, I know
             try {
                 func.run();
-            } catch (Throwable t) {
-                unsafe.throwException(t);
+            } catch (Exception e) {
+                if (e instanceof RuntimeException) {
+                    throw (RuntimeException) e;
+                } else {
+                    throw new RuntimeException(e);
+                }
             }
         }
 
@@ -72,13 +75,17 @@ public class Switch<T> {
      * As a fallback if the object doesn't match any defined cases, execute this function.
      * @param func the function to execute
      * @return this instance of Switch
-     * @throws Throwable any exception that {@literal func} throws
+     * @throws RuntimeException any exception that {@literal func} throws
      */
     public Switch<T> fallback(ThrowingRunnable func) {
         try {
             func.run();
-        } catch (Throwable t) {
-            unsafe.throwException(t);
+        } catch (Throwable e) {
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            } else {
+                throw new RuntimeException(e);
+            }
         }
         return this;
     }
@@ -89,8 +96,8 @@ public class Switch<T> {
     public interface ThrowingRunnable {
         /**
          * The function to run.
-         * @throws Throwable any exception
+         * @throws Exception any exception
          */
-        void run() throws Throwable;
+        void run() throws Exception;
     }
 }
