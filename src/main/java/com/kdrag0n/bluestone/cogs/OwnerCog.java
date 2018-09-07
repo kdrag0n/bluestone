@@ -216,17 +216,6 @@ public class OwnerCog extends Cog {
     }
 
     @Perm.Owner
-    @Command(name = "sendfile", desc = "Upload a file.", usage = "[file path]", reportErrors = false)
-    public void cmdSendfile(Context ctx) throws IOException {
-        if (ctx.args.empty) {
-            ctx.send("🤔 I need a file path!").queue();
-            return;
-        }
-
-        ctx.channel.sendFile(new File(ctx.rawArgs), new MessageBuilder().append("📧 File incoming!").build()).queue();
-    }
-
-    @Perm.Owner
     @Command(name = "setavatar", desc = "Change my avatar.", aliases = { "set_avatar" })
     public void cmdSetAvatar(Context ctx) throws IOException {
         if (ctx.args.empty) {
