@@ -427,8 +427,7 @@ public class Bot implements EventListener {
                 channel.sendMessage("To talk, start your message with `@Goldmine`.\n" + "Prefix: `"
                         + Context.filterMessage(prefix) + '`').queue();
             }
-        } else if (channel instanceof PrivateChannel && author.getIdLong() != ownerId && content.length() != 0
-                && content.charAt(0) == '`') {
+        } else if (channel instanceof PrivateChannel && content.length() != 0 && content.charAt(0) != '`') {
             final String request = Strings.renderMessage(message, null, message.getContentRaw());
 
             if (request.length() < 1) {
