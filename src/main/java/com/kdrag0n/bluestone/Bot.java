@@ -473,37 +473,6 @@ public class Bot implements EventListener {
                 }));
     }
 
-    private MessageEmbed errorEmbed(Throwable e, Message msg, Command cmd) {
-        String stack = StackUtil.renderStackTrace(e, "\u3000", "> ");
-
-        EmbedBuilder emb = new EmbedBuilder()
-                .setAuthor(Cog.getTag(msg.getAuthor()), null, msg.getAuthor().getEffectiveAvatarUrl())
-                .setTitle("Error in command `" + cmd.name + '`').setColor(Color.ORANGE).appendDescription("```java\n")
-                .appendDescription(stack.substring(0, Math.min(stack.length(), 2037))).appendDescription("```");
-
-        if (e.getCause() != null) {
-            String causeStack = StackUtil.renderStackTrace(e, "\u3000", "> ");
-            emb.addField("Caused by",
-                    "```java\n" + causeStack.substring(0, Math.min(causeStack.length(), 1013)) + "```", false);
-        }
-
-        emb.addField("Timestamp", System.currentTimeMillis() + "ms", true)
-                .addField("Author ID", msg.getAuthor().getId(), true).addField("Message ID", msg.getId(), true)
-                .addField("Attachments", str(msg.getAttachments().size()), true)
-                .addField("Guild", msg.getGuild() == null ? "None" : msg.getGuild().getName(), true)
-                .addField("Guild ID", msg.getGuild() == null ? "None (no guild)" : msg.getGuild().getId(), true)
-                .addField("Channel", msg.getChannel().getName(), true)
-                .addField("Channel ID", msg.getChannel().getId(), true)
-                .addField("Content", '`' + msg.getContentDisplay() + '`', true)
-                .addField("Embeds", str(msg.getEmbeds().size()), true)
-                .addField("Shard ID", str(getShardNum() - 1), true).setTimestamp(Instant.now());
-
-        if (msg.getGuild() != null)
-            emb.setFooter("Guild Icon", msg.getGuild().getIconUrl());
-
-        return emb.build();
-    }
-
     public Message waitForMessage(long millis, Predicate<Message> check) {
         AtomicReference<Message> lock = new AtomicReference<>();
         MessageWaitEventListener listener = new MessageWaitEventListener(lock, check);
