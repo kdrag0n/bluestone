@@ -399,6 +399,10 @@ public class Bot implements EventListener {
         final String content = message.getContentRaw();
         final MessageChannel channel = event.getChannel();
 
+        if (content == null) {
+            return; // embeds maybe
+        }
+
         if (content.startsWith(prefix)) {
             final String[] split = WHITESPACE_PATTERN.split(content.substring(prefix.length()), 0);
             if (split.length == 0)
