@@ -90,6 +90,18 @@ public class WelcomeCog extends Cog {
             case "toggle":
                 welcomeCmdToggle(ctx);
                 break;
+            case "off":
+                welcomeCmdOff(ctx);
+                break;
+            case "on":
+                welcomeCmdOn(ctx);
+                break;
+            case "disable":
+                welcomeCmdOff(ctx);
+                break;
+            case "enable":
+                welcomeCmdOn(ctx);
+                break;
             case "preview":
                 welcomeCmdPreview(ctx);
                 break;
@@ -155,6 +167,22 @@ public class WelcomeCog extends Cog {
         ctx.success("The welcome message is now **" + st + "**.");
     }
 
+    private void welcomeCmdOff(Context ctx) throws SQLException {
+        GuildWelcomeMessages query = messageDao.queryForId(ctx.guild.getIdLong());
+        query.setWelcomeEnabled(false);
+
+        messageDao.update(query);
+        ctx.success("The welcome message is now **off**.");
+    }
+
+    private void welcomeCmdOn(Context ctx) throws SQLException {
+        GuildWelcomeMessages query = messageDao.queryForId(ctx.guild.getIdLong());
+        query.setWelcomeEnabled(true);
+
+        messageDao.update(query);
+        ctx.success("The welcome message is now **on**.");
+    }
+
     private void welcomeCmdPreview(Context ctx) {
         onGuildMemberJoin(new GuildMemberJoinEvent(ctx.jda, ctx.event.getResponseNumber(), ctx.member));
     }
@@ -203,6 +231,18 @@ public class WelcomeCog extends Cog {
                 break;
             case "toggle":
                 leaveCmdToggle(ctx);
+                break;
+            case "off":
+                leaveCmdOff(ctx);
+                break;
+            case "on":
+                leaveCmdOn(ctx);
+                break;
+            case "disable":
+                leaveCmdOff(ctx);
+                break;
+            case "enable":
+                leaveCmdOn(ctx);
                 break;
             case "preview":
                 leaveCmdPreview(ctx);
@@ -268,6 +308,22 @@ public class WelcomeCog extends Cog {
 
         messageDao.update(query);
         ctx.success("The leave message is now **" + st + "**.");
+    }
+
+    private void leaveCmdOff(Context ctx) throws SQLException {
+        GuildWelcomeMessages query = messageDao.queryForId(ctx.guild.getIdLong());
+        query.setLeaveEnabled(false);
+
+        messageDao.update(query);
+        ctx.success("The leave message is now **off**.");
+    }
+
+    private void leaveCmdOn(Context ctx) throws SQLException {
+        GuildWelcomeMessages query = messageDao.queryForId(ctx.guild.getIdLong());
+        query.setLeaveEnabled(true);
+
+        messageDao.update(query);
+        ctx.success("The leave message is now **on**.");
     }
 
     private void leaveCmdPreview(Context ctx) {
