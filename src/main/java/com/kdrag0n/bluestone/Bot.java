@@ -33,7 +33,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.reflections.Reflections;
 
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -42,7 +41,6 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
-import java.time.Instant;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -54,7 +52,6 @@ import java.util.function.Predicate;
 
 import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
 import static com.kdrag0n.bluestone.util.Strings.format;
-import static com.kdrag0n.bluestone.util.Strings.str;
 import static net.dv8tion.jda.core.entities.Game.*;
 
 public class Bot implements EventListener {
@@ -93,6 +90,7 @@ public class Bot implements EventListener {
     private static long ourId;
     private static String ourMention;
     private static String ourGuildMention;
+    private boolean isReady;
     public final PrefixStore prefixStore;
 
     static {
@@ -209,78 +207,82 @@ public class Bot implements EventListener {
     }
 
     private void onReady() {
-        jda.getPresence().setStatus(OnlineStatus.ONLINE);
-        ourId = jda.getSelfUser().getIdLong();
-        ourMention = jda.getSelfUser().getAsMention();
-        ourGuildMention = "<@!" + ourId + '>';
+        try {
+            jda.getPresence().setStatus(OnlineStatus.ONLINE);
+            ourId = jda.getSelfUser().getIdLong();
+            ourMention = jda.getSelfUser().getAsMention();
+            ourGuildMention = "<@!" + ourId + '>';
 
-        if (ownerId == -1)
-            updateOwnerInfo();
+            if (ownerId == -1)
+                updateOwnerInfo();
 
-        logger.info("Ready - ID {}", ourId);
+            logger.info("Ready - ID {}", ourId);
 
-        if (jda.getGuildById(110373943822540800L) != null)
-            Emotes.setHasDbots();
+            if (jda.getGuildById(110373943822540800L) != null)
+                Emotes.setHasDbots();
 
-        if (jda.getGuildById(250780048943087618L) != null)
-            Emotes.setHasParadise(true);
+            if (jda.getGuildById(250780048943087618L) != null)
+                Emotes.setHasParadise(true);
 
-        Runnable task = () -> {
-            Game status = new RandomSelect<Game>(50)
-                    .add(() -> playing(format("with {0} users", shardUtil.getUserCount())))
-                    .add(() -> playing(format("in {0} channels", shardUtil.getChannelCount())))
-                    .add(() -> playing(format("in {0} servers", shardUtil.getGuildCount())))
-                    .add(() -> playing(format("in {0} guilds", shardUtil.getGuildCount())))
-                    .add(() -> playing(String.format("from shard %d of %d", getShardNum(), getShardTotal())))
-                    .add(playing("with my buddies")).add(playing("with bits and bytes"))
-                    .add(playing("World Domination")).add(playing("with you")).add(playing("with potatoes"))
-                    .add(playing("something")).add(streaming("data", ""))
-                    .add(streaming("music", "https://www.youtube.com/channel/UC-9-kyTW8ZkZNDHQJ6FgpwQ"))
-                    .add(streaming("your tunes", "https://www.youtube.com/watch?v=zQJh0MWvccs")).add(listening("you"))
-                    .add(watching("darkness")).add(watching("streams"))
-                    .add(streaming("your face", "https://www.youtube.com/watch?v=IUjZtoCrpyA")).add(listening("alone"))
-                    .add(streaming("Alone", "https://www.youtube.com/watch?v=YnwsMEabmSo"))
-                    .add(streaming("bits and bytes", "https://www.youtube.com/watch?v=N3ZMvqISfvY"))
-                    .add(listening("Rick Astley"))
-                    .add(streaming("only the very best", "https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
-                    .add(listening("those potatoes")).add(playing("with my fellow shards"))
-                    .add(listening("the cries of my shards")).add(listening("as the sun goes down"))
-                    .add(streaming("Monstercat", "https://www.twitch.tv/monstercat")).add(watching("dem videos"))
-                    .add(watching("you in your sleep")).add(watching("over you as I sleep"))
-                    .add(watching("the movement of electrons")).add(playing("with some protons"))
-                    .add(listening("trigger-happy players")).add(playing("Discord Hacker v39.2"))
-                    .add(playing("Discord Hacker v42.0")).add(listening("Discordians"))
-                    .add(streaming("donations", "https://patreon.com/kdragon"))
-                    .add(streaming("You should totally donate!", "https://patreon.com/kdragon"))
-                    .add(listening("my people")).add(listening("my favorites")).add(watching("my minions"))
-                    .add(watching("the chosen ones")).add(watching("stars combust")).add(watching("your demise"))
-                    .add(streaming("the supernova", "https://www.youtube.com/watch?v=5WXyCJ1w3Ks"))
-                    .add(listening("something"))
-                    .add(streaming("something", "https://www.youtube.com/watch?v=FM7MFYoylVs"))
-                    .add(watching("I am Cow")).add(watching("you play")).add(watching("for raids"))
-                    .add(playing("buffing before the raid"))
-                    .add(streaming("this sick action", "https://www.youtube.com/watch?v=tD6KJ7QtQH8"))
-                    .add(listening("memes")).add(watching("memes")).add(playing("memes")) // memes
-                    .add(watching("that dank vid")).select();
+            Runnable task = () -> {
+                Game status = new RandomSelect<Game>(50)
+                        .add(() -> playing(format("with {0} users", shardUtil.getUserCount())))
+                        .add(() -> playing(format("in {0} channels", shardUtil.getChannelCount())))
+                        .add(() -> playing(format("in {0} servers", shardUtil.getGuildCount())))
+                        .add(() -> playing(format("in {0} guilds", shardUtil.getGuildCount())))
+                        .add(() -> playing(String.format("from shard %d of %d", getShardNum(), getShardTotal())))
+                        .add(playing("with my buddies")).add(playing("with bits and bytes"))
+                        .add(playing("World Domination")).add(playing("with you")).add(playing("with potatoes"))
+                        .add(playing("something")).add(streaming("data", ""))
+                        .add(streaming("music", "https://www.youtube.com/channel/UC-9-kyTW8ZkZNDHQJ6FgpwQ"))
+                        .add(streaming("your tunes", "https://www.youtube.com/watch?v=zQJh0MWvccs")).add(listening("you"))
+                        .add(watching("darkness")).add(watching("streams"))
+                        .add(streaming("your face", "https://www.youtube.com/watch?v=IUjZtoCrpyA")).add(listening("alone"))
+                        .add(streaming("Alone", "https://www.youtube.com/watch?v=YnwsMEabmSo"))
+                        .add(streaming("bits and bytes", "https://www.youtube.com/watch?v=N3ZMvqISfvY"))
+                        .add(listening("Rick Astley"))
+                        .add(streaming("only the very best", "https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
+                        .add(listening("those potatoes")).add(playing("with my fellow shards"))
+                        .add(listening("the cries of my shards")).add(listening("as the sun goes down"))
+                        .add(streaming("Monstercat", "https://www.twitch.tv/monstercat")).add(watching("dem videos"))
+                        .add(watching("you in your sleep")).add(watching("over you as I sleep"))
+                        .add(watching("the movement of electrons")).add(playing("with some protons"))
+                        .add(listening("trigger-happy players")).add(playing("Discord Hacker v39.2"))
+                        .add(playing("Discord Hacker v42.0")).add(listening("Discordians"))
+                        .add(streaming("donations", "https://patreon.com/kdragon"))
+                        .add(streaming("You should totally donate!", "https://patreon.com/kdragon"))
+                        .add(listening("my people")).add(listening("my favorites")).add(watching("my minions"))
+                        .add(watching("the chosen ones")).add(watching("stars combust")).add(watching("your demise"))
+                        .add(streaming("the supernova", "https://www.youtube.com/watch?v=5WXyCJ1w3Ks"))
+                        .add(listening("something"))
+                        .add(streaming("something", "https://www.youtube.com/watch?v=FM7MFYoylVs"))
+                        .add(watching("I am Cow")).add(watching("you play")).add(watching("for raids"))
+                        .add(playing("buffing before the raid"))
+                        .add(streaming("this sick action", "https://www.youtube.com/watch?v=tD6KJ7QtQH8"))
+                        .add(listening("memes")).add(watching("memes")).add(playing("memes")) // memes
+                        .add(watching("that dank vid")).select();
 
-            jda.getPresence().setGame(status);
-        };
+                jda.getPresence().setGame(status);
+            };
 
-        scheduledExecutor.scheduleAtFixedRate(task, 10, 120, TimeUnit.SECONDS);
+            scheduledExecutor.scheduleAtFixedRate(task, 10, 120, TimeUnit.SECONDS);
 
-        Reflections reflector = new Reflections("com.kdrag0n.bluestone.cogs");
-        Set<Class<? extends Cog>> cogClasses = reflector.getSubTypesOf(Cog.class);
-        for (Class<?> cogClass : cogClasses) {
-            if (cogClass.isAnnotationPresent(Disable.class))
-                continue;
+            Reflections reflector = new Reflections("com.kdrag0n.bluestone.cogs");
+            Set<Class<? extends Cog>> cogClasses = reflector.getSubTypesOf(Cog.class);
+            for (Class<?> cogClass : cogClasses) {
+                if (cogClass.isAnnotationPresent(Disable.class))
+                    continue;
 
-            try {
-                Cog cog = (Cog) cogClass.getConstructor(Bot.class).newInstance(this);
-                registerCog(cog);
-                cog.load();
-            } catch (Throwable e) {
-                logger.error("Failed to register cog {}", cogClass.getName(), e);
+                try {
+                    Cog cog = (Cog) cogClass.getConstructor(Bot.class).newInstance(this);
+                    registerCog(cog);
+                    cog.load();
+                } catch (Throwable e) {
+                    logger.error("Failed to register cog {}", cogClass.getName(), e);
+                }
             }
+        } finally {
+            isReady = true;
         }
     }
 
@@ -385,7 +387,7 @@ public class Bot implements EventListener {
     private void onMessageReceived(MessageReceivedEvent event) {
         final User author = event.getAuthor();
 
-        if (author.isBot() || author.getIdLong() == ourId)
+        if (author.isBot() || author.getIdLong() == ourId || !isReady)
             return;
 
         final Message message = event.getMessage();
