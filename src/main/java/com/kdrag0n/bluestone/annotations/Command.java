@@ -15,5 +15,4 @@ public @interface Command {
     boolean guildOnly() default false;
     String[] aliases() default {};
     boolean thread() default false;
-    boolean reportErrors() default true;
 }

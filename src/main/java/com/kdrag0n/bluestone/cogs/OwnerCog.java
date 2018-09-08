@@ -114,7 +114,7 @@ public class OwnerCog extends Cog {
 
     @Perm.Owner
     @Cooldown(scope = BucketType.GLOBAL, delay = 10)
-    @Command(name = "broadcast", desc = "Broadcast a message to all available guilds.", usage = "[message]", reportErrors = false)
+    @Command(name = "broadcast", desc = "Broadcast a message to all available guilds.", usage = "[message]")
     public void cmdBroadcast(Context ctx) {
         if (ctx.args.empty) {
             ctx.fail("I need a message to broadcast!");
@@ -168,7 +168,7 @@ public class OwnerCog extends Cog {
 
     @Perm.Owner
     @Command(name = "eval", desc = "Evaluate code.", usage = "[code]", aliases = {
-            "reval" }, thread = true, reportErrors = false)
+            "reval" }, thread = true)
     public void cmdEval(Context ctx) {
         if (ctx.args.empty) {
             ctx.fail("I need code!");

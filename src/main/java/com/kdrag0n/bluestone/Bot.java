@@ -323,8 +323,7 @@ public class Bot implements EventListener {
                 }
 
                 Command command = new Command(anno.name(), anno.desc(), anno.usage(), anno.hidden(),
-                        perms, anno.guildOnly(), anno.aliases(), method, cog, anno.thread(),
-                        anno.reportErrors());
+                        perms, anno.guildOnly(), anno.aliases(), method, cog, anno.thread());
 
                 if (commands.containsKey(command.name))
                     throw new IllegalStateException("Command '" + command.name + "' already registered!");

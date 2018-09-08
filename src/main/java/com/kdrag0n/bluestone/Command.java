@@ -32,7 +32,7 @@ public class Command {
 
     public Command(String name, String desc, String usage, boolean hidden,
                    List<Perm> permsRequired, boolean guildOnly, String[] aliases,
-                   Method func, Cog cogInstance, boolean needThread, boolean reportErrors) {
+                   Method func, Cog cogInstance, boolean needThread) {
         this.name = name;
         this.description = desc;
         this.usage = usage;
