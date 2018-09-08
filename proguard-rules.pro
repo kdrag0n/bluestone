@@ -139,3 +139,6 @@
 
 # ImageIO
 -dontwarn com.twelvemonkeys.image.Magick* # ImageMagick bindings
+
+# Handlers
+-keep class com.kdrag0n.bluestone.handlers.SentryFilter.** { *; }

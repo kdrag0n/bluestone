@@ -10,6 +10,7 @@
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>ERROR</level>
         </filter>
+        <filter class="com.kdrag0n.bluestone.handlers.SentryFilter" />
     </appender>
 
     <root level="INFO">
