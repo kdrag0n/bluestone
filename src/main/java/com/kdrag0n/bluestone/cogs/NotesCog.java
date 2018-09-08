@@ -5,7 +5,7 @@ import com.kdrag0n.bluestone.Cog;
 import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.annotations.Disable;
-import com.kdrag0n.bluestone.errors.PermissionError;
+import com.kdrag0n.bluestone.errors.PermissionException;
 
 @Disable
 public class NotesCog extends Cog {
@@ -37,7 +37,7 @@ public class NotesCog extends Cog {
     }
 
     @Command(name = "notes", desc = "Manage notes in this server.", aliases = {"note", "n"})
-    public void mainCmd(Context ctx) throws PermissionError {
+    public void mainCmd(Context ctx) throws PermissionException {
 
     }
 }

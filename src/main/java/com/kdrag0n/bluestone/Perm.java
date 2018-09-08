@@ -1,29 +1,113 @@
 package com.kdrag0n.bluestone;
 
+import com.kdrag0n.bluestone.errors.PermissionException;
 import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.TextChannel;
 
 import java.lang.annotation.*;
+import java.util.List;
 
-public class Perm {
+public enum Perm {
+    // Discord permissions (must copy for security reasons)
+    CREATE_INSTANT_INVITE(Permission.CREATE_INSTANT_INVITE),
+    KICK_MEMBERS(Permission.KICK_MEMBERS),
+    BAN_MEMBERS(Permission.BAN_MEMBERS),
+    ADMINISTRATOR(Permission.ADMINISTRATOR),
+    MANAGE_CHANNEL(Permission.MANAGE_CHANNEL),
+    MANAGE_SERVER(Permission.MANAGE_SERVER),
+    MESSAGE_ADD_REACTION(Permission.MESSAGE_ADD_REACTION),
+    VIEW_AUDIT_LOGS(Permission.VIEW_AUDIT_LOGS),
+    PRIORITY_SPEAKER(Permission.PRIORITY_SPEAKER),
+
+    // Applicable to all channel types
+    VIEW_CHANNEL(Permission.VIEW_CHANNEL),
+
+    // Text permissions
+    MESSAGE_READ(Permission.MESSAGE_READ),
+    MESSAGE_WRITE(Permission.MESSAGE_WRITE),
+    MESSAGE_TTS(Permission.MESSAGE_TTS),
+    MESSAGE_MANAGE(Permission.MESSAGE_MANAGE),
+    MESSAGE_EMBED_LINKS(Permission.MESSAGE_EMBED_LINKS),
+    MESSAGE_ATTACH_FILES(Permission.MESSAGE_ATTACH_FILES),
+    MESSAGE_HISTORY(Permission.MESSAGE_HISTORY),
+    MESSAGE_MENTION_EVERYONE(Permission.MESSAGE_MENTION_EVERYONE),
+    MESSAGE_EXT_EMOJI(Permission.MESSAGE_EXT_EMOJI),
+
+    // Voice permissions
+    VOICE_CONNECT(Permission.VOICE_CONNECT),
+    VOICE_SPEAK(Permission.VOICE_SPEAK),
+    VOICE_MUTE_OTHERS(Permission.VOICE_MUTE_OTHERS),
+    VOICE_DEAF_OTHERS(Permission.VOICE_DEAF_OTHERS),
+    VOICE_MOVE_OTHERS(Permission.VOICE_MOVE_OTHERS),
+    VOICE_USE_VAD(Permission.VOICE_USE_VAD),
+
+    NICKNAME_CHANGE(Permission.NICKNAME_CHANGE),
+    NICKNAME_MANAGE(Permission.NICKNAME_MANAGE),
+
+    MANAGE_ROLES(Permission.MANAGE_ROLES),
+    MANAGE_PERMISSIONS(Permission.MANAGE_PERMISSIONS),
+    MANAGE_WEBHOOKS(Permission.MANAGE_WEBHOOKS),
+    MANAGE_EMOTES(Permission.MANAGE_EMOTES),
+
+    UNKNOWN(Permission.UNKNOWN),
+
+    // Special bot permissions
+    BOT_OWNER(60, "Bot Owner"),
+    PATREON(61, "Patron");
+
+    public final long raw;
+    public final String name;
+    private final Permission discordPerm;
+
+    Perm(long offset, String name) {
+        this.raw = 1 << offset;
+        this.name = name;
+        this.discordPerm = null;
+    }
+
+    Perm(Permission discordPerm) {
+        this.raw = discordPerm.getRawValue();
+        this.name = discordPerm.getName();
+        this.discordPerm = discordPerm;
+    }
+
+    public static boolean check(Context ctx, List<Perm> perms) {
+        // this loop functions as OR
+        for (Perm perm: perms) {
+            if (perm.check(ctx)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static void checkThrow(Context ctx, List<Perm> perms) throws PermissionException {
+        if (!check(ctx, perms))
+            throw new PermissionException("Missing permissions", perms);
+    }
+
+    public boolean check(Context ctx) {
+        if (ctx.author.getIdLong() == Bot.ownerId) {
+            return true;
+        }
+
+        if (this == BOT_OWNER) { // BOT owner
+            return false; // because of the above check
+        } else if (this == PATREON) { // Patreon supporters
+            return Bot.patronIds.contains(ctx.author.getIdLong());
+        } else if (discordPerm != null) { // this is a Discord permission
+            if (ctx.guild != null) {
+                return ctx.member.hasPermission((TextChannel) ctx.channel, discordPerm);
+            }
+
+            return false;
+        } else {
+            throw new PermissionException("Unknown permission " + name + " value=" + raw, this);
+        }
+    }
+
     // Permission annotations
-
-    // Compounds/Operators
-    @Deprecated
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.METHOD)
-    @Repeatable(PermAnds.class)
-    public @interface All {
-        Permission[] value();
-    }
-
-    @Deprecated
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.METHOD)
-    public @interface PermAnds {
-        All[] value();
-    }
-
-    // Actual permissions
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     public @interface Owner {}
@@ -35,110 +119,110 @@ public class Perm {
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     public @interface Invite {
-        Permission value() default Permission.CREATE_INSTANT_INVITE;
+        Perm value() default Perm.CREATE_INSTANT_INVITE;
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     public @interface Kick {
-        Permission value() default Permission.KICK_MEMBERS;
+        Perm value() default Perm.KICK_MEMBERS;
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     public @interface Ban {
-        Permission value() default Permission.BAN_MEMBERS;
+        Perm value() default Perm.BAN_MEMBERS;
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     public @interface Administrator {
-        Permission value() default Permission.ADMINISTRATOR;
+        Perm value() default Perm.ADMINISTRATOR;
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     public @interface ManageChannels {
-        Permission value() default Permission.MANAGE_CHANNEL;
+        Perm value() default Perm.MANAGE_CHANNEL;
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     public @interface ManageServer {
-        Permission value() default Permission.MANAGE_SERVER;
+        Perm value() default Perm.MANAGE_SERVER;
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     public @interface ManagePermissions {
-        Permission value() default Permission.MANAGE_PERMISSIONS;
+        Perm value() default Perm.MANAGE_PERMISSIONS;
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     public @interface AddReactions {
-        Permission value() default Permission.MESSAGE_ADD_REACTION;
+        Perm value() default Perm.MESSAGE_ADD_REACTION;
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     public @interface ViewAuditLogs {
-        Permission value() default Permission.VIEW_AUDIT_LOGS;
+        Perm value() default Perm.VIEW_AUDIT_LOGS;
     }
 
-    private static class Message {
+    public static class Message {
         @Retention(RetentionPolicy.RUNTIME)
         @Target(ElementType.METHOD)
         public @interface Read {
-            Permission value() default Permission.MESSAGE_READ;
+            Perm value() default Perm.MESSAGE_READ;
         }
 
         @Retention(RetentionPolicy.RUNTIME)
         @Target(ElementType.METHOD)
         public @interface Send {
-            Permission value() default Permission.MESSAGE_WRITE;
+            Perm value() default Perm.MESSAGE_WRITE;
         }
 
         @Retention(RetentionPolicy.RUNTIME)
         @Target(ElementType.METHOD)
         public @interface SendTTS {
-            Permission value() default Permission.MESSAGE_TTS;
+            Perm value() default Perm.MESSAGE_TTS;
         }
 
         @Retention(RetentionPolicy.RUNTIME)
         @Target(ElementType.METHOD)
         public @interface Manage {
-            Permission value() default Permission.MESSAGE_MANAGE;
+            Perm value() default Perm.MESSAGE_MANAGE;
         }
 
         @Retention(RetentionPolicy.RUNTIME)
         @Target(ElementType.METHOD)
         public @interface Embed {
-            Permission value() default Permission.MESSAGE_EMBED_LINKS;
+            Perm value() default Perm.MESSAGE_EMBED_LINKS;
         }
 
         @Retention(RetentionPolicy.RUNTIME)
         @Target(ElementType.METHOD)
         public @interface Attach {
-            Permission value() default Permission.MESSAGE_ATTACH_FILES;
+            Perm value() default Perm.MESSAGE_ATTACH_FILES;
         }
 
         @Retention(RetentionPolicy.RUNTIME)
         @Target(ElementType.METHOD)
         public @interface ReadHistory {
-            Permission value() default Permission.MESSAGE_HISTORY;
+            Perm value() default Perm.MESSAGE_HISTORY;
         }
 
         @Retention(RetentionPolicy.RUNTIME)
         @Target(ElementType.METHOD)
         public @interface MentionEveryone {
-            Permission value() default Permission.MESSAGE_MENTION_EVERYONE;
+            Perm value() default Perm.MESSAGE_MENTION_EVERYONE;
         }
 
         @Retention(RetentionPolicy.RUNTIME)
         @Target(ElementType.METHOD)
         public @interface UseExternalEmojis {
-            Permission value() default Permission.MESSAGE_EXT_EMOJI;
+            Perm value() default Perm.MESSAGE_EXT_EMOJI;
         }
     }
 
@@ -146,105 +230,67 @@ public class Perm {
         @Retention(RetentionPolicy.RUNTIME)
         @Target(ElementType.METHOD)
         public @interface Connect {
-            Permission value() default Permission.VOICE_CONNECT;
+            Perm value() default Perm.VOICE_CONNECT;
         }
 
         @Retention(RetentionPolicy.RUNTIME)
         @Target(ElementType.METHOD)
         public @interface Speak {
-            Permission value() default Permission.VOICE_SPEAK;
+            Perm value() default Perm.VOICE_SPEAK;
         }
 
         @Retention(RetentionPolicy.RUNTIME)
         @Target(ElementType.METHOD)
         public @interface Mute {
-            Permission value() default Permission.VOICE_MUTE_OTHERS;
+            Perm value() default Perm.VOICE_MUTE_OTHERS;
         }
 
         @Retention(RetentionPolicy.RUNTIME)
         @Target(ElementType.METHOD)
         public @interface Deafen {
-            Permission value() default Permission.VOICE_DEAF_OTHERS;
+            Perm value() default Perm.VOICE_DEAF_OTHERS;
         }
 
         @Retention(RetentionPolicy.RUNTIME)
         @Target(ElementType.METHOD)
         public @interface Move {
-            Permission value() default Permission.VOICE_MOVE_OTHERS;
+            Perm value() default Perm.VOICE_MOVE_OTHERS;
         }
 
         @Retention(RetentionPolicy.RUNTIME)
         @Target(ElementType.METHOD)
         public @interface VoiceActivity {
-            Permission value() default Permission.VOICE_USE_VAD;
+            Perm value() default Perm.VOICE_USE_VAD;
         }
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     public @interface ChangeNickname {
-        Permission value() default Permission.NICKNAME_CHANGE;
+        Perm value() default Perm.NICKNAME_CHANGE;
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     public @interface ManageNicknames {
-        Permission value() default Permission.NICKNAME_MANAGE;
+        Perm value() default Perm.NICKNAME_MANAGE;
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     public @interface ManageEmotes {
-        Permission value() default Permission.MANAGE_EMOTES;
+        Perm value() default Perm.MANAGE_EMOTES;
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     public @interface ManageWebhooks {
-        Permission value() default Permission.MANAGE_WEBHOOKS;
+        Perm value() default Perm.MANAGE_WEBHOOKS;
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     public @interface ManageRoles {
-        Permission value() default Permission.MANAGE_ROLES;
-    }
-
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.METHOD)
-    public @interface Unknown {
-        Permission value() default Permission.UNKNOWN;
-    }
-
-    public static class Combo {
-        @Retention(RetentionPolicy.RUNTIME)
-        @Target(ElementType.METHOD)
-        public @interface ManageMessagesAndReadHistory {
-            Permission[] value() default {Permission.MESSAGE_MANAGE, Permission.MESSAGE_HISTORY};
-        }
-
-        @Retention(RetentionPolicy.RUNTIME)
-        @Target(ElementType.METHOD)
-        public @interface ManageServerAndInvite {
-            Permission[] value() default {Permission.MANAGE_SERVER, Permission.CREATE_INSTANT_INVITE};
-        }
-
-        @Retention(RetentionPolicy.RUNTIME)
-        @Target(ElementType.METHOD)
-        public @interface ManageRolesAndInvite {
-            Permission[] value() default {Permission.MANAGE_ROLES, Permission.CREATE_INSTANT_INVITE};
-        }
-
-        @Retention(RetentionPolicy.RUNTIME)
-        @Target(ElementType.METHOD)
-        public @interface ManageChannelsAndMessages {
-            Permission[] value() default {Permission.MANAGE_CHANNEL, Permission.MESSAGE_MANAGE};
-        }
-
-        @Retention(RetentionPolicy.RUNTIME)
-        @Target(ElementType.METHOD)
-        public @interface ManageServerAndMessages {
-            Permission[] value() default {Permission.MANAGE_SERVER, Permission.MESSAGE_MANAGE};
-        }
+        Perm value() default Perm.MANAGE_ROLES;
     }
 }

@@ -3,12 +3,10 @@ package com.kdrag0n.bluestone.cogs;
 import com.kdrag0n.bluestone.*;
 import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.annotations.EventHandler;
-import com.kdrag0n.bluestone.enums.MessageDestination;
 import com.kdrag0n.bluestone.util.Paginator;
 import com.kdrag0n.bluestone.util.Strings;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
@@ -93,17 +91,10 @@ public class CoreCog extends Cog {
     }
 
     @Command(name = "help", desc = "Because we all need help.", usage = "{commands and/or cogs}",
-            aliases = {"phelp", "halp", "commands"}, thread = true)
+            aliases = {"halp", "commands"}, thread = true)
     public void cmdHelp(Context ctx) {
         int charLimit = ctx.jda.getSelfUser().isBot() ? MessageEmbed.EMBED_MAX_LENGTH_BOT : MessageEmbed.EMBED_MAX_LENGTH_CLIENT;
-        boolean sendPublic = false;
         boolean isOwner = ctx.author.getIdLong() == Bot.ownerId;
-
-        if (ctx.invoker.charAt(0) == 'p' && Permissions.check(ctx,
-                Permission.MANAGE_CHANNEL, Permission.MANAGE_PERMISSIONS,
-                Permission.MESSAGE_MANAGE, Permission.MANAGE_SERVER)) {
-            sendPublic = true;
-        }
 
         List<MessageEmbed> pages = new ArrayList<>();
         Map<String, List<String>> fields = new HashMap<>();
@@ -213,18 +204,8 @@ public class CoreCog extends Cog {
         }
         pages.add(emb.build());
 
-        MessageDestination destination = MessageDestination.AUTHOR;
-        if (sendPublic) {
-            destination = MessageDestination.CHANNEL;
-        } else {
-            if (pages.size() < 2 && pages.get(0).getLength() < 1012) {
-                destination = MessageDestination.CHANNEL;
-            }
-        }
-        MessageChannel channel = destination.getChannel(ctx);
-
         for (MessageEmbed page: pages) {
-            channel.sendMessage(page).queue(null, exp -> {
+            ctx.author.openPrivateChannel().complete().sendMessage(page).queue(null, exp -> {
                 if (exp instanceof ErrorResponseException) {
                     if (((ErrorResponseException) exp).getErrorCode() != 50007) {
                         RestAction.DEFAULT_FAILURE.accept(exp);
@@ -236,7 +217,7 @@ public class CoreCog extends Cog {
             });
         }
 
-        if (destination == MessageDestination.AUTHOR && ctx.guild != null) {
+        if (ctx.guild != null) {
             try {
                 ctx.message.addReaction("✅").queue(null, e -> {});
             } catch (PermissionException ignored) {

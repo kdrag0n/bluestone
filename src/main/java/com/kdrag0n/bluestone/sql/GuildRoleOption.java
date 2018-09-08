@@ -3,7 +3,7 @@ package com.kdrag0n.bluestone.sql;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 import com.kdrag0n.bluestone.Context;
-import com.kdrag0n.bluestone.Permissions;
+import com.kdrag0n.bluestone.Perm;
 
 import java.time.OffsetDateTime;
 
@@ -113,12 +113,12 @@ public class GuildRoleOption {
 
         // Ranks
         if ((conditions & IS_BOT_OWNER) == IS_BOT_OWNER) {
-            if (!Permissions.check(ctx, Permissions.BOT_OWNER))
+            if (!Perm.BOT_OWNER.check(ctx))
                 return false;
         }
 
         if ((conditions & IS_PATRON) == IS_PATRON) {
-            return Permissions.check(ctx, Permissions.PATREON_SUPPORTER);
+            return Perm.PATREON.check(ctx);
         }
 
         return true;

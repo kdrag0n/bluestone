@@ -1,21 +1,19 @@
 package com.kdrag0n.bluestone;
 
-import com.kdrag0n.bluestone.errors.GuildOnlyError;
+import com.kdrag0n.bluestone.errors.GuildOnlyException;
 import com.kdrag0n.bluestone.errors.PassException;
-import com.kdrag0n.bluestone.errors.PermissionError;
+import com.kdrag0n.bluestone.errors.PermissionException;
 import com.kdrag0n.bluestone.util.ArrayListView;
 import com.kdrag0n.bluestone.util.Strings;
-import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
-import net.dv8tion.jda.core.exceptions.PermissionException;
-import org.apache.commons.lang3.ArrayUtils;
 import org.json.JSONException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
+import java.util.List;
 
 import static java.lang.String.format;
 
@@ -24,7 +22,7 @@ public class Command {
     public final String description;
     public final String usage;
     public final boolean hidden;
-    private final Permission[] permsRequired;
+    private final List<Perm> permsRequired;
     private final boolean guildOnly;
     public final String[] aliases;
     private final boolean needThread;
@@ -33,7 +31,7 @@ public class Command {
     public final Cog cog;
 
     public Command(String name, String desc, String usage, boolean hidden,
-                   Permission[] permsRequired, boolean guildOnly, String[] aliases,
+                   List<Perm> permsRequired, boolean guildOnly, String[] aliases,
                    Method func, Cog cogInstance, boolean needThread, boolean reportErrors) {
         this.name = name;
         this.description = desc;
@@ -45,7 +43,7 @@ public class Command {
         this.func = func;
         this.cog = cogInstance;
         this.needThread = needThread;
-        this.requiresOwner = ArrayUtils.contains(permsRequired, Permissions.BOT_OWNER);
+        this.requiresOwner = permsRequired.contains(Perm.BOT_OWNER);
     }
 
     private void invoke(Bot bot, MessageReceivedEvent event, ArrayListView args,
@@ -53,11 +51,11 @@ public class Command {
         Context ctx = new Context(bot, event, args, prefix, invoker);
 
         if (guildOnly && ctx.guild == null) {
-            throw new GuildOnlyError("Command only works in a guild");
+            throw new GuildOnlyException("Command only works in a guild");
         }
 
-        if (permsRequired.length > 0) {
-            checkPerms(ctx);
+        if (permsRequired.size() != 0) {
+            Perm.checkThrow(ctx, permsRequired);
         }
 
         func.invoke(cog, ctx);
@@ -97,12 +95,12 @@ public class Command {
                 } else //noinspection StatementWithEmptyBody
                     if (cause instanceof PassException) {
                     // assume error has already been sent
-                } else if (cause instanceof PermissionError) {
-                    channel.sendMessage(format("You can't use `%s` because **%s** is required.",
-                            invoker, Strings.smartJoin(((PermissionError) cause).getFriendlyPerms(), "or"))).queue();
                 } else if (cause instanceof PermissionException) {
+                    channel.sendMessage(format("You can't use `%s` because **%s** is required.",
+                            invoker, Strings.smartJoin(((PermissionException) cause).getFriendlyPerms(), "or"))).queue();
+                } else if (cause instanceof net.dv8tion.jda.core.exceptions.PermissionException) {
                     channel.sendMessage(Emotes.getFailure() + " I need the **" +
-                            ((PermissionException) cause).getPermission().getName() + "** permission.").queue();
+                            ((net.dv8tion.jda.core.exceptions.PermissionException) cause).getPermission().getName() + "** permission.").queue();
                 } else if (cause instanceof ErrorResponseException) {
                     if (((ErrorResponseException) cause).getErrorCode() == 50013) {
                         channel.sendMessage(Emotes.getFailure() + " I don't have the permission to do that.").queue();
@@ -122,27 +120,15 @@ public class Command {
                     channel.sendMessage(format(Emotes.getFailure() + " An error occurred. `%s`",
                             cause.getClass().getSimpleName())).queue();
                 }
-            } catch (PermissionError e) {
+            } catch (PermissionException e) {
                 channel.sendMessage(format("You can't use `%s` because **%s** is required.",
                         invoker, Strings.smartJoin(e.getFriendlyPerms(), "or"))).queue();
-            } catch (GuildOnlyError e) {
+            } catch (GuildOnlyException e) {
                 channel.sendMessage(Emotes.getFailure() + " That command only works in a server.").queue();
             } catch (Exception e) {
                 bot.logger.error("Unknown command ({}) error:", invoker, e);
                 channel.sendMessage(Emotes.getFailure() + " An internal error occurred.").queue();
             }
-        } catch (PermissionException ignored) {}
-    }
-
-    private void checkPerms(Context ctx) throws PermissionError {
-        if (!Permissions.check(ctx, permsRequired))
-            throw new PermissionError("Sender missing permissions for command " + name)
-                   .setPerms(permsRequired);
-    }
-
-    public static void checkPerms(Context ctx, Permission[] permsRequired) {
-        if (!Permissions.check(ctx, permsRequired))
-            throw new PermissionError("Sender missing permissions")
-                    .setPerms(permsRequired);
+        } catch (net.dv8tion.jda.core.exceptions.PermissionException ignored) {}
     }
 }

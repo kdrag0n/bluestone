@@ -32,13 +32,11 @@ import org.slf4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.reflections.Reflections;
-import sun.misc.Unsafe;
 
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
@@ -80,7 +78,6 @@ public class Bot implements EventListener {
             new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Bot Command-Exec Pool Thread %d").build(),
             new RejectedExecHandlerImpl("Command-Exec"));
     public final EventWaiter eventWaiter = new EventWaiter();
-    private static Unsafe unsafe = null;
     public final JDA jda;
     public final ShardUtil shardUtil;
     public static JSONObject patreonData = new JSONObject();
@@ -101,8 +98,6 @@ public class Bot implements EventListener {
     static {
         scheduledExecutor.setMaximumPoolSize(16);
         scheduledExecutor.setKeepAliveTime(16L, TimeUnit.SECONDS);
-
-        ensureUnsafe();
 
         RestAction.DEFAULT_FAILURE = e -> {
             if (e instanceof InsufficientPermissionException) {
@@ -219,7 +214,7 @@ public class Bot implements EventListener {
         ourMention = jda.getSelfUser().getAsMention();
         ourGuildMention = "<@!" + ourId + '>';
 
-        if (ownerId == 0)
+        if (ownerId == -1)
             updateOwnerInfo();
 
         logger.info("Ready - ID {}", ourId);
@@ -253,7 +248,6 @@ public class Bot implements EventListener {
                     .add(streaming("Monstercat", "https://www.twitch.tv/monstercat")).add(watching("dem videos"))
                     .add(watching("you in your sleep")).add(watching("over you as I sleep"))
                     .add(watching("the movement of electrons")).add(playing("with some protons"))
-                    .add(listening("the poor electrons")).add(listening("the poor neutrons"))
                     .add(listening("trigger-happy players")).add(playing("Discord Hacker v39.2"))
                     .add(playing("Discord Hacker v42.0")).add(listening("Discordians"))
                     .add(streaming("donations", "https://patreon.com/kdragon"))
@@ -298,16 +292,16 @@ public class Bot implements EventListener {
                 com.kdrag0n.bluestone.annotations.Command anno = method
                         .getDeclaredAnnotation(com.kdrag0n.bluestone.annotations.Command.class);
 
-                List<Permission> perms = new ArrayList<>(method.getDeclaredAnnotations().length - 1);
+                List<Perm> perms = new ArrayList<>(method.getDeclaredAnnotations().length - 1);
                 for (Annotation a : method.getDeclaredAnnotations()) {
                     Class<? extends Annotation> type = a.annotationType();
                     if (type == com.kdrag0n.bluestone.annotations.Command.class)
                         continue;
 
                     if (type == Perm.Owner.class) {
-                        perms.add(Permissions.BOT_OWNER);
+                        perms.add(Perm.BOT_OWNER);
                     } else if (type == Perm.Patron.class) {
-                        perms.add(Permissions.PATREON_SUPPORTER);
+                        perms.add(Perm.PATREON);
                     } else {
                         Method valueMethod;
                         try {
@@ -316,46 +310,12 @@ public class Bot implements EventListener {
                             continue;
                         }
 
-                        Permission perm;
+                        Perm perm;
 
-                        if (valueMethod.getReturnType() == Permission.class) {
-                            try {
-                                perm = (Permission) valueMethod.invoke(a);
-                            } catch (ReflectiveOperationException e) {
-                                throw new RuntimeException(e);
-                            }
-                        } else if (valueMethod.getReturnType() == Permission[].class) {
-                            Permission[] permA;
-                            try {
-                                permA = (Permission[]) valueMethod.invoke(a);
-                            } catch (ReflectiveOperationException e) {
-                                throw new RuntimeException(e);
-                            }
-
-                            boolean isGuild = false;
-                            boolean isChannel = false;
-                            long finalRaw = 0;
-                            StringBuilder joinedName = new StringBuilder();
-
-                            for (Permission p : permA) {
-                                if (p.isGuild())
-                                    isGuild = true;
-                                if (p.isChannel())
-                                    isChannel = true;
-
-                                if (p != Permission.UNKNOWN)
-                                    finalRaw |= p.getRawValue();
-
-                                joinedName.append(p.getName()).append(" & ");
-                            }
-
-                            String jn = joinedName.toString();
-                            perm = Permissions.createPerm(58, isGuild, isChannel, jn.substring(0, jn.length() - 3));
-                            Permissions.setRaw(perm, finalRaw);
-
-                            Permissions.compoundMap.put(perm, permA);
-                        } else {
-                            continue;
+                        try {
+                            perm = (Perm) valueMethod.invoke(a);
+                        } catch (ReflectiveOperationException e) {
+                            throw new RuntimeException(e);
                         }
 
                         perms.add(perm);
@@ -363,7 +323,7 @@ public class Bot implements EventListener {
                 }
 
                 Command command = new Command(anno.name(), anno.desc(), anno.usage(), anno.hidden(),
-                        perms.toArray(new Permission[0]), anno.guildOnly(), anno.aliases(), method, cog, anno.thread(),
+                        perms, anno.guildOnly(), anno.aliases(), method, cog, anno.thread(),
                         anno.reportErrors());
 
                 if (commands.containsKey(command.name))
@@ -667,23 +627,6 @@ public class Bot implements EventListener {
         }
 
         return 0;
-    }
-
-    private static void ensureUnsafe() {
-        if (unsafe == null) {
-            try {
-                Field f = Unsafe.class.getDeclaredField("theUnsafe");
-                f.setAccessible(true);
-                unsafe = (Unsafe) f.get(null);
-            } catch (ReflectiveOperationException e) {
-                defLog.error("Failed to get Unsafe!");
-            }
-        }
-    }
-
-    public static Unsafe getUnsafe() {
-        ensureUnsafe();
-        return unsafe;
     }
 
     public interface EConsumer<T> {

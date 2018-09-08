@@ -9,10 +9,7 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.stmt.DeleteBuilder;
 import com.joestelmach.natty.DateGroup;
 import com.joestelmach.natty.Parser;
-import com.kdrag0n.bluestone.Bot;
-import com.kdrag0n.bluestone.Cog;
-import com.kdrag0n.bluestone.Context;
-import com.kdrag0n.bluestone.Emotes;
+import com.kdrag0n.bluestone.*;
 import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.annotations.EventHandler;
 import com.kdrag0n.bluestone.errors.PassException;
@@ -43,9 +40,7 @@ import java.awt.*;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
+import java.util.*;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -55,7 +50,7 @@ import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
 
 public class StarboardCog extends Cog {
     private static final Logger logger = LoggerFactory.getLogger(StarboardCog.class);
-    private static final Permission[] MOD_PERMS = { Permission.MANAGE_SERVER, Permission.MANAGE_CHANNEL };
+    private static final List<Perm> MOD_PERMS = new ArrayList<>(2);
     private static final String[] TOP_3_BADGES = { "🥇", "🥈", "🥉" };
     private static final String NO_COMMAND = "🤔 **I need an action!**\n" + "The following are valid:\n"
             + "    \u2022 `create/new {channel name='starboard'}` - create a new starboard here (you may pass a different name)\n"
@@ -87,6 +82,11 @@ public class StarboardCog extends Cog {
     private final Dao<Starboard, Long> dao;
     private final Dao<StarboardEntry, Long> entryDao;
     private final Dao<Starrer, Integer> starrerDao;
+
+    static {
+        MOD_PERMS.add(Perm.MANAGE_SERVER);
+        MOD_PERMS.add(Perm.MANAGE_CHANNEL);
+    }
 
     public StarboardCog(Bot bot) {
         super(bot);
@@ -392,7 +392,7 @@ public class StarboardCog extends Cog {
     }
 
     private void cmdCreate(Context ctx) throws SQLException {
-        com.kdrag0n.bluestone.Command.checkPerms(ctx, MOD_PERMS);
+        Perm.checkThrow(ctx, MOD_PERMS);
 
         Starboard oldBoard = dao.queryForId(ctx.guild.getIdLong());
         if (oldBoard != null) {
@@ -430,7 +430,7 @@ public class StarboardCog extends Cog {
     }
 
     private void cmdAge(Context ctx) throws SQLException {
-        com.kdrag0n.bluestone.Command.checkPerms(ctx, MOD_PERMS);
+        Perm.checkThrow(ctx, MOD_PERMS);
 
         if (ctx.rawArgs.length() < 5) {
             ctx.fail("I need an age to set, like `2 days` or `1 year`!");
@@ -456,7 +456,7 @@ public class StarboardCog extends Cog {
     }
 
     private void cmdLock(Context ctx) throws SQLException {
-        com.kdrag0n.bluestone.Command.checkPerms(ctx, MOD_PERMS);
+        Perm.checkThrow(ctx, MOD_PERMS);
 
         Starboard starboard = requireStarboard(ctx);
 
@@ -470,7 +470,7 @@ public class StarboardCog extends Cog {
     }
 
     private void cmdUnlock(Context ctx) throws SQLException {
-        com.kdrag0n.bluestone.Command.checkPerms(ctx, MOD_PERMS);
+        Perm.checkThrow(ctx, MOD_PERMS);
 
         Starboard starboard = requireStarboard(ctx);
 
@@ -484,7 +484,7 @@ public class StarboardCog extends Cog {
     }
 
     private void cmdThreshold(Context ctx) throws SQLException {
-        com.kdrag0n.bluestone.Command.checkPerms(ctx, MOD_PERMS);
+        Perm.checkThrow(ctx, MOD_PERMS);
 
         Starboard starboard = requireStarboard(ctx);
         if (ctx.args.length < 2) {

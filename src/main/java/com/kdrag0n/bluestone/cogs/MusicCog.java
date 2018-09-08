@@ -244,7 +244,7 @@ public class MusicCog extends Cog {
         }
 
         AudioState state = getAudioState(ctx.guild);
-        boolean isPatron = Permissions.check(ctx, Permissions.PATREON_SUPPORTER);
+        boolean isPatron = Perm.PATREON.check(ctx);
         int mn = isPatron ? 48 : 12;
 
         if (state.scheduler.queue.size() >= mn) {

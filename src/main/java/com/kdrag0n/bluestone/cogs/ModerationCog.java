@@ -143,7 +143,7 @@ public class ModerationCog extends Cog {
         return pattern.matcher(input).replaceAll(" ");
     }
 
-    @Perm.Combo.ManageMessagesAndReadHistory
+    @Perm.Message.Manage
     @Command(name = "purge", desc = "Purge messages from a channel.", guildOnly = true, aliases = { "clean", "nuke",
             "prune", "clear" }, usage = "[parameters]", thread = true)
     public void cmdPurge(Context ctx) {
