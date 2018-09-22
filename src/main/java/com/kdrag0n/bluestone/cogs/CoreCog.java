@@ -1,8 +1,10 @@
 package com.kdrag0n.bluestone.cogs;
 
+import com.j256.ormlite.dao.Dao;
 import com.kdrag0n.bluestone.*;
 import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.annotations.EventHandler;
+import com.kdrag0n.bluestone.sql.GuildPrefix;
 import com.kdrag0n.bluestone.util.Paginator;
 import com.kdrag0n.bluestone.util.Strings;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -15,6 +17,7 @@ import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.requests.RestAction;
 import org.apache.commons.lang3.StringUtils;
 
+import java.sql.SQLException;
 import java.time.Instant;
 import java.util.*;
 
@@ -22,8 +25,7 @@ import static com.kdrag0n.bluestone.util.Strings.str;
 
 public class CoreCog extends Cog {
     private static final String JOIN_MESSAGE =
-            "Please read the FAQ *before* asking any questions. <https://tiny.cc/gfaq> Thanks ❤\n\n" +
-            "Enjoy!";
+            "Please read the FAQ *before* asking any questions. <https://tiny.cc/gfaq> Thanks ❤";
 
     private static final long PRODUCTION_USER_ID = 239775420470394897L;
     static final Collection<Permission> PERMS_NEEDED = Permission.getPermissions(473295957L);
@@ -32,6 +34,15 @@ public class CoreCog extends Cog {
             "    \u2022 [Donate](https://patreon.com/kdragon) to help keep me alive\n" +
             "    \u2022 Go to [my website](https://khronodragon.com/goldmine/) for help\n" +
             "    \u2022 Join my [support server](https://discord.gg/sYkwfxA) for even more help";
+
+    private static final List<Perm> PREFIX_PERMS = new ArrayList<>(2);
+    private final Dao<GuildPrefix, Long> prefixDao = setupDao(GuildPrefix.class);
+
+    static {
+        PREFIX_PERMS.add(Perm.MANAGE_SERVER);
+        PREFIX_PERMS.add(Perm.MANAGE_CHANNEL);
+        PREFIX_PERMS.add(Perm.MESSAGE_MANAGE);
+    }
 
     public CoreCog(Bot bot) {
         super(bot);
@@ -261,6 +272,30 @@ public class CoreCog extends Cog {
                 .setTimestamp(Instant.now());
 
         ctx.send(emb.build()).queue();
+    }
+
+    @Command(name = "prefix", desc = "Get or set the command prefix.", aliases = {"setprefix", "pset"}, guildOnly = true)
+    public void cmdPrefix(Context ctx) throws SQLException {
+        if (!ctx.args.empty) {
+            Perm.checkThrow(ctx, PREFIX_PERMS);
+
+            if (ctx.rawArgs.length() > 32) {
+                ctx.fail("Prefix too long!");
+            } else {
+                String rawPrefix = ctx.rawArgs;
+                if (rawPrefix.equals(ctx.guild.getSelfMember().getAsMention())) {
+                    rawPrefix += ' ';
+                }
+
+                GuildPrefix prefix = new GuildPrefix(ctx.guild.getIdLong(), rawPrefix);
+                prefixDao.createOrUpdate(prefix);
+                bot.prefixStore.cache.put(ctx.guild.getIdLong(), rawPrefix);
+
+                ctx.success("Prefix set.");
+            }
+        } else {
+            ctx.send("**Prefix:** `" + ctx.prefix + "`").queue();
+        }
     }
 
     @EventHandler
