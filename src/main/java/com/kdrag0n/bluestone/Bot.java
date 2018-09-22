@@ -421,8 +421,14 @@ public class Bot implements EventListener {
             final String request = Strings.renderMessage(message, message.getGuild(),
                     GENERAL_MENTION_PATTERN.matcher(message.getContentRaw()).replaceFirst(""));
 
-            if (request.equalsIgnoreCase("prefix")) {
-                channel.sendMessage("My prefix here is `" + Context.filterMessage(prefix) + "`.").queue();
+            if (message.getGuild() != null &&
+                    request.regionMatches(true, 0, "prefix", 0, 6 /* "prefix" */)) {
+                // invoke the command
+                final String[] split = WHITESPACE_PATTERN.split(content, 0);
+                final ArrayListView args = new ArrayListView(split); // ignore the mention - 1st element
+
+                final Command command = commands.get("prefix");
+                command.simpleInvoke(this, event, args, prefix, "prefix");
             } else if (request.length() > 0) {
                 chatResponse(channel, "gbot_" + author.getId(), request, null);
             } else {
