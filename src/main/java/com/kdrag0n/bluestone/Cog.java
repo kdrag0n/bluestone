@@ -28,7 +28,7 @@ public abstract class Cog {
         return getName();
     }
 
-    public void load() {}
+    public void onLoad() {}
 
     protected static int randint(int min, int max) {
         return ThreadLocalRandom.current().nextInt(min, max);

@@ -276,7 +276,7 @@ public class Bot implements EventListener {
                 try {
                     Cog cog = (Cog) cogClass.getConstructor(Bot.class).newInstance(this);
                     registerCog(cog);
-                    cog.load();
+                    cog.onLoad();
                 } catch (Throwable e) {
                     logger.error("Failed to register cog {}", cogClass.getName(), e);
                 }

@@ -50,8 +50,7 @@ public class StatReporterCog extends Cog {
         return "Statistic Reporter";
     }
 
-    public void load() {
-        super.load();
+    public void onLoad() {
         report();
     }
 
