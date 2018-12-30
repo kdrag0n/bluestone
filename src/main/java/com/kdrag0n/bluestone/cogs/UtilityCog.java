@@ -199,6 +199,12 @@ public class UtilityCog extends Cog {
             ctx.fail("I need a term!");
             return;
         }
+
+        if (ctx.guild != null && !((TextChannel) ctx.channel).isNSFW()) {
+            ctx.fail("This command may only be used in NSFW channels.");
+            return;
+        }
+
         ctx.channel.sendTyping().queue();
 
         Bot.http.newCall(new Request.Builder().get()
