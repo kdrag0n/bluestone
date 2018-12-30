@@ -82,7 +82,7 @@ public class MiscCog extends Cog {
                     if (bgFile.exists())
                         bg = ImageIO.read(bgFile);
                     else
-                        bg = ImageIO.read(EntertainmentCog.class.getResourceAsStream("/assets/default_profile_bg.png"));
+                        bg = ImageIO.read(MiscCog.class.getResourceAsStream("/assets/default_profile_bg.png"));
 
                     // Card image
                     BufferedImage card = new BufferedImage(PROFILE_WIDTH, PROFILE_HEIGHT, BufferedImage.TYPE_INT_RGB);
