@@ -40,11 +40,6 @@ public class AfkCog extends Cog {
     public String getName() {
         return "AFK";
     }
-
-    public String getDescription() {
-        return "Away-from-keyboard messages.";
-    }
-
     @EventHandler(threaded = true)
     public void onMsg(GuildMessageReceivedEvent event) throws SQLException {
         if (event.getAuthor().isBot())

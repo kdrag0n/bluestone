@@ -222,10 +222,6 @@ public class MiscCog extends Cog {
         return "Miscellaneous";
     }
 
-    public String getDescription() {
-        return "Miscellaneous commands.";
-    }
-
     @Command(name = "profile", desc = "Display a user's profile.", usage = "[user / \"setup\" / \"bg\"]", thread = true)
     public void cmdProfile(Context ctx) throws SQLException {
         User user;

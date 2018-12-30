@@ -41,10 +41,6 @@ public class GameCog extends Cog {
         return "Games";
     }
 
-    public String getDescription() {
-        return "Quick games to play in chat.";
-    }
-
     @Command(name = "rps", desc = "Play a game of Rock, Paper, Scissors with the bot. (10 rounds)")
     public void cmdRps(Context ctx) {
         if (ctx.channel instanceof TextChannel && !ctx.member.hasPermission((Channel) ctx.channel,

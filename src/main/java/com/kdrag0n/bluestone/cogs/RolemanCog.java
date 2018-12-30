@@ -57,10 +57,6 @@ public class RolemanCog extends Cog {
         return "Role Manager";
     }
 
-    public String getDescription() {
-        return "The role manager that allows users to get roles.";
-    }
-
     @EventHandler(threaded = true)
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) throws SQLException {
         long guildId = event.getGuild().getIdLong();

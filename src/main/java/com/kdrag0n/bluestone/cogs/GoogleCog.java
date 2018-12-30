@@ -101,10 +101,6 @@ public class GoogleCog extends Cog {
         return "Google";
     }
 
-    public String getDescription() {
-        return "A description.";
-    }
-
     @Command(name = "google", desc = "We all need Google.", usage = "[search terms]", aliases = {
             "search" }, thread = true)
     public void cmdGoogle(Context ctx) {

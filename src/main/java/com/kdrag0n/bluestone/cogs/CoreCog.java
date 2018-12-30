@@ -57,9 +57,6 @@ public class CoreCog extends Cog {
     public String getName() {
         return "Core";
     }
-    public String getDescription() {
-        return "The core, essential cog to keep the bot running.";
-    }
 
     @Command(name = "say", desc = "Say something! Say it!", aliases = {"echo"}, usage = "[message]")
     public void cmdSay(Context ctx) {

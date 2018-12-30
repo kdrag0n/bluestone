@@ -61,10 +61,6 @@ public class WelcomeCog extends Cog {
         return "Welcome";
     }
 
-    public String getDescription() {
-        return "The cog that welcomes people.";
-    }
-
     @Perm.ManageServer
     @Perm.ManageRoles
     @Command(name = "welcome", desc = "Manage member welcome messages.", guildOnly = true, aliases = { "welcome_msgs",

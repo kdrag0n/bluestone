@@ -50,10 +50,6 @@ public class StatReporterCog extends Cog {
         return "Statistic Reporter";
     }
 
-    public String getDescription() {
-        return "A cog to report bot stats to services like Discord Bots and Carbonitex.";
-    }
-
     public void load() {
         super.load();
         report();

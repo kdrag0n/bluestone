@@ -59,10 +59,6 @@ public class ReplCog extends Cog {
         return "REPL";
     }
 
-    public String getDescription() {
-        return "A multilingual REPL, in Discord!";
-    }
-
     static String cleanUpCode(String code) {
         String stage1 = CODE_TYPE_PATTERN.matcher(code).replaceFirst("");
         return StringUtils.stripEnd(StringUtils.stripStart(stage1, "`"), "`");

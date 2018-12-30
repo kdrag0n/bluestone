@@ -33,10 +33,6 @@ public class PokemonCog extends Cog {
         return "Pokémon";
     }
 
-    public String getDescription() {
-        return "Gotta catch 'em all!";
-    }
-
     @Command(name = "pokémon", desc = "Get info about a Pokémon!", thread = true,
             aliases = {"pokemon", "pokèmon", "pokedex", "pokédex"}, usage = "{name or id}")
     public void command(Context ctx) throws SQLException {

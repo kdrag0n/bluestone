@@ -21,10 +21,6 @@ public class WikiCog extends Cog {
         return "Wikipedia";
     }
 
-    public String getDescription() {
-        return "Wikipedia, the online encyclopedia.";
-    }
-
     @Command(name = "wiki", desc = "Get a Wikipedia page.",
             usage = "[topic]", aliases = {"wikipedia"})
     public void cmdWiki(Context ctx) {

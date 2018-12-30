@@ -219,10 +219,6 @@ public class EntertainmentCog extends Cog {
         return "Entertainment";
     }
 
-    public String getDescription() {
-        return "A cog to entertain.";
-    }
-
     @Command(name = "reverse", desc = "Reverse some text.", usage = "[text]")
     public void cmdReverse(Context ctx) {
         ctx.send(":repeat: " + StringUtils.reverse(ctx.rawArgs)).queue();

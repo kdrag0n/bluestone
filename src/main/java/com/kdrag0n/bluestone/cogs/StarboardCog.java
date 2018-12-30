@@ -100,10 +100,6 @@ public class StarboardCog extends Cog {
         return "Starboard";
     }
 
-    public String getDescription() {
-        return "A starboard! Upvote messages to get them on the starboard. It's like a leaderboard.";
-    }
-
     private Color starGradientColor(int stars) {
         double percent = Math.min(stars / 13, 1.0);
 

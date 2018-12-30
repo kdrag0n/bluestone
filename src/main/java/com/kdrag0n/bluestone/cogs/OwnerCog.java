@@ -40,10 +40,6 @@ public class OwnerCog extends Cog {
         return "Owner";
     }
 
-    public String getDescription() {
-        return "Commands for the bot owner.";
-    }
-
     @Perm.Owner
     @Command(name = "shutdown", desc = "Shutdown the bot.", thread = true)
     public void cmdShutdown(Context ctx) {

@@ -72,10 +72,6 @@ public class CryptoCurrencyCog extends Cog {
         return "Cryptocurrencies";
     }
 
-    public String getDescription() {
-        return "Exchange, view, and sort various cryptocurrencies. Over 1000 are supported!";
-    }
-
     private static void update() {
         try {
             List<Cryptocurrency> data;

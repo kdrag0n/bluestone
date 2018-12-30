@@ -58,10 +58,6 @@ public class PollCog extends Cog {
         return "Poll";
     }
 
-    public String getDescription() {
-        return "Create a public poll.";
-    }
-
     private void scheduleAllPolls() throws SQLException {
         for (ActivePoll poll : pollDao.queryForAll())
             schedulePoll(poll);

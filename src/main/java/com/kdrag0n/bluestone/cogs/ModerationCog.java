@@ -89,10 +89,6 @@ public class ModerationCog extends Cog {
         return "Moderation";
     }
 
-    public String getDescription() {
-        return "Some handy moderation tools.";
-    }
-
     @EventHandler(threaded = true)
     public void onMemberJoin(GuildMemberJoinEvent event) throws SQLException {
         if (!event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_ROLES))

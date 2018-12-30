@@ -72,9 +72,6 @@ public class MusicCog extends Cog {
     public String getName() {
         return "Music";
     }
-    public String getDescription() {
-        return "Listen to those beats together!";
-    }
 
     public void unload() {
         playerManager.shutdown();

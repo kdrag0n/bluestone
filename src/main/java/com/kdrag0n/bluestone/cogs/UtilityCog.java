@@ -76,10 +76,6 @@ public class UtilityCog extends Cog {
         return "Utility";
     }
 
-    public String getDescription() {
-        return "Essential utility commands, as well as playful ones.";
-    }
-
     @Command(name = "icon", desc = "Get the current server's icon.", guildOnly = true)
     public void cmdIcon(Context ctx) {
         ctx.send(val(ctx.guild.getIconUrl()).or("There's no icon here!")).queue();

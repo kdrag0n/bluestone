@@ -88,10 +88,6 @@ public class InfoCog extends Cog {
         return "Information";
     }
 
-    public String getDescription() {
-        return "All sorts of information.";
-    }
-
     @Command(name = "charinfo", desc = "Get the Unicode character info for some text.", usage = "[text]")
     public void cmdCharInfo(Context ctx) {
         if (ctx.args.empty) {

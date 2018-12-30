@@ -43,10 +43,6 @@ public class ReminderCog extends Cog {
         return "Reminder";
     }
 
-    public String getDescription() {
-        return "A cog that's all about reminding you of things.";
-    }
-
     private void scheduleAllFromDB() throws SQLException {
         for (Reminder reminder : dao.queryForAll()) {
             schedule(reminder);
