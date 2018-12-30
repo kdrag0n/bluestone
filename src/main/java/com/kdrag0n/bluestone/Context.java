@@ -27,7 +27,7 @@ public class Context {
     public boolean flag = false;
 
     public Context(Bot bot, MessageReceivedEvent event, ArrayListView args,
-                   String prefix, String invoker) {
+                   String prefix, String invoker, String content, boolean processArgs) {
         this.bot = bot;
         this.event = event;
         this.message = event.getMessage();
@@ -39,7 +39,7 @@ public class Context {
         this.prefix = prefix;
         this.args = args;
         this.invoker = invoker;
-        this.rawArgs = message.getContentRaw().substring(prefix.length() + invoker.length()).trim();
+        this.rawArgs = content.substring((processArgs ? prefix.length() : 0) + invoker.length()).trim();
     }
 
     public static String truncate(String msg) {

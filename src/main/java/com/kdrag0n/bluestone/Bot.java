@@ -415,7 +415,7 @@ public class Bot implements EventListener {
             if (commands.containsKey(cmdName)) {
                 final Command command = commands.get(cmdName);
 
-                command.simpleInvoke(this, event, args, prefix, cmdName);
+                command.simpleInvoke(this, event, args, prefix, cmdName, message.getContentRaw(), true);
             }
         } else if (content.startsWith(ourMention) || content.startsWith(ourGuildMention)) {
             final String request = Strings.renderMessage(message, message.getGuild(),
@@ -425,10 +425,12 @@ public class Bot implements EventListener {
                     request.regionMatches(true, 0, "prefix", 0, 6 /* "prefix" */)) {
                 // invoke the command
                 final String[] split = WHITESPACE_PATTERN.split(content, 0);
-                final ArrayListView args = new ArrayListView(split); // ignore the mention - 1st element
+                final String[] splitCopy = Arrays.copyOfRange(split, 1, split.length); // ignore the mention - 1st element
+                final ArrayListView args = new ArrayListView(splitCopy); // ignore the command - 2nd element
 
                 final Command command = commands.get("prefix");
-                command.simpleInvoke(this, event, args, prefix, "prefix");
+                command.simpleInvoke(this, event, args, prefix, "prefix", // if the requested prefix is an @mention
+                        GENERAL_MENTION_PATTERN.matcher(message.getContentRaw()).replaceFirst(""), false);
             } else if (request.length() > 0) {
                 chatResponse(channel, "gbot_" + author.getId(), request, null);
             } else {
@@ -437,13 +439,7 @@ public class Bot implements EventListener {
             }
         } else if (channel instanceof PrivateChannel && content.length() != 0 && content.charAt(0) != '`') {
             final String request = Strings.renderMessage(message, null, message.getContentRaw());
-
-            if (request.length() < 1) {
-                channel.sendMessage("My prefix is `" + Context.filterMessage(prefix)
-                        + "`.\nYou can use commands with `!`, or talk directly.").queue();
-            } else {
-                chatResponse(channel, "bs_GMdbot2-" + author.getId(), request, "💬 ");
-            }
+            chatResponse(channel, "bs_GMdbot2-" + author.getId(), request, "💬 ");
         }
     }
 

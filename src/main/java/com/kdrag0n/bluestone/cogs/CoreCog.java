@@ -294,7 +294,11 @@ public class CoreCog extends Cog {
                 ctx.success("Prefix set.");
             }
         } else {
-            ctx.send("**Prefix:** `" + ctx.prefix + "`").queue();
+            if (ctx.prefix.equals(ctx.guild.getSelfMember().getAsMention() + " ")) {
+                ctx.send("My prefix is: " + ctx.prefix + "").queue();
+            } else {
+                ctx.send("My prefix is: `" + ctx.prefix + "`").queue();
+            }
         }
     }
 

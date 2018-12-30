@@ -47,8 +47,9 @@ public class Command {
     }
 
     private void invoke(Bot bot, MessageReceivedEvent event, ArrayListView args,
-                        String prefix, String invoker) throws IllegalAccessException, InvocationTargetException {
-        Context ctx = new Context(bot, event, args, prefix, invoker);
+                        String prefix, String invoker, String content, boolean processArgs)
+            throws IllegalAccessException, InvocationTargetException {
+        Context ctx = new Context(bot, event, args, prefix, invoker, content, processArgs);
 
         if (guildOnly && ctx.guild == null) {
             throw new GuildOnlyException("Command only works in a guild");
@@ -61,10 +62,10 @@ public class Command {
         func.invoke(cog, ctx);
     }
 
-    public void simpleInvoke(Bot bot, MessageReceivedEvent event, ArrayListView args,
-                             String prefix, String invoker) {
+    /*package-private*/ void simpleInvoke(Bot bot, MessageReceivedEvent event, ArrayListView args,
+                             String prefix, String invoker, String content, boolean processArgs) {
         if (needThread) {
-            Runnable task = () -> invokeWithHandling(bot, event, args, prefix, invoker);
+            Runnable task = () -> invokeWithHandling(bot, event, args, prefix, invoker, content, processArgs);
 
             if (Bot.threadExecutor.getActiveCount() >= Bot.threadExecutor.getMaximumPoolSize()) {
                 event.getChannel().sendMessage(
@@ -72,17 +73,17 @@ public class Command {
             }
             Bot.threadExecutor.execute(task);
         } else {
-            invokeWithHandling(bot, event, args, prefix, invoker);
+            invokeWithHandling(bot, event, args, prefix, invoker, content, processArgs);
         }
     }
 
     private void invokeWithHandling(Bot bot, MessageReceivedEvent event, ArrayListView args,
-                                    String prefix, String invoker) {
+                                    String prefix, String invoker, String content, boolean processArgs) {
         MessageChannel channel = event.getChannel();
 
         try {
             try {
-                invoke(bot, event, args, prefix, invoker);
+                invoke(bot, event, args, prefix, invoker, content, processArgs);
             } catch (IllegalAccessException e) {
                 bot.logger.error("Severe command ({}) invocation error:", invoker, e);
                 channel.sendMessage(Emotes.getFailure() + " An internal error occurred.").queue();
