@@ -30,8 +30,6 @@ public abstract class Cog {
 
     public void load() {}
 
-    public void unload() {}
-
     protected static int randint(int min, int max) {
         return ThreadLocalRandom.current().nextInt(min, max);
     }

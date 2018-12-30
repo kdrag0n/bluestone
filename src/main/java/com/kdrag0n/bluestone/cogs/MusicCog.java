@@ -73,12 +73,6 @@ public class MusicCog extends Cog {
         return "Music";
     }
 
-    public void unload() {
-        playerManager.shutdown();
-        bgExecutor.shutdown();
-        super.unload();
-    }
-
     private AudioState getAudioState(Guild guild) {
         long guildId = guild.getIdLong();
 

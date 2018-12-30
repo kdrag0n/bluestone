@@ -357,27 +357,6 @@ public class Bot implements EventListener {
         cogs.put(cog.getName(), cog);
     }
 
-    public void unregisterCog(Cog cog) {
-        for (Map.Entry<String, Command> entry : new HashSet<>(commands.entrySet())) {
-            Command cmd = entry.getValue();
-
-            if (cmd.cog == cog) {
-                commands.remove(entry.getKey());
-            }
-        }
-
-        cog.unload();
-        cogs.remove(cog.getName(), cog);
-
-        for (List<ExtraEvent> events : extraEvents.values()) {
-            for (ExtraEvent event : new HashSet<>(events)) {
-                if (event.getMethod().getDeclaringClass().equals(cog.getClass())) {
-                    events.remove(event);
-                }
-            }
-        }
-    }
-
     private void onShutdown() {
         synchronized (this) {
             notifyAll();
