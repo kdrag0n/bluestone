@@ -24,7 +24,7 @@ public abstract class Cog {
         this.bot = bot;
     }
 
-    public String getCosmeticName() {
+    public String getDisplayName() {
         return getName();
     }
 

@@ -218,7 +218,7 @@ public class MiscCog extends Cog {
     }
 
     @Override
-    public String getCosmeticName() {
+    public String getDisplayName() {
         return "Miscellaneous";
     }
 

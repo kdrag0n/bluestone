@@ -29,7 +29,7 @@ public class PokemonCog extends Cog {
     }
 
     @Override
-    public String getCosmeticName() {
+    public String getDisplayName() {
         return "Pokémon";
     }
 
