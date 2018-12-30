@@ -53,11 +53,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class KewlCog extends Cog {
-    private static final Logger logger = LoggerFactory.getLogger(KewlCog.class);
+public class MiscCog extends Cog {
+    private static final Logger logger = LoggerFactory.getLogger(MiscCog.class);
 
     private static final int PROFILE_WIDTH = 1600;
     private static final int PROFILE_HEIGHT = 1000;
@@ -188,7 +187,7 @@ public class KewlCog extends Cog {
     private static final TLongSet profileSetupSessions = new TLongHashSet();
     private final Dao<UserProfile, Long> profileDao;
 
-    public KewlCog(Bot bot) {
+    public MiscCog(Bot bot) {
         super(bot);
 
         profileDao = setupDao(UserProfile.class);
@@ -215,16 +214,16 @@ public class KewlCog extends Cog {
     }
 
     public String getName() {
-        return "Kewl";
+        return "Miscellaneous";
     }
 
     @Override
     public String getCosmeticName() {
-        return "Kewl Stuff";
+        return "Miscellaneous";
     }
 
     public String getDescription() {
-        return "All the kewl extensions belong here.";
+        return "Miscellaneous commands.";
     }
 
     @Command(name = "profile", desc = "Display a user's profile.", usage = "[user / \"setup\" / \"bg\"]", thread = true)
