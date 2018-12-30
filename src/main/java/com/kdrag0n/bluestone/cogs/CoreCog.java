@@ -93,7 +93,7 @@ public class CoreCog extends Cog {
         ctx.send("You can find the FAQ at <https://khronodragon.com/goldmine/faq>.").queue();
     }
 
-    @Command(name = "owner", desc = "Become the bot owner.", aliases = {"bot_owner"})
+    @Command(name = "owner", desc = "Become the bot owner..?", aliases = {"bot_owner"})
     public void cmdOwnerInfo(Context ctx) {
         ctx.send("My owner is **" + Bot.ownerTag +
                 "**. The bot owner is a role that applies globally to the entire bot, and is the person who owns the actual bot, **not** the owner of a server or anything like that.\n" +
@@ -101,7 +101,7 @@ public class CoreCog extends Cog {
         "**__TL;DR Server owner is enough, you can't have bot owner because that's one person (the actual owner of the bot) and offers unlimited control.__**").queue();
     }
 
-    @Command(name = "help", desc = "Because we all need help.", usage = "{commands and/or cogs}",
+    @Command(name = "help", desc = "List the available commands and their usage.", usage = "{commands and/or cogs}",
             aliases = {"halp", "commands"}, thread = true)
     public void cmdHelp(Context ctx) {
         int charLimit = ctx.jda.getSelfUser().isBot() ? MessageEmbed.EMBED_MAX_LENGTH_BOT : MessageEmbed.EMBED_MAX_LENGTH_CLIENT;
@@ -245,7 +245,7 @@ public class CoreCog extends Cog {
         }
     }
 
-    @Command(name = "uptime", desc = "Get how long I've been running.", aliases = {"memory", "ram"})
+    @Command(name = "uptime", desc = "See how long I've been running.", aliases = {"memory", "ram"})
     public void cmdUptime(Context ctx) {
         ctx.send("I've been up for **" + bot.formatUptime() +
                 "**, and am using **" + Strings.formatMemory() + "** of memory.").queue();
