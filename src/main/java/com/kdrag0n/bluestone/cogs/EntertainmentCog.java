@@ -44,8 +44,8 @@ import java.util.stream.Collectors;
 import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
 import static java.lang.String.format;
 
-public class FunCog extends Cog {
-    private static final Logger logger = LoggerFactory.getLogger(FunCog.class);
+public class EntertainmentCog extends Cog {
+    private static final Logger logger = LoggerFactory.getLogger(EntertainmentCog.class);
     private static final Map<String, UnicodeString> charsets = new HashMap<String, UnicodeString>() {
         {
             put("normal", uniString(
@@ -187,7 +187,7 @@ public class FunCog extends Cog {
         return ImmutablePair.of(l, r);
     }
 
-    public FunCog(Bot bot) {
+    public EntertainmentCog(Bot bot) {
         super(bot);
 
         OkHttpClient http = new OkHttpClient();
@@ -198,11 +198,11 @@ public class FunCog extends Cog {
     }
 
     public String getName() {
-        return "Fun";
+        return "Entertainment";
     }
 
     public String getDescription() {
-        return "Who doesn't like fun?";
+        return "A cog to entertain.";
     }
 
     @Command(name = "reverse", desc = "Reverse some text.", usage = "[text]")
@@ -559,8 +559,8 @@ public class FunCog extends Cog {
                 + format(randomChoice(FIGHTS), target) + ". " + format(randomChoice(DEATHS), target)).queue();
     }
 
-    @Command(name = "soon", desc = "Feel the loading of 10000 years, aka Soon™.", aliases = { "soontm" })
+    @Command(name = "soon", desc = "Feel the speed of Soon™.", aliases = { "soontm" })
     public void cmdSoon(Context ctx) {
-        ctx.channel.sendFile(FunCog.class.getResourceAsStream("/assets/soon.gif"), "soon.gif", null).queue();
+        ctx.channel.sendFile(EntertainmentCog.class.getResourceAsStream("/assets/soon.gif"), "soon.gif", null).queue();
     }
 }
