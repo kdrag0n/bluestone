@@ -174,6 +174,24 @@ public class EntertainmentCog extends Cog {
             .stream().map(p -> ImmutablePair.of(Pattern.compile(p.getLeft(), Pattern.CASE_INSENSITIVE), p.getRight()))
             .collect(Collectors.toList());
 
+    private static final String[] EIGHT_BALL_CHOICES = {"Yes, definitely!",
+            "Of course!",
+            "Yes!",
+            "Probably.",
+            "Hmm, I'm not sure...",
+            "I'm not sure...",
+            "I don't think so.",
+            "Hmm, I don't really think so.",
+            "Definitely not.",
+            "No.",
+            "Probably not.",
+            "Sure!",
+            "Try again later...",
+            "I don't know.",
+            "Maybe...",
+            "Yes, of course!",
+            "No, probably not."};
+
     private static final Color BLEACH_COLOR = new Color(51, 143, 216);
     private static final MessageEmbed BLEACH_EMBED = new EmbedBuilder().setColor(BLEACH_COLOR).setTitle("Bleach")
             .setImage("https://upload.wikimedia.org/wikipedia/commons/d/d3/Clorox_Bleach_products.jpg").build();
@@ -562,5 +580,23 @@ public class EntertainmentCog extends Cog {
     @Command(name = "soon", desc = "Feel the speed of Soon™.", aliases = { "soontm" })
     public void cmdSoon(Context ctx) {
         ctx.channel.sendFile(EntertainmentCog.class.getResourceAsStream("/assets/soon.gif"), "soon.gif", null).queue();
+    }
+
+    @Command(name = "flip", desc = "Flip a coin.", aliases = {"coinflip"})
+    public void cmdFlip(Context ctx) {
+        ctx.send("The coin toss revealed... **" + (randint(0, 1) == 1 ? "heads" : "tails") + "**!").queue();
+    }
+
+    @Command(name = "roll", desc = "Roll a virtual die.", aliases = {"dice"})
+    public void cmdRoll(Context ctx) {
+        ctx.send("I rolled a **" + randint(1, 7) + "**.").queue();
+    }
+
+    @Command(name = "8ball", desc = "A magic 8 ball!", aliases = {"8"})
+    public void cmd8Ball(Context ctx) {
+        if (ctx.args.empty)
+            ctx.fail("I need a question!");
+        else
+            ctx.send("🔮 " + randomChoice(EIGHT_BALL_CHOICES)).queue();
     }
 }
