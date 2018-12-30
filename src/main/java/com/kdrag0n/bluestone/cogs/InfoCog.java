@@ -22,6 +22,7 @@ import net.dv8tion.jda.core.entities.impl.GuildImpl;
 import okhttp3.Request;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.WordUtils;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -30,8 +31,6 @@ import org.json.JSONObject;
 import javax.annotation.Nonnull;
 import java.awt.*;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
@@ -49,34 +48,42 @@ public class InfoCog extends Cog {
     private static final byte[] DIRECTIONALITY_NO_PREVIEW = { Character.DIRECTIONALITY_WHITESPACE,
             Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE, Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE };
 
-    static final String SHRUG = "¯\\_(ツ)_/¯";
-    private final LoadingCache<String, EmbedBuilder> ipInfoCache = CacheBuilder.newBuilder().maximumSize(36)
-            .expireAfterAccess(6, TimeUnit.HOURS).build(new CacheLoader<String, EmbedBuilder>() {
+    private final LoadingCache<Pair<String, String>, EmbedBuilder> ipInfoCache = CacheBuilder.newBuilder().maximumSize(36)
+            .expireAfterAccess(6, TimeUnit.HOURS).build(new CacheLoader<Pair<String, String>, EmbedBuilder>() {
                 @Override
-                public EmbedBuilder load(@Nonnull String key) throws IOException {
-                    String uri = "https://freegeoip.net/json/" + key;
+                public EmbedBuilder load(@Nonnull Pair<String, String> args) throws IOException {
+                    String ip = args.getLeft();
+                    String apiKey = args.getRight();
+
+                    String uri = "http://api.ipstack.com/" + ip + "?access_key=" + apiKey + "&hostname=1";
                     JSONObject data = new JSONObject(
                             Bot.http.newCall(new Request.Builder().get().url(uri).build()).execute().body().string());
 
-                    String rdns;
-                    try {
-                        rdns = InetAddress.getByName(data.getString("ip")).getCanonicalHostName();
-                    } catch (UnknownHostException e) {
-                        rdns = "Couldn't find host";
-                    }
-
-                    return new EmbedBuilder().setColor(randomColor()).addField("IP", data.getString("ip"), true)
-                            .addField("Reverse DNS", rdns, true)
+                    return new EmbedBuilder().setColor(randomColor()).addField("IP", ip, true)
+                            .addField("Reverse DNS", data.optString("hostname", "Error resolving host"), true)
+                            .addField("Continent",
+                                    String.format("%s (%s)", data.optString("continent_name", "?"),
+                                            data.optString("continent_code", "?")), true)
                             .addField("Country",
-                                    String.format("%s (%s)", data.getString("country_name"),
-                                            data.getString("country_code")),
-                                    true)
-                            .addField("Region", "WIP", true).addField("City", data.optString("city", SHRUG), true)
-                            .addField("ZIP Code", data.optString("zip_code", SHRUG), true)
-                            .addField("Timezone", data.optString("time_zone", SHRUG), true)
-                            .addField("Longitude", data.optString("longitude", SHRUG), true)
-                            .addField("Latitude", data.optString("latitude", SHRUG), true).addField("Metro Code",
-                                    data.optInt("metro_code") != 0 ? data.optString("metro_code") : SHRUG, true);
+                                    String.format("%s %s (%s)",
+                                            val(data.optJSONObject("location")).or(new JSONObject())
+                                                    .optString("country_flag_emoji", ""),
+                                            data.optString("country_name", "?"),
+                                            data.optString("country_code", "?")), true)
+                            .addField("Region",
+                                    String.format("%s (%s)", data.optString("region_name", "?"),
+                                            data.optString("region_code", "?")), true)
+                            .addField("City", data.optString("city", "?"), true)
+                            .addField("ZIP Code", data.optString("zip", "?"), true)
+                            .addField("Timezone", val(data.optJSONObject("time_zone")).or(new JSONObject())
+                                    .optString("code", "?"), true)
+                            .addField("Longitude", data.optString("longitude", "?"), true)
+                            .addField("Latitude", data.optString("latitude", "?"), true)
+                            .addField("ISP", String.format("%s (AS%s)",
+                                            val(data.optJSONObject("connection")).or(new JSONObject())
+                                                    .optString("isp", "?"),
+                                            val(data.optJSONObject("connection")).or(new JSONObject())
+                                                    .optInt("asn", 0)), true);
                 }
             });
 
@@ -222,8 +229,14 @@ public class InfoCog extends Cog {
             return;
         }
 
+        String key = bot.getKeys().optString("ipstack");
+        if (key == null) {
+            ctx.fail("This bot doesn't have an IPStack API key set up!");
+            return;
+        }
+
         try {
-            ctx.send(ipInfoCache.get(ctx.rawArgs).setTimestamp(Instant.now())
+            ctx.send(ipInfoCache.get(Pair.of(ctx.rawArgs, key)).setTimestamp(Instant.now())
                     .setAuthor("IP Data", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl()).build()).queue();
         } catch (ExecutionException e) {
             if (e.getCause() instanceof IOException) {
@@ -272,11 +285,11 @@ public class InfoCog extends Cog {
                                         wind.optDouble("speed") + " mph (direction: " + wind.optInt("deg") + "°)", true)
                                 .addField("💧 Humidity", str(main.optDouble("humidity")) + '%', true)
                                 .addField("🌅 Sunrise Time",
-                                        sys.optLong("sunrise") == 0L ? InfoCog.SHRUG
+                                        sys.optLong("sunrise") == 0L ? "?"
                                                 : new Date(sys.optLong("sunrise")).toString(),
                                         true)
                                 .addField("🌇 Sunset Time",
-                                        sys.optLong("sunset") == 0L ? InfoCog.SHRUG
+                                        sys.optLong("sunset") == 0L ? "?"
                                                 : new Date(sys.optLong("sunset")).toString(),
                                         true)
                                 .addField("☀ Today's High", str(main.optDouble("temp_max")) + "°F", true)
@@ -285,8 +298,8 @@ public class InfoCog extends Cog {
                                 .addField("☁ Cloudiness", clouds.optInt("all") + "%", true)
                                 .addField("⏬ Pressure", main.optInt("pressure") + " hPa", true)
                                 .addField("🏙 Condition",
-                                        "**" + condition.optString("main", InfoCog.SHRUG) + "** - "
-                                                + condition.optString("description", InfoCog.SHRUG),
+                                        "**" + condition.optString("main", "?") + "** - "
+                                                + condition.optString("description", "?"),
                                         true)
                                 .setColor(GraphicsUtils.interpolateColors(Color.BLUE, Color.RED,
                                         Math.max(Math.min(main.optDouble("temp") / 106, 1.0), 0.0)));

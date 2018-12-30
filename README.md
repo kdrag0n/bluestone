@@ -110,7 +110,8 @@ This is the template:
       "username": "root",
       "password": "toor"
     },
-    "sentry": "https://public:private@host:port/1?environment=development&servername=laptop1"
+    "sentry": "https://public:private@host:port/1?environment=development&servername=laptop1",
+    "ipstack": ""
   },
   "chatengine_url": "http://my-chatengine-server.com/ask"
 }
@@ -143,6 +144,8 @@ whenever guild count is updated.
 For more reliable memes, you should also provide Imgflip account credentials.
 
 For error reporting, provide a Sentry DSN, optionally with `environment` and `servername` set.
+
+For the `ipinfo` command to work, provide an IPStack access key.
 
 At the very least, you must have an empty `keys` object.
 If there is no `keys` object, or it is another data type, everything may explode.
