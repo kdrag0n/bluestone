@@ -58,8 +58,6 @@ import java.util.stream.Collectors;
 
 public class KewlCog extends Cog {
     private static final Logger logger = LoggerFactory.getLogger(KewlCog.class);
-    private static final Pattern DATE_WEEKDAY_PATTERN = Pattern
-            .compile("^The date [0-9 a-zA-Z]+ is not a ([MTWFS][a-z]+), but a ([MTWFS][a-z]+)\\.$");
 
     private static final int PROFILE_WIDTH = 1600;
     private static final int PROFILE_HEIGHT = 1000;
