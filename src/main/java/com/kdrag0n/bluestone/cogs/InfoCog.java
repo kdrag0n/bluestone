@@ -10,7 +10,7 @@ import com.kdrag0n.bluestone.errors.PassException;
 import com.kdrag0n.bluestone.util.GraphicsUtils;
 import com.kdrag0n.bluestone.util.Paginator;
 import com.kdrag0n.bluestone.util.Strings;
-import com.kdrag0n.bluestone.util.UnisafeString;
+import com.kdrag0n.bluestone.util.UnicodeString;
 import gnu.trove.list.TIntList;
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
@@ -100,7 +100,7 @@ public class InfoCog extends Cog {
         }
 
         Paginator pager = new Paginator();
-        PrimitiveIterator.OfInt iterator = new UnisafeString(StringUtils.replace(ctx.rawArgs, "\n", "")).chars();
+        PrimitiveIterator.OfInt iterator = new UnicodeString(StringUtils.replace(ctx.rawArgs, "\n", "")).chars();
 
         while (iterator.hasNext()) {
             int codepoint = iterator.nextInt();

@@ -6,11 +6,11 @@ import java.util.PrimitiveIterator;
 import java.util.function.IntConsumer;
 import java.util.stream.IntStream;
 
-public class UnisafeString {
+public class UnicodeString {
     private final String data;
     private final int length;
 
-    public UnisafeString(String stringIn) {
+    public UnicodeString(String stringIn) {
         data = Objects.requireNonNull(stringIn);
         length = data.codePointCount(0, data.length());
     }
@@ -23,10 +23,10 @@ public class UnisafeString {
         return data.codePointAt(getRealIndex(index));
     }
 
-    public UnisafeString substring(int startIndex, int endIndex) {
+    public UnicodeString substring(int startIndex, int endIndex) {
         int cpStartIndex = getRealIndex(startIndex);
         int cpEndIndex = getRealIndex(endIndex);
-        return new UnisafeString(data.substring(cpStartIndex, cpEndIndex));
+        return new UnicodeString(data.substring(cpStartIndex, cpEndIndex));
     }
 
     public IntStream charStream() {
@@ -104,8 +104,8 @@ public class UnisafeString {
     }
 
     public boolean equals(Object object) {
-        if (object instanceof UnisafeString)
-            return ((UnisafeString) object).data.equals(data);
+        if (object instanceof UnicodeString)
+            return ((UnicodeString) object).data.equals(data);
         else
             return object instanceof String && object.equals(data);
     }

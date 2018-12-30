@@ -5,7 +5,7 @@ import com.kdrag0n.bluestone.*;
 import com.kdrag0n.bluestone.emotes.*;
 import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.util.Strings;
-import com.kdrag0n.bluestone.util.UnisafeString;
+import com.kdrag0n.bluestone.util.UnicodeString;
 import gnu.trove.map.TCharObjectMap;
 import gnu.trove.map.hash.TCharObjectHashMap;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -46,7 +46,7 @@ import static java.lang.String.format;
 
 public class FunCog extends Cog {
     private static final Logger logger = LoggerFactory.getLogger(FunCog.class);
-    private static final Map<String, UnisafeString> charsets = new HashMap<String, UnisafeString>() {
+    private static final Map<String, UnicodeString> charsets = new HashMap<String, UnicodeString>() {
         {
             put("normal", uniString(
                     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~ `!@#$%^&*()-_=+[]{}|;:'\",<.>/?"));
@@ -179,8 +179,8 @@ public class FunCog extends Cog {
             .setImage("https://upload.wikimedia.org/wikipedia/commons/d/d3/Clorox_Bleach_products.jpg").build();
     private final EmoteProviderManager emoteProviderManager = new EmoteProviderManager();
 
-    private static UnisafeString uniString(String javaString) {
-        return new UnisafeString(javaString);
+    private static UnicodeString uniString(String javaString) {
+        return new UnicodeString(javaString);
     }
 
     private static <L, R> ImmutablePair<L, R> pair(L l, R r) {
@@ -397,8 +397,8 @@ public class FunCog extends Cog {
         }, e -> ctx.send(Emotes.getFailure() + " Failed to fetch or create emote.").queue()));
     }
 
-    private String applyStyle(String orig, UnisafeString mapTo) {
-        UnisafeString mapFrom = charsets.get("normal");
+    private String applyStyle(String orig, UnicodeString mapTo) {
+        UnicodeString mapFrom = charsets.get("normal");
         StringBuilder newString = new StringBuilder();
 
         orig.codePoints().map(i -> {
@@ -418,7 +418,7 @@ public class FunCog extends Cog {
                 .setAuthor("Text Styles", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl()).setColor(randomColor())
                 .setDescription("\u200b").setTimestamp(Instant.now());
 
-        for (Map.Entry<String, UnisafeString> entry : charsets.entrySet()) {
+        for (Map.Entry<String, UnicodeString> entry : charsets.entrySet()) {
             emb.appendDescription("    \u2022 " + applyStyle(entry.getKey(), entry.getValue()) + "\n");
         }
         emb.appendDescription("\n\nUse a style with the `style` command: `style [name] [text]`.");
