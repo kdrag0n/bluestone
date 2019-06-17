@@ -205,7 +205,7 @@ public class ModerationCog extends Cog {
                 break;
 
             if (msg.getCreationTime().isBefore(maxAge)) {
-                twoWeekWarn = "\n:vertical_traffic_light: *Some messages may not have been deleted, because they were more than 2 weeks old.*";
+                twoWeekWarn = "\n⚠ Messages older than 2 weeks were not deleted due to Discord restrictions.";
                 break;
             }
 
