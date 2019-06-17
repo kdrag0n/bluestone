@@ -117,10 +117,6 @@ public class GuildRoleOption {
                 return false;
         }
 
-        if ((conditions & IS_PATRON) == IS_PATRON) {
-            return Perm.PATREON.check(ctx);
-        }
-
         return true;
     }
 
@@ -144,6 +140,5 @@ public class GuildRoleOption {
 
         // Ranks
         static final int IS_BOT_OWNER = 1<<12;
-        static final int IS_PATRON = 1<<13;
     }
 }

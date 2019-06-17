@@ -234,16 +234,4 @@ public class OwnerCog extends Cog {
         bot.shardUtil.getShards().forEach(b -> b.jda.getPresence().setGame(Game.playing(ctx.rawArgs)));
         ctx.success("Game set.");
     }
-
-    @Perm.Owner
-    @Command(name = "patreload", desc = "Reload the Patreon supporter list.", hidden = true, aliases = {
-            "preload" }, thread = true)
-    public void cmdPatReload(Context ctx) {
-        boolean success = Bot.loadPatreonData();
-        if (success) {
-            ctx.success("List reloaded.");
-        } else {
-            ctx.fail("Failed to load list.");
-        }
-    }
 }

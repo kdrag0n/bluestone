@@ -235,11 +235,10 @@ public class MusicCog extends Cog {
         }
 
         AudioState state = getAudioState(ctx.guild);
-        boolean isPatron = Perm.PATREON.check(ctx);
-        int mn = isPatron ? 48 : 12;
+        int mn = 12;
 
         if (state.scheduler.queue.size() >= mn) {
-            ctx.fail("There can only be up to " + mn + " items in the queue for you!");
+            ctx.fail("You may only queue up to " + mn + " items.");
             return;
         }
 
@@ -247,7 +246,7 @@ public class MusicCog extends Cog {
         ctx.message.addReaction("⌛").queue();
 
         GuildMusicSettings settings = settingsDao.queryForId(ctx.guild.getIdLong());
-        playerManager.loadItem(term, new TrackLoadHandler(ctx, isPatron, state, playerManager, term, settings));
+        playerManager.loadItem(term, new TrackLoadHandler(ctx, state, playerManager, term, settings));
     }
 
     @Command(name = "pause", desc = "Pause the player.", guildOnly = true)

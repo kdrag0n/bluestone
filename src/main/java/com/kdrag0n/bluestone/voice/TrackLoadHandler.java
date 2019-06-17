@@ -27,16 +27,13 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
     private final String term;
     private final GuildMusicSettings settings;
     private final boolean canTalk;
-    private final boolean isPatron;
 
-    public TrackLoadHandler(Context ctx, boolean isPatron, AudioState state, AudioPlayerManager man,
-                            String term, GuildMusicSettings settings) {
+    public TrackLoadHandler(Context ctx, AudioState state, AudioPlayerManager man, String term, GuildMusicSettings settings) {
         this.ctx = ctx;
         this.state = state;
         this.term = term;
         this.settings = settings;
         this.canTalk = ((TextChannel) ctx.channel).canTalk();
-        this.isPatron = isPatron;
         manager = man;
 
         iteration = 0;
@@ -45,13 +42,9 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
     @Override
     public void trackLoaded(AudioTrack track) {
         if (!track.getInfo().isStream && track.getDuration() >
-                TimeUnit.MINUTES.toMillis(isPatron ? 10 * 60 + 40 : 2 * 60 + 37)) {
-            if (canTalk) {
-                if (isPatron)
-                    ctx.send("⛔ Track longer than **10 h 30 min**!").queue();
-                else
-                    ctx.send("⛔ Track longer than **2 h 30 min**!").queue();
-            }
+                TimeUnit.MINUTES.toMillis(2 * 60 + 37)) {
+            if (canTalk)
+                ctx.send("⛔ Track longer than **2 h 30 min**!").queue();
 
             return;
         }
@@ -135,7 +128,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
             return;
         }
 
-        int mn = isPatron ? 36 : 18;
+        int mn = 18;
         if (tracks.size() > mn) {
             if (canTalk) ctx.send(Emotes.getFailure() +
                     " Playlist too long, only adding the first " + mn + " tracks.").queue();
@@ -143,7 +136,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
         }
         long duration = 0L;
 
-        mn = isPatron ? 32 : 8;
+        mn = 10;
         for (AudioTrack track: tracks) {
             if (!track.getInfo().isStream && track.getDuration() > TimeUnit.HOURS.toMillis(mn)) {
                 if (canTalk) ctx.send("⛔ Track **" + track.getInfo().title +

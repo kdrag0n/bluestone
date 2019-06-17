@@ -31,7 +31,7 @@ public class CoreCog extends Cog {
     static final Collection<Permission> PERMS_NEEDED = Permission.getPermissions(473295957L);
 
     private static final String INFO_LINKS = "\u200b    \u2022 Use my [invite link]([invite]) to take me to another server\n" +
-            "    \u2022 [Donate](https://patreon.com/kdragon) to help keep me alive\n" +
+            "    \u2022 [Donate](https://paypal.me/dragon5232) to help keep me alive\n" +
             "    \u2022 Go to [my website](https://khronodragon.com/goldmine/) for help\n" +
             "    \u2022 Join my [support server](https://discord.gg/sYkwfxA) for even more help";
 

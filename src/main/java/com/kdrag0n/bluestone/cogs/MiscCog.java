@@ -129,9 +129,6 @@ public class MiscCog extends Cog {
                         case ProfileFlags.BOT_OWNER:
                             iconStream = cl.getResourceAsStream("/assets/owner.png");
                             break;
-                        case ProfileFlags.PATREON_SUPPORTER:
-                            iconStream = cl.getResourceAsStream("/assets/patreon.png");
-                            break;
                         default:
                             iconStream = cl.getResourceAsStream("/assets/unknown.png");
                             break;

@@ -52,8 +52,7 @@ public enum Perm {
     UNKNOWN(Permission.UNKNOWN),
 
     // Special bot permissions
-    BOT_OWNER(60, "Bot Owner"),
-    PATREON(61, "Patron");
+    BOT_OWNER(60, "Bot Owner");
 
     public final long raw;
     public final String name;
@@ -94,8 +93,6 @@ public enum Perm {
 
         if (this == BOT_OWNER) { // BOT owner
             return false; // because of the above check
-        } else if (this == PATREON) { // Patreon supporters
-            return Bot.patronIds.contains(ctx.author.getIdLong());
         } else if (discordPerm != null) { // this is a Discord permission
             if (ctx.guild != null) {
                 return ctx.member.hasPermission((TextChannel) ctx.channel, discordPerm);
@@ -111,10 +108,6 @@ public enum Perm {
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     public @interface Owner {}
-
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.METHOD)
-    public @interface Patron {}
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)

@@ -697,37 +697,6 @@ public class UtilityCog extends Cog {
                 .setImage("https://use.gameapis.net/mc/images/avatar/" + name + "/150/true").build()).queue();
     }
 
-    @Command(name = "supporters", desc = "Get a list of Patreon supporters.", aliases = { "patrons", "patreon",
-            "donate", "givemoney" })
-    public void cmdSupporters(Context ctx) {
-        if (!(Bot.patreonData.has("rand") && Bot.patreonData.has("always"))) {
-            ctx.fail("The Patreon data loaded is invalid. Contact the owner.");
-            return;
-        }
-        EmbedBuilder emb = newEmbedWithAuthor(ctx)
-                .setColor(val(ctx.guild.getSelfMember().getColor()).or(Cog::randomColor))
-                .setDescription("Support me at**\u200b <https://patreon.com/kdragon>\u200b**!")
-                .setFooter("If you ❤ " + Bot.NAME + ", please become a Patron.", null);
-        StringBuilder builder = new StringBuilder(120).append('\u200b');
-        List<Object> randList = Bot.patreonData.getJSONArray("rand").toList();
-        Collections.shuffle(randList);
-
-        for (int i = 0; i < randList.size() && i < 10; i++) {
-            builder.append("    \u2022 ").append((String) randList.get(i)).append('\n');
-        }
-
-        for (Object name : Bot.patreonData.getJSONArray("always")) {
-            builder.append("    \u2022 ").append((String) name).append('\n');
-        }
-
-        if (randList.size() > 10) {
-            builder.append("    \u2022 ... and ").append(str(randList.size() - 10)).append(" more!");
-        }
-
-        emb.addField("Supporters", builder.toString(), false);
-        ctx.send(emb.build()).queue();
-    }
-
     @Command(name = "snowtime", desc = "Get the time of a Snowflake ID.", aliases = {
             "snowflake" }, usage = "[snowflake]")
     public void cmdSnowtime(Context ctx) {

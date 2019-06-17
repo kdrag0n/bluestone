@@ -77,8 +77,6 @@ public class Bot implements EventListener {
     public final EventWaiter eventWaiter = new EventWaiter();
     public final JDA jda;
     public final ShardUtil shardUtil;
-    public static JSONObject patreonData = new JSONObject();
-    public static TLongSet patronIds = new TLongHashSet();
     public final Map<String, Command> commands = new HashMap<>();
     public final Map<String, Cog> cogs = new HashMap<>();
     private final Map<Class<? extends Event>, List<ExtraEvent>> extraEvents = new HashMap<>();
@@ -249,8 +247,8 @@ public class Bot implements EventListener {
                         .add(watching("the movement of electrons")).add(playing("with some protons"))
                         .add(listening("trigger-happy players")).add(playing("Discord Hacker v39.2"))
                         .add(playing("Discord Hacker v42.0")).add(listening("Discordians"))
-                        .add(streaming("donations", "https://patreon.com/kdragon"))
-                        .add(streaming("You should totally donate!", "https://patreon.com/kdragon"))
+                        .add(streaming("donations", "https://paypal.me/dragon5232"))
+                        .add(streaming("You should totally donate!", "https://paypal.me/dragon5232"))
                         .add(listening("my people")).add(listening("my favorites")).add(watching("my minions"))
                         .add(watching("the chosen ones")).add(watching("stars combust")).add(watching("your demise"))
                         .add(streaming("the supernova", "https://www.youtube.com/watch?v=5WXyCJ1w3Ks"))
@@ -302,8 +300,6 @@ public class Bot implements EventListener {
 
                     if (type == Perm.Owner.class) {
                         perms.add(Perm.BOT_OWNER);
-                    } else if (type == Perm.Patron.class) {
-                        perms.add(Perm.PATREON);
                     } else {
                         Method valueMethod;
                         try {
@@ -478,28 +474,6 @@ public class Bot implements EventListener {
         return Strings.formatDuration((new Date().getTime() - shardUtil.startTime.getTime()) / 1000L);
     }
 
-    public static boolean loadPatreonData() {
-        String jsonCode;
-        try {
-            jsonCode = new String(Files.readAllBytes(Paths.get("patreon.json")));
-        } catch (NoSuchFileException ignored) {
-            return true;
-        } catch (IOException e) {
-            defLog.error("Failed to load Patreon data", e);
-            return false;
-        }
-
-        patreonData = new JSONObject(jsonCode);
-
-        TLongSet ids = new TLongHashSet();
-        for (Object iter : patreonData.getJSONArray("user_ids")) {
-            ids.add(iter instanceof Long ? (Long) iter : Long.parseUnsignedLong((String) iter));
-        }
-        patronIds = ids;
-
-        return true;
-    }
-
     public static int start(String token, int shardCount, JSONObject config) {
         defLog.info("Starting bot...");
 
@@ -522,8 +496,6 @@ public class Bot implements EventListener {
         if ((System.getProperty("os.arch").startsWith("x86") || System.getProperty("os.arch").equals("amd64"))
                 && (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX))
             builder.setAudioSendFactory(new NativeAudioSendFactory());
-
-        loadPatreonData();
 
         for (int i = 0; i < shardCount; i++) {
             final int shardId = i;
