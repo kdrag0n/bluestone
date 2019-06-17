@@ -42,7 +42,7 @@ public class StatReporterCog extends Cog {
         if (bot.getShardNum() == 1 && bot.getConfig().has("graphite_host") && bot.getConfig().has("graphite_port")) {
             graphiteClient = new SimpleGraphiteClient(bot.getConfig().getString("graphite_host"),
                     bot.getConfig().getInt("graphite_port"));
-            Bot.scheduledExecutor.scheduleAtFixedRate(this::graphiteReport, 2, 60, TimeUnit.SECONDS);
+            Bot.scheduledExecutor.scheduleAtFixedRate(this::graphiteReport, 2, 2, TimeUnit.MINUTES);
         }
     }
 
