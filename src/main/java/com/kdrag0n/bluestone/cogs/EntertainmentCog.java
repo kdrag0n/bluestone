@@ -469,7 +469,8 @@ public class EntertainmentCog extends Cog {
             return;
         }
 
-        ctx.send("<http://lmgtfy.com/?q=" + URLEncoder.encode(ctx.args.join('+'), "UTF-8") + '>').queue();
+        String query = URLEncoder.encode(ctx.args.join(' '), "UTF-8");
+        ctx.send("<https://lmgtfy.com/?q=" + query + '>').queue();
     }
 
     @Command(name = "slap", desc = "Slap someone, with passion.", aliases = { "boop", "poke", "hit" })
