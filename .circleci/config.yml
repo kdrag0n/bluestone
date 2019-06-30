@@ -2,7 +2,7 @@ version: 2
 jobs:
   build_dist:
     docker:
-      - image: circleci/openjdk:9-jdk
+      - image: circleci/openjdk:11-stretch
 
     working_directory: ~/repo
 
@@ -36,7 +36,7 @@ jobs:
 
   build_jar:
     docker:
-      - image: circleci/openjdk:9-jdk
+      - image: circleci/openjdk:11-stretch
 
     working_directory: ~/repo
 
