@@ -194,3 +194,6 @@ store*.bson
 
 # ProGuard mappings
 mapping.txt
+
+# Graal native image
+bluestone-*-all
