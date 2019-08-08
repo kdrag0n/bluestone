@@ -470,6 +470,7 @@ public class MiscCog extends Cog {
         cmdSetProfileBg(ctx);
     }
 
+    @Perm.Owner
     @Command(name = "profile_invalidate", desc = "Invalidate someone's profile in the cache.")
     public void cmdProfileInvalidate(Context ctx) {
         long target;
