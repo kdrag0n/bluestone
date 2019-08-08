@@ -88,11 +88,11 @@
 
 # JDBC
 -keep class org.h2.Driver { *; }
--keep class com.mysql.cj.jdbc.Driver { *; }
+-keep class org.mariadb.jdbc.Driver { *; }
 
-# MySQL
--keep class com.mysql.cj.** { *; }
--dontwarn com.mysql.cj.jdbc.integration.** # C3P0, JBoss
+# MariaDB
+-keep class org.mariadb.jdbc.** { *; }
+-dontwarn org.mariadb.jdbc.integration.** # C3P0, JBoss
 
 # ORM models
 -keep class com.kdrag0n.bluestone.sql.** { *; }
