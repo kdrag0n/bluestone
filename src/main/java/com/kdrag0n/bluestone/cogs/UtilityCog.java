@@ -180,13 +180,12 @@ public class UtilityCog extends Cog {
 
         if (!Strings.isID(ctx.rawArgs)) {
             ctx.fail("Invalid ID!");
-            return;
         } else if (ctx.rawArgs.equals(ctx.jda.getSelfUser().getId())) {
             ctx.send('<' + ctx.jda.asBot().getInviteUrl(CoreCog.PERMS_NEEDED) + '>').queue();
+        } else {
+            ctx.send(String.format("<https://discordapp.com/api/oauth2/authorize?client_id=%s&scope=bot&permissions=3072>",
+                    ctx.rawArgs)).queue();
         }
-
-        ctx.send(String.format("<https://discordapp.com/api/oauth2/authorize?client_id=%s&scope=bot&permissions=3072>",
-                ctx.rawArgs)).queue();
     }
 
     @Command(name = "urban", desc = "Define something with Urban Dictionary.", aliases = { "define" })
