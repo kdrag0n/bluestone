@@ -21,6 +21,8 @@ import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 public class Strings {
+    public static final String EMPTY = new String(new int[] {0xE0020}, 0, 1);
+
     private static final int bmpThreshold = 1 << 16;
     private static final int offset = 1 << 10;
     private static final int high = 0xd800;

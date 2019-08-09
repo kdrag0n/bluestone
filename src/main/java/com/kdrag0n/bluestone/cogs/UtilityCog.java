@@ -334,7 +334,7 @@ public class UtilityCog extends Cog {
         }
         desc = MC_COLOR_PATTERN.matcher(desc).replaceAll("");
 
-        EmbedBuilder emb = new EmbedBuilder().setTitle(server + ':' + port).setDescription('\u200b' + desc)
+        EmbedBuilder emb = new EmbedBuilder().setTitle(server + ':' + port).setDescription(Strings.EMPTY + desc)
                 .setColor(randomColor()).setFooter(getEffectiveName(ctx), ctx.jda.getSelfUser().getEffectiveAvatarUrl())
                 .setTimestamp(Instant.now())
                 .addField("Players", dataPlayers.getInt("online") + "/" + dataPlayers.getInt("max"), true);
@@ -412,7 +412,7 @@ public class UtilityCog extends Cog {
             // user hasn't read FAQ yet
             ctx.fail(
                     "You haven't read the FAQ yet.\nPlease read the FAQ **before** using `contact`, as it saves you, me, and everyone else a lot of time.\n"
-                            + "Link:**\u200b https://khronodragon.com/goldmine/faq \u200b**\n\n"
+                            + "Link:**" + Strings.EMPTY+ " https://khronodragon.com/goldmine/faq " + Strings.EMPTY + "\n\n"
                             + "Once you have read the FAQ, and it **hasn't** answered your question, simply run this command again to proceed.");
             userFaqDao.create(new UserFaqRecord(ctx.author.getIdLong(), true, new Date()));
             return;
@@ -643,7 +643,7 @@ public class UtilityCog extends Cog {
 
     @Command(name = "zwsp", desc = "Get a zero width space.", aliases = { "u200b", "200b" })
     public void cmdZwsp(Context ctx) {
-        ctx.send("\u200b").queue();
+        ctx.send(Strings.EMPTY).queue();
     }
 
     @Command(name = "b64encode", desc = "Encode text into Base64.")

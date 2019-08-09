@@ -430,7 +430,8 @@ public class EntertainmentCog extends Cog {
     public void cmdStyles(Context ctx) {
         EmbedBuilder emb = new EmbedBuilder()
                 .setAuthor("Text Styles", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl()).setColor(randomColor())
-                .setDescription("\u200b").setTimestamp(Instant.now());
+                .setDescription(Strings.EMPTY)
+                .setTimestamp(Instant.now());
 
         for (Map.Entry<String, UnicodeString> entry : charsets.entrySet()) {
             emb.appendDescription("    \u2022 " + applyStyle(entry.getKey(), entry.getValue()) + "\n");

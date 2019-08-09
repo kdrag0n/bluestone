@@ -1,6 +1,7 @@
 package com.kdrag0n.bluestone;
 
 import com.kdrag0n.bluestone.util.ArrayListView;
+import com.kdrag0n.bluestone.util.Strings;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
@@ -58,16 +59,13 @@ public class Context {
 
     @CheckReturnValue
     public static String filterMessage(String msg) {
-        return StringUtils.replace(StringUtils.replace(msg, "@everyone", "@\u200beveryone", -1),
-                "@here", "@\u200bhere", -1);
+        return StringUtils.replace(StringUtils.replace(msg, "@everyone", '@' + Strings.EMPTY + "everyone", -1),
+                "@here", '@' + Strings.EMPTY + "here", -1);
     }
 
     @CheckReturnValue
     public RestAction<Message> send(String msg) {
-        msg = truncate(StringUtils.replace(StringUtils.replace(msg, "@everyone", "@\u200beveryone", -1),
-                "@here", "@\u200bhere", -1)); // fully inline
-
-        return channel.sendMessage(msg);
+        return channel.sendMessage(truncate(filterMessage(msg)));
     }
 
     @CheckReturnValue

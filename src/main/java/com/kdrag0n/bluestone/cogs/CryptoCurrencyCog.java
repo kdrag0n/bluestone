@@ -208,7 +208,7 @@ public class CryptoCurrencyCog extends Cog {
 
     private MessageEmbed dclRenderPage(int i) {
         return renderDetails(currencyArray[i])
-                .addField("\u200b", "Page " + (i + 1) + " of " + currencyArray.length, false).build();
+                .addField(Strings.EMPTY, "Page " + (i + 1) + " of " + currencyArray.length, false).build();
     }
 
     private void dclStep(long authorId, AtomicInteger index, Message msg, Runnable stop) {

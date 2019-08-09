@@ -336,7 +336,7 @@ public class MiscCog extends Cog {
 
         try {
             ctx.send(
-                    "Welcome to Profile Setup. I will ask you a series of questions, and you can respond with your answer. If you don't want to answer a certain question, just answer `skip`. If you want to stop this setup, answer `stop`.\n**The questions will now begin.**\n\n\u200b")
+                    "Welcome to Profile Setup. I will ask you a series of questions, and you can respond with your answer. If you don't want to answer a certain question, just answer `skip`. If you want to stop this setup, answer `stop`.\n**The questions will now begin.**\n\n" + Strings.EMPTY)
                     .queue();
             JSONArray answers = new JSONArray();
 
