@@ -55,8 +55,6 @@ public class WikiCog extends Cog {
                     .setDescription(json.getJSONArray(2).getString(0))
                     .addField("Link", json.getJSONArray(3).getString(0), false);
             ctx.send(emb.build()).queue();
-
-            response.body().close();
         }, e -> {}));
     }
 

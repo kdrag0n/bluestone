@@ -593,6 +593,10 @@ public class Bot implements EventListener {
                                     ee);
                         }
                     }
+                } finally {
+                    ResponseBody body = response.body();
+                    if (body != null)
+                        body.close();
                 }
             }
 

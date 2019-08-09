@@ -141,8 +141,6 @@ public class StatReporterCog extends Cog {
                     if (!response.isSuccessful()) {
                         logger.warn("[Discord Bots] Bad response: {} {}", response.code(), response.message());
                     }
-
-                    response.body().close();
                 }, e -> {
                     if (e instanceof SocketTimeoutException)
                         logger.error("[Discord Bots] Report: timeout");
@@ -161,8 +159,6 @@ public class StatReporterCog extends Cog {
                     if (!response.isSuccessful()) {
                         logger.warn("[Carbonitex] Bad response: {} {}", response.code(), response.message());
                     }
-
-                    response.body().close();
                 }, e -> {
                     if (e instanceof SocketTimeoutException)
                         logger.error("[Carbonitex] Report: timeout");
@@ -188,8 +184,6 @@ public class StatReporterCog extends Cog {
                     if (!response.isSuccessful()) {
                         logger.warn("[Discord Bot List] Bad response: {} {}", response.code(), response.message());
                     }
-
-                    response.body().close();
                 }, e -> {
                     if (e instanceof SocketTimeoutException)
                         logger.error("[Discord Bot List] Report: timeout");
