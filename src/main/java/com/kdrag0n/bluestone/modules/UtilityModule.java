@@ -1,4 +1,4 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import ch.jamiete.mcping.MinecraftPing;
 import ch.jamiete.mcping.MinecraftPingOptions;
@@ -22,7 +22,6 @@ import net.dv8tion.jda.core.entities.impl.GuildImpl;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.utils.MiscUtil;
 import okhttp3.Request;
-import org.apache.commons.codec.DecoderException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import javax.imageio.ImageIO;
-import javax.script.ScriptException;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -51,8 +49,8 @@ import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
 import static com.kdrag0n.bluestone.util.Strings.smartJoin;
 import static com.kdrag0n.bluestone.util.Strings.str;
 
-public class UtilityCog extends Cog {
-    private static final Logger logger = LoggerFactory.getLogger(UtilityCog.class);
+public class UtilityModule extends Module {
+    private static final Logger logger = LoggerFactory.getLogger(UtilityModule.class);
 
     private static final Pattern MC_COLOR_PATTERN = Pattern.compile("\\u00a7[4c6e2ab319d5f78lnokmr]");
     private static final JSONArray EMPTY_JSON_ARRAY = new JSONArray();
@@ -65,7 +63,7 @@ public class UtilityCog extends Cog {
     private final Dao<ContactBannedUser, Long> contactBanDao;
     private final Dao<UserFaqRecord, Long> userFaqDao;
 
-    public UtilityCog(Bot bot) {
+    public UtilityModule(Bot bot) {
         super(bot);
 
         contactBanDao = setupDao(ContactBannedUser.class);
@@ -174,14 +172,14 @@ public class UtilityCog extends Cog {
             "join" }, usage = "{bot ID (default: me)}")
     public void cmdInvite(Context ctx) {
         if (ctx.args.empty) {
-            ctx.send('<' + ctx.jda.asBot().getInviteUrl(CoreCog.PERMS_NEEDED) + '>').queue();
+            ctx.send('<' + ctx.jda.asBot().getInviteUrl(CoreModule.PERMS_NEEDED) + '>').queue();
             return;
         }
 
         if (!Strings.isID(ctx.rawArgs)) {
             ctx.fail("Invalid ID!");
         } else if (ctx.rawArgs.equals(ctx.jda.getSelfUser().getId())) {
-            ctx.send('<' + ctx.jda.asBot().getInviteUrl(CoreCog.PERMS_NEEDED) + '>').queue();
+            ctx.send('<' + ctx.jda.asBot().getInviteUrl(CoreModule.PERMS_NEEDED) + '>').queue();
         } else {
             ctx.send(String.format("<https://discordapp.com/api/oauth2/authorize?client_id=%s&scope=bot&permissions=3072>",
                     ctx.rawArgs)).queue();

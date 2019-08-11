@@ -126,10 +126,10 @@
     java.lang.Object readResolve();
 }
 
-# Cogs
--keep class com.kdrag0n.bluestone.cogs.** { *; }
--dontwarn com.kdrag0n.bluestone.cogs.ReplCog # Nashorn JS engine
--dontwarn com.kdrag0n.bluestone.cogs.OwnerCog # Nashorn JS engine
+# Modules
+-keep class com.kdrag0n.bluestone.modules.** { *; }
+-dontwarn com.kdrag0n.bluestone.modules.ReplModule # Nashorn JS engine
+-dontwarn com.kdrag0n.bluestone.modules.OwnerModule # Nashorn JS engine
 
 # Reflections
 -dontwarn org.reflections.** # Dom4J

@@ -1,17 +1,14 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.j256.ormlite.dao.Dao;
 import com.kdrag0n.bluestone.*;
 import com.kdrag0n.bluestone.annotations.Command;
-import com.kdrag0n.bluestone.annotations.EventHandler;
 import com.kdrag0n.bluestone.sql.GuildPrefix;
 import com.kdrag0n.bluestone.util.Paginator;
 import com.kdrag0n.bluestone.util.Strings;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.MessageEmbed;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.requests.RestAction;
@@ -23,7 +20,7 @@ import java.util.*;
 
 import static com.kdrag0n.bluestone.util.Strings.str;
 
-public class CoreCog extends Cog {
+public class CoreModule extends Module {
     private static final long PRODUCTION_USER_ID = 239775420470394897L;
     static final Collection<Permission> PERMS_NEEDED = Permission.getPermissions(473295957L);
 
@@ -42,7 +39,7 @@ public class CoreCog extends Cog {
         PREFIX_PERMS.add(Perm.MESSAGE_MANAGE);
     }
 
-    public CoreCog(Bot bot) {
+    public CoreModule(Bot bot) {
         super(bot);
 
         if (bot.jda.getSelfUser().getIdLong() == PRODUCTION_USER_ID &&
@@ -96,7 +93,7 @@ public class CoreCog extends Cog {
         "**__TL;DR Server owner is enough, you can't have bot owner because that's one person (the actual owner of the bot) and offers unlimited control.__**").queue();
     }
 
-    @Command(name = "help", desc = "List the available commands and their usage.", usage = "{commands and/or cogs}",
+    @Command(name = "help", desc = "List the available commands and their usage.", usage = "{commands and/or modules}",
             aliases = {"halp", "commands"})
     public void cmdHelp(Context ctx) {
         int charLimit = ctx.jda.getSelfUser().isBot() ? MessageEmbed.EMBED_MAX_LENGTH_BOT : MessageEmbed.EMBED_MAX_LENGTH_CLIENT;
@@ -112,7 +109,7 @@ public class CoreCog extends Cog {
         if (ctx.args.length < 1) {
             for (com.kdrag0n.bluestone.Command cmd: new HashSet<>(bot.commands.values())) {
                 if ((!cmd.hidden || isOwner) && !(cmd.requiresOwner && !isOwner)) {
-                    String cName = cmd.cog.getDisplayName();
+                    String cName = cmd.module.getDisplayName();
                     String entry = "\u2022 **" + cmd.name + "**: " + cmd.description;
 
                     if (fields.containsKey(cName)) {
@@ -131,12 +128,12 @@ public class CoreCog extends Cog {
                 String litem = item.toLowerCase();
                 boolean done = false;
 
-                if (bot.cogs.containsKey(item)) {
-                    Cog cog = bot.cogs.get(item);
+                if (bot.modules.containsKey(item)) {
+                    Module module = bot.modules.get(item);
 
                     for (com.kdrag0n.bluestone.Command cmd: new HashSet<>(bot.commands.values())) {
-                        if (cmd.cog == cog && (!cmd.hidden || isOwner) && !(cmd.requiresOwner && !isOwner)) {
-                            String cName = cmd.cog.getDisplayName();
+                        if (cmd.module == module && (!cmd.hidden || isOwner) && !(cmd.requiresOwner && !isOwner)) {
+                            String cName = cmd.module.getDisplayName();
                             String entry = "\u2022 **" + cmd.name + "**: " + cmd.description;
 
                             if (fields.containsKey(cName)) {
@@ -181,14 +178,14 @@ public class CoreCog extends Cog {
         }
 
         int chars = embedAuthorChars(ctx);
-        for (String cog: fields.keySet()) {
-            List<String> field = fields.get(cog);
+        for (String module: fields.keySet()) {
+            List<String> field = fields.get(module);
             String content = String.join("\n", field);
             if (content.length() < 1) {
                 content = "No visible commands.";
             }
 
-            int preLen = content.length() + cog.length();
+            int preLen = content.length() + module.length();
             if (chars + preLen > charLimit) {
                 pages.add(emb.build());
                 emb = newEmbedWithAuthor(ctx)
@@ -197,13 +194,13 @@ public class CoreCog extends Cog {
             }
 
             if (content.length() <= MessageEmbed.VALUE_MAX_LENGTH) {
-                emb.addField(cog, content, false);
+                emb.addField(module, content, false);
             } else {
                 Paginator pager = new Paginator(1024);
                 for (String s: field) pager.addLine(s);
 
                 for (String page: pager.getPages()) {
-                    emb.addField(cog, page, true);
+                    emb.addField(module, page, true);
                 }
             }
             chars += preLen;

@@ -1,10 +1,9 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.kdrag0n.bluestone.*;
 import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.handlers.RMessageWaitListener;
 import com.kdrag0n.bluestone.util.StackUtil;
-import com.kdrag0n.bluestone.util.Switch;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
@@ -33,23 +32,23 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("SameParameterValue")
-public class ReplCog extends Cog {
+public class ReplModule extends Module {
     public static final String[] NASHORN_ARGS = { "--language=es6", "-scripting" };
     public static final Pattern JS_OBJECT_PATTERN = Pattern.compile("^\\[object [A-Z][a-z0-9]*]$");
-    private static final Logger logger = LoggerFactory.getLogger(ReplCog.class);
+    private static final Logger logger = LoggerFactory.getLogger(ReplModule.class);
     private static final Pattern CODE_TYPE_PATTERN = Pattern.compile("```(?:js|javascript)\n?");
     private final String token;
     private static final String IMPORTS = "net.dv8tion.jda.core.entities\n" + "net.dv8tion.jda.core\n"
             + "net.dv8tion.jda.core.entities.impl\n" + "net.dv8tion.jda.core.audio\n" + "net.dv8tion.jda.core.audit\n"
             + "net.dv8tion.jda.core.managers\n" + "net.dv8tion.jda.core.exceptions\n" + "net.dv8tion.jda.core.events\n"
             + "net.dv8tion.jda.core.utils\n" + "com.kdrag0n.bluestone\n" + "org.apache.logging.log4j\n"
-            + "javax.script\n" + "com.kdrag0n.bluestone.cogs\n" + "com.kdrag0n.bluestone.errors\n" + "org.json\n"
+            + "javax.script\n" + "com.kdrag0n.bluestone.modules\n" + "com.kdrag0n.bluestone.errors\n" + "org.json\n"
             + "com.kdrag0n.bluestone.sql\n" + "com.kdrag0n.bluestone.handlers\n" + "com.kdrag0n.bluestone.enums\n"
             + "com.kdrag0n.bluestone.util\n" + "java.time\n" + "java.math\n" + "java.lang\n" + "java.util\n";
 
     private TLongSet replSessions = new TLongHashSet();
 
-    public ReplCog(Bot bot) {
+    public ReplModule(Bot bot) {
         super(bot);
 
         token = bot.getConfig().getString("token");

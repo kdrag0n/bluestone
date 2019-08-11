@@ -1,4 +1,4 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -6,7 +6,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.j256.ormlite.dao.Dao;
 import com.kdrag0n.bluestone.Bot;
-import com.kdrag0n.bluestone.Cog;
+import com.kdrag0n.bluestone.Module;
 import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.Perm;
 import com.kdrag0n.bluestone.annotations.Command;
@@ -55,8 +55,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class MiscCog extends Cog {
-    private static final Logger logger = LoggerFactory.getLogger(MiscCog.class);
+public class MiscModule extends Module {
+    private static final Logger logger = LoggerFactory.getLogger(MiscModule.class);
 
     private static final int PROFILE_WIDTH = 1600;
     private static final int PROFILE_HEIGHT = 1000;
@@ -82,7 +82,7 @@ public class MiscCog extends Cog {
                     if (bgFile.exists())
                         bg = ImageIO.read(bgFile);
                     else
-                        bg = ImageIO.read(MiscCog.class.getResourceAsStream("/assets/default_profile_bg.png"));
+                        bg = ImageIO.read(MiscModule.class.getResourceAsStream("/assets/default_profile_bg.png"));
 
                     // Card image
                     BufferedImage card = new BufferedImage(PROFILE_WIDTH, PROFILE_HEIGHT, BufferedImage.TYPE_INT_RGB);
@@ -121,7 +121,7 @@ public class MiscCog extends Cog {
 
                     while (iterator.hasNext()) {
                         int flag = iterator.next();
-                        Class<EntertainmentCog> cl = EntertainmentCog.class;
+                        Class<EntertainmentModule> cl = EntertainmentModule.class;
                         int startx = (540 - (60 * flags.size())) / 2;
                         InputStream iconStream;
 
@@ -184,7 +184,7 @@ public class MiscCog extends Cog {
     private static final TLongSet profileSetupSessions = new TLongHashSet();
     private final Dao<UserProfile, Long> profileDao;
 
-    public MiscCog(Bot bot) {
+    public MiscModule(Bot bot) {
         super(bot);
 
         profileDao = setupDao(UserProfile.class);

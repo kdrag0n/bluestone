@@ -1,4 +1,4 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -41,8 +41,8 @@ import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
 import static com.kdrag0n.bluestone.util.Strings.statify;
 import static com.kdrag0n.bluestone.util.Strings.str;
 
-public class InfoCog extends Cog {
-    private static final Logger logger = LoggerFactory.getLogger(InfoCog.class);
+public class InfoModule extends Module {
+    private static final Logger logger = LoggerFactory.getLogger(InfoModule.class);
 
     private static final int[] CHAR_NO_PREVIEW = { 65279 };
     private static final byte[] DIRECTIONALITY_NO_PREVIEW = { Character.DIRECTIONALITY_WHITESPACE,
@@ -87,7 +87,7 @@ public class InfoCog extends Cog {
                 }
             });
 
-    public InfoCog(Bot bot) {
+    public InfoModule(Bot bot) {
         super(bot);
     }
 

@@ -1,10 +1,10 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.j256.ormlite.dao.Dao;
 import com.joestelmach.natty.DateGroup;
 import com.joestelmach.natty.Parser;
 import com.kdrag0n.bluestone.Bot;
-import com.kdrag0n.bluestone.Cog;
+import com.kdrag0n.bluestone.Module;
 import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.emotes.DiscordEmoteProvider;
@@ -30,8 +30,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class PollCog extends Cog {
-    private static final Logger logger = LoggerFactory.getLogger(PollCog.class);
+public class PollModule extends Module {
+    private static final Logger logger = LoggerFactory.getLogger(PollModule.class);
 
     private static final Pattern UNICODE_EMOTE_PATTERN = Pattern
             .compile("([\\u20a0-\\u32ff\\x{1f000}-\\x{1ffff}\\x{fe4e5}-\\x{fe4ee}]|[0-9]\\u20e3)");
@@ -42,7 +42,7 @@ public class PollCog extends Cog {
 
     private final Parser timeParser = new Parser();
 
-    public PollCog(Bot bot) {
+    public PollModule(Bot bot) {
         super(bot);
 
         pollDao = setupDao(ActivePoll.class);

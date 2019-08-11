@@ -1,7 +1,7 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.kdrag0n.bluestone.Bot;
-import com.kdrag0n.bluestone.Cog;
+import com.kdrag0n.bluestone.Module;
 import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.Emotes;
 import com.kdrag0n.bluestone.annotations.Command;
@@ -30,10 +30,10 @@ import java.util.concurrent.TimeUnit;
 import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
 import static com.kdrag0n.bluestone.util.Strings.str;
 
-public class GameCog extends Cog {
-    private static final Logger logger = LoggerFactory.getLogger(GameCog.class);
+public class GameModule extends Module {
+    private static final Logger logger = LoggerFactory.getLogger(GameModule.class);
 
-    public GameCog(Bot bot) {
+    public GameModule(Bot bot) {
         super(bot);
     }
 

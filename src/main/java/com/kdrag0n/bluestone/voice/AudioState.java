@@ -1,6 +1,6 @@
 package com.kdrag0n.bluestone.voice;
 
-import com.kdrag0n.bluestone.cogs.MusicCog;
+import com.kdrag0n.bluestone.modules.MusicModule;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import net.dv8tion.jda.core.entities.Guild;
@@ -11,11 +11,11 @@ public class AudioState {
     public AudioPlayer player;
     public TrackScheduler scheduler;
     public Guild guild;
-    MusicCog parent;
+    MusicModule parent;
     public Date creationTime = new Date();
     private PlayerSendHandler sendHandler;
 
-    public AudioState(AudioPlayerManager manager, Guild guild, MusicCog parent) {
+    public AudioState(AudioPlayerManager manager, Guild guild, MusicModule parent) {
         player = manager.createPlayer();
         this.guild = guild;
         this.parent = parent;

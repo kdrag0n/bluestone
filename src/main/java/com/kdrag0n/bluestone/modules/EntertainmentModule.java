@@ -1,4 +1,4 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.google.common.collect.ImmutableList;
 import com.kdrag0n.bluestone.*;
@@ -44,8 +44,8 @@ import java.util.stream.Collectors;
 import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
 import static java.lang.String.format;
 
-public class EntertainmentCog extends Cog {
-    private static final Logger logger = LoggerFactory.getLogger(EntertainmentCog.class);
+public class EntertainmentModule extends Module {
+    private static final Logger logger = LoggerFactory.getLogger(EntertainmentModule.class);
     private static final Map<String, UnicodeString> charsets = new HashMap<String, UnicodeString>() {
         {
             put("normal", uniString(
@@ -205,7 +205,7 @@ public class EntertainmentCog extends Cog {
         return ImmutablePair.of(l, r);
     }
 
-    public EntertainmentCog(Bot bot) {
+    public EntertainmentModule(Bot bot) {
         super(bot);
 
         OkHttpClient http = new OkHttpClient();
@@ -577,7 +577,7 @@ public class EntertainmentCog extends Cog {
 
     @Command(name = "soon", desc = "Feel the speed of Soon™.", aliases = { "soontm" })
     public void cmdSoon(Context ctx) {
-        ctx.channel.sendFile(EntertainmentCog.class.getResourceAsStream("/assets/soon.gif"), "soon.gif", null).queue();
+        ctx.channel.sendFile(EntertainmentModule.class.getResourceAsStream("/assets/soon.gif"), "soon.gif", null).queue();
     }
 
     @Command(name = "flip", desc = "Flip a coin.", aliases = {"coinflip"})

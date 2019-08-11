@@ -27,11 +27,11 @@ public class Command {
     public final String[] aliases;
     public final boolean requiresOwner;
     private final Method func;
-    public final Cog cog;
+    public final Module module;
 
     public Command(String name, String desc, String usage, boolean hidden,
                    List<Perm> permsRequired, boolean guildOnly, String[] aliases,
-                   Method func, Cog cogInstance) {
+                   Method func, Module moduleInstance) {
         this.name = name;
         this.description = desc;
         this.usage = usage;
@@ -40,7 +40,7 @@ public class Command {
         this.guildOnly = guildOnly;
         this.aliases = aliases;
         this.func = func;
-        this.cog = cogInstance;
+        this.module = moduleInstance;
         this.requiresOwner = permsRequired.contains(Perm.BOT_OWNER);
     }
 
@@ -57,7 +57,7 @@ public class Command {
             Perm.checkThrow(ctx, permsRequired);
         }
 
-        func.invoke(cog, ctx);
+        func.invoke(module, ctx);
     }
 
     /*package-private*/ void simpleInvoke(Bot bot, MessageReceivedEvent event, ArrayListView args,

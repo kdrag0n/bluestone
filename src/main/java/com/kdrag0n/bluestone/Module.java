@@ -16,11 +16,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-public abstract class Cog {
+public abstract class Module {
     protected final Bot bot;
     public abstract String getName();
 
-    public Cog(Bot bot) {
+    public Module(Bot bot) {
         this.bot = bot;
     }
 

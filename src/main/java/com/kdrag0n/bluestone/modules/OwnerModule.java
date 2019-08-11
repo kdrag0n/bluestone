@@ -1,4 +1,4 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.kdrag0n.bluestone.*;
 import com.kdrag0n.bluestone.annotations.Command;
@@ -22,12 +22,12 @@ import java.util.Collection;
 
 import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
 
-public class OwnerCog extends Cog {
-    private static final Logger logger = LoggerFactory.getLogger(OwnerCog.class);
-    private ScriptEngine evalEngine = new NashornScriptEngineFactory().getScriptEngine(ReplCog.NASHORN_ARGS);
+public class OwnerModule extends Module {
+    private static final Logger logger = LoggerFactory.getLogger(OwnerModule.class);
+    private ScriptEngine evalEngine = new NashornScriptEngineFactory().getScriptEngine(ReplModule.NASHORN_ARGS);
     private final String token;
 
-    public OwnerCog(Bot bot) {
+    public OwnerModule(Bot bot) {
         super(bot);
 
         token = bot.getConfig().getString("token");
@@ -88,10 +88,10 @@ public class OwnerCog extends Cog {
                     .append("] | Guilds: ").append(shard.jda.getGuilds().size()).append(" | Users: ")
                     .append(shard.jda.getUsers().size());
 
-            MusicCog musicCog = (MusicCog) shard.cogs.get("Music");
-            if (musicCog != null)
-                result.append(" | MStreams: ").append(musicCog.getActiveStreamCount()).append(" | MTracks: ")
-                        .append(musicCog.getTracksLoaded());
+            MusicModule musicModule = (MusicModule) shard.modules.get("Music");
+            if (musicModule != null)
+                result.append(" | MStreams: ").append(musicModule.getActiveStreamCount()).append(" | MTracks: ")
+                        .append(musicModule.getTracksLoaded());
 
             result.append(" | WSPing: ").append(shard.jda.getPing()).append('\n');
         }
@@ -128,10 +128,10 @@ public class OwnerCog extends Cog {
                 shards.remove(ctx.bot);
 
                 for (Bot b : shards) {
-                    if (b.cogs.containsKey("Owner")) {
+                    if (b.modules.containsKey("Owner")) {
                         ctx.bot = b;
                         ctx.jda = b.jda;
-                        ((OwnerCog) b.cogs.get("Owner")).cmdBroadcast(ctx);
+                        ((OwnerModule) b.modules.get("Owner")).cmdBroadcast(ctx);
                     }
                 }
             }
@@ -182,7 +182,7 @@ public class OwnerCog extends Cog {
 
         Object result;
         try {
-            result = evalEngine.eval(ReplCog.cleanUpCode(ctx.rawArgs));
+            result = evalEngine.eval(ReplModule.cleanUpCode(ctx.rawArgs));
         } catch (ScriptException e) {
             result = e.getCause();
             if (result instanceof ScriptException) {
@@ -199,7 +199,7 @@ public class OwnerCog extends Cog {
         else {
             String strResult = result.toString();
 
-            if (ReplCog.JS_OBJECT_PATTERN.matcher(strResult).matches()) {
+            if (ReplModule.JS_OBJECT_PATTERN.matcher(strResult).matches()) {
                 try {
                     strResult = (String) evalEngine.eval("JSON.stringify(last)");
                 } catch (ScriptException e) {

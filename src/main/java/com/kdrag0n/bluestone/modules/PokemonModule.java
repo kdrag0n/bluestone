@@ -1,8 +1,8 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.j256.ormlite.dao.Dao;
 import com.kdrag0n.bluestone.Bot;
-import com.kdrag0n.bluestone.Cog;
+import com.kdrag0n.bluestone.Module;
 import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.sql.Pokemon;
@@ -13,12 +13,12 @@ import java.util.regex.Pattern;
 
 import static com.kdrag0n.bluestone.util.Strings.str;
 
-public class PokemonCog extends Cog {
+public class PokemonModule extends Module {
     private static final Pattern DIGIT3_PATTERN = Pattern.compile("^[0-9]{1,3}$");
     private static final Pattern PKNAME_PATTERN = Pattern.compile("^[a-zA-Z .]{1,16}$");
     private final Dao<Pokemon, Short> dao;
 
-    public PokemonCog(Bot bot) {
+    public PokemonModule(Bot bot) {
         super(bot);
 
         dao = setupDao(Pokemon.class);

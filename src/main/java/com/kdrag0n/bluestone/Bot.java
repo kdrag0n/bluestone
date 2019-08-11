@@ -11,8 +11,6 @@ import com.kdrag0n.bluestone.handlers.MessageWaitEventListener;
 import com.kdrag0n.bluestone.handlers.RejectedExecHandlerImpl;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
-import gnu.trove.set.TLongSet;
-import gnu.trove.set.hash.TLongHashSet;
 import net.dv8tion.jda.bot.entities.ApplicationInfo;
 import net.dv8tion.jda.core.*;
 import net.dv8tion.jda.core.JDA.ShardInfo;
@@ -38,9 +36,6 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -51,7 +46,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
 import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
-import static com.kdrag0n.bluestone.util.Strings.format;
 import static net.dv8tion.jda.core.entities.Game.*;
 
 public class Bot implements EventListener {
@@ -69,13 +63,13 @@ public class Bot implements EventListener {
                     .setDaemon(true)
                     .setNameFormat("Bot BG-Task Thread %d")
                     .build());
-    private static final ThreadPoolExecutor cogEventExecutor = new ThreadPoolExecutor(4, 32, 10, TimeUnit.SECONDS,
+    private static final ThreadPoolExecutor moduleEventExecutor = new ThreadPoolExecutor(4, 32, 10, TimeUnit.SECONDS,
             new ArrayBlockingQueue<>(64),
             new ThreadFactoryBuilder()
                     .setDaemon(true)
-                    .setNameFormat("Bot Cog-Event Pool Thread %d")
+                    .setNameFormat("Bot Module-Event Pool Thread %d")
                     .build(),
-            new RejectedExecHandlerImpl("Cog-Event"));
+            new RejectedExecHandlerImpl("Module-Event"));
     public static final ThreadPoolExecutor threadExecutor = new ThreadPoolExecutor(4, 85, 10, TimeUnit.SECONDS,
             new ArrayBlockingQueue<>(72),
             new ThreadFactoryBuilder()
@@ -87,7 +81,7 @@ public class Bot implements EventListener {
     public final JDA jda;
     public final ShardUtil shardUtil;
     public final Map<String, Command> commands = new HashMap<>();
-    public final Map<String, Cog> cogs = new HashMap<>();
+    public final Map<String, Module> modules = new HashMap<>();
     private final Map<Class<? extends Event>, List<ExtraEvent>> extraEvents = new HashMap<>();
     public static final OkHttpClient http = new OkHttpClient.Builder()
             .cache(new Cache(new File("data/http_cache"), 24000000000L))
@@ -222,10 +216,10 @@ public class Bot implements EventListener {
             onShutdown();
         }
 
-        dispatchCogEvent(event);
+        dispatchModuleEvent(event);
     }
 
-    private void dispatchCogEvent(Event event) {
+    private void dispatchModuleEvent(Event event) {
         for (Map.Entry<Class<? extends Event>, List<ExtraEvent>> entry : extraEvents.entrySet()) {
             Class<? extends Event> eventClass = entry.getKey();
 
@@ -248,7 +242,7 @@ public class Bot implements EventListener {
                         }
                     };
 
-                    cogEventExecutor.execute(task);
+                    moduleEventExecutor.execute(task);
                 }
             }
         }
@@ -264,7 +258,7 @@ public class Bot implements EventListener {
         }
 
         ownerId = owner.getIdLong();
-        ownerTag = Cog.getTag(owner);
+        ownerTag = Module.getTag(owner);
     }
 
     private void onReady() {
@@ -292,18 +286,18 @@ public class Bot implements EventListener {
 
             scheduledExecutor.scheduleAtFixedRate(task, 10, 120, TimeUnit.SECONDS);
 
-            Reflections reflector = new Reflections("com.kdrag0n.bluestone.cogs");
-            Set<Class<? extends Cog>> cogClasses = reflector.getSubTypesOf(Cog.class);
-            for (Class<?> cogClass : cogClasses) {
-                if (cogClass.isAnnotationPresent(Disable.class))
+            Reflections reflector = new Reflections("com.kdrag0n.bluestone.modules");
+            Set<Class<? extends Module>> moduleClasses = reflector.getSubTypesOf(Module.class);
+            for (Class<?> moduleClass : moduleClasses) {
+                if (moduleClass.isAnnotationPresent(Disable.class))
                     continue;
 
                 try {
-                    Cog cog = (Cog) cogClass.getConstructor(Bot.class).newInstance(this);
-                    registerCog(cog);
-                    cog.onLoad();
+                    Module module = (Module) moduleClass.getConstructor(Bot.class).newInstance(this);
+                    registerModule(module);
+                    module.onLoad();
                 } catch (Throwable e) {
-                    logger.error("Failed to register cog {}", cogClass.getName(), e);
+                    logger.error("Failed to register module {}", moduleClass.getName(), e);
                 }
             }
         } finally {
@@ -311,8 +305,8 @@ public class Bot implements EventListener {
         }
     }
 
-    private void registerCog(Cog cog) {
-        Class<? extends Cog> clazz = cog.getClass();
+    private void registerModule(Module module) {
+        Class<? extends Module> clazz = module.getClass();
 
         for (Method method : clazz.getDeclaredMethods()) {
             if (method.isAnnotationPresent(com.kdrag0n.bluestone.annotations.Command.class)) {
@@ -348,7 +342,7 @@ public class Bot implements EventListener {
                 }
 
                 Command command = new Command(anno.name(), anno.desc(), anno.usage(), anno.hidden(),
-                        perms, anno.guildOnly(), anno.aliases(), method, cog);
+                        perms, anno.guildOnly(), anno.aliases(), method, module);
 
                 if (commands.containsKey(command.name))
                     throw new IllegalStateException("Command '" + command.name + "' already registered!");
@@ -363,7 +357,7 @@ public class Bot implements EventListener {
                 }
             } else if (method.isAnnotationPresent(EventHandler.class)) {
                 EventHandler anno = method.getAnnotation(EventHandler.class);
-                ExtraEvent extraEvent = new ExtraEvent(method, cog);
+                ExtraEvent extraEvent = new ExtraEvent(method, module);
                 Class eventClass = method.getParameterTypes()[0];
 
                 if (extraEvents.containsKey(eventClass)) {
@@ -377,7 +371,7 @@ public class Bot implements EventListener {
             }
         }
 
-        cogs.put(cog.getName(), cog);
+        modules.put(module.getName(), module);
     }
 
     private void onShutdown() {

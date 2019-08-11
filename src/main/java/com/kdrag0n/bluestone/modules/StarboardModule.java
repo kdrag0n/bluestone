@@ -1,4 +1,4 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -48,8 +48,8 @@ import java.util.stream.Collectors;
 
 import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
 
-public class StarboardCog extends Cog {
-    private static final Logger logger = LoggerFactory.getLogger(StarboardCog.class);
+public class StarboardModule extends Module {
+    private static final Logger logger = LoggerFactory.getLogger(StarboardModule.class);
     private static final List<Perm> MOD_PERMS = new ArrayList<>(2);
     private static final String[] TOP_3_BADGES = { "🥇", "🥈", "🥉" };
     private static final String NO_COMMAND = "🤔 **I need an action!**\n" + "The following are valid:\n"
@@ -88,7 +88,7 @@ public class StarboardCog extends Cog {
         MOD_PERMS.add(Perm.MANAGE_CHANNEL);
     }
 
-    public StarboardCog(Bot bot) {
+    public StarboardModule(Bot bot) {
         super(bot);
 
         dao = setupDao(Starboard.class);

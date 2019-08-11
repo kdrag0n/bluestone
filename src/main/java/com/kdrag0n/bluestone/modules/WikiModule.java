@@ -1,7 +1,7 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.kdrag0n.bluestone.Bot;
-import com.kdrag0n.bluestone.Cog;
+import com.kdrag0n.bluestone.Module;
 import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.annotations.Command;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -9,11 +9,11 @@ import okhttp3.Request;
 import org.json.JSONArray;
 
 /**
- * Wikipedia cog
+ * Wikipedia module
  * @author Beefywhale
  */
-public class WikiCog extends Cog {
-    public WikiCog(Bot bot) {
+public class WikiModule extends Module {
+    public WikiModule(Bot bot) {
         super(bot);
     }
 

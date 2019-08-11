@@ -1,9 +1,9 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.jagrosh.jdautilities.menu.Paginator;
 import com.kdrag0n.bluestone.Bot;
-import com.kdrag0n.bluestone.Cog;
+import com.kdrag0n.bluestone.Module;
 import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.Perm;
 import com.kdrag0n.bluestone.annotations.Command;
@@ -42,8 +42,8 @@ import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
 import static com.kdrag0n.bluestone.util.Strings.format;
 import static com.kdrag0n.bluestone.util.Strings.str;
 
-public class CryptoCurrencyCog extends Cog {
-    private static final Logger logger = LoggerFactory.getLogger(CryptoCurrencyCog.class);
+public class CryptoCurrencyModule extends Module {
+    private static final Logger logger = LoggerFactory.getLogger(CryptoCurrencyModule.class);
     private static volatile Map<String, Cryptocurrency> currencies = new LinkedHashMap<>();
     private static final ScheduledExecutorService scheduledExec = new ScheduledThreadPoolExecutor(1,
             new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Cryptocurrency Updater Thread %d").build());
@@ -54,7 +54,7 @@ public class CryptoCurrencyCog extends Cog {
     private static Field stringsField;
 
     static {
-        scheduledExec.scheduleAtFixedRate(CryptoCurrencyCog::update, 0, 11, TimeUnit.MINUTES);
+        scheduledExec.scheduleAtFixedRate(CryptoCurrencyModule::update, 0, 11, TimeUnit.MINUTES);
         try {
             stringsField = Paginator.Builder.class.getDeclaredField("strings");
             stringsField.setAccessible(true);
@@ -64,7 +64,7 @@ public class CryptoCurrencyCog extends Cog {
         }
     }
 
-    public CryptoCurrencyCog(Bot bot) {
+    public CryptoCurrencyModule(Bot bot) {
         super(bot);
     }
 

@@ -1,4 +1,4 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Disable
-public class RolemanCog extends Cog {
-    private static final Logger logger = LoggerFactory.getLogger(RolemanCog.class);
+public class RolemanModule extends Module {
+    private static final Logger logger = LoggerFactory.getLogger(RolemanModule.class);
     private static final String NO_COMMAND = "🤔 **I need an action!**\n" + "The following are valid:\n"
             + "    \u2022 `[id]` - show quote `id`\n" + "    \u2022 `add [quote]` - add a quote\n"
             + "    \u2022 `delete [id]` - delete a quote, if you own it\n"
@@ -46,7 +46,7 @@ public class RolemanCog extends Cog {
     private final Dao<GuildRoleOption, Long> dao;
     private final Dao<GuildMemberActions, Integer> profDao;
 
-    public RolemanCog(Bot bot) {
+    public RolemanModule(Bot bot) {
         super(bot);
 
         dao = setupDao(GuildRoleOption.class);

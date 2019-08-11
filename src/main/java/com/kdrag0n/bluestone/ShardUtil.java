@@ -9,7 +9,7 @@ import com.j256.ormlite.jdbc.DataSourceConnectionSource;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
-import com.kdrag0n.bluestone.cogs.MusicCog;
+import com.kdrag0n.bluestone.modules.MusicModule;
 import com.kdrag0n.bluestone.sql.GuildPrefix;
 import com.kdrag0n.bluestone.sql.MySQLDatabaseType;
 import com.zaxxer.hikari.HikariConfig;
@@ -167,21 +167,21 @@ public class ShardUtil {
 
     public int getTrackCount() {
         return sumBot(b -> {
-            MusicCog cog = (MusicCog) b.cogs.get("Music");
-            if (cog == null)
+            MusicModule module = (MusicModule) b.modules.get("Music");
+            if (module == null)
                 return 0;
 
-            return cog.getTracksLoaded();
+            return module.getTracksLoaded();
         });
     }
 
     public int getStreamCount() {
         return sumBot(b -> {
-            MusicCog cog = (MusicCog) b.cogs.get("Music");
-            if (cog == null)
+            MusicModule module = (MusicModule) b.modules.get("Music");
+            if (module == null)
                 return 0;
 
-            return cog.getActiveStreamCount();
+            return module.getActiveStreamCount();
         });
     }
 

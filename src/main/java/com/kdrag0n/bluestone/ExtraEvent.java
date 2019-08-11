@@ -4,9 +4,9 @@ import java.lang.reflect.Method;
 
 class ExtraEvent {
     private Method method;
-    private Cog parent;
+    private Module parent;
 
-    ExtraEvent(Method method, Cog parent) {
+    ExtraEvent(Method method, Module parent) {
         this.method = method;
         this.parent = parent;
     }
@@ -15,7 +15,7 @@ class ExtraEvent {
         return method;
     }
 
-    /*package-private*/ Cog getParent() {
+    /*package-private*/ Module getParent() {
         return parent;
     }
 }

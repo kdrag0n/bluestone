@@ -1,10 +1,10 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.j256.ormlite.dao.Dao;
 import com.joestelmach.natty.DateGroup;
 import com.joestelmach.natty.Parser;
 import com.kdrag0n.bluestone.Bot;
-import com.kdrag0n.bluestone.Cog;
+import com.kdrag0n.bluestone.Module;
 import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.Emotes;
 import com.kdrag0n.bluestone.annotations.Command;
@@ -20,12 +20,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class ReminderCog extends Cog {
-    private static final Logger logger = LoggerFactory.getLogger(ReminderCog.class);
+public class ReminderModule extends Module {
+    private static final Logger logger = LoggerFactory.getLogger(ReminderModule.class);
     private final Parser timeParser = new Parser();
     private final Dao<Reminder, Integer> dao;
 
-    public ReminderCog(Bot bot) {
+    public ReminderModule(Bot bot) {
         super(bot);
 
         dao = setupDao(Reminder.class);

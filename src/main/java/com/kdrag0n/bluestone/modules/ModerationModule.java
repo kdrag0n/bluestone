@@ -1,4 +1,4 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.stmt.DeleteBuilder;
@@ -38,8 +38,8 @@ import java.util.regex.PatternSyntaxException;
 
 import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
 
-public class ModerationCog extends Cog {
-    private static final Logger logger = LoggerFactory.getLogger(ModerationCog.class);
+public class ModerationModule extends Module {
+    private static final Logger logger = LoggerFactory.getLogger(ModerationModule.class);
     private static final String PURGE_NO_PARAMS = Emotes.getFailure() + " **No valid parameters included!**\n"
             + "Valid parameters:\n" + "    \u2022 `<num 1-800>` - number of messages to include **(required)**\n"
             + "    \u2022 `links` - include messages with links\n"
@@ -79,7 +79,7 @@ public class ModerationCog extends Cog {
         }
     }
 
-    public ModerationCog(Bot bot) {
+    public ModerationModule(Bot bot) {
         super(bot);
 
         autoroleDao = setupDao(GuildAutorole.class);

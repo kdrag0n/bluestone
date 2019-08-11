@@ -1,4 +1,4 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.j256.ormlite.dao.Dao;
 import com.kdrag0n.bluestone.*;
@@ -21,8 +21,8 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.regex.Pattern;
 
-public class WelcomeCog extends Cog {
-    private static final Logger logger = LoggerFactory.getLogger(WelcomeCog.class);
+public class WelcomeModule extends Module {
+    private static final Logger logger = LoggerFactory.getLogger(WelcomeModule.class);
     private static final String DEFAULT_WELCOME = "[mention] **Welcome to [server]!**\n"
             + "Enjoy your time here, and find out more about me with `[prefix]help`.";
     private static final String DEFAULT_LEAVE = "[rip] **[member_tag] has left the server...**";
@@ -51,7 +51,7 @@ public class WelcomeCog extends Cog {
             + "To use this bot, try [prefix]help. It was made by [bot_owner]. Have fun!```";
     private final Dao<GuildWelcomeMessages, Long> messageDao;
 
-    public WelcomeCog(Bot bot) {
+    public WelcomeModule(Bot bot) {
         super(bot);
 
         messageDao = setupDao(GuildWelcomeMessages.class);

@@ -1,4 +1,4 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.j256.ormlite.dao.Dao;
@@ -45,16 +45,16 @@ import java.util.stream.Collectors;
 
 import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
 
-public class MusicCog extends Cog {
+public class MusicModule extends Module {
     private ScheduledThreadPoolExecutor bgExecutor = new ScheduledThreadPoolExecutor(2, new ThreadFactoryBuilder()
             .setDaemon(true)
-            .setNameFormat("Music Cog Cleanup Thread %d")
+            .setNameFormat("Music Module Cleanup Thread %d")
             .build());
     private final DefaultAudioPlayerManager playerManager = new DefaultAudioPlayerManager();
     private final Dao<GuildMusicSettings, Long> settingsDao;
     public final TLongObjectMap<AudioState> audioStates = new TSynchronizedLongObjectMap<>(new TLongObjectHashMap<>());
 
-    public MusicCog(Bot bot) {
+    public MusicModule(Bot bot) {
         super(bot);
 
         playerManager.setItemLoaderThreadPoolSize(16);
@@ -319,7 +319,7 @@ public class MusicCog extends Cog {
 
         EmbedBuilder builder = new EmbedBuilder()
                 .setAuthor("Voice Queue", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
-                .setColor(val(ctx.member.getColor()).or(Cog::randomColor))
+                .setColor(val(ctx.member.getColor()).or(Module::randomColor))
                 .setTimestamp(Instant.now());
 
         if (state.scheduler.current == null)

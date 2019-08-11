@@ -1,11 +1,11 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.kdrag0n.bluestone.Bot;
-import com.kdrag0n.bluestone.Cog;
+import com.kdrag0n.bluestone.Module;
 import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.annotations.Command;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -25,8 +25,8 @@ import java.net.URLEncoder;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-public class GoogleCog extends Cog {
-    private static final Logger logger = LoggerFactory.getLogger(GoogleCog.class);
+public class GoogleModule extends Module {
+    private static final Logger logger = LoggerFactory.getLogger(GoogleModule.class);
     private static final String API_URL_BASE = "https://www.googleapis.com/customsearch/v1?key=%s&cx=011887893391472424519:xf_tuvgfrgk&q=%s";
     private static final MessageEmbed FAILED_EMBED = new EmbedBuilder().setColor(randomColor())
             .setTitle("Google Search")
@@ -93,7 +93,7 @@ public class GoogleCog extends Cog {
                 }
             });
 
-    public GoogleCog(Bot bot) {
+    public GoogleModule(Bot bot) {
         super(bot);
     }
 

@@ -1,7 +1,7 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.kdrag0n.bluestone.Bot;
-import com.kdrag0n.bluestone.Cog;
+import com.kdrag0n.bluestone.Module;
 import com.kdrag0n.bluestone.ShardUtil;
 import com.kdrag0n.bluestone.annotations.EventHandler;
 import com.zanox.lib.simplegraphiteclient.SimpleGraphiteClient;
@@ -26,9 +26,9 @@ import java.util.logging.Level;
 
 import static com.kdrag0n.bluestone.util.Strings.str;
 
-public class StatReporterCog extends Cog {
+public class StatReporterModule extends Module {
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
-    private static final Logger logger = LoggerFactory.getLogger(StatReporterCog.class);
+    private static final Logger logger = LoggerFactory.getLogger(StatReporterModule.class);
     private SimpleGraphiteClient graphiteClient;
     private static final AtomicInteger messagesSinceLastReport = new AtomicInteger();
     private static final AtomicInteger newGuildsSinceLastReport = new AtomicInteger();
@@ -36,7 +36,7 @@ public class StatReporterCog extends Cog {
     private static final String CARBONITEX = "https://www.carbonitex.net/discord/data/botdata.php";
     private static final String DISCORD_BOTS_ORG = "https://discordbots.org/api/bots/%s/stats";
 
-    public StatReporterCog(Bot bot) {
+    public StatReporterModule(Bot bot) {
         super(bot);
 
         if (bot.getShardNum() == 1 && bot.getConfig().has("graphite_host") && bot.getConfig().has("graphite_port")) {

@@ -1,9 +1,9 @@
-package com.kdrag0n.bluestone.cogs;
+package com.kdrag0n.bluestone.modules;
 
 import com.censhare.db.iindex.IDSetTrie;
 import com.j256.ormlite.dao.Dao;
 import com.kdrag0n.bluestone.Bot;
-import com.kdrag0n.bluestone.Cog;
+import com.kdrag0n.bluestone.Module;
 import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.annotations.EventHandler;
@@ -18,12 +18,12 @@ import org.slf4j.Logger;
 import java.sql.SQLException;
 import java.util.List;
 
-public class AfkCog extends Cog {
-    private static final Logger logger = LoggerFactory.getLogger(AfkCog.class);
+public class AfkModule extends Module {
+    private static final Logger logger = LoggerFactory.getLogger(AfkModule.class);
     private static final IDSetTrie afkUsers = new IDSetTrie(48);
     private final Dao<AfkMessage, Long> dao;
 
-    public AfkCog(Bot bot) {
+    public AfkModule(Bot bot) {
         super(bot);
 
         dao = setupDao(AfkMessage.class);
