@@ -533,12 +533,15 @@ public class Bot implements EventListener {
         }
 
         ShardUtil shardUtil = new ShardUtil(shardCount, config);
-        JDABuilder builder = new JDABuilder(AccountType.BOT).setToken(token).setAudioEnabled(true)
-                .setAutoReconnect(true).setWebsocketFactory(new WebSocketFactory().setConnectionTimeout(120000))
-                .setBulkDeleteSplittingEnabled(false).setStatus(OnlineStatus.IDLE).setCorePoolSize(5)
-                .setEnableShutdownHook(true)
-                .setHttpClientBuilder(new OkHttpClient.Builder().retryOnConnectionFailure(true))
-                .setGame(Game.playing("something"));
+        JDABuilder builder = new JDABuilder(AccountType.BOT)
+                .setToken(token)
+                .setWebsocketFactory(new WebSocketFactory()
+                        .setConnectionTimeout(120000))
+                .setBulkDeleteSplittingEnabled(false)
+                .setStatus(OnlineStatus.IDLE)
+                .setHttpClientBuilder(new OkHttpClient.Builder()
+                        .retryOnConnectionFailure(true))
+                .setGame(Game.playing("startup"));
 
         if ((System.getProperty("os.arch").startsWith("x86") || System.getProperty("os.arch").equals("amd64"))
                 && (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX))
