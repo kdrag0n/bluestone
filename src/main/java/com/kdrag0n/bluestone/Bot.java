@@ -29,6 +29,7 @@ import net.dv8tion.jda.core.hooks.EventListener;
 import net.dv8tion.jda.core.requests.RestAction;
 import okhttp3.*;
 import org.apache.commons.lang3.SystemUtils;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.json.JSONArray;
@@ -612,7 +613,7 @@ public class Bot implements EventListener {
     public static okhttp3.Callback callback(EConsumer<Response> success, EConsumer<Throwable> failure) {
         return new okhttp3.Callback() {
             @Override
-            public void onResponse(Call call, Response response) {
+            public void onResponse(@NotNull Call call, @NotNull Response response) {
                 try {
                     if (!(response.isSuccessful() || response.isRedirect())) {
                         failure.accept(new IOException(
@@ -651,7 +652,7 @@ public class Bot implements EventListener {
             }
 
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 try {
                     failure.accept(e);
                 } catch (Throwable ee) {
