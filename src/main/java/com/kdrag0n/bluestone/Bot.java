@@ -91,6 +91,59 @@ public class Bot implements EventListener {
     private boolean isReady;
     public final PrefixStore prefixStore;
 
+    private static final RandomSelect<Game> gameSelector = new RandomSelect<Game>(50)
+            .add(playing("with my buddies"))
+            .add(playing("with bits and bytes"))
+            .add(playing("World Domination"))
+            .add(playing("with you"))
+            .add(playing("with potatoes"))
+            .add(playing("something"))
+            .add(streaming("data", ""))
+            .add(streaming("music", "https://www.youtube.com/channel/UC-9-kyTW8ZkZNDHQJ6FgpwQ"))
+            .add(streaming("your tunes", "https://www.youtube.com/watch?v=zQJh0MWvccs"))
+            .add(listening("you"))
+            .add(watching("darkness"))
+            .add(watching("streams"))
+            .add(streaming("your face", "https://www.youtube.com/watch?v=IUjZtoCrpyA"))
+            .add(listening("alone"))
+            .add(streaming("Alone", "https://www.youtube.com/watch?v=YnwsMEabmSo"))
+            .add(streaming("bits and bytes", "https://www.youtube.com/watch?v=N3ZMvqISfvY"))
+            .add(listening("Rick Astley"))
+            .add(streaming("only the very best", "https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
+            .add(listening("those potatoes"))
+            .add(playing("with my fellow shards"))
+            .add(listening("the cries of my shards"))
+            .add(listening("as the sun goes down"))
+            .add(streaming("Monstercat", "https://www.twitch.tv/monstercat"))
+            .add(watching("dem videos"))
+            .add(watching("you in your sleep"))
+            .add(watching("over you as I sleep"))
+            .add(watching("the movement of electrons"))
+            .add(playing("with some protons"))
+            .add(listening("trigger-happy players"))
+            .add(playing("Discord Hacker v39.2"))
+            .add(playing("Discord Hacker v42.0"))
+            .add(listening("Discordians"))
+            .add(streaming("donations", "https://paypal.me/dragon5232"))
+            .add(listening("my people"))
+            .add(listening("my favorites"))
+            .add(watching("my minions"))
+            .add(watching("the chosen ones"))
+            .add(watching("stars combust"))
+            .add(watching("your demise"))
+            .add(streaming("the supernova", "https://www.youtube.com/watch?v=5WXyCJ1w3Ks"))
+            .add(listening("something"))
+            .add(streaming("something", "https://www.youtube.com/watch?v=FM7MFYoylVs"))
+            .add(watching("I am Cow"))
+            .add(watching("you play"))
+            .add(watching("for raids"))
+            .add(playing("buffing before the raid"))
+            .add(streaming("this sick action", "https://www.youtube.com/watch?v=tD6KJ7QtQH8"))
+            .add(listening("memes"))
+            .add(watching("memes"))
+            .add(playing("memes")) // memes
+            .add(watching("that dank vid"));
+
     static {
         scheduledExecutor.setMaximumPoolSize(16);
         scheduledExecutor.setKeepAliveTime(16L, TimeUnit.SECONDS);
@@ -219,46 +272,7 @@ public class Bot implements EventListener {
             if (jda.getGuildById(250780048943087618L) != null)
                 Emotes.setHasParadise(true);
 
-            Runnable task = () -> {
-                Game status = new RandomSelect<Game>(50)
-                        .add(() -> playing(format("with {0} users", shardUtil.getUserCount())))
-                        .add(() -> playing(format("in {0} channels", shardUtil.getChannelCount())))
-                        .add(() -> playing(format("in {0} servers", shardUtil.getGuildCount())))
-                        .add(() -> playing(format("in {0} guilds", shardUtil.getGuildCount())))
-                        .add(() -> playing(String.format("from shard %d of %d", getShardNum(), getShardTotal())))
-                        .add(playing("with my buddies")).add(playing("with bits and bytes"))
-                        .add(playing("World Domination")).add(playing("with you")).add(playing("with potatoes"))
-                        .add(playing("something")).add(streaming("data", ""))
-                        .add(streaming("music", "https://www.youtube.com/channel/UC-9-kyTW8ZkZNDHQJ6FgpwQ"))
-                        .add(streaming("your tunes", "https://www.youtube.com/watch?v=zQJh0MWvccs")).add(listening("you"))
-                        .add(watching("darkness")).add(watching("streams"))
-                        .add(streaming("your face", "https://www.youtube.com/watch?v=IUjZtoCrpyA")).add(listening("alone"))
-                        .add(streaming("Alone", "https://www.youtube.com/watch?v=YnwsMEabmSo"))
-                        .add(streaming("bits and bytes", "https://www.youtube.com/watch?v=N3ZMvqISfvY"))
-                        .add(listening("Rick Astley"))
-                        .add(streaming("only the very best", "https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
-                        .add(listening("those potatoes")).add(playing("with my fellow shards"))
-                        .add(listening("the cries of my shards")).add(listening("as the sun goes down"))
-                        .add(streaming("Monstercat", "https://www.twitch.tv/monstercat")).add(watching("dem videos"))
-                        .add(watching("you in your sleep")).add(watching("over you as I sleep"))
-                        .add(watching("the movement of electrons")).add(playing("with some protons"))
-                        .add(listening("trigger-happy players")).add(playing("Discord Hacker v39.2"))
-                        .add(playing("Discord Hacker v42.0")).add(listening("Discordians"))
-                        .add(streaming("donations", "https://paypal.me/dragon5232"))
-                        .add(streaming("You should totally donate!", "https://paypal.me/dragon5232"))
-                        .add(listening("my people")).add(listening("my favorites")).add(watching("my minions"))
-                        .add(watching("the chosen ones")).add(watching("stars combust")).add(watching("your demise"))
-                        .add(streaming("the supernova", "https://www.youtube.com/watch?v=5WXyCJ1w3Ks"))
-                        .add(listening("something"))
-                        .add(streaming("something", "https://www.youtube.com/watch?v=FM7MFYoylVs"))
-                        .add(watching("I am Cow")).add(watching("you play")).add(watching("for raids"))
-                        .add(playing("buffing before the raid"))
-                        .add(streaming("this sick action", "https://www.youtube.com/watch?v=tD6KJ7QtQH8"))
-                        .add(listening("memes")).add(watching("memes")).add(playing("memes")) // memes
-                        .add(watching("that dank vid")).select();
-
-                jda.getPresence().setGame(status);
-            };
+            Runnable task = () -> jda.getPresence().setGame(gameSelector.select());
 
             scheduledExecutor.scheduleAtFixedRate(task, 10, 120, TimeUnit.SECONDS);
 
