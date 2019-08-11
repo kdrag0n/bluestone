@@ -454,7 +454,7 @@ public class MusicCog extends Cog {
     @Perm.Voice.Deafen
     @Perm.ManagePermissions
     @Command(name = "play_first_result", desc = "Toggle the setting for always playing the first search result.",
-            aliases = {"first_result", "always_play_first", "play_first", "playfirst", "apfr"}, guildOnly = true, thread = true)
+            aliases = {"first_result", "always_play_first", "play_first", "playfirst", "apfr"}, guildOnly = true)
     public void cmdPlayFirstResult(Context ctx) throws SQLException {
         GuildMusicSettings settings = settingsDao.queryForId(ctx.guild.getIdLong());
         if (settings == null)

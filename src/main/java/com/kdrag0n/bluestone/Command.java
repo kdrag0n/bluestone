@@ -25,14 +25,13 @@ public class Command {
     private final List<Perm> permsRequired;
     private final boolean guildOnly;
     public final String[] aliases;
-    private final boolean needThread;
     public final boolean requiresOwner;
     private final Method func;
     public final Cog cog;
 
     public Command(String name, String desc, String usage, boolean hidden,
                    List<Perm> permsRequired, boolean guildOnly, String[] aliases,
-                   Method func, Cog cogInstance, boolean needThread) {
+                   Method func, Cog cogInstance) {
         this.name = name;
         this.description = desc;
         this.usage = usage;
@@ -42,7 +41,6 @@ public class Command {
         this.aliases = aliases;
         this.func = func;
         this.cog = cogInstance;
-        this.needThread = needThread;
         this.requiresOwner = permsRequired.contains(Perm.BOT_OWNER);
     }
 
@@ -52,7 +50,7 @@ public class Command {
         Context ctx = new Context(bot, event, args, prefix, invoker, content, processArgs);
 
         if (guildOnly && ctx.guild == null) {
-            throw new GuildOnlyException("Command only works in a guild");
+            throw new GuildOnlyException("Command only works in guilds");
         }
 
         if (permsRequired.size() != 0) {
@@ -64,17 +62,14 @@ public class Command {
 
     /*package-private*/ void simpleInvoke(Bot bot, MessageReceivedEvent event, ArrayListView args,
                              String prefix, String invoker, String content, boolean processArgs) {
-        if (needThread) {
-            Runnable task = () -> invokeWithHandling(bot, event, args, prefix, invoker, content, processArgs);
+        Runnable task = () -> invokeWithHandling(bot, event, args, prefix, invoker, content, processArgs);
 
-            if (Bot.threadExecutor.getActiveCount() >= Bot.threadExecutor.getMaximumPoolSize()) {
-                event.getChannel().sendMessage(
-                        "⌛ Your command has been queued.").queue();
-            }
-            Bot.threadExecutor.execute(task);
-        } else {
-            invokeWithHandling(bot, event, args, prefix, invoker, content, processArgs);
+        if (Bot.threadExecutor.getActiveCount() >= Bot.threadExecutor.getMaximumPoolSize()) {
+            event.getChannel().sendMessage(
+                    "⌛ Your command has been queued.").queue();
         }
+
+        Bot.threadExecutor.execute(task);
     }
 
     private void invokeWithHandling(Bot bot, MessageReceivedEvent event, ArrayListView args,

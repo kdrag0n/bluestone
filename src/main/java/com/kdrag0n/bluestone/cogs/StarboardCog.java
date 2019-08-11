@@ -154,7 +154,7 @@ public class StarboardCog extends Cog {
         }
     }
 
-    @EventHandler(threaded = true)
+    @EventHandler()
     public void onReactionAdd(GuildMessageReactionAddEvent event) throws SQLException, ExecutionException {
         if (!event.getReactionEmote().getName().equals("⭐"))
             return;
@@ -255,7 +255,7 @@ public class StarboardCog extends Cog {
         }
     }
 
-    @EventHandler(threaded = true)
+    @EventHandler()
     public void onReactionRemove(GuildMessageReactionRemoveEvent event) throws SQLException, ExecutionException {
         if (!event.getReactionEmote().getName().equals("⭐"))
             return;
@@ -282,17 +282,17 @@ public class StarboardCog extends Cog {
         }
     }
 
-    @EventHandler(threaded = true)
+    @EventHandler()
     public void onReactionRemoveAll(GuildMessageReactionRemoveAllEvent event) throws SQLException, ExecutionException {
         messageDelete(event.getMessageIdLong());
     }
 
-    @EventHandler(threaded = true)
+    @EventHandler()
     public void onMessageDelete(GuildMessageDeleteEvent event) throws SQLException, ExecutionException {
         messageDelete(event.getMessageIdLong());
     }
 
-    @EventHandler(threaded = true)
+    @EventHandler()
     public void onMessageBulkDelete(MessageBulkDeleteEvent event) throws SQLException, ExecutionException {
         for (String sid : event.getMessageIds()) {
             long id = Long.parseUnsignedLong(sid);
@@ -342,7 +342,7 @@ public class StarboardCog extends Cog {
     }
 
     @Command(name = "star", desc = "Master starboard management command.", aliases = { "stars", "starboard",
-            "starman" }, thread = true, guildOnly = true)
+            "starman" }, guildOnly = true)
     public void managementCommand(Context ctx) throws Throwable {
         if (ctx.args.empty) {
             ctx.send(NO_COMMAND).queue();

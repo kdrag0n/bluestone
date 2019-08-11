@@ -219,7 +219,7 @@ public class InfoCog extends Cog {
         ctx.send(emb.build()).queue();
     }
 
-    @Command(name = "ipinfo", desc = "Get information about an IP or domain.", aliases = { "ip" }, thread = true)
+    @Command(name = "ipinfo", desc = "Get information about an IP or domain.", aliases = { "ip" })
     public void cmdIpInfo(Context ctx) throws Throwable {
         if (ctx.args.empty) {
             ctx.fail("I need an IP or domain!");

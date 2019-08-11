@@ -14,5 +14,4 @@ public @interface Command {
     boolean hidden() default false;
     boolean guildOnly() default false;
     String[] aliases() default {};
-    boolean thread() default false;
 }

@@ -97,7 +97,7 @@ public class CoreCog extends Cog {
     }
 
     @Command(name = "help", desc = "List the available commands and their usage.", usage = "{commands and/or cogs}",
-            aliases = {"halp", "commands"}, thread = true)
+            aliases = {"halp", "commands"})
     public void cmdHelp(Context ctx) {
         int charLimit = ctx.jda.getSelfUser().isBot() ? MessageEmbed.EMBED_MAX_LENGTH_BOT : MessageEmbed.EMBED_MAX_LENGTH_CLIENT;
         boolean isOwner = ctx.author.getIdLong() == Bot.ownerId;

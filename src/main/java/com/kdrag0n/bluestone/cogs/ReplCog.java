@@ -65,7 +65,7 @@ public class ReplCog extends Cog {
     }
 
     @Perm.Owner
-    @Command(name = "repl", desc = "A multilingual REPL, in Discord!\n\nFlags come before language in arguments.", usage = "[language] {flags}", thread = true)
+    @Command(name = "repl", desc = "A multilingual REPL, in Discord!\n\nFlags come before language in arguments.", usage = "[language] {flags}")
     public void cmdRepl(Context ctx) {
         if (ctx.args.length < 1) {
             ctx.fail("I need a valid language!");

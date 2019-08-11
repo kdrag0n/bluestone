@@ -40,7 +40,7 @@ public class AfkCog extends Cog {
     public String getName() {
         return "AFK";
     }
-    @EventHandler(threaded = true)
+    @EventHandler()
     public void onMsg(GuildMessageReceivedEvent event) throws SQLException {
         if (event.getAuthor().isBot())
             return;
@@ -82,7 +82,7 @@ public class AfkCog extends Cog {
         }
     }
 
-    @Command(name = "afk", desc = "Set an AFK message, indicating that you're currently away. Automatically removes message when you're back.", usage = "[message]", thread = true, aliases = {
+    @Command(name = "afk", desc = "Set an AFK message, indicating that you're currently away. Automatically removes message when you're back.", usage = "[message]", aliases = {
             "away" })
     public void cmdAfk(Context ctx) throws SQLException {
         AfkMessage afkMessage = dao.queryForId(ctx.author.getIdLong());

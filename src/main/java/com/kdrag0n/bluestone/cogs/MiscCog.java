@@ -219,7 +219,7 @@ public class MiscCog extends Cog {
         return "Miscellaneous";
     }
 
-    @Command(name = "profile", desc = "Display a user's profile.", usage = "[user / \"setup\" / \"bg\"]", thread = true)
+    @Command(name = "profile", desc = "Display a user's profile.", usage = "[user / \"setup\" / \"bg\"]")
     public void cmdProfile(Context ctx) throws SQLException {
         User user;
         if (Strings.isMention(ctx.rawArgs) && ctx.message.getMentionedUsers().size() > 0)
@@ -326,7 +326,7 @@ public class MiscCog extends Cog {
         profileCache.invalidate(event.getUser());
     }
 
-    @Command(name = "profilesetup", desc = "Set up your personal user profile.", thread = true)
+    @Command(name = "profilesetup", desc = "Set up your personal user profile.")
     public void cmdProfileSetup(Context ctx) throws SQLException {
         if (profileSetupSessions.contains(ctx.author.getIdLong())) {
             ctx.fail("You already have a profile setup session active!");
@@ -395,7 +395,7 @@ public class MiscCog extends Cog {
         }
     }
 
-    @Command(name = "set_profile_bg", desc = "Set your profile background.", usage = "{\"reset\" or \"default\" to reset to default}", thread = true, aliases = {
+    @Command(name = "set_profile_bg", desc = "Set your profile background.", usage = "{\"reset\" or \"default\" to reset to default}", aliases = {
             "profilebg", "profile_bg", "setprofilebg" })
     public void cmdSetProfileBg(Context ctx) {
         String a = ctx.invoker.equalsIgnoreCase("profile") ? ctx.args.get(ctx.args.length - 1) : ctx.rawArgs;
@@ -448,7 +448,7 @@ public class MiscCog extends Cog {
     }
 
     @Perm.Owner
-    @Command(name = "profile_override_bg", desc = "Override an user's profile background. This just executes `profile bg` as them.", usage = "[@user/user ID] {to: reset/default / attach image}", thread = true)
+    @Command(name = "profile_override_bg", desc = "Override an user's profile background. This just executes `profile bg` as them.", usage = "[@user/user ID] {to: reset/default / attach image}")
     public void cmdProfileOverrideBg(Context ctx) {
         User target;
 

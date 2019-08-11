@@ -278,7 +278,7 @@ public class EntertainmentCog extends Cog {
         ctx.send(BLEACH_EMBED).queue();
     }
 
-    @Command(name = "cat", desc = "Get a random cat!", thread = true, aliases = { "randcat" })
+    @Command(name = "cat", desc = "Get a random cat!", aliases = { "randcat" })
     public void cmdCat(Context ctx) {
         ctx.channel.sendTyping().queue();
 
@@ -309,7 +309,7 @@ public class EntertainmentCog extends Cog {
         }
     }
 
-    @Command(name = "dog", desc = "Get a random dog!", thread = true, aliases = { "randdog" })
+    @Command(name = "dog", desc = "Get a random dog!", aliases = { "randdog" })
     public void cmdDog(Context ctx) {
         ctx.channel.sendTyping().queue();
 

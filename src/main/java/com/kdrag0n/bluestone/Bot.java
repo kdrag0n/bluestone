@@ -182,10 +182,7 @@ public class Bot implements EventListener {
                         }
                     };
 
-                    if (extraEvent.isThreaded())
-                        cogEventExecutor.execute(task);
-                    else
-                        task.run();
+                    cogEventExecutor.execute(task);
                 }
             }
         }
@@ -321,7 +318,7 @@ public class Bot implements EventListener {
                 }
 
                 Command command = new Command(anno.name(), anno.desc(), anno.usage(), anno.hidden(),
-                        perms, anno.guildOnly(), anno.aliases(), method, cog, anno.thread());
+                        perms, anno.guildOnly(), anno.aliases(), method, cog);
 
                 if (commands.containsKey(command.name))
                     throw new IllegalStateException("Command '" + command.name + "' already registered!");
@@ -336,7 +333,7 @@ public class Bot implements EventListener {
                 }
             } else if (method.isAnnotationPresent(EventHandler.class)) {
                 EventHandler anno = method.getAnnotation(EventHandler.class);
-                ExtraEvent extraEvent = new ExtraEvent(method, anno.threaded(), cog);
+                ExtraEvent extraEvent = new ExtraEvent(method, cog);
                 Class eventClass = method.getParameterTypes()[0];
 
                 if (extraEvents.containsKey(eventClass)) {

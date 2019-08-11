@@ -57,7 +57,7 @@ public class RolemanCog extends Cog {
         return "Role Manager";
     }
 
-    @EventHandler(threaded = true)
+    @EventHandler()
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) throws SQLException {
         long guildId = event.getGuild().getIdLong();
 
@@ -82,7 +82,7 @@ public class RolemanCog extends Cog {
     }
 
     @Command(name = "role", desc = "Get or remove a role.", aliases = {
-            "rank" }, usage = "[role name]", thread = true, guildOnly = true)
+            "rank" }, usage = "[role name]", guildOnly = true)
     public void cmdRole(Context ctx) throws SQLException {
         if (ctx.args.empty || ctx.rawArgs.equals("list")) {
             List<GuildRoleOption> options = dao.queryBuilder().where().eq("guildId", ctx.guild.getIdLong()).query();
@@ -135,7 +135,7 @@ public class RolemanCog extends Cog {
     }
 
     @Perm.ManageRoles
-    @Command(name = "roles", desc = "Manage roles that users can get.", thread = true, aliases = { "roleman",
+    @Command(name = "roles", desc = "Manage roles that users can get.", aliases = { "roleman",
             "role_manager", "rolecontrol", "rcontrol", "rman" })
     public void cmdControl(Context ctx) {
 

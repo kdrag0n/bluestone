@@ -64,7 +64,7 @@ public class WelcomeCog extends Cog {
     @Perm.ManageServer
     @Perm.ManageRoles
     @Command(name = "welcome", desc = "Manage member welcome messages.", guildOnly = true, aliases = { "welcome_msgs",
-            "welcomemsg" }, thread = true, usage = "[action] {args...}")
+            "welcomemsg" }, usage = "[action] {args...}")
     public void welcomeControl(Context ctx) throws SQLException {
         if (ctx.args.empty) {
             ctx.send(NO_COMMAND).queue();
@@ -206,7 +206,7 @@ public class WelcomeCog extends Cog {
     @Perm.ManageServer
     @Perm.ManageRoles
     @Command(name = "leave", desc = "Manage member leave messages.", guildOnly = true, aliases = { "leave_msgs",
-            "leavemsg" }, thread = true, usage = "[action] {args...}")
+            "leavemsg" }, usage = "[action] {args...}")
     public void leaveControl(Context ctx) throws SQLException {
         if (ctx.args.empty) {
             ctx.send(NO_COMMAND).queue();
@@ -351,7 +351,7 @@ public class WelcomeCog extends Cog {
         ctx.send(TAG_HELP).queue();
     }
 
-    @EventHandler(threaded = true)
+    @EventHandler()
     public void onGuildMemberJoin(GuildMemberJoinEvent event) {
         if (event.getMember().getUser().getIdLong() == bot.jda.getSelfUser().getIdLong())
             return;
@@ -393,7 +393,7 @@ public class WelcomeCog extends Cog {
         }
     }
 
-    @EventHandler(threaded = true)
+    @EventHandler()
     public void onGuildMemberLeave(GuildMemberLeaveEvent event) {
         if (event.getMember().getUser().getIdLong() == bot.jda.getSelfUser().getIdLong())
             return;
@@ -435,7 +435,7 @@ public class WelcomeCog extends Cog {
         }
     }
 
-    @EventHandler(threaded = true)
+    @EventHandler()
     public void onGuildJoin(GuildJoinEvent event) {
         try {
             messageDao.createOrUpdate(
@@ -445,7 +445,7 @@ public class WelcomeCog extends Cog {
         }
     }
 
-    @EventHandler(threaded = true)
+    @EventHandler()
     public void onGuildLeave(GuildLeaveEvent event) {
         try {
             messageDao.deleteById(event.getGuild().getIdLong());

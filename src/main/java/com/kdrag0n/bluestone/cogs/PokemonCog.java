@@ -33,7 +33,7 @@ public class PokemonCog extends Cog {
         return "Pokémon";
     }
 
-    @Command(name = "pokémon", desc = "Get info about a Pokémon!", thread = true,
+    @Command(name = "pokémon", desc = "Get info about a Pokémon!",
             aliases = {"pokemon", "pokèmon", "pokedex", "pokédex"}, usage = "{name or id}")
     public void command(Context ctx) throws SQLException {
         byte mode; // 0 = id, 1 = name, 2 = random

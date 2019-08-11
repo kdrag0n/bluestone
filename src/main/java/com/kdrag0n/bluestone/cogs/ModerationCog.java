@@ -89,7 +89,7 @@ public class ModerationCog extends Cog {
         return "Moderation";
     }
 
-    @EventHandler(threaded = true)
+    @EventHandler()
     public void onMemberJoin(GuildMemberJoinEvent event) throws SQLException {
         if (!event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_ROLES))
             return;
@@ -141,7 +141,7 @@ public class ModerationCog extends Cog {
 
     @Perm.Message.Manage
     @Command(name = "purge", desc = "Purge messages from a channel.", guildOnly = true, aliases = { "clean", "nuke",
-            "prune", "clear" }, usage = "[parameters]", thread = true)
+            "prune", "clear" }, usage = "[parameters]")
     public void cmdPurge(Context ctx) {
         if (ctx.args.empty) {
             ctx.send(PURGE_NO_PARAMS).queue();
@@ -493,7 +493,7 @@ public class ModerationCog extends Cog {
 
     @Perm.ManageRoles
     @Command(name = "autorole", desc = "Manage autoroles in this server.", guildOnly = true, usage = "[action] {role}", aliases = {
-            "autoroles", "ar" }, thread = true)
+            "autoroles", "ar" })
     public void cmdAutorole(Context ctx) throws SQLException {
         if (ctx.args.empty) {
             ctx.send(NO_COMMAND).queue();

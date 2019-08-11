@@ -41,7 +41,7 @@ public class OwnerCog extends Cog {
     }
 
     @Perm.Owner
-    @Command(name = "shutdown", desc = "Shutdown the bot.", thread = true)
+    @Command(name = "shutdown", desc = "Shutdown the bot.")
     public void cmdShutdown(Context ctx) {
         ctx.send(Emotes.getFailure() + " Are you **sure** you want to stop the entire bot? Type `yes` to continue.")
                 .complete();
@@ -62,7 +62,7 @@ public class OwnerCog extends Cog {
 
     @Perm.Owner
     @Command(name = "stopshard", desc = "Stop the current shard.", aliases = {
-            "restart" }, thread = true, usage = "{shard}")
+            "restart" }, usage = "{shard}")
     public void cmdStopShard(Context ctx) {
         final Integer n = ctx.args.empty ? ctx.bot.getShardNum() - 1 : Integer.valueOf(ctx.rawArgs);
         ctx.send(Emotes.getFailure() + " Are you **sure** you want to stop (restart) shard " + n
@@ -164,7 +164,7 @@ public class OwnerCog extends Cog {
 
     @Perm.Owner
     @Command(name = "eval", desc = "Evaluate code.", usage = "[code]", aliases = {
-            "reval" }, thread = true)
+            "reval" })
     public void cmdEval(Context ctx) {
         if (ctx.args.empty) {
             ctx.fail("I need code!");

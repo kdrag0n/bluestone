@@ -82,7 +82,7 @@ public class UtilityCog extends Cog {
     }
 
     @Command(name = "user", desc = "Get some info about a user.", usage = "{user}", aliases = { "userinfo",
-            "whois" }, thread = true)
+            "whois" })
     public void cmdUser(Context ctx) throws UnsupportedEncodingException {
         User user;
         if (Strings.isMention(ctx.rawArgs) && ctx.message.getMentionedUsers().size() > 0)
@@ -267,7 +267,7 @@ public class UtilityCog extends Cog {
 
     @Cooldown(scope = BucketType.USER, delay = 5)
     @Command(name = "minecraft", desc = "Get information about a Minecraft server.", usage = "[server address]", aliases = {
-            "mc", "mcserver" }, thread = true)
+            "mc", "mcserver" })
     public void cmdMineServer(Context ctx) {
         if (ctx.args.empty) {
             ctx.fail("I need a server address or skin name!");
@@ -395,7 +395,7 @@ public class UtilityCog extends Cog {
     }
 
     @Cooldown(scope = BucketType.USER, delay = 20)
-    @Command(name = "contact", desc = "Contact the bot owner with a message. Read the FAQ first!", usage = "[message]", thread = true)
+    @Command(name = "contact", desc = "Contact the bot owner with a message. Read the FAQ first!", usage = "[message]")
     public void cmdContact(Context ctx) throws SQLException {
         if (ctx.rawArgs.length() < 6) {
             ctx.fail("I need a valid message!");
@@ -443,7 +443,7 @@ public class UtilityCog extends Cog {
     }
 
     @Perm.Owner
-    @Command(name = "contact_ban", desc = "Ban an user from contacting the owner.", usage = "[@mention/user ID]", thread = true, aliases = "cb")
+    @Command(name = "contact_ban", desc = "Ban an user from contacting the owner.", usage = "[@mention/user ID]", aliases = "cb")
     public void cmdContactBan(Context ctx) throws SQLException {
         long userId;
         User user;
@@ -465,7 +465,7 @@ public class UtilityCog extends Cog {
     }
 
     @Perm.Owner
-    @Command(name = "contact_ban_list", desc = "List users banned from contacting the owner.", thread = true, aliases = {
+    @Command(name = "contact_ban_list", desc = "List users banned from contacting the owner.", aliases = {
             "cb_list" })
     public void cmdContactBanList(Context ctx) throws SQLException {
         String rendered = contactBanDao.queryForAll().stream()
@@ -480,7 +480,7 @@ public class UtilityCog extends Cog {
     }
 
     @Perm.Owner
-    @Command(name = "contact_ban_remove", desc = "Allow a banned user from adding quotes.", usage = "[@mention/user ID]", thread = true, aliases = {
+    @Command(name = "contact_ban_remove", desc = "Allow a banned user from adding quotes.", usage = "[@mention/user ID]", aliases = {
             "cb_remove", "cb_del", "cb_rm" })
     public void cmdContactBanRemove(Context ctx) throws SQLException {
         long userId;
@@ -507,7 +507,7 @@ public class UtilityCog extends Cog {
         }
     }
 
-    @Command(name = "qrcode", desc = "Generate a QR code.", aliases = { "qr" }, thread = true)
+    @Command(name = "qrcode", desc = "Generate a QR code.", aliases = { "qr" })
     public void cmdQrcode(Context ctx) {
         if (ctx.args.empty) {
             ctx.fail("I need some text!");
@@ -542,7 +542,7 @@ public class UtilityCog extends Cog {
         ctx.send("You have " + smartJoin(permList) + " here.").queue();
     }
 
-    @Command(name = "xkcd", desc = "All that xkcd goodness!", thread = true)
+    @Command(name = "xkcd", desc = "All that xkcd goodness!")
     public void cmdXkcd(Context ctx) {
         if (ctx.args.empty) {
             ctx.send("🤔 **You need to specify what to get!**\n" + "The following are valid:\n"
