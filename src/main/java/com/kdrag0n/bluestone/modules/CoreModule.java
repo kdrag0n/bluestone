@@ -4,6 +4,8 @@ import com.j256.ormlite.dao.Dao;
 import com.kdrag0n.bluestone.*;
 import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.sql.GuildPrefix;
+import com.kdrag0n.bluestone.types.Module;
+import com.kdrag0n.bluestone.types.Perm;
 import com.kdrag0n.bluestone.util.Paginator;
 import com.kdrag0n.bluestone.util.Strings;
 import net.dv8tion.jda.core.EmbedBuilder;

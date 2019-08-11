@@ -1,4 +1,4 @@
-package com.kdrag0n.bluestone.enums;
+package com.kdrag0n.bluestone.types;
 
 import com.kdrag0n.bluestone.Bot;
 import gnu.trove.list.TIntList;

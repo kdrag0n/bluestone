@@ -16,6 +16,8 @@ import com.kdrag0n.bluestone.errors.PassException;
 import com.kdrag0n.bluestone.sql.Starboard;
 import com.kdrag0n.bluestone.sql.StarboardEntry;
 import com.kdrag0n.bluestone.sql.Starrer;
+import com.kdrag0n.bluestone.types.Module;
+import com.kdrag0n.bluestone.types.Perm;
 import com.kdrag0n.bluestone.util.GraphicsUtils;
 import com.kdrag0n.bluestone.util.Strings;
 import net.dv8tion.jda.core.EmbedBuilder;

@@ -10,6 +10,8 @@ import com.kdrag0n.bluestone.annotations.Disable;
 import com.kdrag0n.bluestone.annotations.EventHandler;
 import com.kdrag0n.bluestone.sql.GuildMemberActions;
 import com.kdrag0n.bluestone.sql.GuildRoleOption;
+import com.kdrag0n.bluestone.types.Module;
+import com.kdrag0n.bluestone.types.Perm;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Role;

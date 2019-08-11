@@ -7,6 +7,8 @@ import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.annotations.EventHandler;
 import com.kdrag0n.bluestone.errors.PassException;
 import com.kdrag0n.bluestone.sql.GuildMusicSettings;
+import com.kdrag0n.bluestone.types.Module;
+import com.kdrag0n.bluestone.types.Perm;
 import com.kdrag0n.bluestone.util.Strings;
 import com.kdrag0n.bluestone.voice.AudioState;
 import com.kdrag0n.bluestone.voice.DummySendHandler;

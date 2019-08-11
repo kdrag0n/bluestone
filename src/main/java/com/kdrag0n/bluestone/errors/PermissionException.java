@@ -1,10 +1,8 @@
 package com.kdrag0n.bluestone.errors;
 
-import com.kdrag0n.bluestone.Perm;
-import net.dv8tion.jda.core.Permission;
+import com.kdrag0n.bluestone.types.Perm;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 

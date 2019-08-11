@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableList;
 import com.kdrag0n.bluestone.*;
 import com.kdrag0n.bluestone.emotes.*;
 import com.kdrag0n.bluestone.annotations.Command;
+import com.kdrag0n.bluestone.types.Module;
+import com.kdrag0n.bluestone.types.Perm;
 import com.kdrag0n.bluestone.util.Strings;
 import com.kdrag0n.bluestone.util.UnicodeString;
 import gnu.trove.map.TCharObjectMap;

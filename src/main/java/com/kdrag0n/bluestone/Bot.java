@@ -3,6 +3,9 @@ package com.kdrag0n.bluestone;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.re2j.Pattern;
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
+import com.kdrag0n.bluestone.types.Module;
+import com.kdrag0n.bluestone.types.ModuleLoadEvent;
+import com.kdrag0n.bluestone.types.Perm;
 import com.kdrag0n.bluestone.util.*;
 import com.kdrag0n.bluestone.annotations.Disable;
 import com.kdrag0n.bluestone.annotations.EventHandler;
@@ -231,7 +234,7 @@ public class Bot implements EventListener {
                         try {
                             extraEvent.getMethod().invoke(extraEvent.getParent(), event);
                         } catch (IllegalAccessException e) {
-                            logger.error("Error dispatching {} to {} - handler not public",
+                            logger.error("Error dispatching {} to {}: handler not public",
                                     event.getClass().getSimpleName(),
                                     extraEvent.getMethod().getDeclaringClass().getName(), e);
                         } catch (InvocationTargetException eContainer) {
@@ -280,7 +283,7 @@ public class Bot implements EventListener {
                 Emotes.setHasDbots();
 
             if (jda.getGuildById(250780048943087618L) != null)
-                Emotes.setHasParadise(true);
+                Emotes.setHasParadise();
 
             Runnable task = () -> jda.getPresence().setGame(gameSelector.select());
 
@@ -294,18 +297,19 @@ public class Bot implements EventListener {
 
                 try {
                     Module module = (Module) moduleClass.getConstructor(Bot.class).newInstance(this);
-                    registerModule(module);
-                    module.onLoad();
+                    loadModule(module);
                 } catch (Throwable e) {
                     logger.error("Failed to register module {}", moduleClass.getName(), e);
                 }
             }
+
+            dispatchModuleEvent(new ModuleLoadEvent(this));
         } finally {
             isReady = true;
         }
     }
 
-    private void registerModule(Module module) {
+    private void loadModule(Module module) {
         Class<? extends Module> clazz = module.getClass();
 
         for (Method method : clazz.getDeclaredMethods()) {

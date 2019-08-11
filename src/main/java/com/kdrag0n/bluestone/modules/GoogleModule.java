@@ -5,7 +5,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.kdrag0n.bluestone.Bot;
-import com.kdrag0n.bluestone.Module;
+import com.kdrag0n.bluestone.types.Module;
 import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.annotations.Command;
 import net.dv8tion.jda.core.EmbedBuilder;

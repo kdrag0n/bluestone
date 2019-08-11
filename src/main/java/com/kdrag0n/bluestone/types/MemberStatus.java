@@ -1,4 +1,4 @@
-package com.kdrag0n.bluestone.enums;
+package com.kdrag0n.bluestone.types;
 
 import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.entities.Game;

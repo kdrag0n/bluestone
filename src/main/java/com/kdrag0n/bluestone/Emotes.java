@@ -1,6 +1,6 @@
 package com.kdrag0n.bluestone;
 
-import com.kdrag0n.bluestone.enums.MemberStatus;
+import com.kdrag0n.bluestone.types.MemberStatus;
 import net.dv8tion.jda.core.entities.Game;
 import net.dv8tion.jda.core.entities.Member;
 import org.apache.commons.text.WordUtils;
@@ -13,8 +13,8 @@ public class Emotes {
         Emotes.hasDbots = true;
     }
 
-    static void setHasParadise(boolean hasParadise) {
-        Emotes.hasParadise = hasParadise;
+    static void setHasParadise() {
+        Emotes.hasParadise = true;
     }
 
     public static String getFullMemberStatus(Member member) {

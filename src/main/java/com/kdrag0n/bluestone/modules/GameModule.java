@@ -1,7 +1,7 @@
 package com.kdrag0n.bluestone.modules;
 
 import com.kdrag0n.bluestone.Bot;
-import com.kdrag0n.bluestone.Module;
+import com.kdrag0n.bluestone.types.Module;
 import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.Emotes;
 import com.kdrag0n.bluestone.annotations.Command;

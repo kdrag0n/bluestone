@@ -1,6 +1,8 @@
-package com.kdrag0n.bluestone;
+package com.kdrag0n.bluestone.types;
 
 import com.j256.ormlite.dao.Dao;
+import com.kdrag0n.bluestone.Bot;
+import com.kdrag0n.bluestone.Context;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.*;

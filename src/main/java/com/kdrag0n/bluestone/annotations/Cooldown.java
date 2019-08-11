@@ -1,6 +1,6 @@
 package com.kdrag0n.bluestone.annotations;
 
-import com.kdrag0n.bluestone.enums.BucketType;
+import com.kdrag0n.bluestone.types.BucketType;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

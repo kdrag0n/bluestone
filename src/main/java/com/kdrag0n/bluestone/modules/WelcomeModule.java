@@ -5,6 +5,8 @@ import com.kdrag0n.bluestone.*;
 import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.annotations.EventHandler;
 import com.kdrag0n.bluestone.sql.GuildWelcomeMessages;
+import com.kdrag0n.bluestone.types.Module;
+import com.kdrag0n.bluestone.types.Perm;
 import com.kdrag0n.bluestone.util.Strings;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;

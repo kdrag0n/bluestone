@@ -3,7 +3,7 @@ package com.kdrag0n.bluestone.sql;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 import com.kdrag0n.bluestone.Context;
-import com.kdrag0n.bluestone.Perm;
+import com.kdrag0n.bluestone.types.Perm;
 
 import java.time.OffsetDateTime;
 

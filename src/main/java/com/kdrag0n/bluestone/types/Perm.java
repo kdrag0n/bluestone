@@ -1,5 +1,7 @@
-package com.kdrag0n.bluestone;
+package com.kdrag0n.bluestone.types;
 
+import com.kdrag0n.bluestone.Bot;
+import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.errors.PermissionException;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.TextChannel;

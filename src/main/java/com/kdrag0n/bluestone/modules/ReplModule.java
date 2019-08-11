@@ -3,6 +3,8 @@ package com.kdrag0n.bluestone.modules;
 import com.kdrag0n.bluestone.*;
 import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.handlers.RMessageWaitListener;
+import com.kdrag0n.bluestone.types.Module;
+import com.kdrag0n.bluestone.types.Perm;
 import com.kdrag0n.bluestone.util.StackUtil;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;

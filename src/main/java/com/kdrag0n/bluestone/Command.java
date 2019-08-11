@@ -3,6 +3,8 @@ package com.kdrag0n.bluestone;
 import com.kdrag0n.bluestone.errors.GuildOnlyException;
 import com.kdrag0n.bluestone.errors.PassException;
 import com.kdrag0n.bluestone.errors.PermissionException;
+import com.kdrag0n.bluestone.types.Module;
+import com.kdrag0n.bluestone.types.Perm;
 import com.kdrag0n.bluestone.util.ArrayListView;
 import com.kdrag0n.bluestone.util.Strings;
 import net.dv8tion.jda.core.entities.MessageChannel;

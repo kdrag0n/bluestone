@@ -1,4 +1,4 @@
-package com.kdrag0n.bluestone.enums;
+package com.kdrag0n.bluestone.types;
 
 public enum BucketType {
     USER((byte)0),

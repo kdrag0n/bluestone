@@ -1,5 +1,7 @@
 package com.kdrag0n.bluestone;
 
+import com.kdrag0n.bluestone.types.Module;
+
 import java.lang.reflect.Method;
 
 class ExtraEvent {
