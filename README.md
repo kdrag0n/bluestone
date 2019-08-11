@@ -104,7 +104,8 @@ This is the template:
   "graphite_port": 2003,
   "keys": {
     "google": "",
-    "discord_bots": "",
+    "bots_on_discord": "",
+    "discord_bot_list": "",
     "imgflip": {
       "username": "root",
       "password": "toor"

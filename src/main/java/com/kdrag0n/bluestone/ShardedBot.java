@@ -1,5 +1,6 @@
 package com.kdrag0n.bluestone;
 
+import com.google.common.collect.Ordering;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.db.DatabaseType;
@@ -110,6 +111,11 @@ public abstract class ShardedBot {
 
     public JSONObject getConfig() {
         return config;
+    }
+
+    public List<JDA> getSortedShards() {
+        return Ordering.from(Comparator.comparingInt((JDA shard) -> shard.getShardInfo().getShardId()))
+                .sortedCopy(manager.getShards());
     }
 
     public int getGuildCount() {

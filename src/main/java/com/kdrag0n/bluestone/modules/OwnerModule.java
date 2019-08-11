@@ -86,7 +86,7 @@ public class OwnerModule extends Module {
     public void cmdShardInfo(Context ctx) {
         MessageBuilder result = new MessageBuilder().append("```css\n");
 
-        for (JDA shard : ctx.bot.manager.getShards()) {
+        for (JDA shard : ctx.bot.getSortedShards()) {
             result.append('[')
                     .append(ctx.getShardNum() == Bot.getShardNum(shard) ? '*' : ' ')
                     .append("] Shard ")
