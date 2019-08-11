@@ -422,10 +422,16 @@ public class ModerationModule extends Module {
                         .queue();
 
             ctx.guild.getController().ban(user, 0, reason).reason(reason).queue();
-            ctx.send("🔨 Banned.").queue();
+
+            try {
+                ctx.send("🔨 Banned.").queue();
+            } catch (InsufficientPermissionException ignored) {}
         }, ignored -> {
             ctx.guild.getController().ban(user, 0, reason).reason(reason).queue();
-            ctx.send("🔨 Banned.").queue();
+
+            try {
+                ctx.send("🔨 Banned.").queue();
+            } catch (InsufficientPermissionException ignored2) {}
         });
     }
 

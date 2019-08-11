@@ -12,6 +12,7 @@ import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.exceptions.ErrorResponseException;
+import net.dv8tion.jda.core.exceptions.InsufficientPermissionException;
 import net.dv8tion.jda.core.exceptions.PermissionException;
 import net.dv8tion.jda.core.requests.RestAction;
 import org.apache.commons.lang3.StringUtils;
@@ -202,8 +203,10 @@ public class CoreModule extends Module {
                     if (((ErrorResponseException) exp).getErrorCode() != 50007) {
                         RestAction.DEFAULT_FAILURE.accept(exp);
                     } else {
-                        ctx.send(Emotes.getFailure() +
-                                " I couldn't send you help! Make sure you haven't blocked me, and have direct messages from this server turned on.").queue();
+                        try {
+                            ctx.send(Emotes.getFailure() +
+                                    " I couldn't send you help! Make sure you haven't blocked me, and have direct messages from this server turned on.").queue();
+                        } catch (InsufficientPermissionException ignored) {}
                     }
                 }
             });
