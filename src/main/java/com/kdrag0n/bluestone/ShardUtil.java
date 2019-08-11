@@ -73,14 +73,8 @@ public class ShardUtil {
         try {
             dbConn = new DataSourceConnectionSource(dataSource, dbType);
         } catch (SQLException e) {
-            logger.error("Failed to connect to database! Falling back to in-memory.", e);
-
-            try {
-                dbConn = new JdbcConnectionSource("jdbc:h2:mem:bluestone-db");
-            } catch (SQLException ex) {
-                logger.error("Failed to create in-memory database!", ex);
-                System.exit(-1);
-            }
+            logger.error("Failed to connect to database!", e);
+            System.exit(1);
         }
 
         try {
