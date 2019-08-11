@@ -321,9 +321,9 @@ public class Strings {
         long d = h / 24;
         h = h % 24;
 
-        String sd = d > 0 ? String.valueOf(d) + "d" : "";
-        String sh = h > 0 ? String.valueOf(h) + "h" : "";
-        String sm = m > 0 ? (h > 0 && s == 0 ? String.valueOf(m) : String.valueOf(m) + "m") : "1m";
+        String sd = d > 0 ? d + "d" : "";
+        String sh = h > 0 ? h + "h" : "";
+        String sm = m > 0 ? (h > 0 && s == 0 ? String.valueOf(m) : m + "m") : "1m";
 
         return sd + sh + sm;
     }

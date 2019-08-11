@@ -113,8 +113,7 @@ public class GuildRoleOption {
 
         // Ranks
         if ((conditions & IS_BOT_OWNER) == IS_BOT_OWNER) {
-            if (!Perm.BOT_OWNER.check(ctx))
-                return false;
+            return Perm.BOT_OWNER.check(ctx);
         }
 
         return true;
