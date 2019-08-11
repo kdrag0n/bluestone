@@ -255,6 +255,9 @@ public class Bot implements EventListener {
     }
 
     private void onReady() {
+        if (isReady)
+            return;
+
         try {
             jda.getPresence().setStatus(OnlineStatus.ONLINE);
             ourId = jda.getSelfUser().getIdLong();
