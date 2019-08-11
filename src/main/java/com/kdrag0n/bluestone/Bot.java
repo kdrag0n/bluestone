@@ -65,14 +65,23 @@ public class Bot implements EventListener {
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
     public final Logger logger;
     public static final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(8,
-            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Bot BG-Task Thread %d").build());
+            new ThreadFactoryBuilder()
+                    .setDaemon(true)
+                    .setNameFormat("Bot BG-Task Thread %d")
+                    .build());
     private static final ThreadPoolExecutor cogEventExecutor = new ThreadPoolExecutor(4, 32, 10, TimeUnit.SECONDS,
             new ArrayBlockingQueue<>(64),
-            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Bot Cog-Event Pool Thread %d").build(),
+            new ThreadFactoryBuilder()
+                    .setDaemon(true)
+                    .setNameFormat("Bot Cog-Event Pool Thread %d")
+                    .build(),
             new RejectedExecHandlerImpl("Cog-Event"));
     public static final ThreadPoolExecutor threadExecutor = new ThreadPoolExecutor(4, 85, 10, TimeUnit.SECONDS,
             new ArrayBlockingQueue<>(72),
-            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("Bot Command-Exec Pool Thread %d").build(),
+            new ThreadFactoryBuilder()
+                    .setDaemon(true)
+                    .setNameFormat("Bot Command-Exec Pool Thread %d")
+                    .build(),
             new RejectedExecHandlerImpl("Command-Exec"));
     public final EventWaiter eventWaiter = new EventWaiter();
     public final JDA jda;
@@ -81,8 +90,12 @@ public class Bot implements EventListener {
     public final Map<String, Cog> cogs = new HashMap<>();
     private final Map<Class<? extends Event>, List<ExtraEvent>> extraEvents = new HashMap<>();
     public static final OkHttpClient http = new OkHttpClient.Builder()
-            .cache(new Cache(new File("data/http_cache"), 24000000000L)).connectTimeout(5, TimeUnit.SECONDS)
-            .readTimeout(12, TimeUnit.SECONDS).writeTimeout(8, TimeUnit.SECONDS).retryOnConnectionFailure(true).build();
+            .cache(new Cache(new File("data/http_cache"), 24000000000L))
+            .connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(12, TimeUnit.SECONDS)
+            .writeTimeout(8, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .build();
     public static long ownerId = -1;
     public static String ownerTag;
     private static long ourId;
