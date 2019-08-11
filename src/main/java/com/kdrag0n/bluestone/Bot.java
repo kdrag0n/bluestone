@@ -273,7 +273,9 @@ public class Bot extends ShardedBot implements EventListener {
         try {
             jda.getPresence().setStatus(OnlineStatus.ONLINE);
 
-            if (shardId == 0) {
+            if (readyShards.isEmpty()) {
+                readyShards.add(shardId);
+
                 selfUser = jda.getSelfUser();
                 selfId = selfUser.getIdLong();
                 selfMention = selfUser.getAsMention();
@@ -391,7 +393,9 @@ public class Bot extends ShardedBot implements EventListener {
     private void onMessageReceived(MessageReceivedEvent event) {
         final User author = event.getAuthor();
 
-        if (author.isBot() || author.getIdLong() == selfId || !readyShards.contains(Bot.getShardNum(event.getJDA()) - 1))
+        if (author.isBot() ||
+                author.getIdLong() == selfId ||
+                !readyShards.contains(Bot.getShardNum(event.getJDA()) - 1))
             return;
 
         final Message message = event.getMessage();
