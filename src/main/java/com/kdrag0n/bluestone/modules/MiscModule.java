@@ -64,13 +64,12 @@ public class MiscModule extends Module {
     private static final String[] PROFILE_QUESTIONS = { "What's your favorite color?", "What's your favorite food?",
             "What do you want people to know about you?", "What do you like to do?",
             "What are some neat things you've done?", "Tell me a little bit more about yourself." };
-    private static volatile boolean hasWarmedUp = false;
     private final LoadingCache<User, byte[]> profileCache = CacheBuilder.newBuilder().concurrencyLevel(2)
             .initialCapacity(8).maximumSize(36).expireAfterWrite(12, TimeUnit.HOURS)
             .build(new CacheLoader<User, byte[]>() {
                 @Override
                 public byte[] load(@Nonnull User user) throws Exception {
-                    ResponseBody imgBody = Bot.http
+                    ResponseBody imgBody = bot.http
                             .newCall(
                                     new Request.Builder().get().url(user.getEffectiveAvatarUrl() + "?size=256").build())
                             .execute().body();
@@ -115,7 +114,7 @@ public class MiscModule extends Module {
                     g2d.drawString(fstr('@' + getTag(user), new Font(PROFILE_FONT, Font.PLAIN, 36)), 420, 248);
 
                     // Flags
-                    TIntList flags = ProfileFlags.getFlags(user);
+                    TIntList flags = ProfileFlags.getFlags(bot, user);
                     TIntIterator iterator = flags.iterator();
                     int flagI = 0;
 
@@ -186,28 +185,7 @@ public class MiscModule extends Module {
 
     public MiscModule(Bot bot) {
         super(bot);
-
         profileDao = setupDao(UserProfile.class);
-
-        if (!hasWarmedUp) {
-            hasWarmedUp = true;
-
-            Thread thread = new Thread(() -> {
-                User user = bot.jda.getSelfUser();
-
-                for (short i = 0; i < 8; i++) {
-                    profileCache.invalidate(user);
-
-                    try {
-                        profileCache.get(user);
-                    } catch (Exception ignored) {
-                    }
-                }
-            });
-
-            thread.setName("Profile Render JIT Warm-up Thread");
-            thread.start();
-        }
     }
 
     public String getName() {
@@ -345,7 +323,7 @@ public class MiscModule extends Module {
 
                 while (!satisfied) {
                     ctx.send(question).queue();
-                    Message resp = bot.waitForMessage(300000, m -> m.getAuthor().getIdLong() == ctx.author.getIdLong()
+                    Message resp = bot.waitForMessage(ctx.jda, 300000, m -> m.getAuthor().getIdLong() == ctx.author.getIdLong()
                             && m.getChannel().getIdLong() == ctx.channel.getIdLong());
 
                     if (resp == null) {
@@ -417,7 +395,7 @@ public class MiscModule extends Module {
                 && (attachment = ctx.message.getAttachments().get(0)).isImage()) {
             ctx.channel.sendTyping().queue();
 
-            try (InputStream is = Bot.http.newCall(new Request.Builder().get().url(attachment.getUrl()).build())
+            try (InputStream is = bot.http.newCall(new Request.Builder().get().url(attachment.getUrl()).build())
                     .execute().body().byteStream()) {
                 BufferedImage image = ImageIO.read(is);
 

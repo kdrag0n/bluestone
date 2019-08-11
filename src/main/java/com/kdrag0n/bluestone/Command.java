@@ -82,13 +82,13 @@ public class Command {
             try {
                 invoke(bot, event, args, prefix, invoker, content, processArgs);
             } catch (IllegalAccessException e) {
-                bot.logger.error("Severe command ({}) invocation error:", invoker, e);
+                Bot.logger.error("Severe command ({}) invocation error:", invoker, e);
                 channel.sendMessage(Emotes.getFailure() + " An internal error occurred.").queue();
             } catch (InvocationTargetException e) {
                 Throwable cause = e.getCause();
 
                 if (cause == null) {
-                    bot.logger.error("Unknown command ({}) invocation error:", invoker, e);
+                    Bot.logger.error("Unknown command ({}) invocation error:", invoker, e);
                     channel.sendMessage(Emotes.getFailure() + " An unknown internal error occurred.").queue();
                 } else //noinspection StatementWithEmptyBody
                     if (cause instanceof PassException) {
@@ -103,18 +103,18 @@ public class Command {
                     if (((ErrorResponseException) cause).getErrorCode() == 50013) {
                         channel.sendMessage(Emotes.getFailure() + " I don't have the permission to do that.").queue();
                     } else {
-                        bot.logger.error("Command ({}) invocation error:", invoker, cause);
+                        Bot.logger.error("Command ({}) invocation error:", invoker, cause);
                         channel.sendMessage(format(Emotes.getFailure() + " An error occurred. `%s`",
                                 cause.getClass().getSimpleName())).queue();
                     }
                 } else if (cause instanceof SQLException) {
-                    bot.logger.error("SQL error in command {}:", invoker, cause);
+                    Bot.logger.error("SQL error in command {}:", invoker, cause);
                     channel.sendMessage(Emotes.getFailure() + " A database error occurred.").queue();
                 } else if (cause instanceof JSONException) {
-                    bot.logger.error("Command {}: Invalid JSON received", invoker);
+                    Bot.logger.error("Command {}: Invalid JSON received", invoker);
                     channel.sendMessage(Emotes.getFailure() + " The service provided invalid data. Try again later.").queue();
                 } else {
-                    bot.logger.error("Command ({}) invocation error:", invoker, cause);
+                    Bot.logger.error("Command ({}) invocation error:", invoker, cause);
                     channel.sendMessage(format(Emotes.getFailure() + " An error occurred. `%s`",
                             cause.getClass().getSimpleName())).queue();
                 }
@@ -124,7 +124,7 @@ public class Command {
             } catch (GuildOnlyException e) {
                 channel.sendMessage(Emotes.getFailure() + " That command only works in a server.").queue();
             } catch (Exception e) {
-                bot.logger.error("Unknown command ({}) error:", invoker, e);
+                Bot.logger.error("Unknown command ({}) error:", invoker, e);
                 channel.sendMessage(Emotes.getFailure() + " An internal error occurred.").queue();
             }
         } catch (net.dv8tion.jda.core.exceptions.PermissionException ignored) {}

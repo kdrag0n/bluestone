@@ -38,7 +38,7 @@ public class GoogleModule extends Module {
                 @Override
                 public MessageEmbed load(@Nonnull String key) throws IOException {
                     JSONObject resp = new JSONObject(
-                            Bot.http.newCall(new Request.Builder().get().url(key).build()).execute().body().string());
+                            bot.http.newCall(new Request.Builder().get().url(key).build()).execute().body().string());
                     EmbedBuilder emb = new EmbedBuilder().setColor(randomColor()).setTitle("Google Search").setAuthor(
                             "Google", "https://google.com/",
                             "https://raw.githubusercontent.com/Armored-Dragon/goldmine/master/assets/icon-google.png");
@@ -120,9 +120,7 @@ public class GoogleModule extends Module {
         try {
             encodedQuery = URLEncoder.encode(query, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            bot.logger.error("System doesn't support UTF-8!", e);
-            ctx.fail("The system this bot is running on doesn't support an essential encoding.");
-            return;
+            throw new RuntimeException(e);
         }
         ctx.channel.sendTyping().queue();
 

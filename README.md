@@ -105,7 +105,6 @@ This is the template:
   "keys": {
     "google": "",
     "discord_bots": "",
-    "carbonitex": "",
     "imgflip": {
       "username": "root",
       "password": "toor"

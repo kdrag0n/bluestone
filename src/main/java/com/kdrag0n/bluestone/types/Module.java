@@ -32,7 +32,7 @@ public abstract class Module {
 
     public void onLoad() {}
 
-    protected static int randint(int min, int max) {
+    protected static int getRandInt(int min, int max) {
         return ThreadLocalRandom.current().nextInt(min, max);
     }
 
@@ -46,25 +46,11 @@ public abstract class Module {
     }
 
     protected static Color randomColor() { // 255**3 = 16581375
-        return new Color(randint(0, 16581375));
+        return new Color(getRandInt(0, 16581375));
     }
 
     protected static EmbedBuilder newEmbedWithAuthor(Context ctx) {
-        String name;
-        String iconUrl;
-
-        if (ctx.guild != null) {
-            Member me = ctx.guild.getSelfMember();
-            name = me.getEffectiveName();
-            iconUrl = me.getUser().getEffectiveAvatarUrl();
-        } else {
-            User me = ctx.jda.getSelfUser();
-            name = me.getName();
-            iconUrl = me.getEffectiveAvatarUrl();
-        }
-
-        return new EmbedBuilder()
-                .setAuthor(name, null, iconUrl);
+        return newEmbedWithAuthor(ctx, null);
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -94,38 +80,17 @@ public abstract class Module {
         }
     }
 
-    protected static String getEffectiveName(User user, Guild guild) {
-        if (guild == null) {
-            return user.getName();
-        } else {
-            Member member = guild.getMember(user);
-            if (member == null)
-                return user.getName();
-
-            return member.getEffectiveName();
-        }
-    }
-
     public static String getTag(User user) {
         return user.getName() + '#' + user.getDiscriminator();
     }
 
-    public static void removeReactionIfExists(Message message, String unicode) {
-        for (MessageReaction r: message.getReactions()) {
-            if (r.getReactionEmote().getName().equals(unicode)) {
-                r.removeReaction().queue();
-                break;
-            }
-        }
-    }
-
     protected static <T> T randomChoice(T[] array) {
-        return array[randint(0, array.length)];
+        return array[getRandInt(0, array.length)];
     }
 
     @SuppressWarnings("SameParameterValue")
     protected static <T> T randomChoice(List<T> list) {
-        return list.get(randint(0, list.size()));
+        return list.get(getRandInt(0, list.size()));
     }
 
     protected static String[] embedFieldPages(String text) {
@@ -161,6 +126,6 @@ public abstract class Module {
 
     @CheckReturnValue
     protected<C, K> Dao<C, K> setupDao(Class<C> clazz) {
-        return bot.shardUtil.setupDao(clazz);
+        return bot.setupDao(clazz);
     }
 }

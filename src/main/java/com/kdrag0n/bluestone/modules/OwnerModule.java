@@ -8,6 +8,7 @@ import com.kdrag0n.bluestone.types.Module;
 import com.kdrag0n.bluestone.types.Perm;
 import com.kdrag0n.bluestone.util.StackUtil;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.entities.*;
@@ -21,6 +22,7 @@ import javax.script.ScriptException;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 
 import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
 
@@ -47,7 +49,7 @@ public class OwnerModule extends Module {
     public void cmdShutdown(Context ctx) {
         ctx.send(Emotes.getFailure() + " Are you **sure** you want to stop the entire bot? Type `yes` to continue.")
                 .complete();
-        Message resp = bot.waitForMessage(7000,
+        Message resp = bot.waitForMessage(ctx.jda, 7000,
                 msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong()
                         && msg.getChannel().getIdLong() == ctx.channel.getIdLong()
                         && msg.getContentRaw().equalsIgnoreCase("yes"));
@@ -66,107 +68,71 @@ public class OwnerModule extends Module {
     @Command(name = "stopshard", desc = "Stop the current shard.", aliases = {
             "restart" }, usage = "{shard}")
     public void cmdStopShard(Context ctx) {
-        final Integer n = ctx.args.empty ? ctx.bot.getShardNum() - 1 : Integer.valueOf(ctx.rawArgs);
+        final Integer n = ctx.args.empty ? ctx.getShardNum() - 1 : Integer.valueOf(ctx.rawArgs);
         ctx.send(Emotes.getFailure() + " Are you **sure** you want to stop (restart) shard " + n
                 + "? Type `yes` to continue.").complete();
-        Message resp = bot.waitForMessage(7000,
+        Message resp = bot.waitForMessage(ctx.jda, 7000,
                 msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong()
                         && msg.getChannel().getIdLong() == ctx.channel.getIdLong()
                         && msg.getContentRaw().equalsIgnoreCase("yes"));
         if (resp != null) {
             logger.info("Shard {} shutting down...", n);
-            ctx.bot.shardUtil.getShard(n).jda.shutdown();
+            ctx.bot.manager.getShardById(n).shutdown();
         }
     }
 
     @Perm.Owner
     @Command(name = "shardinfo", desc = "Display global shard information.")
-    public void cmdShardTree(Context ctx) {
+    public void cmdShardInfo(Context ctx) {
         MessageBuilder result = new MessageBuilder().append("```css\n");
 
-        for (Bot shard : ctx.bot.shardUtil.getShards()) {
-            result.append('[').append(bot.getShardNum() == shard.getShardNum() ? '*' : ' ').append("] Shard ")
-                    .append(shard.getShardNum() - 1).append(" | [").append(shard.jda.getStatus().name())
-                    .append("] | Guilds: ").append(shard.jda.getGuilds().size()).append(" | Users: ")
-                    .append(shard.jda.getUsers().size());
-
-            MusicModule musicModule = (MusicModule) shard.modules.get("Music");
-            if (musicModule != null)
-                result.append(" | MStreams: ").append(musicModule.getActiveStreamCount()).append(" | MTracks: ")
-                        .append(musicModule.getTracksLoaded());
-
-            result.append(" | WSPing: ").append(shard.jda.getPing()).append('\n');
+        for (JDA shard : ctx.bot.manager.getShards()) {
+            result.append('[')
+                    .append(ctx.getShardNum() == Bot.getShardNum(shard) ? '*' : ' ')
+                    .append("] Shard ")
+                    .append(Bot.getShardNum(shard) - 1)
+                    .append(" | [")
+                    .append(shard.getStatus().name())
+                    .append("] | Guilds: ")
+                    .append(shard.getGuilds().size())
+                    .append(" | Users: ")
+                    .append(shard.getUsers().size())
+                    .append(" | WSPing: ")
+                    .append(shard.getPing())
+                    .append('\n');
         }
-        result.append("\nTotal: ").append(bot.getShardTotal()).append(" shard(s)```");
+
+        result.append("\nTotal: ")
+                .append(bot.manager.getShardsTotal())
+                .append(" shard(s) | Guilds: ")
+                .append(bot.getGuildCount())
+                .append(" | Users: ")
+                .append(bot.getUserCount())
+                .append(" | Average WSPing: ")
+                .append((int) Math.round(bot.manager.getAveragePing()))
+                .append('\n');
+
+        MusicModule musicModule = (MusicModule) bot.modules.get("Music");
+        if (musicModule != null) {
+            result.append("[Music] MStreams: ")
+                    .append(musicModule.getActiveStreamCount())
+                    .append(" | MTracks: ")
+                    .append(musicModule.getTracksLoaded());
+        }
+
+        result.append("```");
 
         if (result.length() > 2000) {
-            for (int i = 0; i < result.length(); i += 1999) {
+            for (int i = 0; i < result.length(); i += 1999)
                 result.getStringBuilder().insert(i - 3, "``````css\n");
-            }
         }
 
-        for (Message msg : result.buildAll(MessageBuilder.SplitPolicy.ANYWHERE)) {
+        for (Message msg : result.buildAll(MessageBuilder.SplitPolicy.ANYWHERE))
             ctx.send(msg).queue();
-        }
     }
 
     @Perm.Owner
-    @Cooldown(scope = BucketType.GLOBAL, delay = 10)
-    @Command(name = "broadcast", desc = "Broadcast a message to all available guilds.", usage = "[message]")
-    public void cmdBroadcast(Context ctx) {
-        if (ctx.args.empty) {
-            ctx.fail("I need a message to broadcast!");
-            return;
-        }
-
-        String ss = "";
-        if (ctx.jda.getShardInfo() != null) {
-            ss = ctx.jda.getShardInfo().getShardString() + ' ';
-
-            if (!ctx.flag) {
-                ctx.flag = true;
-
-                Collection<Bot> shards = bot.shardUtil.getShards();
-                shards.remove(ctx.bot);
-
-                for (Bot b : shards) {
-                    if (b.modules.containsKey("Owner")) {
-                        ctx.bot = b;
-                        ctx.jda = b.jda;
-                        ((OwnerModule) b.modules.get("Owner")).cmdBroadcast(ctx);
-                    }
-                }
-            }
-        }
-        ctx.jda = bot.jda;
-        ctx.bot = bot;
-
-        ctx.send(ss + "Starting broadcast...").queue();
-        int errors = 0;
-
-        for (Guild guild : ctx.jda.getGuilds()) {
-            if (!guild.isAvailable()) {
-                ctx.send(Emotes.getFailure() + " Guild **" + val(guild.getName()).or("[unknown]") + "** (`"
-                        + val(guild.getIdLong()).or(0L) + "`) unavailable.").queue();
-                errors++;
-                continue;
-            }
-            String message = StringUtils.replace(ctx.rawArgs, "%prefix%", bot.prefixStore.getPrefix(guild.getIdLong()));
-            TextChannel channel = defaultWritableChannel(guild.getSelfMember());
-
-            if (channel != null && channel.canTalk())
-                channel.sendMessage(message).queue();
-            else {
-                errors++;
-            }
-        }
-
-        ctx.success("Broadcast finished, with **" + errors + "** guilds all muted.");
-    }
-
-    @Perm.Owner
-    @Command(name = "eval", desc = "Evaluate code.", usage = "[code]", aliases = {
-            "reval" })
+    @Command(name = "eval", desc = "Evaluate code.", usage = "[code]")
     public void cmdEval(Context ctx) {
         if (ctx.args.empty) {
             ctx.fail("I need code!");
@@ -233,7 +199,7 @@ public class OwnerModule extends Module {
             return;
         }
 
-        bot.shardUtil.getShards().forEach(b -> b.jda.getPresence().setGame(Game.playing(ctx.rawArgs)));
+        bot.manager.getShards().forEach(shard -> shard.getPresence().setGame(Game.playing(ctx.rawArgs)));
         ctx.success("Game set.");
     }
 }

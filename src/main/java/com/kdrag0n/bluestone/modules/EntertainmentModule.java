@@ -286,10 +286,10 @@ public class EntertainmentModule extends Module {
 
         try {
             String cat = new JSONObject(
-                    Bot.http.newCall(new Request.Builder().get().url("https://random.cat/meow").build()).execute()
+                    bot.http.newCall(new Request.Builder().get().url("https://random.cat/meow").build()).execute()
                             .body().string()).optString("file", null);
             String fact = new JSONObject(
-                    Bot.http.newCall(new Request.Builder().get().url("https://catfact.ninja/fact").build()).execute()
+                    bot.http.newCall(new Request.Builder().get().url("https://catfact.ninja/fact").build()).execute()
                             .body().string()).optString("fact", null);
 
             if (cat == null || fact == null) {
@@ -317,9 +317,9 @@ public class EntertainmentModule extends Module {
 
         try {
             String cat = new JSONObject(
-                    Bot.http.newCall(new Request.Builder().get().url("https://dog.ceo/api/breeds/image/random").build())
+                    bot.http.newCall(new Request.Builder().get().url("https://dog.ceo/api/breeds/image/random").build())
                             .execute().body().string()).optString("message", null);
-            String fact = val(new JSONObject(Bot.http
+            String fact = val(new JSONObject(bot.http
                     .newCall(new Request.Builder().get().url("https://dog-api.kinduff.com/api/facts?number=1").build())
                     .execute().body().string()).optJSONArray("facts")).or(JSONArray::new).optString(0, null);
 
@@ -363,7 +363,7 @@ public class EntertainmentModule extends Module {
         }
         EmoteInfo info = emoteProviderManager.getFirstInfo(eName);
 
-        Bot.http.newCall(new Request.Builder().get().url(url).build()).enqueue(Bot.callback(response -> {
+        bot.http.newCall(new Request.Builder().get().url(url).build()).enqueue(Bot.callback(response -> {
             Message msg = null;
 
             if (info.description != null && info.description.length() > 0) {
@@ -400,7 +400,7 @@ public class EntertainmentModule extends Module {
 
         ctx.channel.sendTyping().queue();
 
-        Bot.http.newCall(new Request.Builder().get().url(url).build()).enqueue(Bot.callback(response -> {
+        bot.http.newCall(new Request.Builder().get().url(url).build()).enqueue(Bot.callback(response -> {
             final String nm = url.startsWith("https://cdn.discordapp.com/emojis/")
                     ? emoteProviderManager.getFirstInfo(n).name
                     : n;
@@ -548,7 +548,7 @@ public class EntertainmentModule extends Module {
         data.add("text0", topText);
         data.add("text1", bottomText);
 
-        Bot.http.newCall(new Request.Builder().post(data.build()).url("https://api.imgflip.com/caption_image").build())
+        bot.http.newCall(new Request.Builder().post(data.build()).url("https://api.imgflip.com/caption_image").build())
                 .enqueue(Bot.callback(response -> {
                     JSONObject resp = new JSONObject(response.body().string());
 
@@ -584,12 +584,12 @@ public class EntertainmentModule extends Module {
 
     @Command(name = "flip", desc = "Flip a coin.", aliases = {"coinflip"})
     public void cmdFlip(Context ctx) {
-        ctx.send("The coin toss revealed... **" + (randint(0, 1) == 1 ? "heads" : "tails") + "**!").queue();
+        ctx.send("The coin toss revealed... **" + (getRandInt(0, 1) == 1 ? "heads" : "tails") + "**!").queue();
     }
 
     @Command(name = "roll", desc = "Roll a virtual die.", aliases = {"dice"})
     public void cmdRoll(Context ctx) {
-        ctx.send("I rolled a **" + randint(1, 7) + "**.").queue();
+        ctx.send("I rolled a **" + getRandInt(1, 7) + "**.").queue();
     }
 
     @Command(name = "8ball", desc = "A magic 8 ball!", aliases = {"8"})

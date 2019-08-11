@@ -202,7 +202,7 @@ public class UtilityModule extends Module {
 
         ctx.channel.sendTyping().queue();
 
-        Bot.http.newCall(new Request.Builder().get()
+        bot.http.newCall(new Request.Builder().get()
                 .url("https://api.urbandictionary.com/v0/define?term=" + URLEncoder.encode(ctx.rawArgs, "UTF-8"))
                 .build()).enqueue(Bot.callback(response -> {
                     JSONArray results = new JSONObject(response.body().string()).getJSONArray("list");
@@ -435,7 +435,7 @@ public class UtilityModule extends Module {
                     + guild.getMembersMap().size(), true);
         }
 
-        ctx.jda.getUserById(Bot.ownerId).openPrivateChannel().queue(ch -> {
+        ctx.jda.getUserById(bot.ownerId).openPrivateChannel().queue(ch -> {
             ch.sendMessage(new MessageBuilder().append("📧 New message.").setEmbed(emb.build()).build()).queue();
 
             ctx.success("Message sent.");
@@ -566,7 +566,7 @@ public class UtilityModule extends Module {
 
             try {
                 comicNum = new JSONObject(
-                        Bot.http.newCall(new Request.Builder().get().url("https://xkcd.com/info.0.json").build())
+                        bot.http.newCall(new Request.Builder().get().url("https://xkcd.com/info.0.json").build())
                                 .execute().body().string()).getInt("num");
             } catch (IOException e) {
                 logger.error("xkcd > latest: http error", e);
@@ -577,8 +577,8 @@ public class UtilityModule extends Module {
             ctx.channel.sendTyping().queue();
 
             try {
-                comicNum = randint(1,
-                        new JSONObject(Bot.http
+                comicNum = getRandInt(1,
+                        new JSONObject(bot.http
                                 .newCall(new Request.Builder().get().url("https://xkcd.com/info.0.json").build())
                                 .execute().body().string()).getInt("num") + 1);
             } catch (IOException e) {
@@ -592,7 +592,7 @@ public class UtilityModule extends Module {
 
             try {
                 int max = new JSONObject(
-                        Bot.http.newCall(new Request.Builder().get().url("https://xkcd.com/info.0.json").build())
+                        bot.http.newCall(new Request.Builder().get().url("https://xkcd.com/info.0.json").build())
                                 .execute().body().string()).getInt("num");
                 int requested;
                 try {
@@ -620,7 +620,7 @@ public class UtilityModule extends Module {
         }
 
         try {
-            JSONObject resp = new JSONObject(Bot.http
+            JSONObject resp = new JSONObject(bot.http
                     .newCall(
                             new Request.Builder().get().url("http://www.xkcd.com/" + comicNum + "/info.0.json").build())
                     .execute().body().string());

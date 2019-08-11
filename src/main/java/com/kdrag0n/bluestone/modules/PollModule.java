@@ -154,11 +154,11 @@ public class PollModule extends Module {
     private void schedulePoll(final ActivePoll poll) {
         long calculatedTime = poll.getEndTime().getTime() - System.currentTimeMillis();
 
-        if (bot.jda.getTextChannelById(poll.getChannelId()) == null)
+        if (bot.manager.getTextChannelById(poll.getChannelId()) == null)
             return;
 
         Bot.scheduledExecutor.schedule(() -> {
-            TextChannel channel = bot.jda.getTextChannelById(poll.getChannelId());
+            TextChannel channel = bot.manager.getTextChannelById(poll.getChannelId());
 
             try {
                 if (channel == null)
@@ -174,7 +174,7 @@ public class PollModule extends Module {
                 if (message == null)
                     return;
 
-                long ourId = bot.jda.getSelfUser().getIdLong();
+                long ourId = bot.selfUser.getIdLong();
                 Map<MessageReaction.ReactionEmote, Integer> resultTable = message.getReactions().stream()
                         .map(r -> ImmutablePair.of(r,
                                 (int) r.getUsers().complete().stream().filter(u -> u.getIdLong() != ourId).count()))

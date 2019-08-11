@@ -355,7 +355,7 @@ public class WelcomeModule extends Module {
 
     @EventHandler()
     public void onGuildMemberJoin(GuildMemberJoinEvent event) {
-        if (event.getMember().getUser().getIdLong() == bot.jda.getSelfUser().getIdLong())
+        if (event.getMember().getUser().getIdLong() == bot.selfUser.getIdLong())
             return;
 
         if (!event.getGuild().isAvailable())
@@ -397,7 +397,7 @@ public class WelcomeModule extends Module {
 
     @EventHandler()
     public void onGuildMemberLeave(GuildMemberLeaveEvent event) {
-        if (event.getMember().getUser().getIdLong() == bot.jda.getSelfUser().getIdLong())
+        if (event.getMember().getUser().getIdLong() == bot.selfUser.getIdLong())
             return;
 
         if (!event.getGuild().isAvailable())

@@ -11,6 +11,7 @@ import gnu.trove.set.hash.TLongHashSet;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.MessageReaction;
@@ -164,14 +165,14 @@ public class ReplModule extends Module {
         while (true) {
             Message response;
             if (untrusted) {
-                response = waitForRMessage(0,
+                response = waitForRMessage(ctx.jda, 0,
                         msg -> msg.getContentRaw().startsWith(prefix)
                                 && msg.getAuthor().getIdLong() != ctx.jda.getSelfUser().getIdLong(),
                         e -> e.getUser().getIdLong() == ctx.author.getIdLong()
                                 && !MiscUtil.getCreationTime(e.getMessageIdLong()).isBefore(startTime),
                         ctx.channel.getIdLong());
             } else {
-                response = bot.waitForMessage(0,
+                response = bot.waitForMessage(ctx.jda, 0,
                         msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong()
                                 && msg.getChannel().getIdLong() == ctx.channel.getIdLong()
                                 && msg.getContentRaw().startsWith(prefix));
@@ -255,17 +256,17 @@ public class ReplModule extends Module {
         ctx.success("REPL stopped.");
     }
 
-    private Message waitForRMessage(long millis, Predicate<Message> check, Predicate<MessageReactionAddEvent> rCheck,
-            long channelId) {
+    private Message waitForRMessage(JDA jda, long millis, Predicate<Message> check, Predicate<MessageReactionAddEvent> rCheck,
+                                    long channelId) {
         AtomicReference<Message> lock = new AtomicReference<>();
         RMessageWaitListener listener = new RMessageWaitListener(lock, check, rCheck, channelId);
-        bot.jda.addEventListener(listener);
+        jda.addEventListener(listener);
 
         synchronized (lock) {
             try {
                 lock.wait(millis);
             } catch (InterruptedException e) {
-                bot.jda.removeEventListener(listener);
+                jda.removeEventListener(listener);
                 return null;
             }
             return lock.get();

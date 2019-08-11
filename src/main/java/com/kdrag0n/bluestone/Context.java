@@ -43,6 +43,10 @@ public class Context {
         this.rawArgs = content.substring((processArgs ? prefix.length() : 0) + invoker.length()).trim();
     }
 
+    public int getShardNum() {
+        return Bot.getShardNum(jda);
+    }
+
     public static String truncate(String msg) {
         if (msg.length() > 2000) {
             msg = msg.substring(0, 2000);

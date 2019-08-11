@@ -6,7 +6,6 @@ import com.j256.ormlite.db.DatabaseType;
 import com.j256.ormlite.db.DatabaseTypeUtils;
 import com.j256.ormlite.db.MysqlDatabaseType;
 import com.j256.ormlite.jdbc.DataSourceConnectionSource;
-import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.kdrag0n.bluestone.modules.MusicModule;
@@ -16,6 +15,8 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import gnu.trove.list.TIntList;
 import gnu.trove.list.linked.TIntLinkedList;
+import net.dv8tion.jda.bot.sharding.ShardManager;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.impl.GuildImpl;
 import net.dv8tion.jda.core.entities.impl.JDAImpl;
@@ -26,24 +27,20 @@ import org.json.JSONObject;
 import javax.annotation.CheckReturnValue;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
-public class ShardUtil {
-    private static final Logger logger = LoggerFactory.getLogger(ShardUtil.class);
+public abstract class ShardedBot {
+    private static final Logger logger = LoggerFactory.getLogger(ShardedBot.class);
     private static final MySQLDatabaseType mysqlDbType = new MySQLDatabaseType();
-    private final Map<Integer, Bot> shards = new LinkedHashMap<>();
     public final Date startTime = new Date();
-    private int shardCount;
     private ConnectionSource dbConn;
     private HikariDataSource dataSource;
     private JSONObject config;
+    public final ShardManager manager;
 
-    ShardUtil(int shardCount, JSONObject config) {
-        this.shardCount = shardCount;
+    ShardedBot(ShardManager manager, JSONObject config) {
+        this.manager = manager;
         this.config = config;
 
         String connectionUrl = "jdbc:" + config.optString("db_url", "h2:./database");
@@ -107,32 +104,12 @@ public class ShardUtil {
         }
     }
 
-    public ConnectionSource getDatabase() {
-        return dbConn;
-    }
-
-    public HikariDataSource getPool() {
+    /*package-private*/ HikariDataSource getPool() {
         return dataSource;
     }
 
     public JSONObject getConfig() {
         return config;
-    }
-
-    public int getShardCount() {
-        return shardCount;
-    }
-
-    public Bot getShard(int shardId) {
-        return shards.get(shardId);
-    }
-
-    public void setShard(int shardId, Bot bot) {
-        shards.put(shardId, bot);
-    }
-
-    public Collection<Bot> getShards() {
-        return shards.values();
     }
 
     public int getGuildCount() {
@@ -159,46 +136,16 @@ public class ShardUtil {
         return sumJda(j -> (int) j.getEmoteCache().size());
     }
 
-    public int getTrackCount() {
-        return sumBot(b -> {
-            MusicModule module = (MusicModule) b.modules.get("Music");
-            if (module == null)
-                return 0;
-
-            return module.getTracksLoaded();
-        });
-    }
-
-    public int getStreamCount() {
-        return sumBot(b -> {
-            MusicModule module = (MusicModule) b.modules.get("Music");
-            if (module == null)
-                return 0;
-
-            return module.getActiveStreamCount();
-        });
-    }
-
     @Deprecated
     public Stream<Guild> getGuildStream() {
-        return shards.values().stream().flatMap(b -> ((JDAImpl) b.jda).getGuildMap().valueCollection().stream());
-    }
-
-    private int sumBot(ObjectFunctionInt<Bot> fn) {
-        int total = 0;
-
-        for (Bot shard : shards.values()) {
-            total += fn.apply(shard);
-        }
-
-        return total;
+        return manager.getShards().stream().flatMap(jda -> ((JDAImpl) jda).getGuildMap().valueCollection().stream());
     }
 
     private int sumJda(ObjectFunctionInt<JDAImpl> fn) {
         int total = 0;
 
-        for (Bot shard : shards.values()) {
-            total += fn.apply((JDAImpl) shard.jda);
+        for (JDA shard : manager.getShards()) {
+            total += fn.apply((JDAImpl) shard);
         }
 
         return total;
@@ -207,8 +154,8 @@ public class ShardUtil {
     public TIntList guildNums(ObjectFunctionInt<GuildImpl> fn) {
         TIntList l = new TIntLinkedList();
 
-        for (Bot shard : shards.values()) {
-            for (Guild guild : shard.jda.getGuildCache()) {
+        for (JDA shard : manager.getShards()) {
+            for (Guild guild : shard.getGuildCache()) {
                 l.add(fn.apply((GuildImpl) guild));
             }
         }
@@ -217,16 +164,16 @@ public class ShardUtil {
     }
 
     public int guildCount(ObjectFunctionBool<GuildImpl> fn) {
-        int c = 0;
+        int count = 0;
 
-        for (Bot shard : shards.values()) {
-            for (Guild guild : shard.jda.getGuildCache()) {
+        for (JDA shard : manager.getShards()) {
+            for (Guild guild : shard.getGuildCache()) {
                 if (fn.apply((GuildImpl) guild))
-                    c++;
+                    count++;
             }
         }
 
-        return c;
+        return count;
     }
 
     @FunctionalInterface

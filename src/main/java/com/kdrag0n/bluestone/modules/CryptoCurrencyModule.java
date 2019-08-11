@@ -54,7 +54,6 @@ public class CryptoCurrencyModule extends Module {
     private static Field stringsField;
 
     static {
-        scheduledExec.scheduleAtFixedRate(CryptoCurrencyModule::update, 0, 11, TimeUnit.MINUTES);
         try {
             stringsField = Paginator.Builder.class.getDeclaredField("strings");
             stringsField.setAccessible(true);
@@ -66,16 +65,17 @@ public class CryptoCurrencyModule extends Module {
 
     public CryptoCurrencyModule(Bot bot) {
         super(bot);
+        scheduledExec.scheduleAtFixedRate(this::update, 0, 11, TimeUnit.MINUTES);
     }
 
     public String getName() {
         return "Cryptocurrencies";
     }
 
-    private static void update() {
+    private void update() {
         try {
             List<Cryptocurrency> data;
-            try (ResponseBody rbody = Bot.http.newCall(
+            try (ResponseBody rbody = bot.http.newCall(
                     new Request.Builder().get().url("https://api.coinmarketcap.com/v1/ticker/?convert=EUR").build())
                     .execute().body()) {
                 JSONArray items = new JSONArray(StringUtils.replace(rbody.string(), "null", "0"));

@@ -30,12 +30,10 @@ public class ReminderModule extends Module {
 
         dao = setupDao(Reminder.class);
 
-        if (bot.getShardNum() == 1) {
-            try {
-                scheduleAllFromDB();
-            } catch (SQLException e) {
-                logger.warn("Failed to re-schedule all reminders from DB", e);
-            }
+        try {
+            scheduleAllFromDB();
+        } catch (SQLException e) {
+            logger.warn("Failed to re-schedule all reminders from DB", e);
         }
     }
 
@@ -56,12 +54,14 @@ public class ReminderModule extends Module {
             } catch (SQLException ignored) {
             }
 
-            bot.jda.getUserById(reminder.getUserId()).openPrivateChannel()
+            bot.manager.getUserById(reminder.getUserId())
+                    .openPrivateChannel()
                     .queue(channel -> channel.sendMessage(new EmbedBuilder()
-                            .setAuthor("Reminder", null, bot.jda.getSelfUser().getEffectiveAvatarUrl())
+                            .setAuthor("Reminder", null, bot.selfUser.getEffectiveAvatarUrl())
                             .setDescription(reminder.getMessage())
                             .setFooter("You asked me to remind you of this at", null).setColor(randomColor())
-                            .setTimestamp(Instant.now()).build()).queue());
+                            .setTimestamp(Instant.now())
+                            .build()).queue());
         }, reminder.getRemindAt().getTime() - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
     }
 

@@ -75,7 +75,7 @@ public class StarboardModule extends Module {
                 @Override
                 public Message load(Pair<Long, Long> ids) {
                     try {
-                        return bot.jda.getTextChannelById(ids.getLeft()).getMessageById(ids.getRight()).complete();
+                        return bot.manager.getTextChannelById(ids.getLeft()).getMessageById(ids.getRight()).complete();
                     } catch (ErrorResponseException ignored) {
                         return null;
                     }

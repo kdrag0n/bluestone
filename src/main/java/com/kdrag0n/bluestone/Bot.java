@@ -15,9 +15,12 @@ import com.kdrag0n.bluestone.handlers.MessageWaitEventListener;
 import com.kdrag0n.bluestone.handlers.RejectedExecHandlerImpl;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 import net.dv8tion.jda.bot.entities.ApplicationInfo;
+import net.dv8tion.jda.bot.sharding.DefaultShardManagerBuilder;
+import net.dv8tion.jda.bot.sharding.ShardManager;
 import net.dv8tion.jda.core.*;
-import net.dv8tion.jda.core.JDA.ShardInfo;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.ReadyEvent;
@@ -35,6 +38,7 @@ import org.slf4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.security.auth.login.LoginException;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -52,10 +56,11 @@ import java.util.function.Predicate;
 import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
 import static net.dv8tion.jda.core.entities.Game.*;
 
-public class Bot implements EventListener {
-    private static final Logger defLog = LoggerFactory.getLogger(Bot.class);
-    public static final String NAME = "Goldmine";
+public class Bot extends ShardedBot implements EventListener {
+    // Logger
+    public static final Logger logger = LoggerFactory.getLogger(Bot.class);
 
+    // Full module list
     private static final List<Class<? extends Module>> MODULE_CLASSES = ImmutableList.of(
             AfkModule.class,
             CoreModule.class,
@@ -79,12 +84,14 @@ public class Bot implements EventListener {
             WikiModule.class
     );
 
+    // Constants
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
     public static final JSONObject EMPTY_JSON_OBJECT = new JSONObject();
     public static final JSONArray EMPTY_JSON_ARRAY = new JSONArray();
     private static final Pattern GENERAL_MENTION_PATTERN = Pattern.compile("^<@[!&]?[0-9]{17,20}>\\s*");
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
-    public final Logger logger;
+
+    // Executors
     public static final ScheduledThreadPoolExecutor scheduledExecutor = new ScheduledThreadPoolExecutor(8,
             new ThreadFactoryBuilder()
                     .setDaemon(true)
@@ -105,24 +112,23 @@ public class Bot implements EventListener {
                     .build(),
             new RejectedExecHandlerImpl("Command-Exec"));
     public final EventWaiter eventWaiter = new EventWaiter();
-    public final JDA jda;
-    public final ShardUtil shardUtil;
     public final Map<String, Command> commands = new HashMap<>();
     public final Map<String, Module> modules = new HashMap<>();
     private final Map<Class<? extends Event>, List<ExtraEvent>> extraEvents = new HashMap<>();
-    public static final OkHttpClient http = new OkHttpClient.Builder()
+    public final OkHttpClient http = new OkHttpClient.Builder()
             .cache(new Cache(new File("data/http_cache"), 24000000000L))
             .connectTimeout(5, TimeUnit.SECONDS)
             .readTimeout(12, TimeUnit.SECONDS)
             .writeTimeout(8, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
             .build();
-    public static long ownerId = -1;
-    public static String ownerTag;
-    private static long ourId;
-    private static String ourMention;
-    private static String ourGuildMention;
-    private boolean isReady;
+    public long ownerId = -1;
+    public String ownerTag;
+    public User selfUser;
+    private long selfId;
+    private String selfMention;
+    private String selfGuildMention;
+    private TIntSet readyShards = new TIntHashSet();
     public final PrefixStore prefixStore;
 
     private static final RandomSelect<Game> gameSelector = new RandomSelect<Game>(50)
@@ -190,47 +196,19 @@ public class Bot implements EventListener {
                     return;
             }
 
-            defLog.error("RestAction failure", e);
+            logger.error("RestAction failure", e);
         };
-    }
-
-    public JSONObject getConfig() {
-        return shardUtil.getConfig();
     }
 
     public JSONObject getKeys() {
         return getConfig().getJSONObject("keys");
     }
 
-    public Bot(ShardUtil util, JDA jda) {
-        super();
+    public Bot(ShardManager manager, JSONObject config) {
+        super(manager, config);
+        manager.addEventListener(this, eventWaiter);
 
-        shardUtil = util;
-        prefixStore = new PrefixStore(shardUtil.getPool(), shardUtil.getConfig().optString("default_prefix", "!"));
-
-        this.jda = jda;
-        jda.addEventListener(this, eventWaiter);
-
-        final ShardInfo sInfo = jda.getShardInfo();
-        logger = LoggerFactory.getLogger("Bot" + (sInfo == null ? "" : " [" + sInfo.getShardString() + ']'));
-    }
-
-    public int getShardNum() {
-        ShardInfo sInfo = jda.getShardInfo();
-        if (sInfo == null) {
-            return 1;
-        } else {
-            return sInfo.getShardId() + 1;
-        }
-    }
-
-    public int getShardTotal() {
-        ShardInfo sInfo = jda.getShardInfo();
-        if (sInfo == null) {
-            return 1;
-        } else {
-            return sInfo.getShardTotal();
-        }
+        prefixStore = new PrefixStore(getPool(), getConfig().optString("default_prefix", "!"));
     }
 
     @Override
@@ -238,11 +216,12 @@ public class Bot implements EventListener {
         if (event instanceof MessageReceivedEvent) {
             onMessageReceived((MessageReceivedEvent) event);
         } else if (event instanceof ReadyEvent) {
-            onReady();
+            onReady((ReadyEvent) event);
         } else if (event instanceof ShutdownEvent) {
-            onShutdown();
+            onShutdown((ShutdownEvent) event);
         }
 
+        event.getJDA().getShardInfo().getShardId();
         dispatchModuleEvent(event);
     }
 
@@ -277,31 +256,43 @@ public class Bot implements EventListener {
 
     private void updateOwnerInfo() {
         User owner;
-        if (jda.getSelfUser().isBot()) {
-            ApplicationInfo appInfo = jda.asBot().getApplicationInfo().complete();
-            owner = appInfo.getOwner();
-        } else {
-            owner = jda.getSelfUser();
-        }
+        ApplicationInfo appInfo = manager.getShardById(0).asBot().getApplicationInfo().complete();
+        owner = appInfo.getOwner();
 
         ownerId = owner.getIdLong();
         ownerTag = Module.getTag(owner);
     }
 
-    private void onReady() {
-        if (isReady)
+    private void onReady(ReadyEvent event) {
+        JDA jda = event.getJDA();
+        int shardId = Bot.getShardNum(jda) - 1;
+
+        if (readyShards.contains(shardId))
             return;
 
         try {
             jda.getPresence().setStatus(OnlineStatus.ONLINE);
-            ourId = jda.getSelfUser().getIdLong();
-            ourMention = jda.getSelfUser().getAsMention();
-            ourGuildMention = "<@!" + ourId + '>';
 
-            if (ownerId == -1)
-                updateOwnerInfo();
+            if (shardId == 0) {
+                selfUser = jda.getSelfUser();
+                selfId = selfUser.getIdLong();
+                selfMention = selfUser.getAsMention();
+                selfGuildMention = "<@!" + selfId + '>';
 
-            logger.info("Ready - ID {}", ourId);
+                if (ownerId == -1)
+                    updateOwnerInfo();
+
+                for (Class<? extends Module> moduleClass : MODULE_CLASSES) {
+                    try {
+                        Module module = moduleClass.getConstructor(Bot.class).newInstance(this);
+                        loadModule(module);
+                    } catch (Throwable e) {
+                        logger.error("Failed to register module {}", moduleClass.getName(), e);
+                    }
+                }
+
+                dispatchModuleEvent(new ModuleLoadEvent(this));
+            }
 
             if (jda.getGuildById(110373943822540800L) != null)
                 Emotes.setHasDbots();
@@ -310,23 +301,14 @@ public class Bot implements EventListener {
                 Emotes.setHasParadise();
 
             Runnable task = () -> jda.getPresence().setGame(gameSelector.select());
-
             scheduledExecutor.scheduleAtFixedRate(task, 10, 120, TimeUnit.SECONDS);
 
-            for (Class<? extends Module> moduleClass : MODULE_CLASSES) {
-                try {
-                    Module module = moduleClass.getConstructor(Bot.class).newInstance(this);
-                    loadModule(module);
-                } catch (Throwable e) {
-                    logger.error("Failed to register module {}", moduleClass.getName(), e);
-                }
-            }
-
-            dispatchModuleEvent(new ModuleLoadEvent(this));
-
-            logger.info("Bot initialization complete.");
         } finally {
-            isReady = true;
+            readyShards.add(shardId);
+
+            if (Bot.getShardNum(jda) == manager.getShardsTotal()) {
+                logger.info("Ready - ID {}", selfId);
+            }
         }
     }
 
@@ -383,7 +365,6 @@ public class Bot implements EventListener {
                         commands.put(al, command);
                 }
             } else if (method.isAnnotationPresent(EventHandler.class)) {
-                EventHandler anno = method.getAnnotation(EventHandler.class);
                 ExtraEvent extraEvent = new ExtraEvent(method, module);
                 Class eventClass = method.getParameterTypes()[0];
 
@@ -401,7 +382,7 @@ public class Bot implements EventListener {
         modules.put(module.getName(), module);
     }
 
-    private void onShutdown() {
+    private void onShutdown(ShutdownEvent event) {
         synchronized (this) {
             notifyAll();
         }
@@ -410,7 +391,7 @@ public class Bot implements EventListener {
     private void onMessageReceived(MessageReceivedEvent event) {
         final User author = event.getAuthor();
 
-        if (author.isBot() || author.getIdLong() == ourId || !isReady)
+        if (author.isBot() || author.getIdLong() == selfId || !readyShards.contains(Bot.getShardNum(event.getJDA()) - 1))
             return;
 
         final Message message = event.getMessage();
@@ -440,7 +421,7 @@ public class Bot implements EventListener {
 
                 command.simpleInvoke(this, event, args, prefix, cmdName, message.getContentRaw(), true);
             }
-        } else if (content.startsWith(ourMention) || content.startsWith(ourGuildMention)) {
+        } else if (content.startsWith(selfMention) || content.startsWith(selfGuildMention)) {
             final String request = Strings.renderMessage(message, message.getGuild(),
                     GENERAL_MENTION_PATTERN.matcher(message.getContentRaw()).replaceFirst(""));
 
@@ -502,7 +483,7 @@ public class Bot implements EventListener {
                 }));
     }
 
-    public Message waitForMessage(long millis, Predicate<Message> check) {
+    public Message waitForMessage(JDA jda, long millis, Predicate<Message> check) {
         AtomicReference<Message> lock = new AtomicReference<>();
         MessageWaitEventListener listener = new MessageWaitEventListener(lock, check);
         jda.addEventListener(listener);
@@ -519,88 +500,74 @@ public class Bot implements EventListener {
     }
 
     public String formatUptime() {
-        return Strings.formatDuration((new Date().getTime() - shardUtil.startTime.getTime()) / 1000L);
+        return Strings.formatDuration((new Date().getTime() - startTime.getTime()) / 1000L);
+    }
+
+    public int getTrackCount() {
+        MusicModule module = (MusicModule) modules.get("Music");
+        if (module == null)
+            return 0;
+
+        return module.getTracksLoaded();
+    }
+
+    public int getStreamCount() {
+        MusicModule module = (MusicModule) modules.get("Music");
+        if (module == null)
+            return 0;
+
+        return module.getActiveStreamCount();
+    }
+
+    public static int getShardNum(JDA jda) {
+        JDA.ShardInfo sInfo = jda.getShardInfo();
+        if (sInfo == null)
+            return 1;
+        else
+            return sInfo.getShardId() + 1;
     }
 
     public static int start(String token, int shardCount, JSONObject config) {
-        defLog.info("Starting bot...");
+        logger.info("Starting bot...");
 
         if (shardCount < 1) {
-            defLog.info("At least 1 shard is required; {} requested", shardCount);
+            logger.info("At least 1 shard is required; {} requested", shardCount);
             return 1;
         } else if (shardCount == 2) {
-            defLog.error("2 shards not supported");
+            logger.error("2 shards not supported");
             return 1;
         }
 
-        ShardUtil shardUtil = new ShardUtil(shardCount, config);
-        JDABuilder builder = new JDABuilder(AccountType.BOT)
+        DefaultShardManagerBuilder builder = new DefaultShardManagerBuilder()
                 .setToken(token)
+                .setShardsTotal(shardCount)
                 .setWebsocketFactory(new WebSocketFactory()
                         .setConnectionTimeout(120000))
                 .setBulkDeleteSplittingEnabled(false)
-                .setStatus(OnlineStatus.IDLE)
                 .setHttpClientBuilder(new OkHttpClient.Builder()
                         .retryOnConnectionFailure(true))
-                .setGame(Game.playing("startup"));
+                .setStatus(OnlineStatus.IDLE)
+                .setGame(Game.playing("starting up..."));
 
         if ((System.getProperty("os.arch").startsWith("x86") || System.getProperty("os.arch").equals("amd64"))
                 && (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX))
             builder.setAudioSendFactory(new NativeAudioSendFactory());
 
-        for (int i = 0; i < shardCount; i++) {
-            final int shardId = i;
+        ShardManager manager;
+        try {
+            manager = builder.build();
+        } catch (LoginException e) {
+            throw new RuntimeException(e);
+        }
 
-            Runnable monitor = () -> {
-                final Logger logger = LoggerFactory.getLogger("ShardMonitor " + shardId);
+        for (int shardId = 0; shardId < shardCount; shardId++)
+            manager.start(shardId);
 
-                while (true) {
-                    if (shardCount != 1) {
-                        builder.useSharding(shardId, shardCount);
-                    }
-
-                    JDA jda;
-                    try {
-                        jda = builder.build();
-                    } catch (Exception e) {
-                        logger.error("Failed to initialize JDA", e);
-                        if (shardCount == 1)
-                            System.exit(1);
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException ignored) {
-                        }
-                        continue;
-                    }
-
-                    Bot bot = new Bot(shardUtil, jda);
-                    shardUtil.setShard(shardId, bot);
-
-                    synchronized (bot) {
-                        try {
-                            bot.wait();
-                        } catch (InterruptedException ignored) {
-                        }
-                    }
-
-                    if (jda.getStatus() != JDA.Status.DISCONNECTED) {
-                        if (jda.getStatus() == JDA.Status.CONNECTED) {
-                            jda.getPresence().setStatus(OnlineStatus.INVISIBLE);
-                        }
-                        jda.shutdown();
-                    }
-                    if (shardCount == 1) {
-                        System.exit(0);
-                    }
-                }
-            };
-
-            Thread monThread = new Thread(monitor, "Bot Shard-" + shardId + " Monitor Thread");
-            monThread.start();
+        Bot bot = new Bot(manager, config);
+        synchronized (bot) {
             try {
-                Thread.sleep(5000);
-            } catch (InterruptedException ignored) {
-            }
+                bot.wait();
+            } catch (InterruptedException ignored) {}
         }
 
         return 0;
@@ -622,7 +589,7 @@ public class Bot implements EventListener {
                     }
 
                     if (response.isRedirect()) {
-                        defLog.warn("Response is redirect, status " + response.code() + " " + response.message()
+                        logger.warn("Response is redirect, status " + response.code() + " " + response.message()
                                 + ". Destination: " + val(response.header("Location")).or("[not sent]"));
                     }
 
@@ -630,17 +597,17 @@ public class Bot implements EventListener {
                 } catch (Throwable e) {
                     try {
                         if (!(e instanceof PassException))
-                            defLog.error("Error in HTTP success callback", e);
+                            logger.error("Error in HTTP success callback", e);
 
                         failure.accept(e);
                     } catch (Throwable ee) {
                         if (ee instanceof PermissionException) {
                             PermissionException pe = (PermissionException) ee;
                             if (pe.getPermission() != Permission.MESSAGE_WRITE) {
-                                defLog.error("Permission error in HTTP fail callback after success callback error", pe);
+                                logger.error("Permission error in HTTP fail callback after success callback error", pe);
                             }
                         } else {
-                            defLog.error("Error running HTTP call failure callback after error in success callback!",
+                            logger.error("Error running HTTP call failure callback after error in success callback!",
                                     ee);
                         }
                     }
@@ -656,7 +623,7 @@ public class Bot implements EventListener {
                 try {
                     failure.accept(e);
                 } catch (Throwable ee) {
-                    defLog.error("Error running HTTP call failure callback!", ee);
+                    logger.error("Error running HTTP call failure callback!", ee);
                 }
             }
         };

@@ -43,12 +43,6 @@ public class CoreModule extends Module {
 
     public CoreModule(Bot bot) {
         super(bot);
-
-        if (bot.jda.getSelfUser().getIdLong() == PRODUCTION_USER_ID &&
-                !Bot.NAME.equals(bot.jda.getSelfUser().getName()) &&
-                bot.getShardNum() == 1) {
-            bot.jda.getSelfUser().getManager().setName(Bot.NAME).queue();
-        }
     }
 
     public String getName() {
@@ -72,14 +66,15 @@ public class CoreModule extends Module {
 
     @Command(name = "ping", desc = "Pong!")
     public void cmdPing(Context ctx) {
-        String msg = "🏓 WebSockets: " + ctx.jda.getPing() + "ms";
+        String msg = "🏓 WebSockets: " + (int) Math.round(ctx.bot.manager.getAveragePing()) + "ms";
         long beforeTime = System.currentTimeMillis();
 
-        ctx.send(msg).queue(
-                message1 -> message1.editMessage(msg + ", message: calculating...").queue(message2 -> {
-            double msgPing = (System.currentTimeMillis() - beforeTime) / 2.0;
-            message2.editMessage(msg + ", message: " + msgPing + "ms").queue();
-        }));
+        ctx.send(msg).queue(message1 -> message1.editMessage(msg + ", message: calculating...")
+                .queue(message2 -> {
+                    double msgPing = (System.currentTimeMillis() - beforeTime) / 2.0;
+                    message2.editMessage(msg + ", message: " + (int) Math.round(msgPing) + "ms").queue();
+                })
+        );
     }
 
     @Command(name = "faq", desc = "Get the Frequently Asked Questions list.")
@@ -89,17 +84,31 @@ public class CoreModule extends Module {
 
     @Command(name = "owner", desc = "Become the bot owner..?", aliases = {"bot_owner"})
     public void cmdOwnerInfo(Context ctx) {
-        ctx.send("My owner is **" + Bot.ownerTag +
+        ctx.send("My owner is **" + bot.ownerTag +
                 "**. The bot owner is a role that applies globally to the entire bot, and is the person who owns the actual bot, **not** the owner of a server or anything like that.\n" +
         "**No**, you may not have bot owner, because it allows full bot control. In your server, being **server owner** is sufficient, and grants you permission to perform all the actions you will need to, automatically.\n\n" +
         "**__TL;DR Server owner is enough, you can't have bot owner because that's one person (the actual owner of the bot) and offers unlimited control.__**").queue();
+    }
+
+    private void addHelpEntry(com.kdrag0n.bluestone.Command cmd, Map<String, List<String>> fields) {
+        String cName = cmd.module.getDisplayName();
+        String entry = "\u2022 **" + cmd.name + "**: " + cmd.description;
+
+        if (fields.containsKey(cName)) {
+            fields.get(cName).add(entry);
+        } else {
+            final LinkedList<String> newList = new LinkedList<>();
+            newList.add(entry);
+
+            fields.put(cName, newList);
+        }
     }
 
     @Command(name = "help", desc = "List the available commands and their usage.", usage = "{commands and/or modules}",
             aliases = {"halp", "commands"})
     public void cmdHelp(Context ctx) {
         int charLimit = ctx.jda.getSelfUser().isBot() ? MessageEmbed.EMBED_MAX_LENGTH_BOT : MessageEmbed.EMBED_MAX_LENGTH_CLIENT;
-        boolean isOwner = ctx.author.getIdLong() == Bot.ownerId;
+        boolean isOwner = ctx.author.getIdLong() == bot.ownerId;
 
         List<MessageEmbed> pages = new ArrayList<>();
         Map<String, List<String>> fields = new HashMap<>();
@@ -110,19 +119,8 @@ public class CoreModule extends Module {
 
         if (ctx.args.length < 1) {
             for (com.kdrag0n.bluestone.Command cmd: new HashSet<>(bot.commands.values())) {
-                if ((!cmd.hidden || isOwner) && !(cmd.requiresOwner && !isOwner)) {
-                    String cName = cmd.module.getDisplayName();
-                    String entry = "\u2022 **" + cmd.name + "**: " + cmd.description;
-
-                    if (fields.containsKey(cName)) {
-                        fields.get(cName).add(entry);
-                    } else {
-                        final LinkedList<String> newList = new LinkedList<>();
-                        newList.add(entry);
-
-                        fields.put(cName, newList);
-                    }
-                }
+                if ((!cmd.hidden || isOwner) && !(cmd.requiresOwner && !isOwner))
+                    addHelpEntry(cmd, fields);
             }
         } else {
             for (int i = 0; i < ctx.args.length && i < 24; i++) {
@@ -134,19 +132,8 @@ public class CoreModule extends Module {
                     Module module = bot.modules.get(item);
 
                     for (com.kdrag0n.bluestone.Command cmd: new HashSet<>(bot.commands.values())) {
-                        if (cmd.module == module && (!cmd.hidden || isOwner) && !(cmd.requiresOwner && !isOwner)) {
-                            String cName = cmd.module.getDisplayName();
-                            String entry = "\u2022 **" + cmd.name + "**: " + cmd.description;
-
-                            if (fields.containsKey(cName)) {
-                                fields.get(cName).add(entry);
-                            } else {
-                                final LinkedList<String> newList = new LinkedList<>();
-                                newList.add(entry);
-
-                                fields.put(cName, newList);
-                            }
-                        }
+                        if (cmd.module == module && (!cmd.hidden || isOwner) && !(cmd.requiresOwner && !isOwner))
+                            addHelpEntry(cmd, fields);
                     }
                     done = true;
                 }
@@ -247,22 +234,20 @@ public class CoreModule extends Module {
 
     @Command(name = "info", desc = "Get some info about me.", aliases = {"about", "stats", "statistics", "status"})
     public void cmdInfo(Context ctx) {
-        ShardUtil shardUtil = bot.shardUtil;
-
         EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://khronodragon.com/goldmine")
                 .setColor(randomColor())
-                .setDescription("A bot by **" + Bot.ownerTag + "** made with ❤")
-                .addField("Servers", str(shardUtil.getGuildCount()), true)
+                .setDescription("A bot by **" + bot.ownerTag + "** made with ❤")
+                .addField("Servers", str(bot.getGuildCount()), true)
                 .addField("Uptime", bot.formatUptime(), true)
                 .addField("Threads", str(Thread.activeCount()), true)
                 .addField("Memory Used", Strings.formatMemory(), true)
-                .addField("Users", str(shardUtil.getUserCount()), true)
-                .addField("Channels", str(shardUtil.getChannelCount()), true)
+                .addField("Users", str(bot.getUserCount()), true)
+                .addField("Channels", str(bot.getChannelCount()), true)
                 .addField("Revision", BuildConfig.GIT_SHORT_COMMIT, true)
-                .addField("Music Tracks Loaded", str(shardUtil.getTrackCount()), true)
-                .addField("Playing Music in", shardUtil.getStreamCount() + " channels", true)
+                .addField("Music Tracks Loaded", str(bot.getTrackCount()), true)
+                .addField("Playing Music in", bot.getStreamCount() + " channels", true)
                 .addField("Links", StringUtils.replace(INFO_LINKS, "[invite]", ctx.jda.asBot().getInviteUrl(PERMS_NEEDED)), false)
-                .setFooter("Serving you from shard " + bot.getShardNum(), null)
+                .setFooter("Serving you from shard " + ctx.getShardNum(), null)
                 .setTimestamp(Instant.now());
 
         ctx.send(emb.build()).queue();

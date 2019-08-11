@@ -58,7 +58,7 @@ public class InfoModule extends Module {
 
                     String uri = "http://api.ipstack.com/" + ip + "?access_key=" + apiKey + "&hostname=1";
                     JSONObject data = new JSONObject(
-                            Bot.http.newCall(new Request.Builder().get().url(uri).build()).execute().body().string());
+                            bot.http.newCall(new Request.Builder().get().url(uri).build()).execute().body().string());
 
                     return new EmbedBuilder().setColor(randomColor()).addField("IP", ip, true)
                             .addField("Reverse DNS", data.optString("hostname", "Error resolving host"), true)
@@ -127,7 +127,7 @@ public class InfoModule extends Module {
         }
     }
 
-    private int mCount(GuildImpl g, ShardUtil.ObjectFunctionBool<Member> fn) {
+    private int mCount(GuildImpl g, ShardedBot.ObjectFunctionBool<Member> fn) {
         int c = 0;
 
         for (Member member : g.getMembersMap().valueCollection()) {
@@ -141,18 +141,17 @@ public class InfoModule extends Module {
     @Command(name = "xstats", desc = "Get a lot of extended statistics about me.", aliases = { "xstatistics", "xinfo" })
     public void cmdXInfo(Context ctx) {
         ctx.channel.sendTyping().queue();
-        ShardUtil shardUtil = bot.shardUtil;
 
         Map<String, TIntList> stats = new LinkedHashMap<String, TIntList>() {
             {
-                put("Members per Server", shardUtil.guildNums(g -> g.getMembersMap().size()));
+                put("Members per Server", bot.guildNums(g -> g.getMembersMap().size()));
                 put("Online Members per Server",
-                        shardUtil.guildNums(g -> mCount(g, m -> m.getOnlineStatus() == OnlineStatus.ONLINE)));
-                put("Text Channels per Server", shardUtil.guildNums(g -> g.getTextChannelsMap().size()));
-                put("Voice Channels per Server", shardUtil.guildNums(g -> g.getVoiceChannelsMap().size()));
-                put("Categories per Server", shardUtil.guildNums(g -> g.getCategoriesMap().size()));
-                put("Roles per Server", shardUtil.guildNums(g -> g.getRolesMap().size()));
-                put("Custom Emotes per Server", shardUtil.guildNums(g -> g.getEmoteMap().size()));
+                        bot.guildNums(g -> mCount(g, m -> m.getOnlineStatus() == OnlineStatus.ONLINE)));
+                put("Text Channels per Server", bot.guildNums(g -> g.getTextChannelsMap().size()));
+                put("Voice Channels per Server", bot.guildNums(g -> g.getVoiceChannelsMap().size()));
+                put("Categories per Server", bot.guildNums(g -> g.getCategoriesMap().size()));
+                put("Roles per Server", bot.guildNums(g -> g.getRolesMap().size()));
+                put("Custom Emotes per Server", bot.guildNums(g -> g.getEmoteMap().size()));
             }
         };
 
@@ -163,18 +162,18 @@ public class InfoModule extends Module {
             emb.addField(stat.getKey(), statify(stat.getValue()), true);
         }
 
-        int exclusive = shardUtil.guildCount(g -> mCount(g, m -> m.getUser().isBot()) < 2);
+        int exclusive = bot.guildCount(g -> mCount(g, m -> m.getUser().isBot()) < 2);
         String excText = String.format("%d (%.2f%%)", exclusive,
-                ((float) exclusive / (float) shardUtil.getGuildCount()) * 100f);
+                ((float) exclusive / (float) bot.getGuildCount()) * 100f);
 
-        int big = shardUtil.guildCount(g -> g.getMembersMap().size() >= 250);
-        String bigText = String.format("%d (%.2f%%)", big, ((float) big / (float) shardUtil.getGuildCount()) * 100f);
+        int big = bot.guildCount(g -> g.getMembersMap().size() >= 250);
+        String bigText = String.format("%d (%.2f%%)", big, ((float) big / (float) bot.getGuildCount()) * 100f);
 
-        int partnered = shardUtil.guildCount(g -> g.getSplashUrl() != null || g.getRegion().isVip());
+        int partnered = bot.guildCount(g -> g.getSplashUrl() != null || g.getRegion().isVip());
         String partneredText = String.format("%d (%.2f%%)", partnered,
-                ((float) partnered / (float) shardUtil.getGuildCount()) * 100f);
+                ((float) partnered / (float) bot.getGuildCount()) * 100f);
 
-        emb.addBlankField(false).addField("Total Queue Size", str(shardUtil.getTrackCount()), true)
+        emb.addBlankField(false).addField("Total Queue Size", str(bot.getTrackCount()), true)
                 .addField("Servers where I'm the only bot", excText, true).addField("Big Servers", bigText, true)
                 .addField("Partnered Servers", partneredText, true);
 
@@ -259,7 +258,7 @@ public class InfoModule extends Module {
             return;
         }
 
-        Bot.http.newCall(new Request.Builder().get()
+        bot.http.newCall(new Request.Builder().get()
                 .url(Strings.buildQueryUrl("http://api.openweathermap.org/data/2.5/find", "q", ctx.rawArgs, "type",
                         "like", "units", "imperial"))
                 .header("X-API-Key", bot.getKeys().getString("openweathermap")).build())

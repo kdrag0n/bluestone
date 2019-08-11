@@ -34,7 +34,7 @@ public class WikiModule extends Module {
                 .setAuthor("Wikipedia", "https://wikipedia.com/",
                 "https://upload.wikimedia.org/wikipedia/en/thumb/8/80/Wikipedia-logo-v2.svg/1122px-Wikipedia-logo-v2.svg.png");
 
-        Bot.http.newCall(new Request.Builder()
+        bot.http.newCall(new Request.Builder()
                 .url("https://en.wikipedia.org/w/api.php?action=opensearch&search=" + ctx.rawArgs)
                 .build()).enqueue(Bot.callback(response -> {
 

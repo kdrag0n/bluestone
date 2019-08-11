@@ -89,7 +89,7 @@ public enum Perm {
     }
 
     public boolean check(Context ctx) {
-        if (ctx.author.getIdLong() == Bot.ownerId) {
+        if (ctx.author.getIdLong() == ctx.bot.ownerId) {
             return true;
         }
 
