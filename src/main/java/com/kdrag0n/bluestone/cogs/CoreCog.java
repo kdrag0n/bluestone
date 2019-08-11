@@ -24,9 +24,6 @@ import java.util.*;
 import static com.kdrag0n.bluestone.util.Strings.str;
 
 public class CoreCog extends Cog {
-    private static final String JOIN_MESSAGE =
-            "Please read the FAQ *before* asking any questions. <https://tiny.cc/gfaq> Thanks ❤";
-
     private static final long PRODUCTION_USER_ID = 239775420470394897L;
     static final Collection<Permission> PERMS_NEEDED = Permission.getPermissions(473295957L);
 
@@ -297,18 +294,6 @@ public class CoreCog extends Cog {
             } else {
                 ctx.send("My prefix is: `" + ctx.prefix + "`").queue();
             }
-        }
-    }
-
-    @EventHandler
-    public void onJoin(GuildJoinEvent event) {
-        TextChannel defChan = defaultWritableChannel(event.getGuild().getSelfMember());
-
-        if (defChan == null || !defChan.canTalk()) {
-            event.getGuild().getOwner().getUser().openPrivateChannel()
-                    .queue(ch -> ch.sendMessage(JOIN_MESSAGE).queue());
-        } else {
-            defChan.sendMessage(JOIN_MESSAGE).queue();
         }
     }
 }
