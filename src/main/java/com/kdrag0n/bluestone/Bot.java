@@ -1,13 +1,14 @@
 package com.kdrag0n.bluestone;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.re2j.Pattern;
 import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
+import com.kdrag0n.bluestone.modules.*;
 import com.kdrag0n.bluestone.types.Module;
 import com.kdrag0n.bluestone.types.ModuleLoadEvent;
 import com.kdrag0n.bluestone.types.Perm;
 import com.kdrag0n.bluestone.util.*;
-import com.kdrag0n.bluestone.annotations.Disable;
 import com.kdrag0n.bluestone.annotations.EventHandler;
 import com.kdrag0n.bluestone.errors.PassException;
 import com.kdrag0n.bluestone.handlers.MessageWaitEventListener;
@@ -32,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.reflections.Reflections;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,6 +54,29 @@ import static net.dv8tion.jda.core.entities.Game.*;
 public class Bot implements EventListener {
     private static final Logger defLog = LoggerFactory.getLogger(Bot.class);
     public static final String NAME = "Goldmine";
+
+    private static final List<Class<? extends Module>> MODULE_CLASSES = ImmutableList.of(
+            AfkModule.class,
+            CoreModule.class,
+            CryptoCurrencyModule.class,
+            EntertainmentModule.class,
+            GameModule.class,
+            GoogleModule.class,
+            InfoModule.class,
+            MiscModule.class,
+            ModerationModule.class,
+            MusicModule.class,
+            OwnerModule.class,
+            PokemonModule.class,
+            PollModule.class,
+            ReminderModule.class,
+            ReplModule.class,
+            StarboardModule.class,
+            StatReporterModule.class,
+            UtilityModule.class,
+            WelcomeModule.class,
+            WikiModule.class
+    );
 
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
     public static final JSONObject EMPTY_JSON_OBJECT = new JSONObject();
@@ -289,14 +312,9 @@ public class Bot implements EventListener {
 
             scheduledExecutor.scheduleAtFixedRate(task, 10, 120, TimeUnit.SECONDS);
 
-            Reflections reflector = new Reflections("com.kdrag0n.bluestone.modules");
-            Set<Class<? extends Module>> moduleClasses = reflector.getSubTypesOf(Module.class);
-            for (Class<?> moduleClass : moduleClasses) {
-                if (moduleClass.isAnnotationPresent(Disable.class))
-                    continue;
-
+            for (Class<? extends Module> moduleClass : MODULE_CLASSES) {
                 try {
-                    Module module = (Module) moduleClass.getConstructor(Bot.class).newInstance(this);
+                    Module module = moduleClass.getConstructor(Bot.class).newInstance(this);
                     loadModule(module);
                 } catch (Throwable e) {
                     logger.error("Failed to register module {}", moduleClass.getName(), e);
