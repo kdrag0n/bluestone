@@ -322,6 +322,8 @@ public class Bot implements EventListener {
             }
 
             dispatchModuleEvent(new ModuleLoadEvent(this));
+
+            logger.info("Bot initialization complete.");
         } finally {
             isReady = true;
         }
@@ -329,6 +331,8 @@ public class Bot implements EventListener {
 
     private void loadModule(Module module) {
         Class<? extends Module> clazz = module.getClass();
+
+        logger.info("Loading module {}...", clazz.getSimpleName());
 
         for (Method method : clazz.getDeclaredMethods()) {
             if (method.isAnnotationPresent(com.kdrag0n.bluestone.annotations.Command.class)) {
