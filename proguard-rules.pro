@@ -57,7 +57,7 @@
 -ignorewarnings
 
 # Main class
--keep class com.kdrag0n.bluestone.Start { *; }
+-keep class com.kdrag0n.bluestone.Bootstrap { *; }
 
 # SLF4J
 -keep class org.slf4j.** { *; }

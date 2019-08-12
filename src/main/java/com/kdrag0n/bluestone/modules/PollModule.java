@@ -10,12 +10,12 @@ import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.emotes.DiscordEmoteProvider;
 import com.kdrag0n.bluestone.sql.ActivePoll;
 import com.kdrag0n.bluestone.util.RegexUtils;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Emote;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageReaction;
-import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Emote;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageReaction;
+import net.dv8tion.jda.api.entities.TextChannel;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -146,7 +146,7 @@ public class PollModule extends Module {
             schedulePoll(poll);
 
             Bot.scheduledExecutor.schedule(() -> msg.editMessage(embed.build()).queue(),
-                    (unicodeEmotes.size() + customEmotes.size()) * (int) (ctx.jda.getPing() * 1.92),
+                    (unicodeEmotes.size() + customEmotes.size()) * (int) (ctx.jda.getGatewayPing() * 1.92),
                     TimeUnit.MILLISECONDS);
         });
     }
@@ -166,7 +166,7 @@ public class PollModule extends Module {
 
                 Message message;
                 try {
-                    message = channel.getMessageById(poll.getMessageId()).complete();
+                    message = channel.retrieveMessageById(poll.getMessageId()).complete();
                 } catch (Exception ignored) {
                     return;
                 }
@@ -177,7 +177,7 @@ public class PollModule extends Module {
                 long ourId = bot.selfUser.getIdLong();
                 Map<MessageReaction.ReactionEmote, Integer> resultTable = message.getReactions().stream()
                         .map(r -> ImmutablePair.of(r,
-                                (int) r.getUsers().complete().stream().filter(u -> u.getIdLong() != ourId).count()))
+                                (int) r.retrieveUsers().complete().stream().filter(u -> u.getIdLong() != ourId).count()))
                         .sorted(Collections
                                 .reverseOrder(Comparator.comparing(ImmutablePair<MessageReaction, Integer>::getRight)))
                         .collect(Collectors.toMap(e -> e.getLeft().getReactionEmote(), ImmutablePair::getRight,
@@ -187,13 +187,13 @@ public class PollModule extends Module {
 
                 MessageReaction.ReactionEmote winnerKey = Collections
                         .max(resultTable.entrySet(), Map.Entry.comparingByValue()).getKey();
-                String winner = winnerKey.getEmote() == null ? winnerKey.getName()
-                        : winnerKey.getEmote().getAsMention();
+                String winner = winnerKey.isEmote() ? winnerKey.getEmote().getAsMention()
+                        : winnerKey.getName();
 
                 List<String> orderedResultList = resultTable.entrySet().stream().map(e -> {
                     final MessageReaction.ReactionEmote key = e.getKey();
                     final Integer value = e.getValue();
-                    final String userKey = key.getEmote() == null ? key.getName() : key.getEmote().getAsMention();
+                    final String userKey = key.isEmote() ? key.getEmote().getAsMention() : key.getName();
 
                     return userKey + ": " + value + " vote" + (value == 1 ? "" : "s");
                 }).collect(Collectors.toList());

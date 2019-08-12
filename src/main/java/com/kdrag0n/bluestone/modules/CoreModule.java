@@ -8,13 +8,13 @@ import com.kdrag0n.bluestone.types.Module;
 import com.kdrag0n.bluestone.types.Perm;
 import com.kdrag0n.bluestone.util.Paginator;
 import com.kdrag0n.bluestone.util.Strings;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.MessageEmbed;
-import net.dv8tion.jda.core.exceptions.ErrorResponseException;
-import net.dv8tion.jda.core.exceptions.InsufficientPermissionException;
-import net.dv8tion.jda.core.exceptions.PermissionException;
-import net.dv8tion.jda.core.requests.RestAction;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
+import net.dv8tion.jda.api.exceptions.PermissionException;
+import net.dv8tion.jda.api.requests.RestAction;
 import org.apache.commons.lang3.StringUtils;
 
 import java.sql.SQLException;
@@ -24,7 +24,6 @@ import java.util.*;
 import static com.kdrag0n.bluestone.util.Strings.str;
 
 public class CoreModule extends Module {
-    private static final long PRODUCTION_USER_ID = 239775420470394897L;
     static final Collection<Permission> PERMS_NEEDED = Permission.getPermissions(473295957L);
 
     private static final String LIST_ITEM = Strings.EMPTY + ' ' + Strings.EMPTY + ' ' + Strings.EMPTY + ' ' + Strings.EMPTY + " \u2022 ";
@@ -33,14 +32,13 @@ public class CoreModule extends Module {
             LIST_ITEM + "Go to [my website](https://khronodragon.com/goldmine/) for help\n" +
             LIST_ITEM + "Join my [support server](https://discord.gg/sYkwfxA) for even more help";
 
-    private static final List<Perm> PREFIX_PERMS = new ArrayList<>(2);
-    private final Dao<GuildPrefix, Long> prefixDao = setupDao(GuildPrefix.class);
+    private static final EnumSet<Perm> PREFIX_PERMS = EnumSet.of(
+            Perm.MANAGE_SERVER,
+            Perm.MANAGE_CHANNEL,
+            Perm.MESSAGE_MANAGE
+    );
 
-    static {
-        PREFIX_PERMS.add(Perm.MANAGE_SERVER);
-        PREFIX_PERMS.add(Perm.MANAGE_CHANNEL);
-        PREFIX_PERMS.add(Perm.MESSAGE_MANAGE);
-    }
+    private final Dao<GuildPrefix, Long> prefixDao = setupDao(GuildPrefix.class);
 
     public CoreModule(Bot bot) {
         super(bot);
@@ -50,16 +48,6 @@ public class CoreModule extends Module {
         return "Core";
     }
 
-    @Command(name = "say", desc = "Say something! Say it!", aliases = {"echo"}, usage = "[message]")
-    public void cmdSay(Context ctx) {
-        if (ctx.args.empty) {
-            ctx.fail("I need text to say!");
-            return;
-        }
-
-        ctx.send(ctx.rawArgs).queue();
-    }
-
     @Command(name = "test", desc = "Make sure I work.")
     public void cmdTest(Context ctx) {
         ctx.message.addReaction("\uD83D\uDC4D").queue();
@@ -67,7 +55,7 @@ public class CoreModule extends Module {
 
     @Command(name = "ping", desc = "Pong!")
     public void cmdPing(Context ctx) {
-        String msg = "🏓 WebSockets: " + (int) Math.round(ctx.bot.manager.getAveragePing()) + "ms";
+        String msg = "🏓 WebSockets: " + (int) Math.round(ctx.bot.manager.getAverageGatewayPing()) + "ms";
         long beforeTime = System.currentTimeMillis();
 
         ctx.send(msg).queue(message1 -> message1.editMessage(msg + ", message: calculating...")
@@ -201,7 +189,7 @@ public class CoreModule extends Module {
             ctx.author.openPrivateChannel().complete().sendMessage(page).queue(null, exp -> {
                 if (exp instanceof ErrorResponseException) {
                     if (((ErrorResponseException) exp).getErrorCode() != 50007) {
-                        RestAction.DEFAULT_FAILURE.accept(exp);
+                        RestAction.getDefaultFailure().accept(exp);
                     } else {
                         try {
                             ctx.send(Emotes.getFailure() +
@@ -245,12 +233,12 @@ public class CoreModule extends Module {
                 .addField("Threads", str(Thread.activeCount()), true)
                 .addField("Memory Used", Strings.formatMemory(), true)
                 .addField("Users", str(bot.getUserCount()), true)
-                .addField("Channels", str(bot.getChannelCount()), true)
+                .addField("Channels", str(bot.getTotalChannelCount()), true)
                 .addField("Revision", BuildConfig.GIT_SHORT_COMMIT, true)
                 .addField("Music Tracks Loaded", str(bot.getTrackCount()), true)
                 .addField("Playing Music in", bot.getStreamCount() + " channels", true)
-                .addField("Links", StringUtils.replace(INFO_LINKS, "[invite]", ctx.jda.asBot().getInviteUrl(PERMS_NEEDED)), false)
-                .setFooter("Serving you from shard " + ctx.getShardNum(), null)
+                .addField("Links", StringUtils.replace(INFO_LINKS, "[invite]", ctx.jda.getInviteUrl(PERMS_NEEDED)), false)
+                .setFooter("Serving you from shard " + ctx.jda.getShardInfo().getShardId() + 1, null)
                 .setTimestamp(Instant.now());
 
         ctx.send(emb.build()).queue();

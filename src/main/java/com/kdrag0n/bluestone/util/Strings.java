@@ -1,8 +1,9 @@
 package com.kdrag0n.bluestone.util;
 
 import gnu.trove.list.TIntList;
+import gnu.trove.list.TLongList;
 import gnu.trove.list.linked.TIntLinkedList;
-import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.api.entities.*;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nonnull;
@@ -12,13 +13,11 @@ import java.net.URLEncoder;
 import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.text.NumberFormat;
-import java.util.IntSummaryStatistics;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.IntStream;
 
 public class Strings {
     public static final String EMPTY = new String(new int[] {0xE0020}, 0, 1);
@@ -130,7 +129,7 @@ public class Strings {
             String rep = callback.replace(matcher.group(1));
 
             if (rep == null)
-                matcher.appendReplacement(result, "**[__unknown key__]**");
+                matcher.appendReplacement(result, "**[unknown]**");
             else
                 matcher.appendReplacement(result, Matcher.quoteReplacement(rep));
         }
@@ -199,14 +198,7 @@ public class Strings {
         return tmp;
     }
 
-    @Deprecated
-    public static String statify(IntStream stream) {
-        IntSummaryStatistics stats = stream.summaryStatistics();
-
-        return String.format("Min: %d\nAvg: %.2f\nMax: %d", stats.getMin(), stats.getAverage(), stats.getMax());
-    }
-
-    public static String statify(TIntList list) {
+    public static String statify(TLongList list) {
         MinMaxV v = new MinMaxV();
         double avg = (double) list.sum() / list.size();
 
@@ -223,8 +215,8 @@ public class Strings {
     }
 
     private static class MinMaxV {
-        private int min = Integer.MAX_VALUE;
-        private int max = Integer.MIN_VALUE;
+        private long min = Long.MAX_VALUE;
+        private long max = Long.MIN_VALUE;
     }
 
     public static boolean isMention(CharSequence str) {

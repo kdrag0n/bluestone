@@ -16,20 +16,23 @@ import com.kdrag0n.bluestone.handlers.RejectedExecHandlerImpl;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import gnu.trove.set.TIntSet;
+import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TIntHashSet;
-import net.dv8tion.jda.bot.entities.ApplicationInfo;
-import net.dv8tion.jda.bot.sharding.DefaultShardManagerBuilder;
-import net.dv8tion.jda.bot.sharding.ShardManager;
-import net.dv8tion.jda.core.*;
-import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.events.ReadyEvent;
-import net.dv8tion.jda.core.events.ShutdownEvent;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.exceptions.InsufficientPermissionException;
-import net.dv8tion.jda.core.exceptions.PermissionException;
-import net.dv8tion.jda.core.hooks.EventListener;
-import net.dv8tion.jda.core.requests.RestAction;
+import gnu.trove.set.hash.TLongHashSet;
+import net.dv8tion.jda.api.entities.ApplicationInfo;
+import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
+import net.dv8tion.jda.api.sharding.ShardManager;
+import net.dv8tion.jda.api.*;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.Event;
+import net.dv8tion.jda.api.events.ReadyEvent;
+import net.dv8tion.jda.api.events.ShutdownEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
+import net.dv8tion.jda.api.exceptions.PermissionException;
+import net.dv8tion.jda.api.hooks.EventListener;
+import net.dv8tion.jda.api.requests.RestAction;
 import okhttp3.*;
 import org.apache.commons.lang3.SystemUtils;
 import org.jetbrains.annotations.NotNull;
@@ -38,6 +41,7 @@ import org.slf4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
 import java.io.File;
 import java.io.IOException;
@@ -54,7 +58,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 
 import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
-import static net.dv8tion.jda.core.entities.Game.*;
+import static net.dv8tion.jda.api.entities.Activity.*;
 
 public class Bot extends ShardedBot implements EventListener {
     // Logger
@@ -62,14 +66,13 @@ public class Bot extends ShardedBot implements EventListener {
 
     // Full module list
     private static final List<Class<? extends Module>> MODULE_CLASSES = ImmutableList.of(
-            AfkModule.class,
             CoreModule.class,
             CryptoCurrencyModule.class,
             EntertainmentModule.class,
             GameModule.class,
             GoogleModule.class,
             InfoModule.class,
-            MiscModule.class,
+            ProfileModule.class,
             ModerationModule.class,
             MusicModule.class,
             OwnerModule.class,
@@ -129,9 +132,11 @@ public class Bot extends ShardedBot implements EventListener {
     private String selfMention;
     private String selfGuildMention;
     private TIntSet readyShards = new TIntHashSet();
+    public TLongSet interactivePrompts = new TLongHashSet();
     public final PrefixStore prefixStore;
+    private boolean masterInitFinished = false;
 
-    private static final RandomSelect<Game> gameSelector = new RandomSelect<Game>(50)
+    private static final RandomSelect<Activity> gameSelector = new RandomSelect<Activity>(50)
             .add(playing("with my buddies"))
             .add(playing("with bits and bytes"))
             .add(playing("World Domination"))
@@ -188,7 +193,7 @@ public class Bot extends ShardedBot implements EventListener {
         scheduledExecutor.setMaximumPoolSize(16);
         scheduledExecutor.setKeepAliveTime(16L, TimeUnit.SECONDS);
 
-        RestAction.DEFAULT_FAILURE = e -> {
+        RestAction.setDefaultFailure(e -> {
             if (e instanceof InsufficientPermissionException) {
                 InsufficientPermissionException exp = (InsufficientPermissionException) e;
                 Permission perm = exp.getPermission();
@@ -197,7 +202,7 @@ public class Bot extends ShardedBot implements EventListener {
             }
 
             logger.error("RestAction failure", e);
-        };
+        });
     }
 
     public JSONObject getKeys() {
@@ -212,7 +217,7 @@ public class Bot extends ShardedBot implements EventListener {
     }
 
     @Override
-    public void onEvent(Event event) {
+    public void onEvent(@Nonnull GenericEvent event) {
         if (event instanceof MessageReceivedEvent) {
             onMessageReceived((MessageReceivedEvent) event);
         } else if (event instanceof ReadyEvent) {
@@ -221,11 +226,10 @@ public class Bot extends ShardedBot implements EventListener {
             onShutdown((ShutdownEvent) event);
         }
 
-        event.getJDA().getShardInfo().getShardId();
         dispatchModuleEvent(event);
     }
 
-    private void dispatchModuleEvent(Event event) {
+    private void dispatchModuleEvent(GenericEvent event) {
         for (Map.Entry<Class<? extends Event>, List<ExtraEvent>> entry : extraEvents.entrySet()) {
             Class<? extends Event> eventClass = entry.getKey();
 
@@ -256,7 +260,7 @@ public class Bot extends ShardedBot implements EventListener {
 
     private void updateOwnerInfo() {
         User owner;
-        ApplicationInfo appInfo = manager.getShardById(0).asBot().getApplicationInfo().complete();
+        ApplicationInfo appInfo = manager.getShardById(0).retrieveApplicationInfo().complete();
         owner = appInfo.getOwner();
 
         ownerId = owner.getIdLong();
@@ -265,15 +269,13 @@ public class Bot extends ShardedBot implements EventListener {
 
     private void onReady(ReadyEvent event) {
         JDA jda = event.getJDA();
-        int shardId = Bot.getShardNum(jda) - 1;
+        int shardId = jda.getShardInfo().getShardId();
 
         if (readyShards.contains(shardId))
             return;
 
         try {
-            jda.getPresence().setStatus(OnlineStatus.ONLINE);
-
-            if (readyShards.isEmpty()) {
+            if (readyShards.isEmpty() && !masterInitFinished) {
                 readyShards.add(shardId);
 
                 selfUser = jda.getSelfUser();
@@ -294,7 +296,12 @@ public class Bot extends ShardedBot implements EventListener {
                 }
 
                 dispatchModuleEvent(new ModuleLoadEvent(this));
+                masterInitFinished = true;
+
+                logger.info("Bot ID is {}, owner ID is {}", selfId, ownerId);
             }
+
+            jda.getPresence().setStatus(OnlineStatus.ONLINE);
 
             if (jda.getGuildById(110373943822540800L) != null)
                 Emotes.setHasDbots();
@@ -302,15 +309,11 @@ public class Bot extends ShardedBot implements EventListener {
             if (jda.getGuildById(250780048943087618L) != null)
                 Emotes.setHasParadise();
 
-            Runnable task = () -> jda.getPresence().setGame(gameSelector.select());
+            Runnable task = () -> jda.getPresence().setActivity(gameSelector.select());
             scheduledExecutor.scheduleAtFixedRate(task, 10, 120, TimeUnit.SECONDS);
-
         } finally {
             readyShards.add(shardId);
-
-            if (Bot.getShardNum(jda) == manager.getShardsTotal()) {
-                logger.info("Ready - ID {}", selfId);
-            }
+            logger.info("Shard {} is ready", jda.getShardInfo().getShardId());
         }
     }
 
@@ -352,8 +355,9 @@ public class Bot extends ShardedBot implements EventListener {
                     }
                 }
 
+                EnumSet<Perm> permSet = perms.isEmpty() ? EnumSet.noneOf(Perm.class) : EnumSet.copyOf(perms);
                 Command command = new Command(anno.name(), anno.desc(), anno.usage(), anno.hidden(),
-                        perms, anno.guildOnly(), anno.aliases(), method, module);
+                        permSet, anno.guildOnly(), anno.aliases(), method, module);
 
                 if (commands.containsKey(command.name))
                     throw new IllegalStateException("Command '" + command.name + "' already registered!");
@@ -385,9 +389,9 @@ public class Bot extends ShardedBot implements EventListener {
     }
 
     private void onShutdown(ShutdownEvent event) {
-        synchronized (this) {
-            notifyAll();
-        }
+        int shardId = event.getJDA().getShardInfo().getShardId();
+        readyShards.remove(shardId);
+        logger.info("Shard {} has shut down", shardId);
     }
 
     private void onMessageReceived(MessageReceivedEvent event) {
@@ -395,12 +399,13 @@ public class Bot extends ShardedBot implements EventListener {
 
         if (author.isBot() ||
                 author.getIdLong() == selfId ||
-                !readyShards.contains(Bot.getShardNum(event.getJDA()) - 1))
+                !masterInitFinished ||
+                !readyShards.contains(event.getJDA().getShardInfo().getShardId() - 1))
             return;
 
         final Message message = event.getMessage();
         final String prefix;
-        if (message.getGuild() == null) {
+        if (!message.isFromGuild()) {
             prefix = prefixStore.defaultPrefix;
         } else {
             prefix = prefixStore.getPrefix(message.getGuild().getIdLong());
@@ -408,8 +413,9 @@ public class Bot extends ShardedBot implements EventListener {
         final String content = message.getContentRaw();
         final MessageChannel channel = event.getChannel();
 
-        if (content == null) {
-            return; // embeds maybe
+        // Don't process embeds
+        if (content.length() == 0) {
+            return;
         }
 
         if (content.startsWith(prefix)) {
@@ -429,7 +435,7 @@ public class Bot extends ShardedBot implements EventListener {
             final String request = Strings.renderMessage(message, message.getGuild(),
                     GENERAL_MENTION_PATTERN.matcher(message.getContentRaw()).replaceFirst(""));
 
-            if (message.getGuild() != null &&
+            if (message.isFromGuild() &&
                     request.regionMatches(true, 0, "prefix", 0, 6 /* "prefix" */)) {
                 // invoke the command
                 final String[] split = WHITESPACE_PATTERN.split(content, 0);
@@ -445,7 +451,8 @@ public class Bot extends ShardedBot implements EventListener {
                 channel.sendMessage("To talk, start your message with `@Goldmine`.\n" + "Prefix: `"
                         + Context.filterMessage(prefix) + '`').queue();
             }
-        } else if (channel instanceof PrivateChannel && content.length() != 0 && content.charAt(0) != '`') {
+        } else if (channel instanceof PrivateChannel && content.charAt(0) != '`' &&
+                !interactivePrompts.contains(channel.getIdLong())) {
             final String request = Strings.renderMessage(message, null, message.getContentRaw());
             chatResponse(channel, "bs_GMdbot2-" + author.getId(), request, "💬 ");
         }
@@ -461,8 +468,12 @@ public class Bot extends ShardedBot implements EventListener {
 
         http.newCall(new Request.Builder()
                 .post(RequestBody.create(JSON_MEDIA_TYPE,
-                        new JSONObject().put("session", sessionID).put("query", query).toString()))
-                .url(reqDest).header("Authorization", getKeys().optString("chatengine")).build())
+                        new JSONObject().put("session", sessionID)
+                                .put("query", query)
+                                .toString()))
+                .url(reqDest)
+                .header("Authorization", getKeys().optString("chatengine"))
+                .build())
                 .enqueue(Bot.callback(response -> {
                     JSONObject resp = new JSONObject(response.body().string());
 
@@ -487,19 +498,22 @@ public class Bot extends ShardedBot implements EventListener {
                 }));
     }
 
-    public Message waitForMessage(JDA jda, long millis, Predicate<Message> check) {
+    public Message waitForMessage(JDA jda, long millis, Predicate<Message> check, long channelId) {
         AtomicReference<Message> lock = new AtomicReference<>();
         MessageWaitEventListener listener = new MessageWaitEventListener(lock, check);
         jda.addEventListener(listener);
+        interactivePrompts.add(channelId);
 
         synchronized (lock) {
             try {
                 lock.wait(millis);
+                return lock.get();
             } catch (InterruptedException e) {
                 jda.removeEventListener(listener);
                 return null;
+            } finally {
+                interactivePrompts.remove(channelId);
             }
-            return lock.get();
         }
     }
 
@@ -523,14 +537,6 @@ public class Bot extends ShardedBot implements EventListener {
         return module.getActiveStreamCount();
     }
 
-    public static int getShardNum(JDA jda) {
-        JDA.ShardInfo sInfo = jda.getShardInfo();
-        if (sInfo == null)
-            return 1;
-        else
-            return sInfo.getShardId() + 1;
-    }
-
     public static int start(String token, int shardCount, JSONObject config) {
         logger.info("Starting bot...");
 
@@ -551,7 +557,7 @@ public class Bot extends ShardedBot implements EventListener {
                 .setHttpClientBuilder(new OkHttpClient.Builder()
                         .retryOnConnectionFailure(true))
                 .setStatus(OnlineStatus.IDLE)
-                .setGame(Game.playing("starting up..."));
+                .setActivity(Activity.playing("starting up..."));
 
         if ((System.getProperty("os.arch").startsWith("x86") || System.getProperty("os.arch").equals("amd64"))
                 && (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX))
@@ -567,13 +573,7 @@ public class Bot extends ShardedBot implements EventListener {
         for (int shardId = 0; shardId < shardCount; shardId++)
             manager.start(shardId);
 
-        Bot bot = new Bot(manager, config);
-        synchronized (bot) {
-            try {
-                bot.wait();
-            } catch (InterruptedException ignored) {}
-        }
-
+        new Bot(manager, config);
         return 0;
     }
 
@@ -582,6 +582,10 @@ public class Bot extends ShardedBot implements EventListener {
     }
 
     public static okhttp3.Callback callback(EConsumer<Response> success, EConsumer<Throwable> failure) {
+        return callback(success, failure, true);
+    }
+
+    public static okhttp3.Callback callback(EConsumer<Response> success, EConsumer<Throwable> failure, boolean autoClose) {
         return new okhttp3.Callback() {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) {
@@ -617,7 +621,7 @@ public class Bot extends ShardedBot implements EventListener {
                     }
                 } finally {
                     ResponseBody body = response.body();
-                    if (body != null)
+                    if (body != null && autoClose)
                         body.close();
                 }
             }

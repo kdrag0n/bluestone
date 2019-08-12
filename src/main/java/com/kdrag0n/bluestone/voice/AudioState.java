@@ -3,7 +3,7 @@ package com.kdrag0n.bluestone.voice;
 import com.kdrag0n.bluestone.modules.MusicModule;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
-import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.api.entities.Guild;
 
 import java.util.Date;
 

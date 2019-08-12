@@ -1,7 +1,7 @@
 package com.kdrag0n.bluestone.types;
 
 import com.kdrag0n.bluestone.Bot;
-import net.dv8tion.jda.core.events.Event;
+import net.dv8tion.jda.api.events.Event;
 
 public class ModuleLoadEvent extends Event {
     private final Bot bot;

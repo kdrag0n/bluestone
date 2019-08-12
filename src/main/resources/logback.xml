@@ -18,6 +18,9 @@
         <appender-ref ref="Sentry" />
     </root>
 
-    <!-- TableUtils logs every SQL statement and more as Info -->
+    <!-- ORMLite's TableUtils logs every SQL statement and more as Info -->
     <logger name="com.j256.ormlite.table.TableUtils" level="WARN" />
+
+    <!-- Natty's Parser is very verbose and logs AST, parsing steps, etc. as Info -->
+    <logger name="com.joestelmach.natty.Parser" level="WARN" />
 </configuration>

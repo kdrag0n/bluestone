@@ -13,13 +13,14 @@ import com.kdrag0n.bluestone.util.Paginator;
 import com.kdrag0n.bluestone.util.Strings;
 import com.kdrag0n.bluestone.util.UnicodeString;
 import gnu.trove.list.TIntList;
+import gnu.trove.list.TLongList;
 import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.OnlineStatus;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.impl.GuildImpl;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.OnlineStatus;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.TextChannel;
 import okhttp3.Request;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -127,10 +128,10 @@ public class InfoModule extends Module {
         }
     }
 
-    private int mCount(GuildImpl g, ShardedBot.ObjectFunctionBool<Member> fn) {
+    private int mCount(Guild g, ShardedBot.ObjectFunctionBool<Member> fn) {
         int c = 0;
 
-        for (Member member : g.getMembersMap().valueCollection()) {
+        for (Member member : g.getMemberCache()) {
             if (fn.apply(member))
                 c++;
         }
@@ -142,23 +143,23 @@ public class InfoModule extends Module {
     public void cmdXInfo(Context ctx) {
         ctx.channel.sendTyping().queue();
 
-        Map<String, TIntList> stats = new LinkedHashMap<String, TIntList>() {
+        Map<String, TLongList> stats = new LinkedHashMap<String, TLongList>() {
             {
-                put("Members per Server", bot.guildNums(g -> g.getMembersMap().size()));
+                put("Members per Server", bot.guildNums(g -> g.getMemberCache().size()));
                 put("Online Members per Server",
                         bot.guildNums(g -> mCount(g, m -> m.getOnlineStatus() == OnlineStatus.ONLINE)));
-                put("Text Channels per Server", bot.guildNums(g -> g.getTextChannelsMap().size()));
-                put("Voice Channels per Server", bot.guildNums(g -> g.getVoiceChannelsMap().size()));
-                put("Categories per Server", bot.guildNums(g -> g.getCategoriesMap().size()));
-                put("Roles per Server", bot.guildNums(g -> g.getRolesMap().size()));
-                put("Custom Emotes per Server", bot.guildNums(g -> g.getEmoteMap().size()));
+                put("Text Channels per Server", bot.guildNums(g -> g.getTextChannelCache().size()));
+                put("Voice Channels per Server", bot.guildNums(g -> g.getVoiceChannelCache().size()));
+                put("Categories per Server", bot.guildNums(g -> g.getCategoryCache().size()));
+                put("Roles per Server", bot.guildNums(g -> g.getRoleCache().size()));
+                put("Custom Emotes per Server", bot.guildNums(g -> g.getEmoteCache().size()));
             }
         };
 
         EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://khronodragon.com/goldmine").setColor(randomColor())
                 .setDescription("¯\\_(ツ)_/¯").setFooter("Also try the info command!", null).setTimestamp(Instant.now());
 
-        for (Map.Entry<String, TIntList> stat : stats.entrySet()) {
+        for (Map.Entry<String, TLongList> stat : stats.entrySet()) {
             emb.addField(stat.getKey(), statify(stat.getValue()), true);
         }
 
@@ -166,7 +167,7 @@ public class InfoModule extends Module {
         String excText = String.format("%d (%.2f%%)", exclusive,
                 ((float) exclusive / (float) bot.getGuildCount()) * 100f);
 
-        int big = bot.guildCount(g -> g.getMembersMap().size() >= 250);
+        int big = bot.guildCount(g -> g.getMemberCache().size() >= 250);
         String bigText = String.format("%d (%.2f%%)", big, ((float) big / (float) bot.getGuildCount()) * 100f);
 
         int partnered = bot.guildCount(g -> g.getSplashUrl() != null || g.getRegion().isVip());
@@ -183,7 +184,7 @@ public class InfoModule extends Module {
     @Command(name = "serverinfo", desc = "Get loads of info about this server.", guildOnly = true, aliases = { "sinfo",
             "server", "guild", "guildinfo", "ginfo" })
     public void cmdGuildInfo(Context ctx) {
-        GuildImpl guild = (GuildImpl) ctx.guild;
+        Guild guild = ctx.guild;
 
         TObjectIntMap<MemberStatus> statusMap = new TObjectIntHashMap<>();
         for (Member member : ctx.guild.getMembers()) {
@@ -192,24 +193,29 @@ public class InfoModule extends Module {
         }
         StringBuilder membersText = new StringBuilder();
         statusMap.forEachEntry((k, v) -> {
-            membersText.append(Emotes.getStatusWithText(k)).append(':').append(' ').append(v).append('\n');
+            membersText.append(Emotes.getStatusWithText(k))
+                    .append(": ")
+                    .append(v)
+                    .append('\n');
             return true;
         });
-        membersText.append(Emotes.getPlus()).append(" Total: ").append(ctx.guild.getMembers().size());
+        membersText.append(Emotes.getPlus())
+                .append(" Total: ")
+                .append(ctx.guild.getMembers().size());
 
         TextChannel memberChan = defaultReadableChannel(ctx.member);
 
         EmbedBuilder emb = new EmbedBuilder().setColor(val(guild.getSelfMember().getColor()).or(Color.WHITE))
                 .setAuthor(guild.getName(), null,
                         val(guild.getIconUrl()).or(ctx.jda.getSelfUser()::getEffectiveAvatarUrl))
-                .setFooter("Server created at", guild.getIconUrl()).setTimestamp(guild.getCreationTime())
+                .setFooter("Server created at", guild.getIconUrl()).setTimestamp(guild.getTimeCreated())
                 .addField("ID", guild.getId(), true)
-                .addField("Channels", str(guild.getTextChannelsMap().size() + guild.getVoiceChannelsMap().size()), true)
-                .addField("Roles", str(guild.getRolesMap().size()), true)
-                .addField("Emotes", str(guild.getEmoteMap().size()), true)
+                .addField("Channels", str(guild.getTextChannelCache().size() + guild.getVoiceChannelCache().size()), true)
+                .addField("Roles", str(guild.getRoleCache().size()), true)
+                .addField("Emotes", str(guild.getEmoteCache().size()), true)
                 .addField("Region", guild.getRegion().getName(), true)
                 .addField("Owner", guild.getOwner().getAsMention(), true)
-                .addField("Default Channel (for you)", memberChan == null ? "None" : memberChan.getAsMention(), true)
+                .addField("Default GuildChannel (for you)", memberChan == null ? "None" : memberChan.getAsMention(), true)
                 .addField("Admins Need 2FA?", guild.getRequiredMFALevel().getKey() == 1 ? "Yes" : "No", true)
                 .addField("Content Scan Level", guild.getExplicitContentLevel().getDescription(), true)
                 .addField("Verification Level",

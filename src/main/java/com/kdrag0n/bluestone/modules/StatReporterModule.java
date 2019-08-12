@@ -1,15 +1,14 @@
 package com.kdrag0n.bluestone.modules;
 
-import com.google.common.util.concurrent.RateLimiter;
 import com.kdrag0n.bluestone.Bot;
 import com.kdrag0n.bluestone.types.Module;
 import com.kdrag0n.bluestone.annotations.EventHandler;
 import com.zanox.lib.simplegraphiteclient.SimpleGraphiteClient;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.events.ReadyEvent;
-import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
-import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.events.ReadyEvent;
+import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
+import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -57,7 +56,7 @@ public class StatReporterModule extends Module {
                     Runtime runtime = Runtime.getRuntime();
 
                     put("bot.guilds", bot.getGuildCount());
-                    put("bot.channels", bot.getChannelCount());
+                    put("bot.channels", bot.getTotalChannelCount());
                     put("bot.voice_channels", bot.getVoiceChannelCount());
                     put("bot.text_channels", bot.getTextChannelCount());
                     put("bot.users", bot.getUserCount());

@@ -10,14 +10,15 @@ import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
 import jdk.nashorn.api.scripting.NashornScriptEngine;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageEmbed;
-import net.dv8tion.jda.core.entities.MessageReaction;
-import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
-import net.dv8tion.jda.core.requests.RestAction;
-import net.dv8tion.jda.core.utils.MiscUtil;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.MessageReaction;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.utils.MiscUtil;
+import net.dv8tion.jda.api.utils.TimeUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -41,10 +42,10 @@ public class ReplModule extends Module {
     private static final Logger logger = LoggerFactory.getLogger(ReplModule.class);
     private static final Pattern CODE_TYPE_PATTERN = Pattern.compile("```(?:js|javascript)\n?");
     private final String token;
-    private static final String IMPORTS = "net.dv8tion.jda.core.entities\n" + "net.dv8tion.jda.core\n"
-            + "net.dv8tion.jda.core.entities.impl\n" + "net.dv8tion.jda.core.audio\n" + "net.dv8tion.jda.core.audit\n"
-            + "net.dv8tion.jda.core.managers\n" + "net.dv8tion.jda.core.exceptions\n" + "net.dv8tion.jda.core.events\n"
-            + "net.dv8tion.jda.core.utils\n" + "com.kdrag0n.bluestone\n" + "org.apache.logging.log4j\n"
+    private static final String IMPORTS = "net.dv8tion.jda.api.entities\n" + "net.dv8tion.jda.api\n"
+            + "net.dv8tion.jda.api.entities.impl\n" + "net.dv8tion.jda.api.audio\n" + "net.dv8tion.jda.api.audit\n"
+            + "net.dv8tion.jda.api.managers\n" + "net.dv8tion.jda.api.exceptions\n" + "net.dv8tion.jda.api.events\n"
+            + "net.dv8tion.jda.api.utils\n" + "com.kdrag0n.bluestone\n" + "org.apache.logging.log4j\n"
             + "javax.script\n" + "com.kdrag0n.bluestone.modules\n" + "com.kdrag0n.bluestone.errors\n" + "org.json\n"
             + "com.kdrag0n.bluestone.sql\n" + "com.kdrag0n.bluestone.handlers\n" + "com.kdrag0n.bluestone.enums\n"
             + "com.kdrag0n.bluestone.util\n" + "java.time\n" + "java.math\n" + "java.lang\n" + "java.util\n";
@@ -67,7 +68,7 @@ public class ReplModule extends Module {
     }
 
     @Perm.Owner
-    @Command(name = "repl", desc = "A multilingual REPL, in Discord!\n\nFlags come before language in arguments.", usage = "[language] {flags}")
+    @Command(name = "repl", desc = "A multilingual REPL. Flags come before language in arguments.", usage = "[language] {flags}")
     public void cmdRepl(Context ctx) {
         if (ctx.args.length < 1) {
             ctx.fail("I need a valid language!");
@@ -160,22 +161,23 @@ public class ReplModule extends Module {
             ctx.send("⚠ Engine post-init failed.\n```java\n" + StackUtil.renderStackTrace(e) + "```").queue();
         }
 
-        ctx.send(Emotes.getSuccess() + " **REPL started" + (untrusted ? " in untrusted mode" : "") + ".** Prefix is "
+        ctx.send(Emotes.getSuccess() + " **REPL started" + (untrusted ? " in untrusted mode.** " + ctx.author.getAsMention() + " must react to each message with 🛡 to approve it." : ".**") + " Prefix is "
                 + prefix).queue();
         while (true) {
             Message response;
             if (untrusted) {
-                response = waitForRMessage(ctx.jda, 0,
+                response = waitForRMessage(ctx, 0,
                         msg -> msg.getContentRaw().startsWith(prefix)
                                 && msg.getAuthor().getIdLong() != ctx.jda.getSelfUser().getIdLong(),
                         e -> e.getUser().getIdLong() == ctx.author.getIdLong()
-                                && !MiscUtil.getCreationTime(e.getMessageIdLong()).isBefore(startTime),
+                                && !TimeUtil.getTimeCreated(e.getMessageIdLong()).isBefore(startTime),
                         ctx.channel.getIdLong());
             } else {
                 response = bot.waitForMessage(ctx.jda, 0,
                         msg -> msg.getAuthor().getIdLong() == ctx.author.getIdLong()
                                 && msg.getChannel().getIdLong() == ctx.channel.getIdLong()
-                                && msg.getContentRaw().startsWith(prefix));
+                                && msg.getContentRaw().startsWith(prefix),
+                        ctx.channel.getIdLong());
             }
 
             if (untrusted && response.getAuthor().getIdLong() != ctx.author.getIdLong()) {
@@ -183,7 +185,8 @@ public class ReplModule extends Module {
                         .filter(r -> r.getReactionEmote().getName().equals("🛡")).findFirst();
                 if (rr.isPresent()) {
                     MessageReaction mr = rr.get();
-                    if (mr.getUsers().complete().stream().noneMatch(u -> u.getIdLong() == ctx.author.getIdLong())) {
+                    if (mr.retrieveUsers().complete().stream()
+                            .noneMatch(u -> u.getIdLong() == ctx.author.getIdLong())) {
                         continue;
                     }
                 } else {
@@ -256,20 +259,23 @@ public class ReplModule extends Module {
         ctx.success("REPL stopped.");
     }
 
-    private Message waitForRMessage(JDA jda, long millis, Predicate<Message> check, Predicate<MessageReactionAddEvent> rCheck,
+    private Message waitForRMessage(Context ctx, long millis, Predicate<Message> check, Predicate<MessageReactionAddEvent> rCheck,
                                     long channelId) {
         AtomicReference<Message> lock = new AtomicReference<>();
         RMessageWaitListener listener = new RMessageWaitListener(lock, check, rCheck, channelId);
-        jda.addEventListener(listener);
+        ctx.jda.addEventListener(listener);
+        ctx.bot.interactivePrompts.add(channelId);
 
         synchronized (lock) {
             try {
                 lock.wait(millis);
+                return lock.get();
             } catch (InterruptedException e) {
-                jda.removeEventListener(listener);
+                ctx.jda.removeEventListener(listener);
                 return null;
+            } finally {
+                ctx.bot.interactivePrompts.remove(channelId);
             }
-            return lock.get();
         }
     }
 }

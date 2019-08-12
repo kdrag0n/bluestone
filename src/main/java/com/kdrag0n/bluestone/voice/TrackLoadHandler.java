@@ -11,9 +11,9 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Channel;
-import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.GuildChannel;
+import net.dv8tion.jda.api.entities.TextChannel;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -73,7 +73,7 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
     }
 
     private void searchResults(List<AudioTrack> tracks) {
-        if (!ctx.member.hasPermission((Channel) ctx.channel, Permission.MESSAGE_EMBED_LINKS)) {
+        if (!ctx.member.hasPermission((GuildChannel) ctx.channel, Permission.MESSAGE_EMBED_LINKS)) {
             trackLoaded(tracks.get(0));
             return;
         }
@@ -95,7 +95,6 @@ public class TrackLoadHandler implements AudioLoadResultHandler {
                         trackLoaded(track);
                     })
                     .setText("⌛ Pick a search result.")
-                    .setCancel(cmsg -> cmsg.delete().queue())
                     .setUsers(ctx.author)
                     .setEventWaiter(ctx.bot.eventWaiter)
                     .setTimeout(20, TimeUnit.SECONDS);

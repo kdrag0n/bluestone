@@ -3,10 +3,11 @@ package com.kdrag0n.bluestone.types;
 import com.kdrag0n.bluestone.Bot;
 import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.errors.PermissionException;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.TextChannel;
 
 import java.lang.annotation.*;
+import java.util.EnumSet;
 import java.util.List;
 
 public enum Perm {
@@ -72,7 +73,7 @@ public enum Perm {
         this.discordPerm = discordPerm;
     }
 
-    public static boolean check(Context ctx, List<Perm> perms) {
+    public static boolean check(Context ctx, EnumSet<Perm> perms) {
         // this loop functions as OR
         for (Perm perm: perms) {
             if (perm.check(ctx)) {
@@ -83,7 +84,7 @@ public enum Perm {
         return false;
     }
 
-    public static void checkThrow(Context ctx, List<Perm> perms) throws PermissionException {
+    public static void checkThrow(Context ctx, EnumSet<Perm> perms) throws PermissionException {
         if (!check(ctx, perms))
             throw new PermissionException("Missing permissions", perms);
     }

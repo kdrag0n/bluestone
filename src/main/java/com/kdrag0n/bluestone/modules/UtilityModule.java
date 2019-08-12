@@ -15,14 +15,13 @@ import com.kdrag0n.bluestone.types.Module;
 import com.kdrag0n.bluestone.types.Perm;
 import com.kdrag0n.bluestone.util.*;
 import io.nayuki.qrcodegen.QrCode;
-import net.dv8tion.jda.client.entities.Group;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.MessageBuilder;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.entities.impl.GuildImpl;
-import net.dv8tion.jda.core.exceptions.ErrorResponseException;
-import net.dv8tion.jda.core.utils.MiscUtil;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.MessageBuilder;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.utils.MiscUtil;
+import net.dv8tion.jda.api.utils.TimeUtil;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
@@ -102,9 +101,6 @@ public class UtilityModule extends Module {
             case PRIVATE:
                 users = Arrays.asList(ctx.author, ctx.jda.getSelfUser());
                 break;
-            case GROUP:
-                users = ((Group) ctx.channel).getUsers();
-                break;
             default:
                 users = Collections.singletonList(ctx.jda.getSelfUser());
                 break;
@@ -123,9 +119,9 @@ public class UtilityModule extends Module {
 
         EmbedBuilder emb = new EmbedBuilder().setColor(randomColor())
                 .setAuthor(getTag(user), user.getEffectiveAvatarUrl(), user.getEffectiveAvatarUrl())
-                .setThumbnail(user.getEffectiveAvatarUrl()).setTimestamp(user.getCreationTime())
+                .setThumbnail(user.getEffectiveAvatarUrl()).setTimestamp(user.getTimeCreated())
                 .addField("ID", user.getId(), true)
-                .addField("Creation Time", Date.from(user.getCreationTime().toInstant()).toString(), true)
+                .addField("Creation Time", Date.from(user.getTimeCreated().toInstant()).toString(), true)
                 .setFooter("User created at", null);
 
         if (user.isBot())
@@ -139,18 +135,28 @@ public class UtilityModule extends Module {
                     emb.addField("Nickname", member.getNickname(), true);
 
                 String status;
-                if (member.getGame() == null)
+                if (member.getActivities().isEmpty())
                     status = Emotes.getFullMemberStatus(member);
                 else {
-                    Game game = member.getGame();
+                    StringBuilder statusBuilder = new StringBuilder();
 
-                    if (game.getType() == Game.GameType.STREAMING) {
-                        status = Emotes.getMemberStatus(member) + "Streaming [**" + game.getName() + "**]("
-                                + game.getUrl() + ")";
-                    } else {
-                        status = Emotes.getMemberStatus(member) + " Playing [**" + game.getName()
-                                + "**](https://google.com/search?q=" + URLEncoder.encode(game.getName(), "UTF-8") + ')';
+                    for (Activity act : member.getActivities()) {
+                        if (act.getType() == Activity.ActivityType.STREAMING) {
+                            statusBuilder.append(Emotes.getMemberStatus(member))
+                                    .append("Streaming [**")
+                                    .append(act.getName())
+                                    .append("**](")
+                                    .append(act.getUrl())
+                                    .append(")\n");
+                        } else {
+                            statusBuilder.append(Emotes.getMemberStatus(member))
+                                    .append(" Playing **")
+                                    .append(act.getName())
+                                    .append("**\n");
+                        }
                     }
+
+                    status = statusBuilder.toString();
                 }
 
                 String roleText = member.getRoles().stream().map(Role::getAsMention).collect(Collectors.joining(", "));
@@ -162,7 +168,7 @@ public class UtilityModule extends Module {
                 }
 
                 emb.setColor(val(member.getColor()).or(Color.WHITE))
-                        .addField("Server Join Time", Date.from(member.getJoinDate().toInstant()).toString(), true)
+                        .addField("Server Join Time", Date.from(member.getTimeJoined().toInstant()).toString(), true)
                         .addField("Status", status, true).addField("Roles", roleText, true);
             }
         }
@@ -174,14 +180,14 @@ public class UtilityModule extends Module {
             "join" }, usage = "{bot ID (default: me)}")
     public void cmdInvite(Context ctx) {
         if (ctx.args.empty) {
-            ctx.send('<' + ctx.jda.asBot().getInviteUrl(CoreModule.PERMS_NEEDED) + '>').queue();
+            ctx.send('<' + ctx.jda.getInviteUrl(CoreModule.PERMS_NEEDED) + '>').queue();
             return;
         }
 
         if (!Strings.isID(ctx.rawArgs)) {
             ctx.fail("Invalid ID!");
         } else if (ctx.rawArgs.equals(ctx.jda.getSelfUser().getId())) {
-            ctx.send('<' + ctx.jda.asBot().getInviteUrl(CoreModule.PERMS_NEEDED) + '>').queue();
+            ctx.send('<' + ctx.jda.getInviteUrl(CoreModule.PERMS_NEEDED) + '>').queue();
         } else {
             ctx.send(String.format("<https://discordapp.com/api/oauth2/authorize?client_id=%s&scope=bot&permissions=3072>",
                     ctx.rawArgs)).queue();
@@ -307,7 +313,7 @@ public class UtilityModule extends Module {
         JSONObject data;
         try {
             data = new MinecraftPing()
-                    .getPing(new MinecraftPingOptions().setHostname(server).setPort(port).setTimeout(5000));
+                    .getGatewayPing(new MinecraftPingOptions().setHostname(server).setPort(port).setTimeout(5000));
         } catch (IOException e) {
             logger.error("Error connecting to Minecraft server:", e);
             ctx.fail("A network error occurred.");
@@ -405,15 +411,10 @@ public class UtilityModule extends Module {
             return;
         }
 
-        UserFaqRecord faqRecord;
-        if (/* Strings.isQuestion(ctx.rawArgs) && */ ((faqRecord = userFaqDao
-                .queryForId(ctx.author.getIdLong())) == null
-                || faqRecord.when.before(new Date(System.currentTimeMillis() - 5184000000L)))) {
+        if (userFaqDao.queryForId(ctx.author.getIdLong()) == null) {
             // user hasn't read FAQ yet
-            ctx.fail(
-                    "You haven't read the FAQ yet.\nPlease read the FAQ **before** using `contact`, as it saves you, me, and everyone else a lot of time.\n"
-                            + "Link:**" + Strings.EMPTY+ " https://khronodragon.com/goldmine/faq " + Strings.EMPTY + "\n\n"
-                            + "Once you have read the FAQ, and it **hasn't** answered your question, simply run this command again to proceed.");
+            ctx.fail("Please read the FAQ first: https://khronodragon.com/goldmine/faq\n" +
+                    "If it doesn't answer your question, simply run the `contact` command again to proceed.");
             userFaqDao.create(new UserFaqRecord(ctx.author.getIdLong(), true, new Date()));
             return;
         }
@@ -425,14 +426,13 @@ public class UtilityModule extends Module {
                 .addField("Channel", String.format("**%s**\nID: `%s`", ctx.channel.getName(), ctx.channel.getId()),
                         true)
                 .addField("Sent via PM?", ctx.channel instanceof PrivateChannel ? "Yes" : "No", true)
-                .addField("Time", ctx.message.getCreationTime().toString(), true)
-                .addField("Timestamp", str(ctx.message.getCreationTime().toEpochSecond()), true)
+                .addField("Time", ctx.message.getTimeCreated().toString(), true)
+                .addField("Timestamp", str(ctx.message.getTimeCreated().toEpochSecond()), true)
                 .addField("Contains Mention?", ctx.message.getMentionedUsers().size() > 0 ? "Yes" : "No", true);
 
         if (ctx.guild != null) {
-            GuildImpl guild = (GuildImpl) ctx.guild;
-            emb.addField("Guild", "**" + guild.getName() + "**\nID: `" + guild.getId() + "`\nMembers: "
-                    + guild.getMembersMap().size(), true);
+            emb.addField("Guild", "**" + ctx.guild.getName() + "**\nID: `" + ctx.guild.getId() + "`\nMembers: "
+                    + ctx.guild.getMemberCache().size(), true);
         }
 
         ctx.jda.getUserById(bot.ownerId).openPrivateChannel().queue(ch -> {
@@ -529,13 +529,13 @@ public class UtilityModule extends Module {
             return;
         }
 
-        ctx.channel.sendFile(data, "qrcode.png", null).queue();
+        ctx.channel.sendFile(data, "qrcode.png").queue();
     }
 
-    @Command(name = "permissions", desc = "See your permissions here.", aliases = { "perms" })
+    @Command(name = "permissions", desc = "Check your Discord permissions.", aliases = { "perms" })
     public void cmdPerms(Context ctx) {
-        List<Permission> perms = ctx.guild == null ? Permission.getPermissions(379968)
-                : ctx.member.getPermissions((Channel) ctx.channel);
+        EnumSet<Permission> perms = ctx.guild == null ? Permission.getPermissions(379968)
+                : ctx.member.getPermissions((GuildChannel) ctx.channel);
 
         List<String> permList = perms.stream().map(perm -> "**" + perm.getName() + "**").collect(Collectors.toList());
 
@@ -712,7 +712,7 @@ public class UtilityModule extends Module {
 
         ctx.send(new EmbedBuilder().setColor(randomColor())
                 .setAuthor("Snowflake Time:", null, ctx.jda.getSelfUser().getEffectiveAvatarUrl())
-                .setTimestamp(MiscUtil.getCreationTime(id)).build()).queue();
+                .setTimestamp(TimeUtil.getTimeCreated(id)).build()).queue();
     }
 
     @Command(name = "calculate", desc = "Evaluate a mathematical expression.", aliases = { "calc", "calculator" })

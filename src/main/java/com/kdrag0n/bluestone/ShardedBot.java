@@ -9,18 +9,15 @@ import com.j256.ormlite.db.MysqlDatabaseType;
 import com.j256.ormlite.jdbc.DataSourceConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
-import com.kdrag0n.bluestone.modules.MusicModule;
 import com.kdrag0n.bluestone.sql.GuildPrefix;
 import com.kdrag0n.bluestone.sql.MySQLDatabaseType;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import gnu.trove.list.TIntList;
-import gnu.trove.list.linked.TIntLinkedList;
-import net.dv8tion.jda.bot.sharding.ShardManager;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.impl.GuildImpl;
-import net.dv8tion.jda.core.entities.impl.JDAImpl;
+import gnu.trove.list.TLongList;
+import gnu.trove.list.linked.TLongLinkedList;
+import net.dv8tion.jda.api.sharding.ShardManager;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Guild;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.json.JSONObject;
@@ -29,7 +26,6 @@ import javax.annotation.CheckReturnValue;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Stream;
 
 public abstract class ShardedBot {
     private static final Logger logger = LoggerFactory.getLogger(ShardedBot.class);
@@ -118,63 +114,58 @@ public abstract class ShardedBot {
                 .sortedCopy(manager.getShards());
     }
 
-    public int getGuildCount() {
-        return sumJda(j -> j.getGuildMap().size());
+    public long getGuildCount() {
+        return sumJda(j -> j.getGuildCache().size());
     }
 
-    public int getChannelCount() {
-        return sumJda(jda -> jda.getTextChannelMap().size() + jda.getVoiceChannelMap().size());
+    public long getTotalChannelCount() {
+        return sumJda(jda -> jda.getTextChannelCache().size() + jda.getVoiceChannelCache().size());
     }
 
-    public int getVoiceChannelCount() {
-        return sumJda(j -> j.getVoiceChannelMap().size());
+    public long getVoiceChannelCount() {
+        return sumJda(j -> j.getVoiceChannelCache().size());
     }
 
-    public int getTextChannelCount() {
-        return sumJda(j -> j.getTextChannelMap().size());
+    public long getTextChannelCount() {
+        return sumJda(j -> j.getTextChannelCache().size());
     }
 
-    public int getUserCount() {
-        return sumJda(j -> j.getUserMap().size());
+    public long getUserCount() {
+        return sumJda(j -> j.getUserCache().size());
     }
 
-    public int getEmoteCount() {
-        return sumJda(j -> (int) j.getEmoteCache().size());
+    public long getEmoteCount() {
+        return sumJda(j -> j.getEmoteCache().size());
     }
 
-    @Deprecated
-    public Stream<Guild> getGuildStream() {
-        return manager.getShards().stream().flatMap(jda -> ((JDAImpl) jda).getGuildMap().valueCollection().stream());
-    }
-
-    private int sumJda(ObjectFunctionInt<JDAImpl> fn) {
-        int total = 0;
+    private long sumJda(ObjectFunctionLong<JDA> fn) {
+        long total = 0;
 
         for (JDA shard : manager.getShards()) {
-            total += fn.apply((JDAImpl) shard);
+            total += fn.apply(shard);
         }
 
         return total;
     }
 
-    public TIntList guildNums(ObjectFunctionInt<GuildImpl> fn) {
-        TIntList l = new TIntLinkedList();
+    public TLongList guildNums(ObjectFunctionLong<Guild> fn) {
+        TLongList l = new TLongLinkedList();
 
         for (JDA shard : manager.getShards()) {
             for (Guild guild : shard.getGuildCache()) {
-                l.add(fn.apply((GuildImpl) guild));
+                l.add(fn.apply(guild));
             }
         }
 
         return l;
     }
 
-    public int guildCount(ObjectFunctionBool<GuildImpl> fn) {
+    public int guildCount(ObjectFunctionBool<Guild> fn) {
         int count = 0;
 
         for (JDA shard : manager.getShards()) {
             for (Guild guild : shard.getGuildCache()) {
-                if (fn.apply((GuildImpl) guild))
+                if (fn.apply(guild))
                     count++;
             }
         }
@@ -183,8 +174,8 @@ public abstract class ShardedBot {
     }
 
     @FunctionalInterface
-    public interface ObjectFunctionInt<A> {
-        int apply(A value);
+    public interface ObjectFunctionLong<A> {
+        long apply(A value);
     }
 
     @FunctionalInterface

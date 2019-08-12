@@ -2,10 +2,11 @@ package com.kdrag0n.bluestone;
 
 import com.kdrag0n.bluestone.util.ArrayListView;
 import com.kdrag0n.bluestone.util.Strings;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.requests.RestAction;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.CheckReturnValue;
@@ -33,7 +34,7 @@ public class Context {
         this.event = event;
         this.message = event.getMessage();
         this.author = event.getAuthor();
-        this.guild = event.getGuild();
+        this.guild = event.isFromGuild() ? event.getGuild() : null;
         this.channel = event.getChannel();
         this.member = event.getMember();
         this.jda = event.getJDA();
@@ -41,10 +42,6 @@ public class Context {
         this.args = args;
         this.invoker = invoker;
         this.rawArgs = content.substring((processArgs ? prefix.length() : 0) + invoker.length()).trim();
-    }
-
-    public int getShardNum() {
-        return Bot.getShardNum(jda);
     }
 
     public static String truncate(String msg) {
@@ -68,17 +65,17 @@ public class Context {
     }
 
     @CheckReturnValue
-    public RestAction<Message> send(String msg) {
+    public MessageAction send(String msg) {
         return channel.sendMessage(truncate(filterMessage(msg)));
     }
 
     @CheckReturnValue
-    public RestAction<Message> send(MessageEmbed msg) {
+    public MessageAction send(MessageEmbed msg) {
         return channel.sendMessage(msg);
     }
 
     @CheckReturnValue
-    public RestAction<Message> send(Message msg) {
+    public MessageAction send(Message msg) {
         return channel.sendMessage(msg);
     }
 

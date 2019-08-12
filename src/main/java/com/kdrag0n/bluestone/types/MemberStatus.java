@@ -1,8 +1,8 @@
 package com.kdrag0n.bluestone.types;
 
-import net.dv8tion.jda.core.OnlineStatus;
-import net.dv8tion.jda.core.entities.Game;
-import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.api.OnlineStatus;
+import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Member;
 
 public enum MemberStatus {
     ONLINE,
@@ -25,7 +25,7 @@ public enum MemberStatus {
     }
 
     public static MemberStatus from(Member member) {
-        if (member.getGame() != null && member.getGame().getType() == Game.GameType.STREAMING)
+        if (member.getActivities().stream().anyMatch(a -> a.getType() == Activity.ActivityType.STREAMING))
             return STREAMING;
         else
             return from(member.getOnlineStatus());

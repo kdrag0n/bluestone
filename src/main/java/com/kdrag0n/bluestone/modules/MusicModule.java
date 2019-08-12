@@ -25,17 +25,17 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import gnu.trove.impl.sync.TSynchronizedLongObjectMap;
 import gnu.trove.map.TLongObjectMap;
 import gnu.trove.map.hash.TLongObjectHashMap;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.GuildVoiceState;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.VoiceChannel;
-import net.dv8tion.jda.core.entities.impl.VoiceChannelImpl;
-import net.dv8tion.jda.core.events.guild.voice.GenericGuildVoiceEvent;
-import net.dv8tion.jda.core.events.guild.voice.GuildVoiceJoinEvent;
-import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
-import net.dv8tion.jda.core.exceptions.PermissionException;
-import net.dv8tion.jda.core.managers.AudioManager;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.GuildVoiceState;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.internal.entities.VoiceChannelImpl;
+import net.dv8tion.jda.api.events.guild.voice.GenericGuildVoiceEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
+import net.dv8tion.jda.api.exceptions.PermissionException;
+import net.dv8tion.jda.api.managers.AudioManager;
 
 import java.sql.SQLException;
 import java.time.Instant;
@@ -113,12 +113,16 @@ public class MusicModule extends Module {
     @EventHandler
     public void onGuildVoiceLeave(GuildVoiceLeaveEvent event) {
         if (getVoiceEventSelfId(event) == event.getChannelLeft().getIdLong()) {
-            AudioState state = getAudioState(event.getGuild());
-            if (state == null) return;
+            if (event.getMember().getIdLong() == bot.selfUser.getIdLong())
+                return;
 
-            if (((VoiceChannelImpl) event.getChannelLeft())
-                    .getConnectedMembersMap().valueCollection().stream()
-                    .filter(m -> !m.getVoiceState().isDeafened()).count() < 2) {
+            AudioState state = getAudioState(event.getGuild());
+            if (state == null)
+                return;
+
+            // Pause player if we're the only non-deafened member in the channel
+            if (event.getChannelLeft().getMembers().stream()
+                    .filter(m -> !m.getVoiceState().isDeafened()).count() <= 1) {
                 state.scheduler.player.setPaused(true);
                 state.scheduler.setEmptyPauseTime(new Date());
                 state.scheduler.setEmptyPaused(true);
@@ -129,12 +133,18 @@ public class MusicModule extends Module {
     @EventHandler
     public void onGuildVoiceJoin(GuildVoiceJoinEvent event) {
         if (getVoiceEventSelfId(event) == event.getChannelJoined().getIdLong()) {
-            AudioState state = getAudioState(event.getGuild());
-            if (state == null) return;
+            if (event.getMember().getIdLong() == bot.selfUser.getIdLong())
+                return;
 
-            if (((VoiceChannelImpl) event.getChannelJoined())
-                    .getConnectedMembersMap().valueCollection().stream()
-                    .filter(m -> !m.getVoiceState().isDeafened()).count() == 2) {
+            AudioState state = getAudioState(event.getGuild());
+            if (state == null)
+                return;
+
+            // Resume player if we're the only non-deafened member in the channel *and*
+            // the player was paused due to the channel being empty
+            if (state.scheduler.isEmptyPaused() &&
+                    event.getChannelJoined().getMembers().stream()
+                            .filter(m -> !m.getVoiceState().isDeafened()).count() > 1) {
                 state.scheduler.player.setPaused(false);
                 state.scheduler.setEmptyPaused(false);
             }
@@ -283,7 +293,9 @@ public class MusicModule extends Module {
         AudioState state = getAudioState(ctx.guild);
 
         state.scheduler.shuffleQueue();
-        List<String> items = state.scheduler.queue.stream().map(t -> "**" + t.getInfo().title + "**").collect(Collectors.toList());
+        List<String> items = state.scheduler.queue.stream()
+                .map(t -> "**" + t.getInfo().title + "**")
+                .collect(Collectors.toList());
         ctx.send("🔀 Queue shuffled.\n    \u2022 " + String.join("\n    \u2022 ", items)).queue();
     }
 

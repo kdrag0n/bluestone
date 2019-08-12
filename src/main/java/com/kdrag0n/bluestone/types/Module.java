@@ -3,11 +3,10 @@ package com.kdrag0n.bluestone.types;
 import com.j256.ormlite.dao.Dao;
 import com.kdrag0n.bluestone.Bot;
 import com.kdrag0n.bluestone.Context;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.entities.impl.GuildImpl;
-import net.dv8tion.jda.core.utils.MiscUtil;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.utils.MiscUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
 
@@ -100,19 +99,19 @@ public abstract class Module {
     @Nullable
     @CheckReturnValue
     protected static TextChannel defaultWritableChannel(Member member) {
-        return ((GuildImpl) member.getGuild()).getTextChannelsMap().valueCollection().stream()
-                .sorted(Comparator.naturalOrder())
+        return member.getGuild().getTextChannelCache().streamUnordered()
                 .filter(c -> member.hasPermission(c, Permission.MESSAGE_READ, Permission.MESSAGE_WRITE))
-                .findFirst().orElse(null);
+                .min(Comparator.naturalOrder())
+                .orElse(null);
     }
 
     @Nullable
     @CheckReturnValue
     protected static TextChannel defaultReadableChannel(Member member) {
-        return ((GuildImpl) member.getGuild()).getTextChannelsMap().valueCollection().stream()
-                .sorted(Comparator.naturalOrder())
+        return member.getGuild().getTextChannelCache().streamUnordered()
                 .filter(c -> member.hasPermission(c, Permission.MESSAGE_READ))
-                .findFirst().orElse(null);
+                .min(Comparator.naturalOrder())
+                .orElse(null);
     }
 
     @CheckReturnValue

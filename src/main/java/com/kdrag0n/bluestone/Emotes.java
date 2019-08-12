@@ -1,8 +1,8 @@
 package com.kdrag0n.bluestone;
 
 import com.kdrag0n.bluestone.types.MemberStatus;
-import net.dv8tion.jda.core.entities.Game;
-import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Member;
 import org.apache.commons.text.WordUtils;
 
 public class Emotes {
@@ -27,7 +27,7 @@ public class Emotes {
 
     public static String getMemberStatus(Member member) {
         if (hasDbots) {
-            if (member.getGame() != null && member.getGame().getType() == Game.GameType.STREAMING)
+            if (member.getActivities().stream().anyMatch(a -> a.getType() == Activity.ActivityType.STREAMING))
                 return "<:streaming:313956277132853248>";
 
             switch (member.getOnlineStatus()) {

@@ -6,20 +6,20 @@ import com.kdrag0n.bluestone.emotes.*;
 import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.types.Module;
 import com.kdrag0n.bluestone.types.Perm;
+import com.kdrag0n.bluestone.util.StreamUtil;
 import com.kdrag0n.bluestone.util.Strings;
 import com.kdrag0n.bluestone.util.UnicodeString;
 import gnu.trove.map.TCharObjectMap;
 import gnu.trove.map.hash.TCharObjectHashMap;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.MessageBuilder;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Emote;
-import net.dv8tion.jda.core.entities.Icon;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageEmbed;
-import okhttp3.FormBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.MessageBuilder;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Emote;
+import net.dv8tion.jda.api.entities.Icon;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import okhttp3.*;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -34,6 +34,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.ref.Reference;
 import java.net.URLEncoder;
 import java.time.Instant;
 import java.util.HashMap;
@@ -226,7 +227,7 @@ public class EntertainmentModule extends Module {
         ctx.send(":repeat: " + StringUtils.reverse(ctx.rawArgs)).queue();
     }
 
-    @Command(name = "emotisay", desc = "Show some text as cool block letters.", aliases = { "emotesay",
+    @Command(name = "emotisay", desc = "Show some text using Emoji block letters.", aliases = { "emotesay",
             "esay" }, usage = "[text]")
     public void cmdEmotisay(Context ctx) {
         if (ctx.args.empty) {
@@ -243,16 +244,6 @@ public class EntertainmentModule extends Module {
                 return String.valueOf(character);
             }
         }).collect(Collectors.toList()))).queue();
-    }
-
-    @Command(name = "cookie", desc = "Cookie time!")
-    public void cmdCookie(Context ctx) {
-        ctx.send("\uD83C\uDF6A").queue();
-    }
-
-    @Command(name = "triggered", desc = "TRIGGERED")
-    public void cmdTriggered(Context ctx) {
-        ctx.send("***TRIGGERED***").queue();
     }
 
     @Command(name = "lenny", desc = "Le Lenny Face.")
@@ -275,7 +266,7 @@ public class EntertainmentModule extends Module {
         ctx.send("(╯°□°）╯︵ ┻━─┬\uFEFF ノ( ゜-゜ノ)").queue();
     }
 
-    @Command(name = "bleach", desc = "Get me some bleach. NOW.")
+    @Command(name = "bleach", desc = "Clorox bleach.")
     public void cmdBleach(Context ctx) {
         ctx.send(BLEACH_EMBED).queue();
     }
@@ -286,7 +277,7 @@ public class EntertainmentModule extends Module {
 
         try {
             String cat = new JSONObject(
-                    bot.http.newCall(new Request.Builder().get().url("https://random.cat/meow").build()).execute()
+                    bot.http.newCall(new Request.Builder().get().url("https://aws.random.cat/meow").build()).execute()
                             .body().string()).optString("file", null);
             String fact = new JSONObject(
                     bot.http.newCall(new Request.Builder().get().url("https://catfact.ninja/fact").build()).execute()
@@ -370,8 +361,13 @@ public class EntertainmentModule extends Module {
                 msg = new MessageBuilder().append(info.description).build();
             }
 
-            ctx.channel.sendFile(response.body().byteStream(), "emote.png", msg).queue();
-        }, e -> ctx.send(Emotes.getFailure() + " Failed to fetch emote.").queue()));
+            InputStream stream = response.body().byteStream();
+            if (msg == null)
+                ctx.channel.sendFile(stream, "emote.png").queue(unused -> response.body().close());
+            else
+                ctx.channel.sendMessage(msg).addFile(stream, "emote.png").queue();
+
+        }, e -> ctx.send(Emotes.getFailure() + " Failed to fetch emote.").queue(), false));
     }
 
     @Perm.ManageEmotes
@@ -406,7 +402,7 @@ public class EntertainmentModule extends Module {
                     : n;
 
             InputStream is = response.body().byteStream();
-            Emote emote = ctx.guild.getController().createEmote(nm, Icon.from(is))
+            Emote emote = ctx.guild.createEmote(nm, Icon.from(is))
                     .reason("Adding emote " + nm + " by user request. User has Manage Emotes.").complete();
 
             ctx.send(Emotes.getSuccess() + " Emote added. " + emote.getAsMention()).queue();
@@ -476,14 +472,14 @@ public class EntertainmentModule extends Module {
         ctx.send("<https://lmgtfy.com/?q=" + query + '>').queue();
     }
 
-    @Command(name = "slap", desc = "Slap someone, with passion.", aliases = { "boop", "poke", "hit" })
+    @Command(name = "slap", desc = "Slap someone with passion.", aliases = { "boop", "poke", "hit" })
     public void cmdSlap(Context ctx) {
         if (ctx.args.empty) {
             ctx.fail("I need someone to " + ctx.invoker + '!');
             return;
         }
 
-        ctx.send(format("%s %ss *%s* **%s**.", (ctx.guild == null ? ctx.author : ctx.member).getAsMention(),
+        ctx.send(format("%s %ss %s %s.", (ctx.guild == null ? ctx.author : ctx.member).getAsMention(),
                 ctx.invoker, ctx.rawArgs, randomChoice(ADJECTIVES))).queue();
     }
 
@@ -564,14 +560,14 @@ public class EntertainmentModule extends Module {
                 }));
     }
 
-    @Command(name = "attack", desc = "Hurt someone, with determination.", aliases = { "stab", "kill", "punch", "shoot",
+    @Command(name = "attack", desc = "Hurt someone with determination.", aliases = { "stab", "kill", "punch", "shoot",
             "hurt", "fight" })
     public void cmdAttack(Context ctx) {
         if (ctx.args.empty) {
             ctx.fail("I need someone to " + ctx.invoker + '!');
             return;
         }
-        final String target = '*' + ctx.rawArgs + '*';
+        final String target = ctx.rawArgs;
 
         ctx.send((ctx.guild == null ? ctx.author : ctx.member).getAsMention() + ' '
                 + format(randomChoice(FIGHTS), target) + ". " + format(randomChoice(DEATHS), target)).queue();
@@ -579,7 +575,8 @@ public class EntertainmentModule extends Module {
 
     @Command(name = "soon", desc = "Feel the speed of Soon™.", aliases = { "soontm" })
     public void cmdSoon(Context ctx) {
-        ctx.channel.sendFile(EntertainmentModule.class.getResourceAsStream("/assets/soon.gif"), "soon.gif", null).queue();
+        ctx.channel.sendFile(EntertainmentModule.class.getResourceAsStream("/assets/soon.gif"), "soon.gif")
+                .queue();
     }
 
     @Command(name = "flip", desc = "Flip a coin.", aliases = {"coinflip"})
@@ -587,7 +584,7 @@ public class EntertainmentModule extends Module {
         ctx.send("The coin toss revealed... **" + (getRandInt(0, 1) == 1 ? "heads" : "tails") + "**!").queue();
     }
 
-    @Command(name = "roll", desc = "Roll a virtual die.", aliases = {"dice"})
+    @Command(name = "roll", desc = "Roll a virtual dice.", aliases = {"dice"})
     public void cmdRoll(Context ctx) {
         ctx.send("I rolled a **" + getRandInt(1, 7) + "**.").queue();
     }

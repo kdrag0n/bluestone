@@ -15,13 +15,13 @@ import gnu.trove.list.TLongList;
 import gnu.trove.list.linked.TLongLinkedList;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
-import net.dv8tion.jda.core.exceptions.ErrorResponseException;
-import net.dv8tion.jda.core.exceptions.InsufficientPermissionException;
-import net.dv8tion.jda.core.utils.MiscUtil;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.exceptions.InsufficientPermissionException;
+import net.dv8tion.jda.api.utils.MiscUtil;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -91,7 +91,7 @@ public class ModerationModule extends Module {
         return "Moderation";
     }
 
-    @EventHandler()
+    @EventHandler
     public void onMemberJoin(GuildMemberJoinEvent event) throws SQLException {
         if (!event.getGuild().getSelfMember().hasPermission(Permission.MANAGE_ROLES))
             return;
@@ -115,7 +115,7 @@ public class ModerationModule extends Module {
         }
 
         if (toAdd.size() > 0)
-            event.getGuild().getController().addRolesToMember(event.getMember(), toAdd)
+            event.getGuild().modifyMemberRoles(event.getMember(), toAdd, null)
                     .reason("Autorole: new member matched specified conditions for role(s)").queue();
     }
 
@@ -199,14 +199,14 @@ public class ModerationModule extends Module {
                 && !attachments;
 
         String twoWeekWarn = "";
-        OffsetDateTime maxAge = ctx.message.getCreationTime().minusWeeks(2).plusMinutes(1);
+        OffsetDateTime maxAge = ctx.message.getTimeCreated().minusWeeks(2).plusMinutes(1);
         List<Message> toDelete = new LinkedList<>();
 
         for (Message msg : channel.getIterableHistory()) {
             if (toDelete.size() >= limit)
                 break;
 
-            if (msg.getCreationTime().isBefore(maxAge)) {
+            if (msg.getTimeCreated().isBefore(maxAge)) {
                 twoWeekWarn = "\n⚠ Messages older than 2 weeks were not deleted due to Discord restrictions.";
                 break;
             }
@@ -408,7 +408,7 @@ public class ModerationModule extends Module {
         }
 
         if (user.getUser().isBot()) {
-            ctx.guild.getController().ban(user, 0, reason).reason(reason).queue();
+            ctx.guild.ban(user, 0, reason).reason(reason).queue();
             ctx.send("🔨 Banned.").queue();
             return;
         }
@@ -421,13 +421,13 @@ public class ModerationModule extends Module {
                 ch.sendMessage("You were banned from **" + ctx.guild.getName() + "**. No reason was specified.")
                         .queue();
 
-            ctx.guild.getController().ban(user, 0, reason).reason(reason).queue();
+            ctx.guild.ban(user, 0, reason).reason(reason).queue();
 
             try {
                 ctx.send("🔨 Banned.").queue();
             } catch (InsufficientPermissionException ignored) {}
         }, ignored -> {
-            ctx.guild.getController().ban(user, 0, reason).reason(reason).queue();
+            ctx.guild.ban(user, 0, reason).reason(reason).queue();
 
             try {
                 ctx.send("🔨 Banned.").queue();
@@ -478,7 +478,7 @@ public class ModerationModule extends Module {
         }
 
         if (user.getUser().isBot()) {
-            ctx.guild.getController().kick(user, reason).reason(reason).queue();
+            ctx.guild.kick(user, reason).reason(reason).queue();
             ctx.send("👢 Kicked.").queue();
             return;
         }
@@ -491,10 +491,10 @@ public class ModerationModule extends Module {
                 ch.sendMessage("You've been kicked from **" + ctx.guild.getName() + "**. No reason was specified.")
                         .queue();
 
-            ctx.guild.getController().kick(user, reason).reason(reason).queue();
+            ctx.guild.kick(user, reason).reason(reason).queue();
             ctx.send("👢 Kicked.").queue();
         }, ignored -> {
-            ctx.guild.getController().kick(user, reason).reason(reason).queue();
+            ctx.guild.kick(user, reason).reason(reason).queue();
             ctx.send("👢 Kicked.").queue();
         });
     }
@@ -582,10 +582,10 @@ public class ModerationModule extends Module {
             ctx.fail("Role is already an autorole!");
             return;
         } else if (role.isManaged()) {
-            ctx.fail("That role is a special bot role, or is managed by an integration!");
+            ctx.fail("I can't assign bot or integration roles.");
             return;
         } else if (!ctx.guild.getSelfMember().canInteract(role)) {
-            ctx.fail("I need a higher-level role to apply that role, and I can't apply the owner.");
+            ctx.fail("I need a higher-level role to be able to assign that role.");
             return;
         }
 
@@ -617,7 +617,7 @@ public class ModerationModule extends Module {
 
     @Perm.Invite
     @Command(name = "instant_invite", desc = "Create an instant invite that never expires.", usage = "{#channel - default current channel}", guildOnly = true, aliases = {
-            "inv", "make_invite", "mkinvite", "makeinvite", "createinvite", "instantinvite", "create_invite" })
+            "inv", "make_invite", "mkinvite", "makeinvite", "createinvite", "instantinvite", "create_invite", "serverinvite" })
     public void cmdMakeInvite(Context ctx) {
         MessageChannel channel = ctx.channel;
         if (ctx.message.getMentionedChannels().size() > 0) {
@@ -632,7 +632,7 @@ public class ModerationModule extends Module {
         }
 
         ch.createInvite().setUnique(false).setTemporary(false).setMaxAge(0).setMaxUses(0).queue(i -> ctx
-                .send(Emotes.getSuccess() + " Invite created to " + ch.getAsMention() + ".\n" + i.getURL()).queue(),
+                .send(Emotes.getSuccess() + " Invite to " + ch.getAsMention() + " created: " + i.getUrl()).queue(),
                 e -> {
                     ctx.fail("Failed to create invite!");
                     logger.error("Invite creation error", e);

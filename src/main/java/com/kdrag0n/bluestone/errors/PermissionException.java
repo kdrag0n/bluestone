@@ -2,30 +2,25 @@ package com.kdrag0n.bluestone.errors;
 
 import com.kdrag0n.bluestone.types.Perm;
 
-import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class PermissionException extends RuntimeException {
-    private final List<Perm> erroredPerms;
-    private static final List<Perm> unknownErrPerms = new ArrayList<>(1);
-
-    static {
-        unknownErrPerms.add(Perm.UNKNOWN);
-    }
+    private static final EnumSet<Perm> UNKNOWN_ERR_PERMS = EnumSet.of(Perm.UNKNOWN);
+    private final EnumSet<Perm> erroredPerms;
 
     public PermissionException(String message) {
         super(message);
-        erroredPerms = unknownErrPerms;
+        erroredPerms = UNKNOWN_ERR_PERMS;
     }
 
     public PermissionException(String message, Perm perm) {
         super(message);
-        erroredPerms = new ArrayList<>(1);
-        erroredPerms.add(perm);
+        erroredPerms = EnumSet.of(perm);
     }
 
-    public PermissionException(String message, List<Perm> perms) {
+    public PermissionException(String message, EnumSet<Perm> perms) {
         super(message);
         erroredPerms = perms;
     }

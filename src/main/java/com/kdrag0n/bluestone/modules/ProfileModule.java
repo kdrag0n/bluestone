@@ -20,14 +20,12 @@ import gnu.trove.iterator.TIntIterator;
 import gnu.trove.list.TIntList;
 import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
-import net.dv8tion.jda.client.entities.Group;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.entities.impl.GuildImpl;
-import net.dv8tion.jda.core.events.user.update.UserUpdateAvatarEvent;
-import net.dv8tion.jda.core.exceptions.ErrorResponseException;
-import net.dv8tion.jda.core.utils.MiscUtil;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.user.update.UserUpdateAvatarEvent;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.utils.MiscUtil;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
 import org.apache.commons.lang3.StringUtils;
@@ -55,8 +53,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class MiscModule extends Module {
-    private static final Logger logger = LoggerFactory.getLogger(MiscModule.class);
+public class ProfileModule extends Module {
+    private static final Logger logger = LoggerFactory.getLogger(ProfileModule.class);
 
     private static final int PROFILE_WIDTH = 1600;
     private static final int PROFILE_HEIGHT = 1000;
@@ -81,7 +79,7 @@ public class MiscModule extends Module {
                     if (bgFile.exists())
                         bg = ImageIO.read(bgFile);
                     else
-                        bg = ImageIO.read(MiscModule.class.getResourceAsStream("/assets/default_profile_bg.png"));
+                        bg = ImageIO.read(ProfileModule.class.getResourceAsStream("/assets/default_profile_bg.png"));
 
                     // Card image
                     BufferedImage card = new BufferedImage(PROFILE_WIDTH, PROFILE_HEIGHT, BufferedImage.TYPE_INT_RGB);
@@ -183,7 +181,7 @@ public class MiscModule extends Module {
     private static final TLongSet profileSetupSessions = new TLongHashSet();
     private final Dao<UserProfile, Long> profileDao;
 
-    public MiscModule(Bot bot) {
+    public ProfileModule(Bot bot) {
         super(bot);
         profileDao = setupDao(UserProfile.class);
     }
@@ -213,14 +211,11 @@ public class MiscModule extends Module {
             Collection<User> users;
             switch (ctx.channel.getType()) {
             case TEXT:
-                users = ((GuildImpl) ctx.guild).getMembersMap().valueCollection().stream().map(Member::getUser)
+                users = ctx.guild.getMemberCache().stream().map(Member::getUser)
                         .collect(Collectors.toList());
                 break;
             case PRIVATE:
                 users = Arrays.asList(ctx.author, ctx.jda.getSelfUser());
-                break;
-            case GROUP:
-                users = ((Group) ctx.channel).getUsers();
                 break;
             default:
                 users = Collections.singletonList(ctx.jda.getSelfUser());
@@ -255,7 +250,7 @@ public class MiscModule extends Module {
             return;
         }
 
-        ctx.channel.sendFile(data, "profile.png", null).queue();
+        ctx.channel.sendFile(data, "profile.png").queue();
     }
 
     private static AttributedCharacterIterator fstr(String text, Font font) {
@@ -304,7 +299,7 @@ public class MiscModule extends Module {
         profileCache.invalidate(event.getUser());
     }
 
-    @Command(name = "profilesetup", desc = "Set up your personal user profile.")
+    @Command(name = "profilesetup", aliases = {"profile_setup"}, desc = "Set up your personal user profile.")
     public void cmdProfileSetup(Context ctx) throws SQLException {
         if (profileSetupSessions.contains(ctx.author.getIdLong())) {
             ctx.fail("You already have a profile setup session active!");
@@ -324,7 +319,8 @@ public class MiscModule extends Module {
                 while (!satisfied) {
                     ctx.send(question).queue();
                     Message resp = bot.waitForMessage(ctx.jda, 300000, m -> m.getAuthor().getIdLong() == ctx.author.getIdLong()
-                            && m.getChannel().getIdLong() == ctx.channel.getIdLong());
+                            && m.getChannel().getIdLong() == ctx.channel.getIdLong(),
+                            ctx.channel.getIdLong());
 
                     if (resp == null) {
                         ctx.fail(
@@ -426,7 +422,8 @@ public class MiscModule extends Module {
     }
 
     @Perm.Owner
-    @Command(name = "profile_override_bg", desc = "Override an user's profile background. This just executes `profile bg` as them.", usage = "[@user/user ID] {to: reset/default / attach image}")
+    @Command(name = "profile_override_bg", desc = "Override an user's profile background. This just executes `profile bg` as them.",
+            aliases = {"profile_bg_override"}, usage = "[@user/user ID] {to: reset/default / attach image}")
     public void cmdProfileOverrideBg(Context ctx) {
         User target;
 

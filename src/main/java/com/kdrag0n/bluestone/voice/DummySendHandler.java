@@ -1,6 +1,8 @@
 package com.kdrag0n.bluestone.voice;
 
-import net.dv8tion.jda.core.audio.AudioSendHandler;
+import net.dv8tion.jda.api.audio.AudioSendHandler;
+
+import java.nio.ByteBuffer;
 
 public class DummySendHandler implements AudioSendHandler {
     @Override
@@ -9,8 +11,8 @@ public class DummySendHandler implements AudioSendHandler {
     }
 
     @Override
-    public byte[] provide20MsAudio() {
-        return new byte[] {};
+    public ByteBuffer provide20MsAudio() {
+        return null;
     }
 
     @Override

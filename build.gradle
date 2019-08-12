@@ -28,7 +28,7 @@ compileJava.options.encoding = 'UTF-8'
 
 sourceCompatibility = 1.8
 archivesBaseName = 'bluestone'
-mainClassName = 'com.kdrag0n.bluestone.Start'
+mainClassName = 'com.kdrag0n.bluestone.Bootstrap'
 applicationDefaultJvmArgs = [
         '-Xms1000M',
         '-XX:MaxDirectMemorySize=64M',
@@ -98,8 +98,8 @@ if (file("/usr/share/proguard/lib").exists()) {
 }
 
 dependencies {
-    implementation 'net.dv8tion:JDA:3.8.3_464'
-    implementation 'com.sedmelluq:lavaplayer:1.3.19'
+    implementation 'net.dv8tion:JDA:4.0.0_39'
+    implementation 'com.sedmelluq:lavaplayer:1.3.20'
     implementation 'com.squareup.okhttp3:okhttp:4.0.1'
     implementation 'com.google.guava:guava:28.0-jre'
     implementation 'org.json:json:20190722'
@@ -110,14 +110,14 @@ dependencies {
     implementation 'com.j256.ormlite:ormlite-core:5.1' // --
     implementation 'com.j256.ormlite:ormlite-jdbc:5.1'
     implementation 'com.h2database:h2:1.4.199'
-    implementation 'com.sedmelluq:jda-nas:1.0.6'
+    implementation 'com.sedmelluq:jda-nas:1.1.0'
     implementation 'com.zaxxer:HikariCP:3.3.1'
     implementation 'org.mariadb.jdbc:mariadb-java-client:2.4.3'
     implementation 'net.sf.trove4j:trove4j:3.0.3'
-    implementation 'com.jagrosh:jda-utilities-menu:2.1.5'
-    implementation 'com.jagrosh:jda-utilities-commons:2.1.5'
+    implementation 'com.jagrosh:jda-utilities-menu:3.0.1'
+    implementation 'com.jagrosh:jda-utilities-commons:3.0.1'
     implementation 'com.joestelmach:natty:0.13'
     implementation 'com.twelvemonkeys.imageio:imageio-core:3.4.1'
     implementation 'com.google.re2j:re2j:1.3'
-    implementation 'io.sentry:sentry-logback:1.7.25'
+    implementation 'io.sentry:sentry-logback:1.7.26'
 }

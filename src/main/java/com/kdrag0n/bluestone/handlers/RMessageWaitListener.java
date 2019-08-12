@@ -1,9 +1,9 @@
 package com.kdrag0n.bluestone.handlers;
 
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
-import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -43,7 +43,7 @@ public class RMessageWaitListener extends ListenerAdapter {
         }
 
         if (rCheck.test(event)) {
-            event.getChannel().getMessageById(event.getMessageIdLong()).queue(msg -> {
+            event.getChannel().retrieveMessageById(event.getMessageIdLong()).queue(msg -> {
                 if (check.test(msg)) {
                     synchronized (lock) {
                         lock.set(msg);

@@ -8,13 +8,13 @@ import com.kdrag0n.bluestone.sql.GuildWelcomeMessages;
 import com.kdrag0n.bluestone.types.Module;
 import com.kdrag0n.bluestone.types.Perm;
 import com.kdrag0n.bluestone.util.Strings;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.events.guild.GuildJoinEvent;
-import net.dv8tion.jda.core.events.guild.GuildLeaveEvent;
-import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
-import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
+import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
+import net.dv8tion.jda.api.events.guild.member.GuildMemberLeaveEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -30,27 +30,33 @@ public class WelcomeModule extends Module {
     private static final String DEFAULT_LEAVE = "[rip] **[member_tag] has left the server...**";
 
     private static final Pattern SUB_REGEX = Pattern.compile("\\[([a-z_]+)]");
-    private static final String NO_COMMAND = "🤔 **I need an action!**\n" + "The following are valid:\n"
-            + "    \u2022 `status` - view the status of this message\n"
-            + "    \u2022 `show` - show the current message\n"
-            + "    \u2022 `set [message]` - set the current message\n"
-            + "    \u2022 `toggle` - toggle the status of this message\n"
-            + "    \u2022 `preview` - preview the current message\n"
-            + "    \u2022 `channel [#channel]` - change the channel messages are sent in (default: default channel, or first available one)\n"
-            + "    \u2022 `tags` - show the tags available for use in messages\n";
-    private static final String TAG_HELP = "**Here are all the tags:**\n"
-            + "    • `[mention/member_mention/member]` - @mention the member\n"
-            + "    • `[member_name]` - the name of the member\n"
-            + "    • `[member_tag]` - the tag (Username#XXXX) of the member\n"
-            + "    • `[member_discrim]` - the member's discriminator\n" + "    • `[member_id]` - the member's user ID\n"
-            + "    • `[server/server_name]` - the name of this server\n"
-            + "    • `[server_icon]` - the link to this server's icon\n" + "    • `[server_id]` - this server's ID\n"
-            + "    • `[server_owner]` - the name of this server's owner\n"
-            + "    • `[time/date]` - the current date and time, like `Tue Jun 27 10:06:59 EDT 2017`\n"
-            + "    • `[prefix]` - my command prefix in this server\n" + "    • `[bot_owner]` - the tag of my owner\n"
-            + "    • `[rip]` - a gravestone\n" + "\n" + "Example message:```\n"
-            + "[mention] Hey there, and welcome to [server]! The owner here is [server_owner]. You joined at [time]. "
-            + "To use this bot, try [prefix]help. It was made by [bot_owner]. Have fun!```";
+    private static final String NO_COMMAND = "🤔 **I need an action!**\n" +
+            "The following are valid:\n" +
+            "    \u2022 `status` - view the status of this message\n" +
+            "    \u2022 `show` - show the current message\n" +
+            "    \u2022 `set [message]` - set the current message\n" +
+            "    \u2022 `toggle` - toggle the status of this message\n" +
+            "    \u2022 `preview` - preview the current message\n" +
+            "    \u2022 `channel [#channel]` - change the channel messages are sent in (default: default channel, or first available one)\n" +
+            "    \u2022 `tags` - show the tags available for use in messages\n";
+    private static final String TAG_HELP = "**Here are all of the available tags:**\n" +
+            "    • `[mention/member_mention/member]` - @mention the member\n" +
+            "    • `[member_name]` - the name of the member\n" +
+            "    • `[member_tag]` - the tag (Username#XXXX) of the member\n" +
+            "    • `[member_discrim]` - the member's discriminator\n" +
+            "    • `[member_id]` - the member's user ID\n" +
+            "    • `[server/server_name]` - the name of this server\n" +
+            "    • `[server_icon]` - the link to this server's icon\n" +
+            "    • `[server_id]` - this server's ID\n" +
+            "    • `[server_owner]` - the name of this server's owner\n" +
+            "    • `[time/date]` - the current date and time, like `Tue Jun 27 10:06:59 EDT 2017`\n" +
+            "    • `[prefix]` - my command prefix in this server\n" +
+            "    • `[bot_owner]` - the tag of my owner\n" +
+            "    • `[rip]` - a gravestone\n" +
+            "\n" +
+            "Example message:```\n" +
+            "Hey [mention], welcome to [server]! Send `[prefix]help` to learn how to use this bot.\n" +
+            "Enjoy your stay!```";
     private final Dao<GuildWelcomeMessages, Long> messageDao;
 
     public WelcomeModule(Bot bot) {
@@ -338,13 +344,19 @@ public class WelcomeModule extends Module {
     private String formatMessage(String msg, Guild guild, Member member, String def) {
         return Strings.replace(StringUtils.replace(msg, "[default]", def), SUB_REGEX,
                 m -> Strings.createMap().map("mention", member::getAsMention)
-                        .map("member_name", member::getEffectiveName).map("member_tag", () -> getTag(member.getUser()))
+                        .map("member_name", member::getEffectiveName)
+                        .map("member_tag", () -> getTag(member.getUser()))
                         .map("member_discrim", member.getUser()::getDiscriminator)
-                        .map("member_id", member.getUser()::getId).map("server", guild::getName)
-                        .map("server_icon", guild::getIconUrl).map("server_id", guild::getId)
-                        .map("server_owner", guild.getOwner()::getEffectiveName).map("member", member::getAsMention)
-                        .map("member_mention", member::getAsMention).map("time", () -> new Date().toString())
-                        .map("date", () -> new Date().toString()).map("server_name", guild::getName)
+                        .map("member_id", member.getUser()::getId)
+                        .map("server", guild::getName)
+                        .map("server_icon", guild::getIconUrl)
+                        .map("server_id", guild::getId)
+                        .map("server_owner", guild.getOwner()::getEffectiveName)
+                        .map("member", member::getAsMention)
+                        .map("member_mention", member::getAsMention)
+                        .map("time", () -> new Date().toString())
+                        .map("date", () -> new Date().toString())
+                        .map("server_name", guild::getName)
                         .map("prefix", () -> bot.prefixStore.getPrefix(guild.getIdLong()))
                         .map("bot_owner", "Dragon5232#1841").map("rip", Emotes::getGrave).exec(m));
     }
@@ -353,7 +365,7 @@ public class WelcomeModule extends Module {
         ctx.send(TAG_HELP).queue();
     }
 
-    @EventHandler()
+    @EventHandler
     public void onGuildMemberJoin(GuildMemberJoinEvent event) {
         if (event.getMember().getUser().getIdLong() == bot.selfUser.getIdLong())
             return;
@@ -395,7 +407,7 @@ public class WelcomeModule extends Module {
         }
     }
 
-    @EventHandler()
+    @EventHandler
     public void onGuildMemberLeave(GuildMemberLeaveEvent event) {
         if (event.getMember().getUser().getIdLong() == bot.selfUser.getIdLong())
             return;
@@ -437,7 +449,7 @@ public class WelcomeModule extends Module {
         }
     }
 
-    @EventHandler()
+    @EventHandler
     public void onGuildJoin(GuildJoinEvent event) {
         try {
             messageDao.createOrUpdate(
@@ -447,7 +459,7 @@ public class WelcomeModule extends Module {
         }
     }
 
-    @EventHandler()
+    @EventHandler
     public void onGuildLeave(GuildLeaveEvent event) {
         try {
             messageDao.deleteById(event.getGuild().getIdLong());

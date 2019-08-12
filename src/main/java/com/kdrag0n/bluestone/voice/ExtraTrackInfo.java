@@ -1,7 +1,7 @@
 package com.kdrag0n.bluestone.voice;
 
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageChannel;
 
 import java.util.HashSet;
 

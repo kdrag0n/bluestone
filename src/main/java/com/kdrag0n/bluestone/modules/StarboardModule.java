@@ -20,24 +20,26 @@ import com.kdrag0n.bluestone.types.Module;
 import com.kdrag0n.bluestone.types.Perm;
 import com.kdrag0n.bluestone.util.GraphicsUtils;
 import com.kdrag0n.bluestone.util.Strings;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.MessageBuilder;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.events.channel.text.TextChannelDeleteEvent;
-import net.dv8tion.jda.core.events.message.MessageBulkDeleteEvent;
-import net.dv8tion.jda.core.events.message.guild.GuildMessageDeleteEvent;
-import net.dv8tion.jda.core.events.message.guild.react.GenericGuildMessageReactionEvent;
-import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionAddEvent;
-import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionRemoveAllEvent;
-import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionRemoveEvent;
-import net.dv8tion.jda.core.exceptions.ErrorResponseException;
-import net.dv8tion.jda.core.utils.MiscUtil;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.MessageBuilder;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.channel.text.TextChannelDeleteEvent;
+import net.dv8tion.jda.api.events.message.MessageBulkDeleteEvent;
+import net.dv8tion.jda.api.events.message.guild.GuildMessageDeleteEvent;
+import net.dv8tion.jda.api.events.message.guild.react.GenericGuildMessageReactionEvent;
+import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
+import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemoveAllEvent;
+import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemoveEvent;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import net.dv8tion.jda.api.utils.MiscUtil;
+import net.dv8tion.jda.api.utils.TimeUtil;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
+import javax.annotation.Nonnull;
 import java.awt.*;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -52,7 +54,7 @@ import static com.kdrag0n.bluestone.util.NullValueWrapper.val;
 
 public class StarboardModule extends Module {
     private static final Logger logger = LoggerFactory.getLogger(StarboardModule.class);
-    private static final List<Perm> MOD_PERMS = new ArrayList<>(2);
+    private static final EnumSet<Perm> MOD_PERMS = EnumSet.of(Perm.MANAGE_SERVER, Perm.MANAGE_CHANNEL);
     private static final String[] TOP_3_BADGES = { "🥇", "🥈", "🥉" };
     private static final String NO_COMMAND = "🤔 **I need an action!**\n" + "The following are valid:\n"
             + "    \u2022 `create/new {channel name='starboard'}` - create a new starboard here (you may pass a different name)\n"
@@ -73,9 +75,10 @@ public class StarboardModule extends Module {
             .concurrencyLevel(4).initialCapacity(4).expireAfterWrite(5, TimeUnit.MINUTES)
             .build(new CacheLoader<Pair<Long, Long>, Message>() {
                 @Override
-                public Message load(Pair<Long, Long> ids) {
+                public Message load(@Nonnull Pair<Long, Long> ids) {
                     try {
-                        return bot.manager.getTextChannelById(ids.getLeft()).getMessageById(ids.getRight()).complete();
+                        return bot.manager.getTextChannelById(ids.getLeft())
+                                .retrieveMessageById(ids.getRight()).complete();
                     } catch (ErrorResponseException ignored) {
                         return null;
                     }
@@ -84,11 +87,6 @@ public class StarboardModule extends Module {
     private final Dao<Starboard, Long> dao;
     private final Dao<StarboardEntry, Long> entryDao;
     private final Dao<Starrer, Integer> starrerDao;
-
-    static {
-        MOD_PERMS.add(Perm.MANAGE_SERVER);
-        MOD_PERMS.add(Perm.MANAGE_CHANNEL);
-    }
 
     public StarboardModule(Bot bot) {
         super(bot);
@@ -128,7 +126,7 @@ public class StarboardModule extends Module {
     }
 
     private int getStarCount(GenericGuildMessageReactionEvent event, int threshold) {
-        List<User> users = event.getReaction().getUsers().complete();
+        List<User> users = event.getReaction().retrieveUsers().complete();
         if (users.size() < threshold)
             return 0; // fast path
         int c = 0;
@@ -156,11 +154,11 @@ public class StarboardModule extends Module {
         }
     }
 
-    @EventHandler()
+    @EventHandler
     public void onReactionAdd(GuildMessageReactionAddEvent event) throws SQLException, ExecutionException {
-        if (!event.getReactionEmote().getName().equals("⭐"))
-            return;
         if (event.getUser().isBot())
+            return;
+        if (!event.getReactionEmote().getName().equals("⭐"))
             return;
 
         Starboard starboard = dao.queryForId(event.getGuild().getIdLong());
@@ -183,12 +181,12 @@ public class StarboardModule extends Module {
                     .get(ImmutablePair.of(event.getChannel().getIdLong(), event.getMessageIdLong()));
             if (event.getUser().getIdLong() == origMessage.getAuthor().getIdLong())
                 return;
-            if (origMessage.getCreationTime()
+            if (origMessage.getTimeCreated()
                     .isBefore(OffsetDateTime.now().minus(starboard.getMaxAge().getTime(), ChronoUnit.MILLIS))) {
                 return;
             }
 
-            EmbedBuilder emb = new EmbedBuilder().setTimestamp(origMessage.getCreationTime())
+            EmbedBuilder emb = new EmbedBuilder().setTimestamp(origMessage.getTimeCreated())
                     .setAuthor(origMessage.getMember().getEffectiveName(), null,
                             origMessage.getAuthor().getEffectiveAvatarUrl())
                     .setDescription(origMessage.getContentRaw()).setColor(starGradientColor(stars));
@@ -232,7 +230,11 @@ public class StarboardModule extends Module {
                 onChannelDelete(new TextChannelDeleteEvent(event.getJDA(), event.getResponseNumber(), channel));
 
             long botMessageId = channel
-                    .sendMessage(new MessageBuilder().append(renderedText).setEmbed(emb.build()).build()).complete()
+                    .sendMessage(new MessageBuilder()
+                            .append(renderedText)
+                            .setEmbed(emb.build())
+                            .build())
+                    .complete()
                     .getIdLong();
 
             entry = new StarboardEntry(event.getMessageIdLong(), event.getGuild().getIdLong(), botMessageId,
@@ -251,13 +253,17 @@ public class StarboardModule extends Module {
             starrerDao.createOrUpdate(starrer);
 
             Message message = messageCache.get(ImmutablePair.of(starboard.getChannelId(), entry.getBotMessageId()));
-            message.editMessage(new MessageBuilder().append(renderedText)
-                    .setEmbed(new EmbedBuilder(message.getEmbeds().get(0)).setColor(starGradientColor(stars)).build())
-                    .build()).queue();
+            message.editMessage(new MessageBuilder()
+                    .append(renderedText)
+                    .setEmbed(new EmbedBuilder(message.getEmbeds().get(0))
+                            .setColor(starGradientColor(stars))
+                            .build())
+                    .build())
+                    .queue();
         }
     }
 
-    @EventHandler()
+    @EventHandler
     public void onReactionRemove(GuildMessageReactionRemoveEvent event) throws SQLException, ExecutionException {
         if (!event.getReactionEmote().getName().equals("⭐"))
             return;
@@ -284,17 +290,17 @@ public class StarboardModule extends Module {
         }
     }
 
-    @EventHandler()
+    @EventHandler
     public void onReactionRemoveAll(GuildMessageReactionRemoveAllEvent event) throws SQLException, ExecutionException {
         messageDelete(event.getMessageIdLong());
     }
 
-    @EventHandler()
+    @EventHandler
     public void onMessageDelete(GuildMessageDeleteEvent event) throws SQLException, ExecutionException {
         messageDelete(event.getMessageIdLong());
     }
 
-    @EventHandler()
+    @EventHandler
     public void onMessageBulkDelete(MessageBulkDeleteEvent event) throws SQLException, ExecutionException {
         for (String sid : event.getMessageIds()) {
             long id = Long.parseUnsignedLong(sid);
@@ -403,14 +409,14 @@ public class StarboardModule extends Module {
         if (ctx.args.length > 1) {
             String wantedName = ctx.args.get(1);
             if (!Strings.isChannelName(wantedName)) {
-                ctx.fail("Channel name must be between 2 and 100 characters long!");
+                ctx.fail("GuildChannel name must be between 2 and 100 characters long!");
                 return;
             }
 
             channelName = wantedName.toLowerCase();
         }
 
-        TextChannel channel = (TextChannel) ctx.guild.getController().createTextChannel(channelName)
+        TextChannel channel = (TextChannel) ctx.guild.createTextChannel(channelName)
                 .setTopic("Starboard created and managed by " + ctx.guild.getSelfMember().getAsMention())
                 .addPermissionOverride(ctx.guild.getPublicRole(), ImmutableList.of(Permission.MESSAGE_HISTORY),
                         ImmutableList.of(Permission.MESSAGE_WRITE))
@@ -592,7 +598,7 @@ public class StarboardModule extends Module {
 
         EmbedBuilder emb = new EmbedBuilder().setColor(val(ctx.member.getColor()).or(Color.WHITE))
                 .setFooter("Tracking stars and stargazers since", ctx.jda.getSelfUser().getEffectiveAvatarUrl())
-                .setTimestamp(MiscUtil.getCreationTime(starboard.getChannelId())).setTitle("Starboard Stats");
+                .setTimestamp(TimeUtil.getTimeCreated(starboard.getChannelId())).setTitle("Starboard Stats");
         StringBuilder desc = emb.getDescriptionBuilder();
         desc.append("There are ").append(starCountEntries.size()).append(" starred messages, with a total of ");
 

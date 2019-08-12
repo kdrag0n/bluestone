@@ -6,7 +6,7 @@ import com.kdrag0n.bluestone.types.Module;
 import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.sql.Pokemon;
-import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.api.EmbedBuilder;
 
 import java.sql.SQLException;
 import java.util.regex.Pattern;

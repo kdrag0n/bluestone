@@ -2,11 +2,17 @@ package com.kdrag0n.bluestone.voice;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
-import net.dv8tion.jda.core.audio.AudioSendHandler;
+import net.dv8tion.jda.api.audio.AudioSendHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.ByteBuffer;
 
 public class PlayerSendHandler implements AudioSendHandler {
+    private static final Logger logger = LoggerFactory.getLogger(PlayerSendHandler.class);
     private final AudioPlayer audioPlayer;
     private AudioFrame lastFrame;
+    private ByteBuffer dataBuffer;
 
     public PlayerSendHandler(AudioPlayer audioPlayer) {
         this.audioPlayer = audioPlayer;
@@ -14,23 +20,22 @@ public class PlayerSendHandler implements AudioSendHandler {
 
     @Override
     public boolean canProvide() {
-        if (lastFrame == null) {
-            lastFrame = audioPlayer.provide();
-        }
-
+        lastFrame = audioPlayer.provide();
         return lastFrame != null;
     }
 
     @Override
-    public byte[] provide20MsAudio() {
-        if (lastFrame == null) {
-            lastFrame = audioPlayer.provide();
+    public ByteBuffer provide20MsAudio() {
+        int len = lastFrame.getDataLength();
+        if (dataBuffer == null || dataBuffer.capacity() < len) {
+            dataBuffer = ByteBuffer.allocate(len);
+        } else {
+            dataBuffer.rewind();
+            dataBuffer.limit(len);
         }
 
-        byte[] data = lastFrame != null ? lastFrame.getData() : null;
-        lastFrame = null;
-
-        return data;
+        lastFrame.getData(dataBuffer.array(), 0);
+        return dataBuffer;
     }
 
     @Override

@@ -51,7 +51,7 @@ public class GuildRoleOption {
 
     public boolean test(Context ctx, int mSend, boolean hasBeenMentioned, boolean hasMentionedOther) {
         OffsetDateTime now = OffsetDateTime.now();
-        OffsetDateTime mJoin = ctx.member.getJoinDate();
+        OffsetDateTime mJoin = ctx.member.getTimeJoined();
 
         // Join time
         if ((conditions & JOIN_1_MINUTE) == JOIN_1_MINUTE) {

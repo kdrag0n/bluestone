@@ -47,8 +47,8 @@ public class MinecraftPing {
      * @return {@link JSONObject}
      * @throws IOException if an error occurs communicating with the server
      */
-    public JSONObject getPing(final String hostname) throws IOException {
-        return this.getPing(new MinecraftPingOptions().setHostname(hostname));
+    public JSONObject getGatewayPing(final String hostname) throws IOException {
+        return this.getGatewayPing(new MinecraftPingOptions().setHostname(hostname));
     }
 
     /**
@@ -58,7 +58,7 @@ public class MinecraftPing {
      * @return {@link JSONObject}
      * @throws IOException if an error occurs communicating with the server
      */
-    public JSONObject getPing(final MinecraftPingOptions options) throws IOException {
+    public JSONObject getGatewayPing(final MinecraftPingOptions options) throws IOException {
         MinecraftPingUtil.validate(options.getHostname(), "Hostname cannot be null.");
         MinecraftPingUtil.validate(options.getPort(), "Port cannot be null.");
 

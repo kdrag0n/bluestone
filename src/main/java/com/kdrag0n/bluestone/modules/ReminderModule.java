@@ -9,7 +9,7 @@ import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.Emotes;
 import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.sql.Reminder;
-import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.api.EmbedBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;

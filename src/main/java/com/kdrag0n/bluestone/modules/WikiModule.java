@@ -4,7 +4,7 @@ import com.kdrag0n.bluestone.Bot;
 import com.kdrag0n.bluestone.types.Module;
 import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.annotations.Command;
-import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.api.EmbedBuilder;
 import okhttp3.Request;
 import org.json.JSONArray;
 

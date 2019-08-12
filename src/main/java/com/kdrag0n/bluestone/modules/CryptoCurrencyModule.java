@@ -8,13 +8,13 @@ import com.kdrag0n.bluestone.Context;
 import com.kdrag0n.bluestone.types.Perm;
 import com.kdrag0n.bluestone.annotations.Command;
 import com.kdrag0n.bluestone.util.Strings;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.MessageBuilder;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageEmbed;
-import net.dv8tion.jda.core.entities.MessageReaction;
-import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
-import net.dv8tion.jda.core.exceptions.PermissionException;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.MessageBuilder;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.MessageReaction;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.exceptions.PermissionException;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
 import org.apache.commons.lang3.StringUtils;
@@ -307,8 +307,11 @@ public class CryptoCurrencyModule extends Module {
                     msg.editMessage(new MessageBuilder().append("Finished.")
                             .setEmbed(new EmbedBuilder().setColor(color)
                                     .setAuthor(name, null, ctx.author.getEffectiveAvatarUrl())
-                                    .setFooter("Data updated at", null).setTimestamp(lastUpdated).build())
-                            .build()).queue();
+                                    .setFooter("Data updated at", null)
+                                    .setTimestamp(lastUpdated)
+                                    .build())
+                            .build())
+                            .queue();
 
                     try {
                         msg.clearReactions().queue();
@@ -318,14 +321,17 @@ public class CryptoCurrencyModule extends Module {
                                 r.removeReaction().queue();
                                 r.removeReaction(ctx.author).queue();
                             }
-                        } catch (PermissionException _ignored) {
-                        }
+                        } catch (PermissionException ignored2) {}
                     }
-                }).setEventWaiter(bot.eventWaiter).setTimeout(2, TimeUnit.MINUTES).addUsers(ctx.author);
+                })
+                .setEventWaiter(bot.eventWaiter)
+                .setTimeout(2, TimeUnit.MINUTES)
+                .addUsers(ctx.author);
 
         stringsField.set(builder, rankedList);
 
-        builder.build().paginate(ctx.channel, page);
+        builder.build()
+                .paginate(ctx.channel, page);
     }
 
     @Perm.Owner
