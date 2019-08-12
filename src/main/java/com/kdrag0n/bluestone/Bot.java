@@ -467,10 +467,9 @@ public class Bot extends ShardedBot implements EventListener {
         channel.sendTyping().queue();
 
         http.newCall(new Request.Builder()
-                .post(RequestBody.create(JSON_MEDIA_TYPE,
-                        new JSONObject().put("session", sessionID)
+                .post(RequestBody.create(new JSONObject().put("session", sessionID)
                                 .put("query", query)
-                                .toString()))
+                                .toString(), JSON_MEDIA_TYPE))
                 .url(reqDest)
                 .header("Authorization", getKeys().optString("chatengine"))
                 .build())

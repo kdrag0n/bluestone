@@ -139,7 +139,7 @@ public class StatReporterModule extends Module {
     private void reportBod(String key) {
         JSONObject object = constructBodJson();
 
-        bot.http.newCall(new Request.Builder().post(RequestBody.create(JSON_MEDIA_TYPE, object.toString()))
+        bot.http.newCall(new Request.Builder().post(RequestBody.create(object.toString(), JSON_MEDIA_TYPE))
                 .url(String.format(BOD_URL, bot.selfUser.getId())).header("Authorization", key).build())
                 .enqueue(Bot.callback(response -> {
                     if (!response.isSuccessful()) {
@@ -156,7 +156,7 @@ public class StatReporterModule extends Module {
     private void reportDbl(String key) {
         JSONObject object = constructDblJson();
 
-        bot.http.newCall(new Request.Builder().post(RequestBody.create(JSON_MEDIA_TYPE, object.toString()))
+        bot.http.newCall(new Request.Builder().post(RequestBody.create(object.toString(), JSON_MEDIA_TYPE))
                 .url(String.format(DBL_URL, bot.selfUser.getId())).header("Authorization", key)
                 .build()).enqueue(Bot.callback(response -> {
                     if (!response.isSuccessful()) {
