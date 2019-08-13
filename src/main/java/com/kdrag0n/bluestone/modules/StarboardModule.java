@@ -117,12 +117,12 @@ public class StarboardModule extends Module {
             return "✨";
     }
 
-    private String renderText(int stars, String channelMention, String messageId) {
+    private String renderText(int stars, String channelMention) {
         String starCountText = "";
         if (stars > 1)
             starCountText = "**" + stars + "** ";
 
-        return getStarEmoji(stars) + ' ' + starCountText + channelMention + " | Message ID: " + messageId;
+        return getStarEmoji(stars) + ' ' + starCountText + channelMention;
     }
 
     private int getStarCount(GenericGuildMessageReactionEvent event, int threshold) {
@@ -173,7 +173,7 @@ public class StarboardModule extends Module {
         if (stars < starboard.getStarThreshold())
             return;
 
-        String renderedText = renderText(stars, event.getChannel().getAsMention(), event.getMessageId());
+        String renderedText = renderText(stars, event.getChannel().getAsMention());
 
         StarboardEntry entry = entryDao.queryForId(event.getMessageIdLong());
         if (entry == null) {
@@ -186,27 +186,28 @@ public class StarboardModule extends Module {
                 return;
             }
 
-            EmbedBuilder emb = new EmbedBuilder().setTimestamp(origMessage.getTimeCreated())
+            EmbedBuilder emb = new EmbedBuilder()
+                    .setFooter("Message ID: " + event.getMessageId())
+                    .setTimestamp(origMessage.getTimeCreated())
                     .setAuthor(origMessage.getMember().getEffectiveName(), null,
                             origMessage.getAuthor().getEffectiveAvatarUrl())
-                    .setDescription(origMessage.getContentRaw()).setColor(starGradientColor(stars));
+                    .setDescription(origMessage.getContentRaw())
+                    .setColor(starGradientColor(stars));
 
             if (origMessage.getEmbeds().size() > 0) {
                 MessageEmbed data = origMessage.getEmbeds().get(0);
                 if (data.getType() == EmbedType.IMAGE) {
                     emb.setImage(data.getUrl());
                 } else {
-                    for (MessageEmbed embed : origMessage.getEmbeds()) {
-                        String value = val(data.getTitle()).or("*No title*");
+                    String value = val(data.getTitle()).or("*No title*");
 
-                        if (data.getFields().size() > 0) {
-                            value += String.format("\n%d fields", data.getFields().size());
-                        } else {
-                            value += "\nNo fields";
-                        }
-
-                        emb.addField("Embed", value, false);
+                    if (data.getFields().size() > 0) {
+                        value += String.format("\n%d fields", data.getFields().size());
+                    } else {
+                        value += "\nNo fields";
                     }
+
+                    emb.addField("Embed", value, false);
                 }
             }
 
@@ -284,9 +285,10 @@ public class StarboardModule extends Module {
             builder.where().eq("userId", event.getUser().getIdLong()).and().eq("messageId", entry.getMessageId());
             builder.delete();
 
-            String renderedText = renderText(stars, event.getChannel().getAsMention(), event.getMessageId());
+            String renderedText = renderText(stars, event.getChannel().getAsMention());
             messageCache.get(ImmutablePair.of(starboard.getChannelId(), entry.getBotMessageId()))
-                    .editMessage(renderedText).queue();
+                    .editMessage(renderedText)
+                    .queue();
         }
     }
 
