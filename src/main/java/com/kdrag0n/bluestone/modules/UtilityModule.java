@@ -413,7 +413,7 @@ public class UtilityModule extends Module {
 
         if (userFaqDao.queryForId(ctx.author.getIdLong()) == null) {
             // user hasn't read FAQ yet
-            ctx.fail("Please read the FAQ first: https://khronodragon.com/goldmine/faq\n" +
+            ctx.fail("Please read the FAQ first: https://kdrag0n.dev/goldmine/faq\n" +
                     "If it doesn't answer your question, simply run the `contact` command again to proceed.");
             userFaqDao.create(new UserFaqRecord(ctx.author.getIdLong(), true, new Date()));
             return;

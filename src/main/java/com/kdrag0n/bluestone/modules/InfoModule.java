@@ -156,7 +156,7 @@ public class InfoModule extends Module {
             }
         };
 
-        EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://khronodragon.com/goldmine").setColor(randomColor())
+        EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://kdrag0n.dev/goldmine").setColor(randomColor())
                 .setDescription("¯\\_(ツ)_/¯").setFooter("Also try the info command!", null).setTimestamp(Instant.now());
 
         for (Map.Entry<String, TLongList> stat : stats.entrySet()) {

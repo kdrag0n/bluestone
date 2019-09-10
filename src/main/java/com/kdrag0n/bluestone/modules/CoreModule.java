@@ -29,7 +29,7 @@ public class CoreModule extends Module {
     private static final String LIST_ITEM = Strings.EMPTY + ' ' + Strings.EMPTY + ' ' + Strings.EMPTY + ' ' + Strings.EMPTY + " \u2022 ";
     private static final String INFO_LINKS = LIST_ITEM + "Use my [invite link]([invite]) to take me to another server\n" +
             LIST_ITEM + "[Donate](https://paypal.me/dragon5232) to help keep me alive\n" +
-            LIST_ITEM + "Go to [my website](https://khronodragon.com/goldmine/) for help\n" +
+            LIST_ITEM + "Go to [my website](https://kdrag0n.dev/goldmine/) for help\n" +
             LIST_ITEM + "Join my [support server](https://discord.gg/sYkwfxA) for even more help";
 
     private static final EnumSet<Perm> PREFIX_PERMS = EnumSet.of(
@@ -68,7 +68,7 @@ public class CoreModule extends Module {
 
     @Command(name = "faq", desc = "Get the Frequently Asked Questions list.")
     public void cmdFaq(Context ctx) {
-        ctx.send("You can find the FAQ at <https://khronodragon.com/goldmine/faq>.").queue();
+        ctx.send("You can find the FAQ at <https://kdrag0n.dev/goldmine/faq>.").queue();
     }
 
     @Command(name = "owner", desc = "Become the bot owner..?", aliases = {"bot_owner"})
@@ -225,7 +225,7 @@ public class CoreModule extends Module {
 
     @Command(name = "info", desc = "Get some info about me.", aliases = {"about", "stats", "statistics", "status"})
     public void cmdInfo(Context ctx) {
-        EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://khronodragon.com/goldmine")
+        EmbedBuilder emb = newEmbedWithAuthor(ctx, "https://kdrag0n.dev/goldmine")
                 .setColor(randomColor())
                 .setDescription("A bot by **" + bot.ownerTag + "** made with ❤")
                 .addField("Servers", str(bot.getGuildCount()), true)

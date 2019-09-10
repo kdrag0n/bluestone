@@ -77,7 +77,7 @@ public class PokemonModule extends Module {
             return;
         }
 
-        final String imageUrl = "https://khronodragon.com/pokesprites/" + pokemon.id + ".png";
+        final String imageUrl = "https://kdrag0n.dev/pokesprites/" + pokemon.id + ".png";
         String stats = "**ATK**: " +
                 pokemon.atk +
                 "\n**DEF**: " +

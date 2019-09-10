@@ -295,7 +295,7 @@ public class EntertainmentModule extends Module {
                 color = val(ctx.member.getColor()).or(Color.WHITE);
 
             ctx.send(new EmbedBuilder().setImage(cat).setColor(color)
-                    .setAuthor("Random Cat", null, "https://khronodragon.com/cat.png")
+                    .setAuthor("Random Cat", null, "https://kdrag0n.dev/cat.png")
                     .addField("Did You Know?", fact, false).build()).queue();
         } catch (IOException ignored) {
             ctx.fail("Failed to get a cat!");
@@ -326,7 +326,7 @@ public class EntertainmentModule extends Module {
                 color = val(ctx.member.getColor()).or(Color.WHITE);
 
             ctx.send(new EmbedBuilder().setImage(cat).setColor(color)
-                    .setAuthor("Random Dog", null, "https://khronodragon.com/dog.png")
+                    .setAuthor("Random Dog", null, "https://kdrag0n.dev/dog.png")
                     .addField("Did You Know?", fact, false).build()).queue();
         } catch (IOException ignored) {
             ctx.fail("Failed to get a dog!");

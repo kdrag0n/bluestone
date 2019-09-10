@@ -13,7 +13,7 @@ Should you want to change the prefix away from the default of `!`, simply type `
 
 If you forget the prefix or set it to something impossible to type, simply type `@Goldmine#1629 prefix` to retrieve the current prefix so it is possible to reset the prefix.
 
-For more information, read [this page](https://khronodragon.com/goldmine/adding).
+For more information, read [this page](https://kdrag0n.dev/goldmine/adding).
 
 ## Which set of instructions should I follow?
 You should follow the instructions above **unless** you know exactly what you're doing and want to set the bot up locally, on your own computer. 
