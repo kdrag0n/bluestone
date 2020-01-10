@@ -1,9 +1,17 @@
+# Project Bluestone
+
+Project Bluestone was an open-source multi-purpose Discord chatbot written in Java, with an official instance under the name of Goldmine. The official instance was used by over 4,500 Discord servers before it was shut down on January 9, 2020.
+
+This project has not been updated since August 2019. Please **DO NOT USE** this bot as anything other than a reference source. The code was already severely lacking in maintenance by the time it was officially discontinued.
+
+The original readme is available below for historical purposes, broken links intact.
+
+<details>
+<summary>Old readme</summary>
+
 # Project Bluestone (Goldmine)
-<a href="https://discord.gg/sYkwfxA"><img src="https://discordapp.com/api/guilds/239772188649979904/widget.png" alt="Goldmine Support"></a> <a href="https://discordbots.org/bot/goldmine"><img src="https://discordbots.org/api/widget/owner/239775420470394897.svg" alt="Discord Bots"></a> <a href="https://discordbots.org/bot/goldmine/vote"><img src="https://discordbots.org/api/widget/upvotes/239775420470394897.svg?noavatar=true" alt="Vote"></a>
 
 This is Project Bluestone, the rewrite of Goldmine in Java.
-
-<a href="https://discordbots.org/bot/goldmine"><img src="https://discordbots.org/api/widget/239775420470394897.svg?usernamecolor=FF7619&topcolor=000000&middlecolor=161616&datacolor=E0E0E0&highlightcolor=000000" alt="Discord Bots"></a>
 
 # How do I use the bot?
 Click [here](https://discordapp.com/oauth2/authorize?client_id=239775420470394897&scope=bot&permissions=473295957) to get to the invite page.
@@ -165,3 +173,5 @@ Is something not working?
 
 # Credits
  - The `Strftime` class from Apache Tomcat is included under the Apache 2.0 License.
+
+</details>
